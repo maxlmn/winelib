@@ -1,0 +1,11 @@
+[theme]
+base = "light"
+primaryColor = "#c27ba0"
+
+# Custom highlight for Light Theme
+[theme.light]
+primaryColor = "#c27ba0"  # Example: SeaGreen
+
+# Custom highlight for Dark Theme
+[theme.dark]
+primaryColor = "#c27ba0"  # Example: Gold

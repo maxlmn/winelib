@@ -1,0 +1,56 @@
+id,name,country,color,iso_code
+1,Alsace,France,#ac79a2,FR
+4,Austria,Austria,#d0e0e3,AT
+5,Beaujolais,France,#d97693,FR
+6,Belgium,Belgium,,BE
+7,Bordeaux,France,#d96663,FR
+8,Bourgogne,France,#d97693,FR
+9,Bulgaria,Bulgaria,,BG
+13,Champagne,France,#ffe599,FR
+17,Corsica,France,#cd92a3,FR
+18,Croatia,Croatia,,HR
+19,Cyprus,Cyprus,,CY
+24,Germany,Germany,#a2c4c9,DE
+25,Greece,Greece,#ead1dc,EL
+26,Hungary,Hungary,#b7b7b7,HU
+27,Italy,Italy,#ea9999,IT
+29,Jura,France,#ac79a2,FR
+30,Languedoc,France,#d5be00,FR
+35,Luxembourg,Luxembourg,,LU
+37,Malta,Malta,,MT
+39,Netherlands,Netherlands,,NL
+42,Piemonte,Italy,#ea9999,IT
+43,Portugal,Portugal,#fff2cc,PT
+44,Provence,France,#cd92a3,FR
+45,Rhone,France,#ce9178,FR
+46,Romania,Romania,,RO
+47,Savoie,France,#ac79a2,FR
+48,Slovakia,Slovakia,,SK
+49,Slovenia,Slovenia,,SI
+51,Southwest,France,#ffffff,FR
+52,Spain,Spain,#fff2cc,ES
+54,Toscana,Italy,#ea9999,IT
+2,Argentina,Argentina,#b7b7b7,
+3,Australia,Australia,#f1c232,
+12,Canada,Canada,#d9ead3,
+14,Charentes,France,,
+15,Chile,Chile,#fce5cd,
+16,China,China,#d9ead3,
+33,Loire,France,#abc96c,
+28,Japan,Japan,#d9ead3,
+53,Switzerland,Switzerland,#c27ba0,
+40,New Zealand,New Zealand,#a4c2f4,
+50,South Africa,South Africa,#b7b7b7,
+31,Lebanon,Lebanon,#ead1dc,
+23,Georgia,Georgia,#ead1dc,
+20,Czech Republic,Georgia,,
+21,Denmark,Georgia,,
+32,Limousin,France,,
+34,Lorraine,France,,
+36,Lyonnais,France,,
+38,Mendoza,Argentina,,
+56,United States,United States,#f6b26b,
+55,United Kingdom,United Kingdom,,
+11,California,United States,#f6b26b,
+41,Pacific Northwest,United States,#f9cb9c,
+22,England,United Kingdom,#ffffff,

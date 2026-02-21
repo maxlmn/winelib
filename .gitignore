@@ -1,0 +1,32 @@
+# Database
+data/winelib.db
+
+# Geo data (parquets, ~140MB — download separately)
+data/geo/
+
+# User images
+data/images/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Environment
+.env
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
