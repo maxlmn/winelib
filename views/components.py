@@ -4,7 +4,7 @@ import os
 import base64
 from shared import get_region_colors_map, TYPE_COLORS
 
-CURRENT_DIR = os.path.dirname(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+CURRENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def render_tasting_cards(events, key_suffix=""):
     """
