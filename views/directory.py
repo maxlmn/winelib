@@ -110,25 +110,29 @@ def view_places():
             "Type": p.type, 
             "Michelin Stars": p.michelin_stars if p.michelin_stars else 0,
             "Visits": len(all_dates),
+            "Last Visit": max(all_dates) if all_dates else None,
             "id": p.id
         })
         
     df = pd.DataFrame(data)
+    df = df.sort_values("Last Visit", ascending=False, na_position="last").reset_index(drop=True)
     session.close()
 
     if not df.empty:
         # --- FILTERS ---
-        f1, f2, f3, f4 = st.columns(4)
+        f1, f2, f3, f4, f5 = st.columns(5)
         sel_country = f1.multiselect("Country", sorted(df["Country"].dropna().unique().tolist()))
         sel_city = f2.multiselect("City", sorted(df["City"].dropna().unique().tolist()))
         sel_type = f3.multiselect("Type", sorted(df["Type"].dropna().unique().tolist()))
         sel_stars = f4.multiselect("Michelin Stars", sorted(df["Michelin Stars"].unique().tolist()))
+        search_name = f5.text_input("Search Name")
 
         filtered_df = df.copy()
         if sel_country: filtered_df = filtered_df[filtered_df["Country"].isin(sel_country)]
         if sel_city: filtered_df = filtered_df[filtered_df["City"].isin(sel_city)]
         if sel_type: filtered_df = filtered_df[filtered_df["Type"].isin(sel_type)]
         if sel_stars: filtered_df = filtered_df[filtered_df["Michelin Stars"].isin(sel_stars)]
+        if search_name: filtered_df = filtered_df[filtered_df["Name"].str.contains(search_name, case=False, na=False)]
 
         if not filtered_df.empty:
             filtered_df['Name_Link'] = filtered_df.apply(lambda x: f"/?page=Place+Detail&id={x['id']}&label={x['Name'].replace(' ', '+')}", axis=1)
@@ -148,7 +152,7 @@ def view_places():
                     "Michelin Stars": st.column_config.TextColumn("Michelin Stars"),
                     "Visits": st.column_config.NumberColumn("Visits")
                 },
-                cols=["Name", "City", "Country", "Type", "Michelin Stars", "Visits"]
+                cols=["Name", "City", "Country", "Type", "Michelin Stars", "Visits", "Last Visit", "Notes"]
             )
         else:
             st.info("No places match the selected filters.")

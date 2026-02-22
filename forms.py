@@ -975,21 +975,29 @@ def form_place(place_id=None):
         country = c2.text_input("Country", value=p.country if p else "")
         
         c3, c4 = st.columns(2)
-        p_type = c3.selectbox("Type", ["Restaurant", "Winery", "Home", "Bar", "Friend's Place", "Other"], index=["Restaurant", "Winery", "Home", "Bar", "Friend's Place", "Other"].index(p.type) if p and p.type in ["Restaurant", "Winery", "Home", "Bar", "Friend's Place", "Other"] else 0)
+        p_type = c3.text_input("Type", value=p.type if p and p.type else "")
         stars = c4.number_input("Michelin Stars", min_value=0, max_value=3, value=p.michelin_stars if p and p.michelin_stars else 0)
         
         notes = st.text_area("Notes", value=p.notes if p else "")
+        
+        c5, c6 = st.columns(2)
+        lat = c5.number_input("Latitude", value=p.lat if p and p.lat else 0.0, format="%.6f", step=0.0001)
+        lng = c6.number_input("Longitude", value=p.lng if p and p.lng else 0.0, format="%.6f", step=0.0001)
         
         submitted = st.form_submit_button("Save Place")
         if submitted:
             if not name: st.error("Name is required"); st.stop()
             
+            # Treat 0.0 as "not set"
+            save_lat = lat if lat != 0.0 else None
+            save_lng = lng if lng != 0.0 else None
+            
             if p:
                 p.name, p.city, p.country, p.type, p.michelin_stars, p.notes = name, city, country, p_type, stars, notes
+                p.lat, p.lng = save_lat, save_lng
                 session.commit(); st.success("Place Updated"); time.sleep(0.5); navigate_to("Place Detail", {"id": place_id})
             else:
-                # Should not really be reached via "Add" button yet, but for completeness
-                new_p = Place(name=name, city=city, country=country, type=p_type, michelin_stars=stars, notes=notes)
+                new_p = Place(name=name, city=city, country=country, type=p_type, michelin_stars=stars, notes=notes, lat=save_lat, lng=save_lng)
                 session.add(new_p)
                 session.commit(); st.success("Place Created"); time.sleep(0.5); navigate_to("Places")
     session.close()

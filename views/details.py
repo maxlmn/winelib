@@ -575,6 +575,11 @@ def view_place_detail(plid):
             mc3.caption("Type")
             mc3.write(f"**{p.type}**")
         
+        if p.notes:
+            with st.container(border=True):
+                st.caption("Notes")
+                st.write(p.notes)
+        
         # MAP DISPLAY
         if p.lat and p.lng:
             from streamlit_folium import st_folium
