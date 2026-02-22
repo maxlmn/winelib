@@ -333,31 +333,35 @@ def view_tasting_notes():
             if unique_places:
                 import folium
                 from streamlit_folium import st_folium
+                from geo_utils import add_tile_layers
 
                 # Determine center
                 lats = [d['lat'] for d in unique_places.values()]
                 lngs = [d['lng'] for d in unique_places.values()]
                 
                 if lats and lngs:
-                    # Calculate bounds
                     min_lat, max_lat = min(lats), max(lats)
                     min_lng, max_lng = min(lngs), max(lngs)
-                    
-                    # Center for initialization
                     center_lat = (min_lat + max_lat) / 2
                     center_lng = (min_lng + max_lng) / 2
                     
-                    # Create map and let folium handle zoom via fit_bounds
-                    m = folium.Map(location=[center_lat, center_lng], zoom_start=5)
-                    m.fit_bounds([[min_lat, min_lng], [max_lat, max_lng]])
+                    # Calculate zoom from bounds (avoids st_folium fit_bounds first-render bug)
+                    lat_diff = max_lat - min_lat
+                    lng_diff = max_lng - min_lng
+                    max_diff = max(lat_diff, lng_diff, 0.01)
+                    import math
+                    zoom = int(math.log2(360 / max_diff))
+                    zoom = max(2, min(zoom, 15))
+                    
+                    m = folium.Map(location=[center_lat, center_lng], zoom_start=zoom)
                 else:
                     m = folium.Map(location=[47.0, 4.0], zoom_start=4)
+
+                add_tile_layers(m)
 
                 for pid, data in unique_places.items():
                     tooltip = f"{data['name']} ({data['count']} events)"
                     
-                    # Create popup link
-                    # values matching app.py routing
                     popup_html = f"<b>{data['name']}</b><br><a href='/?page=Place+Detail&id={pid}' target='_top'>Open Details</a>"
                     
                     folium.Marker(
