@@ -328,19 +328,57 @@ def form_producer(prod_id=None):
                     break
         
         region_obj_sel = st.selectbox("Region", all_regions, index=reg_idx, format_func=lambda r: r.name)
-        winemaker = st.text_input("Winemaker", value=p.winemaker if p else "")
-        profile = st.text_input("Profile URL", value=p.profile_url if p else "")
-        desc = st.text_area("Description", value=p.description if p else "")
+        
+        c1, c2 = st.columns(2)
+        subregion = c1.text_input("Subregion", value=p.subregion if p and p.subregion else "")
+        village = c2.text_input("Village", value=p.village if p and p.village else "")
+        
+        c3, c4 = st.columns(2)
+        winemaker = c3.text_input("Winemaker", value=p.winemaker if p and p.winemaker else "")
+        owner = c4.text_input("Owner", value=p.owner if p and p.owner else "")
+        
+        type_options = ["", "domaine", "maison", "negoce"]
+        type_idx = 0
+        if p and p.type and p.type in type_options:
+            type_idx = type_options.index(p.type)
+        prod_type = st.selectbox("Type", type_options, index=type_idx, format_func=lambda t: t.capitalize() if t else "—")
+        
+        importers = st.text_input("Importers", value=p.importers if p and p.importers else "")
+        lists = st.text_input("Lists", value=p.lists if p and p.lists else "", help='e.g. "[The New French Wine]"')
+        
+        c5, c6 = st.columns(2)
+        profile = c5.text_input("Profile URL", value=p.profile_url if p and p.profile_url else "")
+        website = c6.text_input("Website", value=p.website if p and p.website else "")
+        
+        notes = st.text_area("Notes", value=p.notes if p and p.notes else "")
+        desc = st.text_area("Description", value=p.description if p and p.description else "")
         
         submitted = st.form_submit_button("Save Producer")
         if submitted:
             if not name: st.error("Name is required"); return
             reg_obj = session.get(Region, region_obj_sel.id) if region_obj_sel else None
             if p:
-                p.name, p.region_obj = name, reg_obj
-                p.winemaker, p.profile_url, p.description = winemaker, profile, desc
+                p.name = name
+                p.region_obj = reg_obj
+                p.subregion = subregion or None
+                p.village = village or None
+                p.winemaker = winemaker or None
+                p.owner = owner or None
+                p.type = prod_type or None
+                p.importers = importers or None
+                p.lists = lists or None
+                p.profile_url = profile or None
+                p.website = website or None
+                p.notes = notes or None
+                p.description = desc or None
             else:
-                session.add(Producer(name=name, region_obj=reg_obj, winemaker=winemaker, profile_url=profile, description=desc))
+                session.add(Producer(
+                    name=name, region_obj=reg_obj, subregion=subregion or None,
+                    village=village or None, winemaker=winemaker or None, owner=owner or None,
+                    type=prod_type or None, importers=importers or None, lists=lists or None,
+                    profile_url=profile or None, website=website or None,
+                    notes=notes or None, description=desc or None
+                ))
             session.commit()
             st.success("Producer saved!")
             time.sleep(0.5)
