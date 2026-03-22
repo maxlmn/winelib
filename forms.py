@@ -202,7 +202,9 @@ def _render_wine_core_fields(session, defaults=None, include_producer=True, pref
     vineyard_lbl = st.selectbox("Vineyard (Optional)", viny_options, index=v_idx, key=f"{prefix}_vyd_sel")
     vineyard_id = viny_map.get(vineyard_lbl)
     
-    new_wine_blend = st.text_input("Blend", value=defaults.get("blend", "") if defaults else "", key=f"{prefix}_blend")
+    c_b1, c_b2 = st.columns(2)
+    new_wine_blend = c_b1.text_input("Blend", value=defaults.get("blend", "") if defaults else "", key=f"{prefix}_blend")
+    new_wine_lwin = c_b2.text_input("LWIN", value=defaults.get("lwin", "") if defaults else "", key=f"{prefix}_lwin")
     
     c_rp1, c_rp2 = st.columns(2)
     new_wine_rp_score = c_rp1.text_input("RP Score", value=str(defaults.get("rp_score", "")) if defaults else "", key=f"{prefix}_rps")
@@ -228,6 +230,7 @@ def _render_wine_core_fields(session, defaults=None, include_producer=True, pref
         "new_var_name": new_wine_var,
         "vineyard_id": vineyard_id,
         "blend": new_wine_blend,
+        "lwin": new_wine_lwin,
         "rp_score": new_wine_rp_score,
         "rp_url": new_wine_rp_url,
         "rp_note": new_wine_rp_note,
@@ -300,7 +303,8 @@ def _process_new_wine_form(session, data):
         producer_id=pid, cuvee=data["cuvee"], vintage=data["vintage"], 
         type=data["type"], region_obj=reg_obj,
         appellation_id=aid, varietal_id=vid, vineyard_id=vineyard_id, 
-        blend=data["blend"], rp_score=data["rp_score"], rp_note=data["rp_note"], 
+        blend=data["blend"], lwin=data.get("lwin") or None,
+        rp_score=data["rp_score"], rp_note=data["rp_note"], 
         rp_url=data["rp_url"], drink_window_start=data["drink_start"], drink_window_end=data["drink_end"],
         disgorgement_date=data.get("disgorgement_date")
     )
@@ -405,6 +409,7 @@ def form_wine(wine_id=None):
             "varietal": w.varietal.name if w.varietal else None,
             "vineyard": w.vineyard.name if w.vineyard else None,
             "blend": w.blend,
+            "lwin": w.lwin,
             "rp_score": w.rp_score,
             "rp_note": w.rp_note,
             "rp_url": w.rp_url,
@@ -471,7 +476,7 @@ def form_wine(wine_id=None):
         if w:
             w.producer_id, w.cuvee, w.vintage, w.type = pid, data["cuvee"], data["vintage"], data["type"]
             w.region_obj = reg_obj
-            w.appellation_id, w.varietal_id, w.vineyard_id, w.blend, w.rp_score, w.rp_note, w.rp_url = aid, vid, viny_id, data["blend"], data["rp_score"], data["rp_note"], data["rp_url"]
+            w.appellation_id, w.varietal_id, w.vineyard_id, w.blend, w.lwin, w.rp_score, w.rp_note, w.rp_url = aid, vid, viny_id, data["blend"], data.get("lwin") or None, data["rp_score"], data["rp_note"], data["rp_url"]
             w.drink_window_start, w.drink_window_end = data["drink_start"], data["drink_end"]
             w.disgorgement_date = data.get("disgorgement_date", "")
             session.commit(); st.success("Wine Updated")
@@ -480,7 +485,8 @@ def form_wine(wine_id=None):
                 producer_id=pid, cuvee=data["cuvee"], vintage=data["vintage"], 
                 type=data["type"], region_obj=reg_obj,
                 appellation_id=aid, varietal_id=vid, vineyard_id=viny_id, 
-                blend=data["blend"], rp_score=data["rp_score"], rp_note=data["rp_note"], 
+                blend=data["blend"], lwin=data.get("lwin") or None,
+                rp_score=data["rp_score"], rp_note=data["rp_note"], 
                 rp_url=data["rp_url"], drink_window_start=data["drink_start"], 
                 drink_window_end=data["drink_end"],
                 disgorgement_date=data.get("disgorgement_date", "")
@@ -613,6 +619,7 @@ def _component_wine_selector(session, prefix="main", default_wine_id=None):
                 "varietal": template_w.varietal.name if template_w.varietal else None,
                 "vineyard": template_w.vineyard.name if template_w.vineyard else None,
                 "blend": template_w.blend,
+                "lwin": template_w.lwin,
                 "rp_score": "", "rp_note": "", "rp_url": "",
                 "drink_start": template_w.drink_window_start,
                 "drink_end": template_w.drink_window_end,
