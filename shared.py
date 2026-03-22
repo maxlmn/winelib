@@ -69,7 +69,7 @@ def get_region_name(obj):
 
 # --- CONSTANTS ---
 EXCHANGE_RATES = {
-    "SGD": 1.0, "EUR": 1.45, "USD": 1.35, "GBP": 1.70, "AUD": 0.90
+    "SGD": 1.0, "EUR": 1.49, "USD": 1.28, "GBP": 1.71, "AUD": 0.90
 }
 
 # Obsidian-inspired color palette for both themes

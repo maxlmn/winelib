@@ -256,7 +256,12 @@ def render_cellar_cards(bottles_df):
     for loc_group, group_df in groups:
         # Stats
         total_bottles = group_df['Qty'].sum()
-        total_val = group_df['Total(sgd)'].sum() if 'Total(sgd)' in group_df.columns else 0
+        if 'TotalMarket(sgd)' in group_df.columns:
+            total_val = group_df['TotalMarket(sgd)'].sum()
+        elif 'TotalCost(sgd)' in group_df.columns:
+            total_val = group_df['TotalCost(sgd)'].sum()
+        else:
+            total_val = group_df['Total(sgd)'].sum() if 'Total(sgd)' in group_df.columns else 0
         
         reds_df = group_df[group_df['Color'] == 'Red']
         reds_count = reds_df['Qty'].sum()
