@@ -204,7 +204,7 @@ def render_wine_content(session, wid):
             st.write(f"**Varietal:** {w.varietal.name if w.varietal else 'N/A'}")
             if w.blend: st.write(f"**Blend:** {w.blend}")
             if w.lwin:
-                st.markdown(f"**LWIN / Winelib.ai link :** [{w.lwin}](https://wwww.winelabs.ai/quote/{w.lwin})")
+                st.markdown(f"**LWIN / Winelib.ai link :** [{w.lwin}](https://winelabs.ai/quote/{w.lwin})")
         with m2:
             # Map Rendering Logic
             from streamlit_folium import st_folium
