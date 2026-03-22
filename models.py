@@ -112,6 +112,7 @@ class Wine(Base):
     vineyard = relationship("Vineyard", back_populates="wines")
     region_obj = relationship("Region", back_populates="wines")
     blend = Column(String) # e.g. "Bordeaux Blend"
+    lwin = Column(String, index=True) # Liv-ex Wine Identification Number (LWIN7)
     rp_score = Column(String) # Robert Parker Score
     rp_note = Column(Text)
     rp_url = Column(String)
@@ -135,6 +136,9 @@ class Bottle(Base):
     currency = Column(String, default="EUR")
     vendor = Column(String)
     provenance = Column(String) # either importer / seller / restaurant name / person who brought the wine
+    last_price = Column(Float)  # last known market price
+    last_price_date = Column(Date)  # date of last price check
+    last_price_source = Column(String)  # source of last price (e.g. wine-searcher)
     wine = relationship("Wine", back_populates="inventory")
     tastings = relationship("TastingNote", back_populates="bottle")
 

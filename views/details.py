@@ -203,6 +203,8 @@ def render_wine_content(session, wid):
 
             st.write(f"**Varietal:** {w.varietal.name if w.varietal else 'N/A'}")
             if w.blend: st.write(f"**Blend:** {w.blend}")
+            if w.lwin:
+                st.markdown(f"**LWIN:** [{w.lwin}](https://www.wine-searcher.com/find/lwin{w.lwin})")
         with m2:
             # Map Rendering Logic
             from streamlit_folium import st_folium
@@ -514,7 +516,21 @@ def view_bottle_detail(bid):
                 if c1.button("Edit Bottle"): navigate_to("Edit Bottle", {"id": bid})
                 if c2.button("Drink"): navigate_to("Add Tasting", {"bottle_id": bid})
             with m2:
-                st.write(f"**Price:** {b.price} {b.currency}" if b.price else "**Price:** N/A")
+                p1, p2 = st.columns(2)
+                with p1:
+                    st.write(f"**Purchase:** {b.price} {b.currency}" if b.price else "**Purchase:** N/A")
+                with p2:
+                    if b.last_price:
+                        lp_parts = [f"**Market:** {b.last_price}"]
+                        if b.last_price_source: lp_parts[0] += f" ({b.last_price_source})"
+                        st.write(lp_parts[0])
+                        if b.price and b.price > 0:
+                            pct = ((b.last_price - b.price) / b.price) * 100
+                            color = "green" if pct >= 0 else "red"
+                            arrow = "▲" if pct >= 0 else "▼"
+                            st.markdown(f":{color}[{arrow} {abs(pct):.0f}%]")
+                        if b.last_price_date:
+                            st.caption(f"as of {b.last_price_date}")
                 st.write(f"**Vendor:** {b.vendor}")
                 st.write(f"**Provenance:** {b.provenance}")
                 st.write(f"**Purchase Date:** {b.purchase_date}")

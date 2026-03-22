@@ -696,6 +696,13 @@ def form_bottle(bottle_id=None):
     prov = col1.text_input("Provenance", value=b.provenance if b else "")
     p_date = col2.date_input("Purchase Date", value=b.purchase_date if b else date.today())
     
+    st.divider()
+    st.caption("Market Price")
+    mp1, mp2, mp3 = st.columns(3)
+    last_price = mp1.number_input("Last Price", value=float(b.last_price) if b and b.last_price else 0.0)
+    last_price_date = mp2.date_input("Price Date", value=b.last_price_date if b and b.last_price_date else None)
+    last_price_source = mp3.text_input("Price Source", value=b.last_price_source if b and b.last_price_source else "")
+    
     submitted = st.button("Save Bottle")
     if submitted:
         final_wid = None
@@ -708,10 +715,16 @@ def form_bottle(bottle_id=None):
         
         if not final_wid: st.error("Wine is required"); st.stop()
         
+        # Clean up price fields
+        lp = last_price if last_price else None
+        lpd = last_price_date if last_price_date else None
+        lps = last_price_source if last_price_source else None
+        
         if b:
             b.wine_id, b.qty, b.bottle_size, b.location, b.price, b.currency, b.vendor, b.provenance, b.purchase_date = final_wid, qty, size, location, price, currency, vendor, prov, p_date
+            b.last_price, b.last_price_date, b.last_price_source = lp, lpd, lps
         else:
-            session.add(Bottle(wine_id=final_wid, qty=qty, bottle_size=size, location=location, price=price, currency=currency, vendor=vendor, provenance=prov, purchase_date=p_date))
+            session.add(Bottle(wine_id=final_wid, qty=qty, bottle_size=size, location=location, price=price, currency=currency, vendor=vendor, provenance=prov, purchase_date=p_date, last_price=lp, last_price_date=lpd, last_price_source=lps))
         session.commit()
         st.success("Bottle saved!")
         time.sleep(0.5)
