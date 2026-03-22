@@ -87,7 +87,7 @@ def view_cellar():
         singapore_market = singapore_df['TotalMarket(sgd)'].sum()
 
         with st.container(border=True):
-            c1, c2, c3, c4, c5 = st.columns([0.8, 0.8, 1, 1.2, 1.2])
+            c1, c2, c3, c3b, c4, c5 = st.columns([0.7, 0.6, 0.9, 0.9, 1.1, 1.1])
             
             with c1:
                 if st.button("Add Bottle", type="primary", use_container_width=True): navigate_to("Add Bottle")
@@ -95,8 +95,11 @@ def view_cellar():
             c2.caption("Total Bottles")
             c2.write(f"**{int(total_qty)}**")
 
-            c3.caption("Purchase Value (SGD)")
+            c3.caption("Cost (SGD)")
             c3.write(f"**${total_cost:,.0f}**")
+
+            c3b.caption("SG Cost (SGD)")
+            c3b.write(f"**${singapore_cost:,.0f}**")
 
             c4.caption("Market Value (SGD)")
             pct = ((total_market_val - total_cost) / total_cost * 100) if total_cost else 0
@@ -104,7 +107,7 @@ def view_cellar():
             arrow = "▲" if pct >= 0 else "▼"
             c4.write(f"**${total_market_val:,.0f}** :{color}[{arrow} {abs(pct):.1f}%]")
 
-            c5.caption("SG Market Value (SGD)")
+            c5.caption("SG Market Value")
             sg_pct = ((singapore_market - singapore_cost) / singapore_cost * 100) if singapore_cost else 0
             sg_color = "green" if sg_pct >= 0 else "red"
             sg_arrow = "▲" if sg_pct >= 0 else "▼"
