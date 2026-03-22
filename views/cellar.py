@@ -180,7 +180,7 @@ def view_cellar():
                         vintage = row['Vintage'] or ""
                         lwin_link = ""
                         if row.get('LWIN'):
-                            lwin_link = f" [🔍](https://www.winelabs.ai/quote/{row['LWIN']})"
+                            lwin_link = f" [🔍](https://winelabs.ai/quote/{row['LWIN']})"
                         
                         st.markdown(
                             f"**[{name}](/?page=Bottle+Detail&id={row['bid']})** {vintage}  \n"
