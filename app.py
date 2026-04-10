@@ -21,46 +21,26 @@ NAV_OPTIONS = ["Cellar", "Tasting Notes", "Summary", "Producers", "Places", "Map
 # Initialize session state
 if "page" not in st.session_state:
     st.session_state["page"] = "Cellar"
-if "sidebar_selection" not in st.session_state:
-    st.session_state["sidebar_selection"] = "Cellar"
 
 # Determine current view from URL or state
 params = st.query_params.to_dict()
 current_view = params.get("page", st.session_state["page"])
 
 # Determine which sidebar option should be highlighted
-sidebar_idx = 0
+sidebar_idx = None
 if current_view in NAV_OPTIONS:
     sidebar_idx = NAV_OPTIONS.index(current_view)
-    st.session_state["sidebar_selection"] = current_view
-else:
-    # If on a detail/edit page, highlight current context
-    prev_sel = st.session_state.get("sidebar_selection")
-    if prev_sel in NAV_OPTIONS:
-        sidebar_idx = NAV_OPTIONS.index(prev_sel)
 
 # Sidebar navigation
 st.sidebar.markdown('# :material/wine_bar: WineLib ', unsafe_allow_html=True)
 selection = st.sidebar.radio("Navigation", NAV_OPTIONS, index=sidebar_idx)
 
-
-
 # Handle sidebar interaction (Change of top-level page)
-if selection != st.session_state.get("sidebar_selection"):
-    st.session_state["sidebar_selection"] = selection
+if selection is not None and selection != current_view:
     st.session_state["page"] = selection
     st.query_params.clear() 
     st.query_params["page"] = selection
     st.rerun()
-
-# Breadcrumb / Back Navigation if on a sub-page
-if current_view not in NAV_OPTIONS:
-    st.sidebar.divider()
-    parent_page = st.session_state.get("sidebar_selection", "Cellar")
-    if st.sidebar.button(f"← Back to {parent_page}", use_container_width=True):
-        st.query_params.clear()
-        st.query_params["page"] = parent_page
-        st.rerun()
 
 st.sidebar.divider()
 if st.sidebar.button("Clear Cache", use_container_width=True):
