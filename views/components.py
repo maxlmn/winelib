@@ -54,44 +54,28 @@ def render_tasting_cards(events, key_suffix=""):
     .wine-card-body {
         padding: 15px;
         display: flex;
+        flex-direction: row-reverse;
+        flex-wrap: wrap;
+        justify-content: flex-end;
         align-items: flex-start;
         gap: 15px;
     }
     
     .wine-card-content {
-        flex: 1;
-        order: 1;
+        flex: 1 1 350px;
         min-width: 0;
     }
     
     .wine-card-image {
-        flex-shrink: 0;
-        order: 2;
+        flex: 0 1 auto;
+        max-width: 100%;
     }
     
     .wine-card-image img {
-        max-width: 500px;
+        max-width: 100%;
         max-height: 500px;
         border-radius: 4px;
         object-fit: cover;
-    }
-    
-    @media (max-width: 768px) {
-        .wine-card-body {
-            flex-direction: column;
-        }
-        .wine-card-image {
-            order: 1;
-            width: 100%;
-        }
-        .wine-card-image img {
-            max-width: 100%;
-            width: 100%;
-        }
-        .wine-card-content {
-            order: 2;
-            width: 100%;
-        }
     }
     
     .wine-card-meta {
@@ -207,11 +191,11 @@ def render_tasting_cards(events, key_suffix=""):
 <span style="color: #666; font-size: 0.9rem;">{date_str}</span>
 </div>
 <div class="wine-card-body">
+{img_html}
 <div class="wine-card-content">
 <div class="wine-card-meta">{meta_html}</div>
 {body_content}
 </div>
-{img_html}
 </div>
 </div>
 """
