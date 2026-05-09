@@ -53,6 +53,45 @@ def render_tasting_cards(events, key_suffix=""):
     
     .wine-card-body {
         padding: 15px;
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .wine-card-content {
+        flex: 1;
+        order: 1;
+        min-width: 0;
+    }
+    
+    .wine-card-image {
+        flex-shrink: 0;
+        order: 2;
+    }
+    
+    .wine-card-image img {
+        max-width: 500px;
+        max-height: 500px;
+        border-radius: 4px;
+        object-fit: cover;
+    }
+    
+    @media (max-width: 768px) {
+        .wine-card-body {
+            flex-direction: column;
+        }
+        .wine-card-image {
+            order: 1;
+            width: 100%;
+        }
+        .wine-card-image img {
+            max-width: 100%;
+            width: 100%;
+        }
+        .wine-card-content {
+            order: 2;
+            width: 100%;
+        }
     }
     
     .wine-card-meta {
@@ -153,8 +192,8 @@ def render_tasting_cards(events, key_suffix=""):
                     
                     img_src = f"data:image/{mime};base64,{encoded}"
                     img_html = f"""
-<div style="margin-left: 15px; flex-shrink: 0;">
-    <img src="{img_src}" style="max-width: 500px; max-height: 500px; border-radius: 4px; object-fit: cover;">
+<div class="wine-card-image">
+    <img src="{img_src}">
 </div>
 """
         except Exception:
@@ -167,8 +206,8 @@ def render_tasting_cards(events, key_suffix=""):
 <a href="{place_url}" target="_self" style="text-decoration: none; color: var(--primary-color);">{place_name}</a>
 <span style="color: #666; font-size: 0.9rem;">{date_str}</span>
 </div>
-<div class="wine-card-body" style="display: flex; align-items: flex-start;">
-<div style="flex: 1;">
+<div class="wine-card-body">
+<div class="wine-card-content">
 <div class="wine-card-meta">{meta_html}</div>
 {body_content}
 </div>
