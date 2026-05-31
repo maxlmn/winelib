@@ -142,7 +142,14 @@ def view_tasting_notes():
 
         # Tabs
         # Tabs
-        tab_cards, tab_list, tab_map = st.tabs(["Cards", "List", "Map"])
+        import inspect
+        sig = inspect.signature(st.tabs)
+        if "key" in sig.parameters:
+            tab_cards, tab_list, tab_map = st.tabs(["Cards", "List", "Map"], key="tasting_notes_tabs", on_change="rerun")
+            render_map = getattr(tab_map, "open", True)
+        else:
+            tab_cards, tab_list, tab_map = st.tabs(["Cards", "List", "Map"])
+            render_map = True
         
         with tab_list:
             if filtered_df.empty:
@@ -295,86 +302,87 @@ def view_tasting_notes():
                     session.close()
 
         with tab_map:
-            # Aggregate unique places with coordinates
-            unique_places = {}
+            if render_map:
+                # Aggregate unique places with coordinates
+                unique_places = {}
 
-            # 1. From Visits
-            if wine_filters_active == False:
-                 # visits are already fetched
-                 if 'visits' in locals():
-                     for v in visits:
-                         if v.place and v.place.lat and v.place.lng:
-                             unique_places[v.place.id] = {
-                                 "name": v.place.name,
-                                 "lat": v.place.lat,
-                                 "lng": v.place.lng,
-                                 "count": 1, 
-                                 "type": "Visit"
-                             }
-            
-            # 2. From filtered_df
-            if not filtered_df.empty:
-                # Iterate rows to find places
-                # ensure we have Lat/Lng columns
-                if "Lat" in filtered_df.columns and "Lng" in filtered_df.columns:
-                     for _, row in filtered_df.iterrows():
-                         if pd.notnull(row["Lat"]) and pd.notnull(row["Lng"]):
-                             pid = int(row["plid"])
-                             if pid not in unique_places:
-                                 unique_places[pid] = {
-                                     "name": row["Location"],
-                                     "lat": row["Lat"],
-                                     "lng": row["Lng"],
-                                     "count": 0,
-                                     "type": "Tasting"
+                # 1. From Visits
+                if wine_filters_active == False:
+                     # visits are already fetched
+                     if 'visits' in locals():
+                         for v in visits:
+                             if v.place and v.place.lat and v.place.lng:
+                                 unique_places[v.place.id] = {
+                                     "name": v.place.name,
+                                     "lat": v.place.lat,
+                                     "lng": v.place.lng,
+                                     "count": 1, 
+                                     "type": "Visit"
                                  }
-                             unique_places[pid]["count"] += 1
-
-            if unique_places:
-                import folium
-                from streamlit_folium import st_folium
-                from geo_utils import add_tile_layers
-
-                # Determine center
-                lats = [d['lat'] for d in unique_places.values()]
-                lngs = [d['lng'] for d in unique_places.values()]
                 
-                if lats and lngs:
-                    min_lat, max_lat = min(lats), max(lats)
-                    min_lng, max_lng = min(lngs), max(lngs)
-                    center_lat = (min_lat + max_lat) / 2
-                    center_lng = (min_lng + max_lng) / 2
+                # 2. From filtered_df
+                if not filtered_df.empty:
+                    # Iterate rows to find places
+                    # ensure we have Lat/Lng columns
+                    if "Lat" in filtered_df.columns and "Lng" in filtered_df.columns:
+                         for _, row in filtered_df.iterrows():
+                             if pd.notnull(row["Lat"]) and pd.notnull(row["Lng"]):
+                                 pid = int(row["plid"])
+                                 if pid not in unique_places:
+                                     unique_places[pid] = {
+                                         "name": row["Location"],
+                                         "lat": row["Lat"],
+                                         "lng": row["Lng"],
+                                         "count": 0,
+                                         "type": "Tasting"
+                                     }
+                                 unique_places[pid]["count"] += 1
+
+                if unique_places:
+                    import folium
+                    from streamlit_folium import st_folium
+                    from geo_utils import add_tile_layers
+
+                    # Determine center
+                    lats = [d['lat'] for d in unique_places.values()]
+                    lngs = [d['lng'] for d in unique_places.values()]
                     
-                    # Calculate zoom from bounds (avoids st_folium fit_bounds first-render bug)
-                    lat_diff = max_lat - min_lat
-                    lng_diff = max_lng - min_lng
-                    max_diff = max(lat_diff, lng_diff, 0.01)
-                    import math
-                    zoom = int(math.log2(360 / max_diff))
-                    zoom = max(2, min(zoom, 15))
+                    if lats and lngs:
+                        min_lat, max_lat = min(lats), max(lats)
+                        min_lng, max_lng = min(lngs), max(lngs)
+                        center_lat = (min_lat + max_lat) / 2
+                        center_lng = (min_lng + max_lng) / 2
+                        
+                        # Calculate zoom from bounds (avoids st_folium fit_bounds first-render bug)
+                        lat_diff = max_lat - min_lat
+                        lng_diff = max_lng - min_lng
+                        max_diff = max(lat_diff, lng_diff, 0.01)
+                        import math
+                        zoom = int(math.log2(360 / max_diff))
+                        zoom = max(2, min(zoom, 15))
+                        
+                        m = folium.Map(location=[center_lat, center_lng], zoom_start=zoom)
+                    else:
+                        m = folium.Map(location=[47.0, 4.0], zoom_start=4)
+
+                    add_tile_layers(m)
+
+                    for pid, data in unique_places.items():
+                        tooltip = f"{data['name']} ({data['count']} events)"
+                        
+                        popup_html = f"<b>{data['name']}</b><br><a href='/?page=Place+Detail&id={pid}' target='_top'>Open Details</a>"
+                        
+                        folium.Marker(
+                            [data['lat'], data['lng']],
+                            tooltip=tooltip,
+                            popup=folium.Popup(popup_html, max_width=300),
+                            icon=folium.Icon(color="red", icon="cutlery", prefix='fa')
+                        ).add_to(m)
                     
-                    m = folium.Map(location=[center_lat, center_lng], zoom_start=zoom)
+                    st_folium(m, height=500, width="100%", key="tasting_notes_map", returned_objects=[])
+                    
                 else:
-                    m = folium.Map(location=[47.0, 4.0], zoom_start=4)
-
-                add_tile_layers(m)
-
-                for pid, data in unique_places.items():
-                    tooltip = f"{data['name']} ({data['count']} events)"
-                    
-                    popup_html = f"<b>{data['name']}</b><br><a href='/?page=Place+Detail&id={pid}' target='_top'>Open Details</a>"
-                    
-                    folium.Marker(
-                        [data['lat'], data['lng']],
-                        tooltip=tooltip,
-                        popup=folium.Popup(popup_html, max_width=300),
-                        icon=folium.Icon(color="red", icon="cutlery", prefix='fa')
-                    ).add_to(m)
-                
-                st_folium(m, height=500, width="100%", returned_objects=[])
-                
-            else:
-                st.info("No geocoded places data available for current selection.")
+                    st.info("No geocoded places data available for current selection.")
 
     else:
         st.info("No notes found.")
