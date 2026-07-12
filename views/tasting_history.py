@@ -12,24 +12,10 @@ def view_tasting_notes():
     st.markdown('# :material/wine_bar: Tastings', unsafe_allow_html=True)
     
     session = get_session()
-    total_notes = session.query(TastingNote).count()
-    avg_score = session.query(func.avg(TastingNote.rating)).scalar() or 0
-    m1, m2 = st.columns(2)
     
-    with st.container(border=True):
-        c1, c2 = st.columns([1, 1])
-        
-        with c1:
-            if st.button("Add Tasting", type="primary"): navigate_to("Add Tasting")
-
-        c2.caption("Total Notes")
-        c2.write(f"**{int(total_notes)}**")
-
     # Custom CSS handled by shared component
 
-
     # Handle filtering by Wine ID
-
     wid = st.query_params.get("wid")
     
     query = """
@@ -77,14 +63,18 @@ def view_tasting_notes():
         df['Location'] = df['Location'].fillna(df['loc_raw'])
         df['Vintage'] = df.apply(lambda x: f"{x['Vintage']} - {x['Disgorgement']}" if (x['Vintage'] == "NV" and pd.notnull(x['Disgorgement']) and x['Disgorgement']) else x['Vintage'], axis=1)
         
+        stats_container = st.empty()
+        
         # --- FILTERS ---
         with st.container(border=True):
-            f1, f2, f3, f4, f5 = st.columns(5)
+            search_query = st.text_input("Search", placeholder="Search by Producer, Cuvée, or Appellation...", label_visibility="collapsed")
+            f1, f2, f3, f4, f5, f6 = st.columns(6)
             
             sel_color = f1.multiselect("Color", sorted(df["Color"].unique()))
             sel_region = f2.multiselect("Region", sorted(df["Region"].unique().tolist()))
             sel_prod = f3.multiselect("Producer", sorted(df["Domaine"].unique().tolist()))
-            sel_loc = f4.multiselect("Location", sorted(df["Location"].unique().tolist()))
+            sel_vintage = f4.multiselect("Vintage", sorted([v for v in df["Vintage"].unique() if pd.notna(v)]))
+            sel_loc = f5.multiselect("Location", sorted(df["Location"].unique().tolist()))
         
             # Date range filter
             min_date = pd.to_datetime(df["Date"]).min().date()
@@ -97,7 +87,7 @@ def view_tasting_notes():
             end_date = picker_max_date 
 
             period_options = ["Year to Date", "All", "Last 30 Days", "Custom"]
-            selected_period = f5.selectbox("Period", period_options, index=0)
+            selected_period = f6.selectbox("Period", period_options, index=0)
         
             # Determine start/end dates
             if selected_period == "Year to Date":
@@ -114,7 +104,7 @@ def view_tasting_notes():
                 init_start = max(min_date, ytd_start)
                 if init_start > picker_max_date: init_start = picker_max_date
                 
-                d_range = f5.date_input("Range", value=(init_start, picker_max_date), min_value=min_date, max_value=picker_max_date, label_visibility="collapsed")
+                d_range = f6.date_input("Range", value=(init_start, picker_max_date), min_value=min_date, max_value=picker_max_date, label_visibility="collapsed")
                 if isinstance(d_range, tuple) and len(d_range) == 2:
                     start_date, end_date = d_range
                 else:
@@ -123,9 +113,17 @@ def view_tasting_notes():
         
         # Apply filtering
         filtered_df = df.copy()
+        if search_query:
+            q = search_query.lower()
+            filtered_df = filtered_df[
+                filtered_df["Domaine"].str.lower().str.contains(q, na=False) |
+                filtered_df["Cuvee"].str.lower().str.contains(q, na=False) |
+                filtered_df["Appellation"].str.lower().str.contains(q, na=False)
+            ]
         if sel_color: filtered_df = filtered_df[filtered_df["Color"].isin(sel_color)]
         if sel_region: filtered_df = filtered_df[filtered_df["Region"].isin(sel_region)]
         if sel_prod: filtered_df = filtered_df[filtered_df["Domaine"].isin(sel_prod)]
+        if sel_vintage: filtered_df = filtered_df[filtered_df["Vintage"].isin(sel_vintage)]
         if sel_loc: filtered_df = filtered_df[filtered_df["Location"].isin(sel_loc)]
         
         # Apply Date Filter
@@ -135,10 +133,41 @@ def view_tasting_notes():
                 (pd.to_datetime(filtered_df["Date"]).dt.date <= end_date)
             ]
 
+        with stats_container.container():
+            with st.container(border=True):
+                col_btn, col_all, col_filt = st.columns([0.15, 0.425, 0.425])
+                with col_btn:
+                    if st.button("Add Tasting", type="primary", use_container_width=True): navigate_to("Add Tasting")
+                
+                with col_all:
+                    st.markdown("**All Notes**")
+                    c1, c2, c3, c4 = st.columns(4)
+                    c1.caption("Wines Tasted")
+                    c1.write(f"**{len(df)}**")
+                    c2.caption("Producers")
+                    c2.write(f"**{df['pid'].nunique()}**")
+                    c3.caption("Unique Wines")
+                    c3.write(f"**{df['wid'].nunique()}**")
+                    c4.caption("Michelin Stars")
+                    total_stars = int(df.groupby(['Date', 'Location'])['Stars'].first().fillna(0).sum())
+                    c4.write(f"**{total_stars}**")
+
+                with col_filt:
+                    st.markdown("**Filtered Notes**")
+                    c1, c2, c3, c4 = st.columns(4)
+                    c1.caption("Wines Tasted")
+                    c1.write(f"**{len(filtered_df)}**")
+                    c2.caption("Producers")
+                    c2.write(f"**{filtered_df['pid'].nunique()}**")
+                    c3.caption("Unique Wines")
+                    c3.write(f"**{filtered_df['wid'].nunique()}**")
+                    c4.caption("Michelin Stars")
+                    filt_stars = int(filtered_df.groupby(['Date', 'Location'])['Stars'].first().fillna(0).sum()) if not filtered_df.empty else 0
+                    c4.write(f"**{filt_stars}**")
+
         if filtered_df.empty:
             st.info("No notes match the selected filters.")
             return
-
 
         # Tabs
         # Tabs
