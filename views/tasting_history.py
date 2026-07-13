@@ -104,12 +104,26 @@ def view_tasting_notes():
                 init_start = max(min_date, ytd_start)
                 if init_start > picker_max_date: init_start = picker_max_date
                 
-                d_range = f6.date_input("Range", value=(init_start, picker_max_date), min_value=min_date, max_value=picker_max_date, label_visibility="collapsed")
-                if isinstance(d_range, tuple) and len(d_range) == 2:
-                    start_date, end_date = d_range
+                d_range = f6.date_input(
+                    "Range", 
+                    value=(init_start, picker_max_date), 
+                    min_value=min_date, 
+                    max_value=picker_max_date, 
+                    label_visibility="collapsed",
+                    key="custom_period_date"
+                )
+                if isinstance(d_range, (tuple, list)):
+                    if len(d_range) == 2:
+                        start_date, end_date = d_range
+                    elif len(d_range) == 1:
+                        start_date = d_range[0]
+                        end_date = picker_max_date
+                    else:
+                        start_date = init_start
+                        end_date = picker_max_date
                 else:
-                    start_date = init_start
-                    end_date = picker_max_date
+                    start_date = d_range
+                    end_date = d_range
         
         # Apply filtering
         filtered_df = df.copy()
@@ -225,7 +239,7 @@ def view_tasting_notes():
                 visits_data = []
                 
                 # If any wine-specific filter is active, we skip visits as they don't have these attributes
-                wine_filters_active = any([sel_color, sel_region, sel_prod])
+                wine_filters_active = any([sel_color, sel_region, sel_prod, sel_vintage, search_query])
                 
                 if not wine_filters_active:
                     session = get_session()
