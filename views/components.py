@@ -2,10 +2,30 @@ import streamlit as st
 import glob
 import os
 import base64
+<<<<<<< HEAD
 import pandas as pd
+=======
+import re
+>>>>>>> 47e0fd10de002e06142259734c887e030f9e14d2
 from shared import get_region_colors_map, TYPE_COLORS
 
 CURRENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+def get_format_width(bottle_format):
+    if not bottle_format:
+        return 4
+    fmt = str(bottle_format).lower().replace(' ', '')
+    if fmt == '37.5cl': return 2
+    if fmt == '75cl': return 4
+    if fmt == '150cl': return 8
+    if fmt == '300cl': return 16
+    if fmt == '600cl': return 32
+    m = re.match(r'(\d+(?:\.\d+)?)cl', fmt)
+    if m:
+        cl = float(m.group(1))
+        return max(2, int((cl / 75.0) * 4))
+    return 4
+
 
 def render_tasting_cards(events, key_suffix=""):
     """
@@ -137,9 +157,11 @@ def render_tasting_cards(events, key_suffix=""):
                 w_type = w.get('Color', 'Other')
                 type_cols = TYPE_COLORS.get(w_type, ["#ccc", "#000"])
                 w_color = type_cols[0]
+                
+                f_width = get_format_width(w.get('Format'))
 
                 # Visuals
-                region_bar = f"<span style='display: inline-block; width: 4px; height: 12px; background-color: {r_color}; margin-right: 6px; border-radius: 2px; vertical-align: middle;'></span>"
+                region_bar = f"<span style='display: inline-block; width: {f_width}px; height: 12px; background-color: {r_color}; margin-right: 6px; border-radius: 2px; vertical-align: middle;'></span>"
                 color_circle = f"<span style='display: inline-block; width: 10px; height: 10px; background-color: {w_color}; border-radius: 50%; margin-right: 6px; vertical-align: middle;'></span>"
                 
                 # Label
@@ -248,10 +270,12 @@ def render_cellar_cards(bottles_df):
             bid = row['bid']
             wine_url = f"/?page=Bottle+Detail&id={bid}"
             
+            f_width = get_format_width(row.get('Format'))
+            
             # Region Bars (one per bottle)
             region_bars = ""
             for _ in range(qty):
-                region_bars += f"<span style='display: inline-block; width: 4px; height: 12px; background-color: {r_color}; margin-right: 2px; border-radius: 2px; vertical-align: middle;'></span>"
+                region_bars += f"<span style='display: inline-block; width: {f_width}px; height: 12px; background-color: {r_color}; margin-right: 2px; border-radius: 2px; vertical-align: middle;'></span>"
             
             # Type Dot
             type_dot = f"<span style='display: inline-block; width: 8px; height: 8px; background-color: {w_color}; border-radius: 50%; margin-left: 6px; margin-right: 4px; vertical-align: middle;'></span>"
@@ -316,8 +340,9 @@ def render_cellar_cards(bottles_df):
         for _, row in sorted_group.iterrows():
             qty = int(row['Qty'])
             r_color = region_colors.get(row['Region'], "#ccc")
+            f_width = get_format_width(row.get('Format'))
             for _ in range(qty):
-                bars_html += f"<span style='width: 4px; height: 16px; background-color: {r_color}; border-radius: 2px;'></span>"
+                bars_html += f"<span style='width: {f_width}px; height: 16px; background-color: {r_color}; border-radius: 2px;'></span>"
         bars_html += "</div>"
         
         # Summary HTML - DEDENTED STRICTLY

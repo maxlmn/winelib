@@ -115,17 +115,27 @@ def view_cellar():
 
         # --- Detailed Inventory ---
         with st.container(border=True):
-            f1, f2, f3, f4, f5 = st.columns(5)
+            search_query = st.text_input("Search", placeholder="Search by Producer, Cuvée, or Appellation...", label_visibility="collapsed")
+            f1, f2, f3, f4, f5, f6 = st.columns(6)
             sel_color = f1.multiselect("Color", sorted(df["Color"].unique()))
             sel_region = f2.multiselect("Region", sorted(df["Region"].unique()))
             sel_prod = f3.multiselect("Producer", sorted(df["Domaine"].unique()))
-            sel_loc_group = f4.multiselect("Location Group", sorted(df["LocGroup"].unique()))
-            sel_loc = f5.multiselect("Location", sorted(df["Location"].unique()))
+            sel_vintage = f4.multiselect("Vintage", sorted([v for v in df["Vintage"].unique() if pd.notna(v)]))
+            sel_loc_group = f5.multiselect("Location Group", sorted(df["LocGroup"].unique()))
+            sel_loc = f6.multiselect("Location", sorted(df["Location"].unique()))
         
         filtered_df = df.copy()
+        if search_query:
+            q = search_query.lower()
+            filtered_df = filtered_df[
+                filtered_df["Domaine"].str.lower().str.contains(q, na=False) |
+                filtered_df["Cuvee"].str.lower().str.contains(q, na=False) |
+                filtered_df["Appellation"].str.lower().str.contains(q, na=False)
+            ]
         if sel_color: filtered_df = filtered_df[filtered_df["Color"].isin(sel_color)]
         if sel_region: filtered_df = filtered_df[filtered_df["Region"].isin(sel_region)]
         if sel_prod: filtered_df = filtered_df[filtered_df["Domaine"].isin(sel_prod)]
+        if sel_vintage: filtered_df = filtered_df[filtered_df["Vintage"].isin(sel_vintage)]
         if sel_loc_group: filtered_df = filtered_df[filtered_df["LocGroup"].isin(sel_loc_group)]
         if sel_loc: filtered_df = filtered_df[filtered_df["Location"].isin(sel_loc)]
         
