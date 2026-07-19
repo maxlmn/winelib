@@ -2,11 +2,8 @@ import streamlit as st
 import glob
 import os
 import base64
-<<<<<<< HEAD
 import pandas as pd
-=======
 import re
->>>>>>> 47e0fd10de002e06142259734c887e030f9e14d2
 from shared import get_region_colors_map, TYPE_COLORS
 
 CURRENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
