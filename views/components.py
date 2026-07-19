@@ -2,6 +2,7 @@ import streamlit as st
 import glob
 import os
 import base64
+import pandas as pd
 from shared import get_region_colors_map, TYPE_COLORS
 
 CURRENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -145,7 +146,12 @@ def render_tasting_cards(events, key_suffix=""):
                 label_html = f"{region_bar}<b>{prod}</b>"
                 if cuvee: label_html += f" - {cuvee}"
                 if app: label_html += f" ({app})"
-                label_html += f" {color_circle}<span style='color: #666;'>[{year}]</span>"
+                
+                rp_val = w.get('RP') or w.get('rp_score')
+                rp_text = ""
+                if pd.notnull(rp_val) and str(rp_val).strip() not in ("", "-", "0", "None"):
+                    rp_text = f" (RP {str(rp_val).strip()})"
+                label_html += f" {color_circle}<span style='color: #666;'>[{year}]{rp_text}</span>"
                 
                 action_link=""
                 # Action Link (Icon)
@@ -255,13 +261,18 @@ def render_cellar_cards(bottles_df):
             if cuvee and str(cuvee).strip(): text_label += f" - {cuvee}"
             if app and str(app).strip(): text_label += f" ({app})"
             
+            rp_val = row.get('RP') if 'RP' in row else row.get('rp_score')
+            rp_text = ""
+            if pd.notnull(rp_val) and str(rp_val).strip() not in ("", "-", "0", "None"):
+                rp_text = f" (RP {str(rp_val).strip()})"
+                
             line_html = f"""
 <li style='margin-bottom: 6px; display: flex; align-items: center;'>
 <div style='margin-right: 8px; white-space: nowrap;'>{region_bars}</div>
 <div>
 <a href="{wine_url}" target="_self" style="text-decoration: none; color: inherit; margin-right: 0px;">{text_label}</a>
 {type_dot}
-<span style='color: #666; font-size: 0.9em;'>[{year}]</span>
+<span style='color: #666; font-size: 0.9em;'>[{year}]{rp_text}</span>
 </div>
 </li>
 """

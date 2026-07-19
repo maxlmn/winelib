@@ -101,7 +101,8 @@ def view_producer_detail(pid):
                         "bid": b.id,
                         "Location": b.location,
                         "LocGroup": get_loc_group(b.location),
-                        "Total(sgd)": b.qty * price_sgd
+                        "Total(sgd)": b.qty * price_sgd,
+                        "RP": w.rp_score
                     })
                 
                 inv_df = pd.DataFrame(data)
@@ -140,7 +141,8 @@ def view_producer_detail(pid):
                         "Region": get_region_name(w),
                         "Color": w.type,
                         "City": t.place.city if t.place else "",
-                        "Stars": t.place.michelin_stars if t.place else 0
+                        "Stars": t.place.michelin_stars if t.place else 0,
+                        "RP": w.rp_score
                     })
                 
                 # Convert to list and sort
@@ -328,7 +330,8 @@ def render_wine_content(session, wid):
                         "bid": b.id,
                         "Location": b.location,
                         "LocGroup": get_loc_group(b.location),
-                        "Total(sgd)": b.qty * price_sgd
+                        "Total(sgd)": b.qty * price_sgd,
+                        "RP": w.rp_score
                     })
                 
                 inv_df = pd.DataFrame(inv_data)
@@ -367,7 +370,8 @@ def render_wine_content(session, wid):
                         "Region": get_region_name(w),
                         "Color": w.type,
                         "City": t.place.city if t.place else "",
-                        "Stars": t.place.michelin_stars if t.place else 0
+                        "Stars": t.place.michelin_stars if t.place else 0,
+                        "RP": w.rp_score
                     })
                 
                 events = list(grouped.values())
@@ -426,7 +430,8 @@ def render_wine_content(session, wid):
                         "bid": b.id,
                         "Location": b.location,
                         "LocGroup": get_loc_group(b.location),
-                        "Total(sgd)": b.qty * price_sgd
+                        "Total(sgd)": b.qty * price_sgd,
+                        "RP": w_sub.rp_score
                     })
                 
                 inv_df = pd.DataFrame(inv_data)
@@ -466,7 +471,8 @@ def render_wine_content(session, wid):
                         "Region": get_region_name(w_sub),
                         "Color": w_sub.type,
                         "City": t.place.city if t.place else "",
-                        "Stars": t.place.michelin_stars if t.place else 0
+                        "Stars": t.place.michelin_stars if t.place else 0,
+                        "RP": w_sub.rp_score
                     })
                 
                 events = list(grouped.values())
@@ -654,7 +660,8 @@ def view_place_detail(plid):
                 "Region": get_region_name(w),
                 "Color": w.type,
                 "City": p.city,
-                "Stars": p.michelin_stars
+                "Stars": p.michelin_stars,
+                "RP": w.rp_score
             })
             
         events.extend(list(grouped_tastings.values()))
@@ -803,7 +810,8 @@ def view_appellation_detail(aid):
                         "Region": get_region_name(w),
                         "Color": w.type,
                         "City": t.place.city if t.place else "",
-                        "Stars": t.place.michelin_stars if t.place else 0
+                        "Stars": t.place.michelin_stars if t.place else 0,
+                        "RP": w.rp_score
                     })
                 
                 events = list(grouped.values())
@@ -863,7 +871,8 @@ def view_appellation_detail(aid):
                         "bid": b.id,
                         "Location": b.location,
                         "LocGroup": get_loc_group(b.location),
-                        "Total(sgd)": b.qty * price_sgd
+                        "Total(sgd)": b.qty * price_sgd,
+                        "RP": w.rp_score
                     })
                 
                 inv_df = pd.DataFrame(data)
@@ -996,7 +1005,8 @@ def view_vineyard_detail(vid):
                         "wid": w.id,
                         "bid": b.id,
                         "Location": b.location,
-                        "Total(sgd)": b.qty * price_sgd
+                        "Total(sgd)": b.qty * price_sgd,
+                        "RP": w.rp_score
                     })
                 render_cellar_cards(pd.DataFrame(inv_data))
             else:
@@ -1029,7 +1039,8 @@ def view_vineyard_detail(vid):
                         "Region": get_region_name(w),
                         "Color": w.type,
                         "City": t.place.city if t.place else "",
-                        "Stars": t.place.michelin_stars if t.place else 0
+                        "Stars": t.place.michelin_stars if t.place else 0,
+                        "RP": w.rp_score
                     })
                 events = list(grouped.values())
                 events.sort(key=lambda x: x['date'], reverse=True)
