@@ -88,6 +88,10 @@ def view_cellar():
         singapore_market = singapore_df['TotalMarket(sgd)'].sum()
 
         # --- Distribution by Location (Pie Charts) ---
+        # Shared color scale so the same location has the same color in both donuts
+        loc_domain = sorted(df['LocGroup'].unique().tolist())
+        loc_scale = alt.Scale(domain=loc_domain, scheme='tableau10')
+
         def render_location_pie(data, value_col, title, value_format):
             grouped = data.groupby('LocGroup')[value_col].sum().reset_index()
             grouped = grouped[grouped[value_col] > 0].sort_values(value_col, ascending=False)
@@ -96,7 +100,7 @@ def view_cellar():
             st.caption(title)
             chart = alt.Chart(grouped).mark_arc(innerRadius=50).encode(
                 theta=alt.Theta(f'{value_col}:Q', stack=True),
-                color=alt.Color('LocGroup:N', title='Location'),
+                color=alt.Color('LocGroup:N', title='Location', scale=loc_scale),
                 order=alt.Order(f'{value_col}:Q', sort='descending'),
                 tooltip=[
                     alt.Tooltip('LocGroup:N', title='Location'),
