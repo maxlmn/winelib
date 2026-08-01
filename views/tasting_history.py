@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
+import altair as alt
 from datetime import datetime, timedelta
 from sqlalchemy import func
-from shared import get_session, engine
+from shared import get_session, engine, get_region_colors_map
 from ui_utils import apply_colors, render_table, navigate_to
 from shared import (
     TastingNote, Place, RestaurantVisit
@@ -188,10 +189,10 @@ def view_tasting_notes():
         import inspect
         sig = inspect.signature(st.tabs)
         if "key" in sig.parameters:
-            tab_cards, tab_list, tab_map = st.tabs(["Cards", "List", "Map"], key="tasting_notes_tabs", on_change="rerun")
+            tab_cards, tab_list, tab_map, tab_trends = st.tabs(["Cards", "List", "Map", "Trends"], key="tasting_notes_tabs", on_change="rerun")
             render_map = getattr(tab_map, "open", True)
         else:
-            tab_cards, tab_list, tab_map = st.tabs(["Cards", "List", "Map"])
+            tab_cards, tab_list, tab_map, tab_trends = st.tabs(["Cards", "List", "Map", "Trends"])
             render_map = True
         
         with tab_list:
@@ -423,9 +424,51 @@ def view_tasting_notes():
                         ).add_to(m)
                     
                     st_folium(m, height=500, width="100%", key="tasting_notes_map", returned_objects=[])
-                    
+
                 else:
                     st.info("No geocoded places data available for current selection.")
+
+        with tab_trends:
+            st.caption("Reflects the active filters and selected period. Pick period **All** for the full history.")
+
+            trend_df = filtered_df.copy()
+            trend_df['Month'] = pd.to_datetime(trend_df['Date']).dt.to_period('M').dt.to_timestamp()
+
+            # --- Tastings Over Time (stacked area by region) ---
+            st.subheader("Tastings Over Time")
+            region_colors = get_region_colors_map()
+            trend_df['Region'] = trend_df['Region'].fillna('Unknown')
+            monthly = trend_df.groupby(['Month', 'Region']).size().reset_index(name='Tastings')
+            region_domain = sorted(monthly['Region'].unique().tolist())
+            region_range = [region_colors.get(r, '#7b68ee') for r in region_domain]
+            tastings_chart = alt.Chart(monthly).mark_area().encode(
+                x=alt.X('yearmonth(Month):T', title='Month'),
+                y=alt.Y('Tastings:Q', title='Tastings', stack=True),
+                color=alt.Color('Region:N', scale=alt.Scale(domain=region_domain, range=region_range), title='Region'),
+                order=alt.Order('Region:N'),
+                tooltip=[alt.Tooltip('yearmonth(Month):T', title='Month'), 'Region', 'Tastings'],
+            )
+            st.altair_chart(tastings_chart, use_container_width=True)
+
+            # --- Michelin Stars Over Time ---
+            st.subheader("Michelin Stars Over Time")
+            # Stars are per (day, place), not per wine — dedupe before summing
+            star_events = trend_df.groupby(['Date', 'Location'], as_index=False).agg(
+                Stars=('Stars', 'first'), Month=('Month', 'first')
+            )
+            star_events['Stars'] = star_events['Stars'].fillna(0)
+            stars_monthly = star_events.groupby('Month', as_index=False)['Stars'].sum()
+            stars_monthly = stars_monthly[stars_monthly['Stars'] > 0]
+
+            if not stars_monthly.empty:
+                stars_chart = alt.Chart(stars_monthly).mark_bar(color='#d4af37').encode(
+                    x=alt.X('yearmonth(Month):T', title='Month'),
+                    y=alt.Y('Stars:Q', title='Michelin Stars'),
+                    tooltip=[alt.Tooltip('yearmonth(Month):T', title='Month'), alt.Tooltip('Stars:Q', title='Stars')],
+                )
+                st.altair_chart(stars_chart, use_container_width=True)
+            else:
+                st.info("No Michelin-starred visits in the current selection.")
 
     else:
         st.info("No notes found.")
