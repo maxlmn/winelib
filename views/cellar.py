@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import altair as alt
 from shared import get_session, engine, EXCHANGE_RATES
 from ui_utils import apply_colors, render_table, navigate_to
 from shared import Bottle
@@ -85,6 +86,32 @@ def view_cellar():
         singapore_df = df[df['Location'].apply(is_singapore)]
         singapore_cost = singapore_df['TotalCost(sgd)'].sum()
         singapore_market = singapore_df['TotalMarket(sgd)'].sum()
+
+        # --- Distribution by Location (Pie Charts) ---
+        def render_location_pie(data, value_col, title, value_format):
+            grouped = data.groupby('LocGroup')[value_col].sum().reset_index()
+            grouped = grouped[grouped[value_col] > 0].sort_values(value_col, ascending=False)
+            total = grouped[value_col].sum()
+            grouped['Pct'] = grouped[value_col] / total * 100 if total else 0
+            st.caption(title)
+            chart = alt.Chart(grouped).mark_arc(innerRadius=50).encode(
+                theta=alt.Theta(f'{value_col}:Q', stack=True),
+                color=alt.Color('LocGroup:N', title='Location'),
+                order=alt.Order(f'{value_col}:Q', sort='descending'),
+                tooltip=[
+                    alt.Tooltip('LocGroup:N', title='Location'),
+                    alt.Tooltip(f'{value_col}:Q', title=title, format=value_format),
+                    alt.Tooltip('Pct:Q', title='%', format='.1f'),
+                ]
+            )
+            st.altair_chart(chart, use_container_width=True)
+
+        with st.container(border=True):
+            pc1, pc2 = st.columns(2)
+            with pc1:
+                render_location_pie(df, 'TotalMarket(sgd)', "Market Value by Location (SGD)", ",.0f")
+            with pc2:
+                render_location_pie(df, 'Qty', "Bottles by Location", ",.0f")
 
         with st.container(border=True):
             c1, c2, c3, c3b, c4, c5 = st.columns([0.7, 0.6, 0.9, 0.9, 1.1, 1.1])
