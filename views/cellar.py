@@ -2,7 +2,7 @@ import re
 import streamlit as st
 import pandas as pd
 import altair as alt
-from shared import get_session, engine, EXCHANGE_RATES
+from shared import get_session, engine, EXCHANGE_RATES, get_region_colors_map
 from ui_utils import apply_colors, render_table, navigate_to, df_to_markdown
 from shared import Bottle
 
@@ -30,53 +30,101 @@ def _select_location(loc):
     st.session_state["cellar_sel_loc_group"] = []
 
 
-def _shade(share):
-    # Light rose -> deep wine; sqrt spreads out the many small bins
-    lo, hi = (247, 232, 239), (122, 15, 58)
-    t = share ** 0.5
-    return "#%02x%02x%02x" % tuple(round(a + (b - a) * t) for a, b in zip(lo, hi))
+def _clear_location_filters():
+    st.session_state["cellar_sel_loc"] = []
+    st.session_state["cellar_sel_loc_group"] = []
 
 
-def render_shelf_map(all_locations, data, selected_locs, metric):
-    """One clickable tile per stocked location, grouped Home / WineBanc / Offsite. Every location is always
-    drawn so the map stays physically stable; bins with nothing matching the current filters are greyed out."""
-    agg = data.groupby("Location").agg(Bottles=("Qty", "sum"), Value=("TotalMarket(sgd)", "sum"))
-    tiles = pd.DataFrame({"Location": sorted(all_locations, key=_loc_sort_key)})
-    tiles = tiles.join(agg, on="Location").fillna({"Bottles": 0, "Value": 0})
-    tiles["Group"] = tiles["Location"].map(_shelf_group)
-    field, _ = METRICS[metric]
-    # Shade within each group: Octavian alone would otherwise wash out every home shelf
-    tiles["Peak"] = tiles.groupby("Group")[field].transform("max").replace(0, 1)
+def _capacity(loc):
+    # Home shelves H0..H10 hold 10, WineBanc bins are 12-bottle cases; other places have no fixed capacity
+    if re.match(r"H\d+$", loc): return 10
+    if loc.startswith("WB"): return 12
+    return None
+
+
+def _region_strip(counts, region_colors):
+    """CSS gradient with one hard-edged segment per region, sized by its share of the bin, largest first."""
+    total = sum(counts.values())
+    stops, pos = [], 0.0
+    for region, n in sorted(counts.items(), key=lambda kv: -kv[1]):
+        end = pos + n / total * 100
+        stops.append(f"{region_colors.get(region, '#7b68ee')} {pos:.1f}% {end:.1f}%")
+        pos = end
+    return f"linear-gradient(to right, {', '.join(stops)})"
+
+
+def render_shelf_map(all_df, data, selected_locs):
+    """One clickable tile per stocked location, grouped Home / WineBanc / Offsite, with a region strip and
+    fill vs capacity. Every location is always drawn so the map stays physically stable; `data` (the page's
+    non-location filters) drives the strips, so bins with nothing matching are dimmed."""
+    region_colors = get_region_colors_map()
+    filtering = len(data) != len(all_df)
+    held = all_df.groupby("Location")["Qty"].sum()
+    value = all_df.groupby("Location")["TotalMarket(sgd)"].sum()
+    mix = data.assign(Region=data["Region"].fillna("Unknown")).groupby(["Location", "Region"])["Qty"].sum()
+    mix_by_loc = {loc: grp.droplevel(0).to_dict() for loc, grp in mix.groupby(level=0)}
+
+    tiles = []
+    for loc in sorted(held.index, key=_loc_sort_key):
+        counts = mix_by_loc.get(loc, {})
+        cap, n_all, n_match = _capacity(loc), int(held[loc]), int(sum(counts.values()))
+        if filtering:
+            stats = f"{n_match} matching" if n_match else "—"
+        elif cap:
+            stats = f"{n_all}/{cap}" + (" ⚠" if n_all > cap else "")
+        else:
+            stats = f"{n_all} btl"
+        mix_text = " · ".join(f"{r} {int(n)}" for r, n in sorted(counts.items(), key=lambda kv: -kv[1]))
+        tiles.append(dict(
+            loc=loc, group=_shelf_group(loc), cap=cap, n_all=n_all, n_match=n_match, value=value[loc], counts=counts,
+            key="shelf_" + re.sub(r"\W", "_", loc), label=f"**{loc}**  \n{stats}",
+            help=f"**{loc}** · {n_all} btl{f' / {cap}' if cap else ''} · ${value[loc]:,.0f}  \n{mix_text}",
+        ))
 
     css = []
-    for _, t in tiles.iterrows():
-        key = "shelf_" + re.sub(r"\W", "_", t["Location"])
-        share = t[field] / t["Peak"]
-        bg = _shade(share) if t["Bottles"] else "rgba(128,128,128,0.12)"
-        fg = ("white" if share > 0.35 else "#3a0a1e") if t["Bottles"] else "inherit"
-        ring = "0 0 0 3px #d4af37" if t["Location"] in selected_locs else "none"
+    for t in tiles:
+        strip = _region_strip(t["counts"], region_colors) if t["counts"] else "none"
+        ring = "0 0 0 3px #d4af37" if t["loc"] in selected_locs else "none"
+        dim = "0.35" if filtering and not t["n_match"] else "1"
         # !important: Streamlit's own hover/focus styles would otherwise repaint the tile after a click
-        css.append(f".st-key-{key} button {{background:{bg} !important; color:{fg} !important; box-shadow:{ring} !important;"
-                   f" border:1px solid rgba(128,128,128,0.25) !important; min-height:64px; width:100%;}}"
-                   f".st-key-{key} button p {{color:{fg} !important;}}")
+        css.append(
+            f".st-key-{t['key']} button {{background-color:rgba(128,128,128,0.10) !important; background-image:{strip} !important;"
+            f" background-size:100% 8px !important; background-position:bottom !important; background-repeat:no-repeat !important;"
+            f" box-shadow:{ring} !important; border:1px solid rgba(128,128,128,0.25) !important; opacity:{dim};"
+            f" min-height:68px; padding-bottom:12px; width:100%;}}"
+        )
     st.markdown(f"<style>{''.join(css)}</style>", unsafe_allow_html=True)
 
     for group in SHELF_GROUPS:
-        g = tiles[tiles["Group"] == group]
-        if g.empty: continue
-        st.markdown(f"**{group}** · {int(g['Bottles'].sum())} btl · ${g['Value'].sum():,.0f}")
-        records = g.to_dict("records")
-        for i in range(0, len(records), SHELF_COLS):
-            cols = st.columns(SHELF_COLS)
-            for col, t in zip(cols, records[i:i + SHELF_COLS]):
-                stats = f"{int(t['Bottles'])} btl · ${t['Value'] / 1000:,.1f}k" if t["Bottles"] else "—"
-                col.button(
-                    f"**{t['Location']}**  \n{stats}",
-                    key="shelf_" + re.sub(r"\W", "_", t["Location"]),
-                    on_click=_select_location, args=(t["Location"],),
-                    help=f"{t['Location']}: {int(t['Bottles'])} bottles · ${t['Value']:,.0f} SGD",
-                    use_container_width=True,
-                )
+        g = [t for t in tiles if t["group"] == group]
+        if not g: continue
+        free = sum(max(t["cap"] - t["n_all"], 0) for t in g if t["cap"])
+        free_text = f" · {free} free slots" if any(t["cap"] for t in g) else ""
+        st.markdown(f"**{group}** · {sum(t['n_all'] for t in g)} btl · ${sum(t['value'] for t in g):,.0f}{free_text}")
+        for i in range(0, len(g), SHELF_COLS):
+            for col, t in zip(st.columns(SHELF_COLS), g[i:i + SHELF_COLS]):
+                col.button(t["label"], key=t["key"], on_click=_select_location, args=(t["loc"],),
+                           help=t["help"], use_container_width=True)
+
+    if selected_locs:
+        contents = data[data["Location"].isin(selected_locs)].sort_values(["Location", "Region", "Domaine", "Vintage"])
+        st.markdown(f"**In {', '.join(selected_locs)}** · {int(contents['Qty'].sum())} btl")
+        st.dataframe(
+            contents[["Location", "Qty", "Domaine", "Cuvee", "Vintage", "Region", "Color", "Format", "MarketPrice(sgd)"]],
+            hide_index=True, use_container_width=True,
+            column_config={"MarketPrice(sgd)": st.column_config.NumberColumn("Market (SGD)", format="%.0f")},
+        )
+
+
+def _rgb(hex_color):
+    try:
+        return tuple(int(hex_color.lstrip("#")[i:i + 2], 16) for i in (0, 2, 4))
+    except ValueError:
+        return (123, 104, 238)
+
+
+def _is_light(rgb):
+    return 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2] > 150
 
 
 def render_vintage_heatmap(data, metric):
@@ -87,18 +135,36 @@ def render_vintage_heatmap(data, metric):
     grid = h.groupby(["Region", "VintageBase"], as_index=False).agg(
         Bottles=("Qty", "sum"), Value=("TotalMarket(sgd)", "sum")
     )
-    field, fmt = METRICS[metric]
+    field, _ = METRICS[metric]
     vintages = sorted(grid["VintageBase"].unique(), key=lambda v: (not v.isdigit(), int(v) if v.isdigit() else 0, v))
     regions = grid.groupby("Region")[field].sum().sort_values(ascending=False).index.tolist()
-    grid["Share"] = grid[field] / (grid[field].max() or 1)
+    region_colors = get_region_colors_map()
     grid["Label"] = grid.apply(lambda r: f"{int(r['Bottles'])}" if field == "Bottles" else f"{r['Value'] / 1000:,.0f}k", axis=1)
+
+    # Solid fills, one ramp per region: pale tint -> the region's own color -> a deeper shade at the peak.
+    # Solid colors (not opacity) look the same on light and dark themes, so the text color can be picked per cell.
+    peak = grid[field].max() or 1
+
+    def fill(r):
+        c = _rgb(region_colors.get(r["Region"], "#7b68ee"))
+        t = (r[field] / peak) ** 0.5
+        if t < 0.5:
+            mix, toward = 0.35 + 1.3 * t, (255, 255, 255)   # 0.35 .. 1 of the way from white to the color
+            return tuple(round(w + (x - w) * mix) for w, x in zip(toward, c))
+        shade = (t - 0.5) * 0.9                             # 0 .. 45% toward black
+        return tuple(round(x * (1 - shade)) for x in c)
+
+    fills = grid.apply(fill, axis=1)
+    grid["Fill"] = fills.map(lambda c: "#%02x%02x%02x" % c)
+    grid["DarkText"] = fills.map(_is_light)
+    fill_values = grid["Fill"].unique().tolist()
 
     base = alt.Chart(grid).encode(
         x=alt.X("VintageBase:O", sort=vintages, title="Vintage", axis=alt.Axis(labelAngle=-45)),
         y=alt.Y("Region:N", sort=regions, title=None),
     )
     rect = base.mark_rect(cornerRadius=3).encode(
-        color=alt.Color(f"{field}:Q", scale=alt.Scale(scheme="purplered"), legend=alt.Legend(title=metric, format=fmt)),
+        color=alt.Color("Fill:N", scale=alt.Scale(domain=fill_values, range=fill_values), legend=None),
         tooltip=[
             alt.Tooltip("Region:N"),
             alt.Tooltip("VintageBase:N", title="Vintage"),
@@ -108,7 +174,7 @@ def render_vintage_heatmap(data, metric):
     )
     text = base.mark_text(fontSize=10).encode(
         text="Label:N",
-        color=alt.condition(alt.datum.Share > 0.55, alt.value("white"), alt.value("#3a0a1e")),
+        color=alt.condition(alt.datum.DarkText, alt.value("#222"), alt.value("white")),
     )
     st.altair_chart(alt.layer(rect, text).properties(height=alt.Step(30)), use_container_width=True)
 
@@ -298,10 +364,9 @@ def view_cellar():
             tab_cards, tab_list, tab_shelves, tab_vintages, tab_price = st.tabs(["Cards", "List", "Shelf Map", "Vintages", "Price Variations"])
 
             with tab_shelves:
-                shelf_metric = st.radio("Shade by", list(METRICS), horizontal=True, key="cellar_shelf_metric")
-                st.caption("Click a bin to filter the page to it, click it again to clear. "
-                           "Darker = more, compared within each group · grey bins hold nothing matching the other filters.")
-                render_shelf_map(df["Location"].unique(), wine_df, sel_loc, shelf_metric)
+                st.caption("Bottom strip = region mix · click a bin to list its contents (and filter the page), click again to clear. "
+                           "With a search or filter active, tiles show matching bottles and dim when there are none.")
+                render_shelf_map(df, wine_df, sel_loc)
 
             with tab_vintages:
                 heat_metric = st.radio("Shade by", list(METRICS), horizontal=True, key="cellar_heat_metric")
@@ -390,6 +455,9 @@ def view_cellar():
                 else:
                     st.info("No bottles with both purchase price and market price available.")
         else:
-            st.info("No wines match the selected filter.") 
+            st.info("No wines match the selected filter.")
+            if sel_loc or sel_loc_group:
+                # A bin picked on the shelf map can outlive a new search; let the user drop it without hunting for the ×
+                st.button("Clear location filter", on_click=_clear_location_filters, icon=":material/filter_alt_off:")
     else:
         st.info("Cellar is empty.")
