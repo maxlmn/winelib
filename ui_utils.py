@@ -23,6 +23,19 @@ def render_table(styler, config, cols):
     st.dataframe(styler, column_config=new_config, hide_index=True, width="stretch", column_order=cols, height=height)
 
 
+def md_cell(value):
+    if value is None or (not isinstance(value, str) and pd.isna(value)): return ""
+    if isinstance(value, float): value = f"{value:,.0f}" if value.is_integer() else f"{value:,.1f}"
+    return str(value).replace("|", "\\|").replace("\n", " ").strip()
+
+
+def df_to_markdown(df, cols):
+    lines = ["| " + " | ".join(cols) + " |", "|" + "---|" * len(cols)]
+    for _, row in df.iterrows():
+        lines.append("| " + " | ".join(md_cell(row.get(c)) for c in cols) + " |")
+    return "\n".join(lines)
+
+
 def navigate_to(page_name, params=None):
     st.session_state["page"] = page_name
     st.query_params["page"] = page_name

@@ -4,7 +4,7 @@ import altair as alt
 from datetime import datetime, timedelta
 from sqlalchemy import func
 from shared import get_session, engine, get_region_colors_map
-from ui_utils import apply_colors, render_table, navigate_to
+from ui_utils import apply_colors, render_table, navigate_to, md_cell
 from shared import (
     TastingNote, Place, RestaurantVisit
 )
@@ -148,11 +148,35 @@ def view_tasting_notes():
                 (pd.to_datetime(filtered_df["Date"]).dt.date <= end_date)
             ]
 
+        def build_tastings_markdown(data):
+            lines = [f"# Tasting notes export — {datetime.now():%Y-%m-%d}", "", f"{len(data)} wines tasted", ""]
+            data = data.assign(DateObj=pd.to_datetime(data["Date"]).dt.date)
+            for (d, loc), group in sorted(data.groupby(["DateObj", "Location"], dropna=False), key=lambda g: g[0][0], reverse=True):
+                first = group.iloc[0]
+                meta = [str(x) for x in [first.get("City")] if pd.notna(x) and x]
+                if pd.notna(first.get("Stars")) and first.get("Stars"): meta.append("⭐" * int(first["Stars"]))
+                lines.append(f"## {d:%Y-%m-%d} — {loc if pd.notna(loc) else 'Unknown'}" + (f" ({' · '.join(meta)})" if meta else ""))
+                lines.append("")
+                for _, w in group.sort_values("Seq").iterrows():
+                    name = " ".join(md_cell(w.get(c)) for c in ["Domaine", "Cuvee", "Vintage"] if md_cell(w.get(c)))
+                    details = " · ".join(md_cell(w.get(c)) for c in ["Appellation", "Color", "Format"] if md_cell(w.get(c)))
+                    rp = f" · RP {md_cell(w['RP'])}" if md_cell(w.get("RP")) else ""
+                    lines.append(f"- **{name}** — {details}{rp}")
+                    if pd.notna(w.get("Notes")) and str(w["Notes"]).strip():
+                        lines.append(f"  > {str(w['Notes']).strip().replace(chr(10), chr(10) + '  > ')}")
+                lines.append("")
+            return "\n".join(lines)
+
         with stats_container.container():
             with st.container(border=True):
                 col_btn, col_all, col_filt = st.columns([0.15, 0.425, 0.425])
                 with col_btn:
                     if st.button("Add Tasting", type="primary", use_container_width=True): navigate_to("Add Tasting")
+                    st.download_button(
+                        "Export", build_tastings_markdown(filtered_df) if not filtered_df.empty else "",
+                        file_name=f"tastings_{datetime.now():%Y%m%d}.md", mime="text/markdown",
+                        icon=":material/download:", use_container_width=True, disabled=filtered_df.empty
+                    )
                 
                 with col_all:
                     st.markdown("**All Notes**")

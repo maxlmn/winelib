@@ -1,9 +1,117 @@
+import re
 import streamlit as st
 import pandas as pd
 import altair as alt
 from shared import get_session, engine, EXCHANGE_RATES
-from ui_utils import apply_colors, render_table, navigate_to
+from ui_utils import apply_colors, render_table, navigate_to, df_to_markdown
 from shared import Bottle
+
+SHELF_COLS = 8
+SHELF_GROUPS = ["Home", "WineBanc", "Offsite"]
+METRICS = {"Bottles": ("Bottles", ",.0f"), "Value (SGD)": ("Value", ",.0f")}
+
+
+def _loc_sort_key(loc):
+    # Natural sort so H2 < H10, then named bins (WBB, WBCC...) after numbered ones
+    m = re.match(r"([A-Za-z]+?)(\d+)$", loc)
+    return (m.group(1), 0, int(m.group(2)), "") if m else (loc[:2], 1, 0, loc)
+
+
+def _shelf_group(loc):
+    if loc.startswith("H"): return "Home"
+    if loc.startswith("WB"): return "WineBanc"
+    return "Offsite"
+
+
+def _select_location(loc):
+    # on_click callbacks run before the rerun, so they may write to the filter widgets' state
+    current = st.session_state.get("cellar_sel_loc", [])
+    st.session_state["cellar_sel_loc"] = [] if current == [loc] else [loc]
+    st.session_state["cellar_sel_loc_group"] = []
+
+
+def _shade(share):
+    # Light rose -> deep wine; sqrt spreads out the many small bins
+    lo, hi = (247, 232, 239), (122, 15, 58)
+    t = share ** 0.5
+    return "#%02x%02x%02x" % tuple(round(a + (b - a) * t) for a, b in zip(lo, hi))
+
+
+def render_shelf_map(all_locations, data, selected_locs, metric):
+    """One clickable tile per stocked location, grouped Home / WineBanc / Offsite. Every location is always
+    drawn so the map stays physically stable; bins with nothing matching the current filters are greyed out."""
+    agg = data.groupby("Location").agg(Bottles=("Qty", "sum"), Value=("TotalMarket(sgd)", "sum"))
+    tiles = pd.DataFrame({"Location": sorted(all_locations, key=_loc_sort_key)})
+    tiles = tiles.join(agg, on="Location").fillna({"Bottles": 0, "Value": 0})
+    tiles["Group"] = tiles["Location"].map(_shelf_group)
+    field, _ = METRICS[metric]
+    # Shade within each group: Octavian alone would otherwise wash out every home shelf
+    tiles["Peak"] = tiles.groupby("Group")[field].transform("max").replace(0, 1)
+
+    css = []
+    for _, t in tiles.iterrows():
+        key = "shelf_" + re.sub(r"\W", "_", t["Location"])
+        share = t[field] / t["Peak"]
+        bg = _shade(share) if t["Bottles"] else "rgba(128,128,128,0.12)"
+        fg = ("white" if share > 0.35 else "#3a0a1e") if t["Bottles"] else "inherit"
+        ring = "0 0 0 3px #d4af37" if t["Location"] in selected_locs else "none"
+        # !important: Streamlit's own hover/focus styles would otherwise repaint the tile after a click
+        css.append(f".st-key-{key} button {{background:{bg} !important; color:{fg} !important; box-shadow:{ring} !important;"
+                   f" border:1px solid rgba(128,128,128,0.25) !important; min-height:64px; width:100%;}}"
+                   f".st-key-{key} button p {{color:{fg} !important;}}")
+    st.markdown(f"<style>{''.join(css)}</style>", unsafe_allow_html=True)
+
+    for group in SHELF_GROUPS:
+        g = tiles[tiles["Group"] == group]
+        if g.empty: continue
+        st.markdown(f"**{group}** · {int(g['Bottles'].sum())} btl · ${g['Value'].sum():,.0f}")
+        records = g.to_dict("records")
+        for i in range(0, len(records), SHELF_COLS):
+            cols = st.columns(SHELF_COLS)
+            for col, t in zip(cols, records[i:i + SHELF_COLS]):
+                stats = f"{int(t['Bottles'])} btl · ${t['Value'] / 1000:,.1f}k" if t["Bottles"] else "—"
+                col.button(
+                    f"**{t['Location']}**  \n{stats}",
+                    key="shelf_" + re.sub(r"\W", "_", t["Location"]),
+                    on_click=_select_location, args=(t["Location"],),
+                    help=f"{t['Location']}: {int(t['Bottles'])} bottles · ${t['Value']:,.0f} SGD",
+                    use_container_width=True,
+                )
+
+
+def render_vintage_heatmap(data, metric):
+    h = data.assign(
+        VintageBase=data["Vintage"].fillna("NV").astype(str).str.split(" - ").str[0],
+        Region=data["Region"].fillna("Unknown"),
+    )
+    grid = h.groupby(["Region", "VintageBase"], as_index=False).agg(
+        Bottles=("Qty", "sum"), Value=("TotalMarket(sgd)", "sum")
+    )
+    field, fmt = METRICS[metric]
+    vintages = sorted(grid["VintageBase"].unique(), key=lambda v: (not v.isdigit(), int(v) if v.isdigit() else 0, v))
+    regions = grid.groupby("Region")[field].sum().sort_values(ascending=False).index.tolist()
+    grid["Share"] = grid[field] / (grid[field].max() or 1)
+    grid["Label"] = grid.apply(lambda r: f"{int(r['Bottles'])}" if field == "Bottles" else f"{r['Value'] / 1000:,.0f}k", axis=1)
+
+    base = alt.Chart(grid).encode(
+        x=alt.X("VintageBase:O", sort=vintages, title="Vintage", axis=alt.Axis(labelAngle=-45)),
+        y=alt.Y("Region:N", sort=regions, title=None),
+    )
+    rect = base.mark_rect(cornerRadius=3).encode(
+        color=alt.Color(f"{field}:Q", scale=alt.Scale(scheme="purplered"), legend=alt.Legend(title=metric, format=fmt)),
+        tooltip=[
+            alt.Tooltip("Region:N"),
+            alt.Tooltip("VintageBase:N", title="Vintage"),
+            alt.Tooltip("Bottles:Q", format=",.0f"),
+            alt.Tooltip("Value:Q", title="Value (SGD)", format=",.0f"),
+        ],
+    )
+    text = base.mark_text(fontSize=10).encode(
+        text="Label:N",
+        color=alt.condition(alt.datum.Share > 0.55, alt.value("white"), alt.value("#3a0a1e")),
+    )
+    st.altair_chart(alt.layer(rect, text).properties(height=alt.Step(30)), use_container_width=True)
+
 
 def view_cellar():
     st.markdown('# :material/warehouse: Cellar', unsafe_allow_html=True)
@@ -152,27 +260,53 @@ def view_cellar():
             sel_region = f2.multiselect("Region", sorted(df["Region"].unique()))
             sel_prod = f3.multiselect("Producer", sorted(df["Domaine"].unique()))
             sel_vintage = f4.multiselect("Vintage", sorted([v for v in df["Vintage"].unique() if pd.notna(v)]))
-            sel_loc_group = f5.multiselect("Location Group", sorted(df["LocGroup"].unique()))
-            sel_loc = f6.multiselect("Location", sorted(df["Location"].unique()))
-        
-        filtered_df = df.copy()
+            sel_loc_group = f5.multiselect("Location Group", sorted(df["LocGroup"].unique()), key="cellar_sel_loc_group")
+            sel_loc = f6.multiselect("Location", sorted(df["Location"].unique()), key="cellar_sel_loc")
+
+        # wine_df: every filter except location — the shelf map uses it so all bins stay on the map
+        wine_df = df.copy()
         if search_query:
             q = search_query.lower()
-            filtered_df = filtered_df[
-                filtered_df["Domaine"].str.lower().str.contains(q, na=False) |
-                filtered_df["Cuvee"].str.lower().str.contains(q, na=False) |
-                filtered_df["Appellation"].str.lower().str.contains(q, na=False)
+            wine_df = wine_df[
+                wine_df["Domaine"].str.lower().str.contains(q, na=False) |
+                wine_df["Cuvee"].str.lower().str.contains(q, na=False) |
+                wine_df["Appellation"].str.lower().str.contains(q, na=False)
             ]
-        if sel_color: filtered_df = filtered_df[filtered_df["Color"].isin(sel_color)]
-        if sel_region: filtered_df = filtered_df[filtered_df["Region"].isin(sel_region)]
-        if sel_prod: filtered_df = filtered_df[filtered_df["Domaine"].isin(sel_prod)]
-        if sel_vintage: filtered_df = filtered_df[filtered_df["Vintage"].isin(sel_vintage)]
+        if sel_color: wine_df = wine_df[wine_df["Color"].isin(sel_color)]
+        if sel_region: wine_df = wine_df[wine_df["Region"].isin(sel_region)]
+        if sel_prod: wine_df = wine_df[wine_df["Domaine"].isin(sel_prod)]
+        if sel_vintage: wine_df = wine_df[wine_df["Vintage"].isin(sel_vintage)]
+
+        filtered_df = wine_df
         if sel_loc_group: filtered_df = filtered_df[filtered_df["LocGroup"].isin(sel_loc_group)]
         if sel_loc: filtered_df = filtered_df[filtered_df["Location"].isin(sel_loc)]
         
         if not filtered_df.empty:
-            tab_cards, tab_list, tab_price = st.tabs(["Cards", "List", "Price Variations"])
-            
+            export_cols = ["Qty", "Format", "Color", "Region", "Domaine", "Cuvee", "Appellation", "Varietal", "Vintage", "Location", "Price(sgd)", "MarketPrice(sgd)", "RP"]
+            export_md = (
+                f"# Cellar export — {pd.Timestamp.now():%Y-%m-%d}\n\n"
+                f"{int(filtered_df['Qty'].sum())} bottles · cost ${filtered_df['TotalCost(sgd)'].sum():,.0f} · "
+                f"market ${filtered_df['TotalMarket(sgd)'].sum():,.0f} (SGD)\n\n"
+                + df_to_markdown(filtered_df, export_cols) + "\n"
+            )
+            _, col_export = st.columns([0.8, 0.2])
+            col_export.download_button(
+                "Export to Markdown", export_md, file_name=f"cellar_{pd.Timestamp.now():%Y%m%d}.md",
+                mime="text/markdown", icon=":material/download:", use_container_width=True
+            )
+
+            tab_cards, tab_list, tab_shelves, tab_vintages, tab_price = st.tabs(["Cards", "List", "Shelf Map", "Vintages", "Price Variations"])
+
+            with tab_shelves:
+                shelf_metric = st.radio("Shade by", list(METRICS), horizontal=True, key="cellar_shelf_metric")
+                st.caption("Click a bin to filter the page to it, click it again to clear. "
+                           "Darker = more, compared within each group · grey bins hold nothing matching the other filters.")
+                render_shelf_map(df["Location"].unique(), wine_df, sel_loc, shelf_metric)
+
+            with tab_vintages:
+                heat_metric = st.radio("Shade by", list(METRICS), horizontal=True, key="cellar_heat_metric")
+                render_vintage_heatmap(filtered_df, heat_metric)
+
             with tab_list:
                 filtered_df = filtered_df.copy() # Avoid SettingWithCopy
                 filtered_df['Domaine_Link'] = filtered_df.apply(lambda x: f"/?page=Producer+Detail&id={x['pid']}&label={x['Domaine'].replace(' ', '+')}", axis=1)
