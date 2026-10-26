@@ -13,7 +13,8 @@ import zipfile
 
 import geo
 
-MAP_PACK_URL = os.getenv("MAP_PACK_URL", "")
+# The published pack (a release tagged map-pack on the public repository); MAP_PACK_URL for another address or a file
+MAP_PACK_URL = os.getenv("MAP_PACK_URL", "https://github.com/maxlmn/winelib/releases/download/map-pack/winelib-map-pack.zip")
 FORMAT = "winelib-map-pack"
 
 
