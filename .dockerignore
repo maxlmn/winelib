@@ -1,0 +1,15 @@
+# Built inside the image, or yours: never sent to the build
+.git
+**/node_modules
+app/web/build
+app/web/.svelte-kit
+**/__pycache__
+**/.pytest_cache
+app/api/.cache
+app/api/dev.db
+data
+backups
+dist
+screenshots
+.secrets.env
+.env

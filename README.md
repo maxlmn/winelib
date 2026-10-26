@@ -91,6 +91,13 @@ Catalogue): a network of every known parent → offspring link, your wines on it
 
 ![The home page in light and dark](screenshots/themes.png)
 
+**On your phone** too: the same app in a phone layout, with a menu that folds away.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/mobile-dark.png">
+  <img alt="Home, the cellar's racks and a wine page on a phone" src="screenshots/mobile.png">
+</picture>
+
 And more:
 
 - **A complete reference**: 129 wine regions, 2,900 appellations (every INAO name, AVA, EU PDO and PGI, and eight
@@ -105,26 +112,36 @@ And more:
 
 ## Quick start
 
-With Python 3.11 or newer, download the zip of the latest release (GitHub › Releases), unzip it, then:
+**With Docker**: save [`docker-compose.yml`](docker-compose.yml), then
+
+```bash
+docker compose up -d
+```
+
+and open http://localhost:8000. Your data lives in the `winelib-data` volume.
+
+**With Python** 3.11 or newer: download the zip of the latest release (GitHub › Releases), unzip it, then
 
 ```bash
 pip install -r app/api/requirements.txt
 python run.py
 ```
 
-It opens http://127.0.0.1:8000 on a short setup page (your currency, where you keep bottles, your preferred critic). Your data lives
-in your user folder (`%APPDATA%\winelib`, `~/Library/Application Support/winelib` or `~/.local/share/winelib`;
-`--data` for another), apart from the program, so a newer version finds it.
+It opens http://127.0.0.1:8000. Your data lives in your user folder (`%APPDATA%\winelib`,
+`~/Library/Application Support/winelib` or `~/.local/share/winelib`; `--data` for another), apart from the program,
+so a newer version finds it.
 
-Then, in Settings › Maintenance:
+Either way, the first start opens on a short setup page (your currency, where you keep bottles, your preferred
+critic). Then, in Settings › Maintenance:
 
 - **Map outlines** downloads the appellations' outlines (the map pack);
 - **Import a cellar** brings your CellarTracker or Vivino export, or your spreadsheet.
 
-WineLib is reachable from your computer only. `--host 0.0.0.0` opens it to your network: only behind your own
-sign-in (Tailscale, a proxy with login), never exposed bare. Docker and Postgres are options (`docker/`, `DB_URL`).
+WineLib is reachable from your computer only. To reach it from your phone or another machine, put your own sign-in in
+front (Tailscale, a proxy with login): never expose it bare. Postgres works too (`DB_URL`).
 
-From the source: Node.js to build the web app once (`cd app/web && npm install && npm run build`), then as above.
+From the source: Node.js to build the web app once (`cd app/web && npm install && npm run build`), then
+`python run.py`; or `docker compose up -d --build`.
 
 ## The data and its sources
 

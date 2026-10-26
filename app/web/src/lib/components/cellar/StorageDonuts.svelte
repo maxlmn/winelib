@@ -97,7 +97,7 @@
 		--s4: #eda100;
 		--s5: #9a9893;
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
 		gap: 12px 28px;
 	}
 	:global(:root[data-theme='dark']) .donuts {
