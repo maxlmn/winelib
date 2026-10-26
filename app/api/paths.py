@@ -14,7 +14,8 @@ import sys
 
 API_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(API_DIR, "..", ".."))
-FROM_SOURCE = os.path.isdir(os.path.join(ROOT_DIR, "winelib_utils")) and os.path.isdir(os.path.join(ROOT_DIR, "app"))
+# The project's files around app/api (a checkout, the release zip, the Docker image): data and plug-ins next to them
+FROM_SOURCE = os.path.isdir(os.path.join(ROOT_DIR, "app", "web"))
 
 
 def user_data_dir(name="winelib"):
@@ -45,6 +46,6 @@ PLUGINS_DIR = _path("PLUGINS_DIR", HOME, "plugins")
 LWIN_DB = _path("LWIN_DB", DATA_DIR, "lwin", "lwin.sqlite")
 REFERENCE_DIR = _path("REFERENCE_DIR", API_DIR, "data", "reference")
 
-os.environ.setdefault("LWIN_DB", LWIN_DB)  # winelib_utils/match_lwin.py reads it
+os.environ.setdefault("LWIN_DB", LWIN_DB)  # app/api/tasks/match_lwin.py reads it
 if DB_URL.startswith("sqlite"):
     os.makedirs(DATA_DIR, exist_ok=True)  # a new installation: the database's folder

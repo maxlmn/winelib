@@ -26,7 +26,7 @@ def seed(s):
 
 @pytest.fixture
 def bi(monkeypatch):
-    from winelib_utils import bordeaux_index as bi
+    from tasks import bordeaux_index as bi
     for k in ("BI_EMAIL", "BI_PASSWORD", "BI_SALES_LEDGER", "BI_PURCHASE_LEDGER"):
         monkeypatch.setenv(k, "x")
     monkeypatch.setattr(bi, "portfolio", lambda: PORTFOLIO)

@@ -117,7 +117,7 @@ def test_blends_and_grape_lists(client):
 
 
 def test_grapes_of():
-    from winelib_utils.import_cellar import grapes_of
+    from tasks.import_cellar import grapes_of
     assert grapes_of("White Rhone Blend") == ("Rhône blend", [])
     assert grapes_of("GSM") == ("Rhône blend", [])
     assert grapes_of("Syrah / Viognier (5%)") == (None, [("Syrah", None), ("Viognier", 5)])

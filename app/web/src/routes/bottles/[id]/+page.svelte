@@ -18,7 +18,7 @@
 
 	// The market price sources set up (Settings › Integrations), named on the button while it asks
 	const priceSources = $derived(integrations.list.filter((i) => i.configured && ['bordeaux_index', 'winelabs'].includes(i.id)).map((i) => i.name).join(' / '));
-	// Market price by the wine's LWIN: Bordeaux Index when your BI portfolio holds it, else WineLabs.ai (see winelib_utils/update_market_prices.py).
+	// Market price by the wine's LWIN: Bordeaux Index when your BI portfolio holds it, else WineLabs.ai (see app/api/tasks/update_market_prices.py).
 	// Asked for this bottle and every other one of the wine in the cellar, shown for a look, saved on Save.
 	type Proposal = {
 		bottle_id: number;

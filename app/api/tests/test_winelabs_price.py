@@ -1,5 +1,5 @@
 """Which WineLabs figure becomes the market price."""
-from winelib_utils.update_market_prices import pick_price
+from tasks.update_market_prices import pick_price
 
 
 def seed(s):

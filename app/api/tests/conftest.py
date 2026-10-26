@@ -41,7 +41,7 @@ TEST_SETTINGS = settings.Settings(
 
 
 def _forget_bi():
-    from winelib_utils import bordeaux_index
+    from tasks import bordeaux_index
     bordeaux_index.forget_portfolio()  # a module's fake portfolio mustn't leak into the next
 
 

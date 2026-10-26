@@ -23,7 +23,7 @@ def link():
 def setup(tmp_path, link):
     """A database like the app's (no boundary column yet) and a store with a few shapes per source."""
     from shapely.geometry import box
-    from winelib_utils.models import Appellation, Base, Region, Vineyard
+    from models import Appellation, Base, Region, Vineyard
     url = f"sqlite:///{tmp_path / 'wine.db'}"
     engine = create_engine(url)
     Base.metadata.create_all(engine)
@@ -125,7 +125,7 @@ def test_a_link_set_by_hand_is_kept_and_a_gone_shape_unlinked(setup, link):
 def test_eu_by_name_when_there_is_no_pdo_id(tmp_path, link):
     """An appellation without pdo_id finds its EU shape by the shape's name in its country, or by an alias."""
     from shapely.geometry import box
-    from winelib_utils.models import Appellation, Base, Region
+    from models import Appellation, Base, Region
     url = f"sqlite:///{tmp_path / 'wine.db'}"
     engine = create_engine(url)
     Base.metadata.create_all(engine)
@@ -171,7 +171,7 @@ def test_names_match_in_any_script_and_across_dashes(link):
 def test_admin_areas_by_country_and_name(tmp_path, link):
     """An appellation that is an administrative area (Toscana IGT, Yamanashi) links to source admin by country and name."""
     from shapely.geometry import box
-    from winelib_utils.models import Appellation, Base, Region
+    from models import Appellation, Base, Region
     url = f"sqlite:///{tmp_path / 'wine.db'}"
     engine = create_engine(url)
     Base.metadata.create_all(engine)
@@ -193,7 +193,7 @@ def test_admin_areas_by_country_and_name(tmp_path, link):
 def test_one_country_source_by_name_and_alias(tmp_path, link):
     """INAO's areas (France): names with accents and hyphens aside, the "X ou Y" forms, and the Vin de Pays aliases."""
     from shapely.geometry import box
-    from winelib_utils.models import Appellation, Base, Region
+    from models import Appellation, Base, Region
     url = f"sqlite:///{tmp_path / 'wine.db'}"
     engine = create_engine(url)
     Base.metadata.create_all(engine)

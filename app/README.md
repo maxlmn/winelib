@@ -2,7 +2,7 @@
 
 ```
 app/
-├── api/   FastAPI on the SQLAlchemy models (winelib_utils/models.py); migrations in api/migrations/
+├── api/   FastAPI on the SQLAlchemy models (app/api/models.py); migrations in api/migrations/
 └── web/   SvelteKit (Svelte 5, a static single-page app) with MapLibre GL
 ```
 
@@ -36,7 +36,7 @@ API_URL=http://localhost:8000 npx vite dev
 
 ## Change the schema
 
-Edit `winelib_utils/models.py`, then from `app/api`:
+Edit `app/api/models.py`, then from `app/api`:
 
 ```bash
 python migrate.py revision "what changed"

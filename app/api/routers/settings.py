@@ -26,8 +26,8 @@ def integrations():
     import os
     import map_pack
     import plugins
-    from winelib_utils import bordeaux_index, match_lwin
-    from winelib_utils import update_market_prices as prices
+    from tasks import bordeaux_index, match_lwin
+    from tasks import update_market_prices as prices
     return {
         "integrations": [
             {"id": "bordeaux_index", "name": "Bordeaux Index", "configured": bordeaux_index.configured(),
@@ -40,7 +40,7 @@ def integrations():
              "needs": "An API key: WINELABS_API_KEY in .secrets.env."},
             {"id": "lwin", "name": "LWIN list", "configured": os.path.exists(match_lwin.LWIN_DB),
              "what": "LWIN suggestions in the wine form and Maintenance › LWIN codes (needed for market prices).",
-             "needs": "Liv-ex's LWIN file, indexed on a PC (python winelib_utils/match_lwin.py --build-index) and "
+             "needs": "Liv-ex's LWIN file, indexed on a PC (python app/api/tasks/match_lwin.py --build-index) and "
                       "copied to data/lwin/."},
         ],
         "plugins": plugins.loaded,

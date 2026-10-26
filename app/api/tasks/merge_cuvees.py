@@ -1,5 +1,5 @@
 """Merges two spellings of one producer's cuvée ("Poyeux" into "Les Poyeux"), e.g. from the similar cuvée names
-report (winelib_utils/housekeeping/find_similar_cuvees.py).
+report (app/api/tasks/housekeeping/find_similar_cuvees.py).
 
 Each wine of the dropped cuvée either:
 - has a twin under the kept name (same color, appellation, grape, vintage and disgorgement): its cellar lines move to
@@ -9,8 +9,8 @@ Each wine of the dropped cuvée either:
 Nothing points at a wine but cellar lines, so nothing is left dangling; the orphan check runs before committing
 and undoes everything if it finds one.
 
-    python winelib_utils/merge_cuvees.py --producer 12 --drop "Poyeux" --keep "Les Poyeux"            # dry run
-    python winelib_utils/merge_cuvees.py --producer 12 --drop "Poyeux" --keep "Les Poyeux" --commit
+    python app/api/tasks/merge_cuvees.py --producer 12 --drop "Poyeux" --keep "Les Poyeux"            # dry run
+    python app/api/tasks/merge_cuvees.py --producer 12 --drop "Poyeux" --keep "Les Poyeux" --commit
 
 The same function backs the Similar cuvée names report on the app's Settings page.
 """
@@ -22,8 +22,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from winelib_utils.housekeeping.check_orphans import find_orphans  # noqa: E402
-from winelib_utils.models import Bottle, Wine  # noqa: E402
+from tasks.housekeeping.check_orphans import find_orphans  # noqa: E402
+from models import Bottle, Wine  # noqa: E402
 
 # Taken from the dropped wine when its twin has none (and each critic's score: carry())
 CARRIED = ("lwin", "drink_window_start", "drink_window_end", "vineyard_id", "blend")
@@ -104,8 +104,8 @@ def main():
     parser.add_argument("--keep", required=True, help="Cuvée name to keep")
     parser.add_argument("--commit", action="store_true", help="Apply (default: dry run)")
     args = parser.parse_args()
-    import config
-    session = sessionmaker(bind=create_engine(config.DB_URL))()
+    import paths
+    session = sessionmaker(bind=create_engine(paths.DB_URL))()
     try:
         r = merge_cuvee(session, args.producer, args.drop, args.keep)
         if args.commit:

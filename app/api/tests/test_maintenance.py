@@ -1,4 +1,4 @@
-"""Settings page maintenance: the job runner and its tasks (scripts in winelib_utils/). No browser, no network."""
+"""Settings page maintenance: the job runner and its tasks (scripts in app/api/tasks/). No browser, no network."""
 import os
 import time
 
@@ -123,8 +123,8 @@ def test_unknown_task(client):
 def test_tasks_say_what_they_need(client, monkeypatch):
     """Without the LWIN list, a price source or a map pack address, those tasks say so instead of failing."""
     import map_pack
-    from winelib_utils import bordeaux_index, match_lwin
-    from winelib_utils import update_market_prices as prices
+    from tasks import bordeaux_index, match_lwin
+    from tasks import update_market_prices as prices
     monkeypatch.setattr(match_lwin, "LWIN_DB", "/nonexistent/lwin.sqlite")
     monkeypatch.setattr(bordeaux_index, "configured", lambda: False)
     monkeypatch.setattr(prices, "api_key", lambda: None)

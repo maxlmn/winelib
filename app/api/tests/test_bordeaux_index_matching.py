@@ -30,7 +30,7 @@ def seed(s):
 
 @pytest.fixture
 def bi(monkeypatch):
-    from winelib_utils import bordeaux_index as bi
+    from tasks import bordeaux_index as bi
     monkeypatch.setattr(bi, "configured", lambda: True)
     monkeypatch.setattr(bi, "portfolio", lambda: PORTFOLIO)
     bi.forget_portfolio()
@@ -62,7 +62,7 @@ def test_clos_des_angles_matches_les_angles_by_name_then_takes_bis_lwin(client, 
 
 
 def test_nv_bottle_is_priced_from_bi(client, bi):
-    from winelib_utils import update_market_prices as prices
+    from tasks import update_market_prices as prices
     from db import get_session
     from main import app
     session = next(app.dependency_overrides[get_session]())
@@ -75,7 +75,7 @@ def test_nv_bottle_is_priced_from_bi(client, bi):
 
 def test_portfolio_is_shared_for_a_few_minutes(client, fetch_price, bi, monkeypatch):
     """The view and the market price button read BI's portfolio once; a price run (and Refresh) reads it again."""
-    from winelib_utils import update_market_prices as prices
+    from tasks import update_market_prices as prices
     reads = []
     monkeypatch.setattr(bi, "portfolio", lambda: reads.append(1) or PORTFOLIO)
     monkeypatch.setattr(prices, "api_key", lambda: None)

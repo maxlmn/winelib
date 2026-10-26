@@ -12,7 +12,7 @@ import time
 import urllib.error
 import urllib.request
 
-from winelib_utils import USER_AGENT
+from tasks import USER_AGENT
 
 BI_API = os.getenv("BI_API", "https://api.biwine.com")
 

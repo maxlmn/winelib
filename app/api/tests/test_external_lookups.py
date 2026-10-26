@@ -27,7 +27,7 @@ class Calls(list):
 
 @pytest.fixture
 def winelabs(monkeypatch):
-    from winelib_utils import update_market_prices as prices
+    from tasks import update_market_prices as prices
     monkeypatch.setenv("WINELABS_API_KEY", "test-key")
     calls = Calls()
     calls.answer = {"price": 500.0, "currency": "EUR", "sales": 12}
@@ -83,7 +83,7 @@ HIT = [{"name": "Odette", "display_name": "Odette, 1 Saint Andrew's Road, Singap
 
 @pytest.fixture
 def osm(monkeypatch):
-    from winelib_utils import geocode
+    from tasks import geocode
     queries = []
     monkeypatch.setattr(geocode, "_get_json", lambda url: queries.append(url) or HIT)
     return queries

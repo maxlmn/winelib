@@ -1,5 +1,5 @@
 <script lang="ts">
-	/** Maintenance scripts (winelib_utils/) run on the server as background jobs: see app/api/routers/maintenance.py */
+	/** Maintenance scripts (app/api/tasks/) run on the server as background jobs: see app/api/routers/maintenance.py */
 	import { onMount } from 'svelte';
 	import PickList from './PickList.svelte';
 	import PickCard, { editBody } from './PickCard.svelte';

@@ -19,8 +19,8 @@ import settings
 from cellar import location_sort_key
 from display import vineyard_label
 from textsearch import fold, search
-from winelib_utils.matching import is_rose
-from winelib_utils.blends import BLEND_STYLES, blend_style
+from tasks.matching import is_rose
+from tasks.blends import BLEND_STYLES, blend_style
 from db import same, Appellation, Bottle, Place, Producer, Region, RestaurantVisit, TastingNote, Varietal, Vineyard, Wine, get_session, same_cuvee
 
 router = APIRouter()
@@ -486,7 +486,7 @@ def delete_vineyard(vineyard_id: int, session: Session = Depends(get_session)):
 def _share_lwin(session, w):
     """An LWIN is the wine's, whatever the vintage: a wine without one takes its other vintages' (same producer,
     cuvée, appellation and colour); one with one gives it to those without. The number of other vintages given it."""
-    from winelib_utils.match_lwin import cuvee_key, lwin7
+    from tasks.match_lwin import cuvee_key, lwin7
     others = [o for o in session.query(Wine).filter(Wine.producer_id == w.producer_id, Wine.id != w.id)
               if cuvee_key(o) == cuvee_key(w)]
     if not (w.lwin or "").strip():

@@ -2,7 +2,7 @@
 "Bodegas Vega Sicilia" / "Vega Sicilia"), found and merged.
 
 Two producers look like one when their names are the same without accents, case and punctuation, or have the same
-distinctive words (no "Domaine", "Bodegas", "Weingut", initials: winelib_utils/matching.py). It's a guess
+distinctive words (no "Domaine", "Bodegas", "Weingut", initials: app/api/tasks/matching.py). It's a guess
 ("Château L'Enclos" and "Domaine de l'Enclos" aren't one): the report lists them, you pick.
 
 Merging moves the dropped producer's wines to the kept one; a wine the kept producer already has (same cuvée,
@@ -10,9 +10,9 @@ color, appellation, grape, vintage and disgorgement) gives it its cellar lines a
 cuvées. The kept producer takes the details it lacks (region, website...); notes and descriptions are joined. Then
 the dropped producer is deleted. Nothing but wines points at a producer.
 
-    python winelib_utils/merge_producers.py                         # the likely duplicates
-    python winelib_utils/merge_producers.py --keep 12 --drop 40     # dry run
-    python winelib_utils/merge_producers.py --keep 12 --drop 40 --commit
+    python app/api/tasks/merge_producers.py                         # the likely duplicates
+    python app/api/tasks/merge_producers.py --keep 12 --drop 40     # dry run
+    python app/api/tasks/merge_producers.py --keep 12 --drop 40 --commit
 
 The same functions back Settings › Maintenance › Duplicate producers.
 """
@@ -25,10 +25,10 @@ from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from winelib_utils.housekeeping.check_orphans import find_orphans  # noqa: E402
-from winelib_utils.matching import distinctive, norm  # noqa: E402
-from winelib_utils.merge_cuvees import _empty, fold, twin_of  # noqa: E402
-from winelib_utils.models import Producer, Wine  # noqa: E402
+from tasks.housekeeping.check_orphans import find_orphans  # noqa: E402
+from tasks.matching import distinctive, norm  # noqa: E402
+from tasks.merge_cuvees import _empty, fold, twin_of  # noqa: E402
+from models import Producer, Wine  # noqa: E402
 
 FILLED = ("region_id", "subregion", "village", "winemaker", "owner", "type", "importers", "profile_url", "lists",
           "website")
@@ -108,8 +108,8 @@ def main():
     parser.add_argument("--drop", type=int, help="Producer id to merge into it")
     parser.add_argument("--commit", action="store_true", help="Apply (default: dry run)")
     args = parser.parse_args()
-    import config
-    session = sessionmaker(bind=create_engine(config.DB_URL))()
+    import paths
+    session = sessionmaker(bind=create_engine(paths.DB_URL))()
     try:
         if args.keep is None or args.drop is None:
             for p in find_similar_producers(session):

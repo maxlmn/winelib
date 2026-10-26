@@ -15,8 +15,8 @@ import io
 import re
 from datetime import datetime
 
-from winelib_utils.matching import DETAILS, Producers, cuvee_key, find_wine, norm, same_wine
-from winelib_utils.models import Appellation, Producer, Varietal, Wine, has_score
+from tasks.matching import DETAILS, Producers, cuvee_key, find_wine, norm, same_wine
+from models import Appellation, Producer, Varietal, Wine, has_score
 
 FIELDS = ["producer", "cuvee", "vintage", "colour", "grape", "appellation", "score", "note", "link", "date"]
 REQUIRED = ["producer", "vintage"]

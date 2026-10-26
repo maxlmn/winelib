@@ -1,4 +1,4 @@
-"""Duplicate producers (winelib_utils/merge_producers.py): the report and the merge."""
+"""Duplicate producers (app/api/tasks/merge_producers.py): the report and the merge."""
 import time
 
 import pytest
@@ -83,7 +83,7 @@ def test_details_carried_over(tmp_path):
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
     from db import Base
-    from winelib_utils.merge_producers import merge_producer
+    from tasks.merge_producers import merge_producer
     engine = create_engine(f"sqlite:///{tmp_path / 'w.db'}")
     Base.metadata.create_all(engine)
     s = sessionmaker(bind=engine)()

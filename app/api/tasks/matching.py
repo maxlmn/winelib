@@ -5,8 +5,8 @@ from collections import defaultdict
 
 from unidecode import unidecode
 
-from winelib_utils.match_lwin import PRODUCER_PREFIXES, producer_keys
-from winelib_utils.models import Wine
+from tasks.match_lwin import PRODUCER_PREFIXES, producer_keys
+from models import Wine
 
 
 # Words that name a style or a classification, not which wine it is (compared without them)

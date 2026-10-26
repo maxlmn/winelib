@@ -1,4 +1,4 @@
-"""Maintenance tasks for the Settings page: the scripts in winelib_utils/, run as background jobs (see jobs.py).
+"""Maintenance tasks for the Settings page: the scripts in app/api/tasks/, run as background jobs (see jobs.py).
 
 Tasks that change data have a preview (dry run) first. Reports only read.
 """
@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session, sessionmaker
 import jobs
 import settings
 import paths
-from winelib_utils.update_market_prices import PRICE_MAX_AGE_DAYS
+from tasks.update_market_prices import PRICE_MAX_AGE_DAYS
 from db import get_session
 
 router = APIRouter()
@@ -36,7 +36,7 @@ def _item(label, detail=None, href=None, **extra):
 
 
 def _duplicates(session, job):
-    from winelib_utils import consolidate_duplicate_wines as dup
+    from tasks import consolidate_duplicate_wines as dup
     groups = dup.find_duplicate_groups(session)
     bottles = sum(len(b) for g in groups for b in g["bottles"].values())
     items = [_item(g["label"], f"wines {', '.join(map(str, g['duplicates']))} → {g['primary']} · "
@@ -56,7 +56,7 @@ def _duplicates(session, job):
 
 
 def _orphans(session, job):
-    from winelib_utils.housekeeping.check_orphans import find_orphans
+    from tasks.housekeeping.check_orphans import find_orphans
     r = find_orphans(session)
     items = ([_item(f"Tasting note {n} has no bottle (bottle {b})", (t or "")[:120]) for n, b, t in r["notes"]] +
              [_item(f"Bottle {b} has no wine (wine {w})", loc) for b, w, loc in r["bottles"]])
@@ -72,7 +72,7 @@ def _offer(task, a, b, wines_a, wines_b, keep_a, keep_b):
 
 
 def _similar(session, job):
-    from winelib_utils.housekeeping.find_similar_cuvees import find_similar
+    from tasks.housekeeping.find_similar_cuvees import find_similar
     pairs = find_similar(session)
     # Each pair can be merged from the page (task merge_cuvees): keep one name, the other merges into it
     items = [_item(f"{p['producer']}: “{p['a'][0]}” / “{p['b'][0]}”", p["reason"], f"/producers/{p['producer_id']}",
@@ -86,7 +86,7 @@ def _similar(session, job):
 def _merge_cuvees(session, job):
     """The pairs picked in the similar cuvée names report: [{"producer_id", "keep", "drop"}]. Each merge is
     checked for orphans; a preview rolls everything back."""
-    from winelib_utils.merge_cuvees import merge_cuvee
+    from tasks.merge_cuvees import merge_cuvee
     pairs = job.params.get("pairs") or []
     items, totals = [], {"renamed": 0, "merged": 0, "lines_moved": 0}
     for p in pairs:
@@ -112,7 +112,7 @@ def _merge_cuvees(session, job):
 
 
 def _similar_producers(session, job):
-    from winelib_utils.merge_producers import find_similar_producers
+    from tasks.merge_producers import find_similar_producers
     pairs = find_similar_producers(session)
     items = [_item(f"“{p['a'][1]}” / “{p['b'][1]}”", p["reason"], f"/producers/{p['a'][0]}",
                    merge=_offer("merge_producers", p["a"][1], p["b"][1], p["a"][2], p["b"][2],
@@ -124,7 +124,7 @@ def _similar_producers(session, job):
 
 def _merge_producers(session, job):
     """The pairs picked in the duplicate producers report: [{"keep": id, "drop": id}]; a preview rolls back."""
-    from winelib_utils.merge_producers import merge_producer
+    from tasks.merge_producers import merge_producer
     pairs = job.params.get("pairs") or []
     items, totals = [], {"moved": 0, "merged": 0, "lines_moved": 0}
     for p in pairs:
@@ -149,11 +149,11 @@ def _merge_producers(session, job):
 
 
 def _scores_csv(session, job):
-    """Critics' scores from an uploaded CSV (winelib_utils/import_scores.py), for the critic named on the card: a
+    """Critics' scores from an uploaded CSV (app/api/tasks/import_scores.py), for the critic named on the card: a
     preview lists the rows by producer to tick (new wines, scores for wines you have), a run saves the ticked ones
     (params "keys": their line numbers)."""
     from collections import Counter
-    from winelib_utils import import_scores as sc
+    from tasks import import_scores as sc
     critic = " ".join((job.params.get("critic") or "").split())
     headers, rows = sc.read(job.params.get("_text") or "")
     if not rows:
@@ -222,10 +222,10 @@ def _scores_csv(session, job):
 
 
 def _cellar_csv(session, job):
-    """A cellar from an uploaded CSV (winelib_utils/import_cellar.py): a preview lists the rows by producer to tick
+    """A cellar from an uploaded CSV (app/api/tasks/import_cellar.py): a preview lists the rows by producer to tick
     (wines found or new, bottles, tastings), a run adds the ticked ones (params "keys": their line numbers)."""
     from collections import Counter
-    from winelib_utils import import_cellar as ic
+    from tasks import import_cellar as ic
     from routers.forms import AD_HOC, CONSUMED
     headers, rows = ic.read(job.params.get("_text") or "")
     if not rows:
@@ -288,7 +288,7 @@ def _cellar_csv(session, job):
 
 
 def _places(session, job):
-    from winelib_utils.geocode import fill_missing, missing, place_query
+    from tasks.geocode import fill_missing, missing, place_query
     limit = job.params.get("limit") or 10
     total = len(missing(session))
     found = fill_missing(session, limit=limit, commit=job.commit, log=job.log)
@@ -305,7 +305,7 @@ def _kind(match):
 
 
 def _lwin(session, job):
-    from winelib_utils import match_lwin
+    from tasks import match_lwin
     try:
         results = match_lwin.fill_missing_lwin(session, commit=job.commit, log=job.log)
     except FileNotFoundError:
@@ -340,7 +340,7 @@ def _lwin(session, job):
 
 def _prices(session, job, force=False):
     """force: every cellar bottle with an LWIN, however recent its price; else not those priced in the last 90 days."""
-    from winelib_utils import update_market_prices as prices
+    from tasks import update_market_prices as prices
     bottles = prices.cellar_bottles(session, max_age_days=0 if force else prices.PRICE_MAX_AGE_DAYS)
     scope = "" if force else f" not priced in {prices.PRICE_MAX_AGE_DAYS} days"
 
@@ -432,7 +432,7 @@ def _shape_links(session, job):
 def _backup(session, job):
     """Every main table to CSV; with SQLite, a copy of the database too (SQLite's own backup: consistent while the
     app runs). A Postgres database is dumped with Postgres's own tools (pg_dump), into the backups folder."""
-    from winelib_utils.backup import backup_csv
+    from tasks.backup import backup_csv
     engine = session.get_bind()
     folder = backup_csv(engine, BACKUP_DIR, log=job.log)
     saved = [f"backups/{os.path.basename(folder)}"]
@@ -479,13 +479,13 @@ def _scores_csv_params(body, commit):
 GROUPS = ["Clean up", "LWIN and prices", "Import", "Maps and places", "Backup"]  # plug-ins add theirs
 
 def _no_lwin_list():
-    from winelib_utils import match_lwin
+    from tasks import match_lwin
     return None if os.path.exists(match_lwin.LWIN_DB) else "Needs the LWIN list (see Integrations)."
 
 
 def _no_price_source():
-    from winelib_utils import bordeaux_index
-    from winelib_utils import update_market_prices as prices
+    from tasks import bordeaux_index
+    from tasks import update_market_prices as prices
     if bordeaux_index.configured() or prices.api_key():
         return None
     return "Needs Bordeaux Index or WineLabs.ai (see Integrations)."
@@ -616,8 +616,8 @@ def wine_lookup(producer_id: int, cuvee: str = "", vintage: str = "", type: str 
     critic's score), or null: the import would create it. An appellation / grape typed by name counts if it exists."""
     from sqlalchemy import func
     from db import Appellation, Varietal
-    from winelib_utils.matching import find_wine
-    from winelib_utils.models import has_score
+    from tasks.matching import find_wine
+    from models import has_score
 
     def by_name(model, value, name):
         if value is not None or not name.strip():

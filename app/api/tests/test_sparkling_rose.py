@@ -21,7 +21,7 @@ def test_form_saves_a_named_rose_as_one(client):
 
 
 def test_import_reads_a_named_rose(client):
-    from winelib_utils.import_cellar import colour_of, plan
+    from tasks.import_cellar import colour_of, plan
     from db import get_session
     from main import app
     s = next(app.dependency_overrides[get_session]())

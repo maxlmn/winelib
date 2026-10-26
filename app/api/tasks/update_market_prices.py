@@ -4,8 +4,8 @@ Bordeaux Index's valuation (the last trade, else the best bid, per bottle in GBP
 currency) comes from your BI portfolio when it holds that wine, vintage and size, else from the LiveTrade market
 for its LWIN18; a wine BI doesn't quote asks WineLabs.ai.
 
-    python winelib_utils/update_market_prices.py                 # dry run: how many API calls
-    python winelib_utils/update_market_prices.py --commit [--limit N]
+    python app/api/tasks/update_market_prices.py                 # dry run: how many API calls
+    python app/api/tasks/update_market_prices.py --commit [--limit N]
 
 Keys in the environment (.secrets.env): WINELABS_API_KEY, and the BI_
 login (see bordeaux_index.py). Either one alone works.
@@ -23,12 +23,12 @@ from datetime import datetime, timedelta
 from sqlalchemy import create_engine, or_
 from sqlalchemy.orm import sessionmaker
 
-# Add parent directory to path to import config and models
+# app/api on the path (models, paths, tasks), for running this file as a script
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_dir)
-from winelib_utils import USER_AGENT  # noqa: E402
-from winelib_utils.bordeaux_index import size_cl  # noqa: E402
-from winelib_utils.models import Bottle, Wine  # noqa: E402
+from tasks import USER_AGENT  # noqa: E402
+from tasks.bordeaux_index import size_cl  # noqa: E402
+from models import Bottle, Wine  # noqa: E402
 
 # Before the Settings page is saved: its defaults (app/api/settings.py), main currency EUR (1 unit = x euros)
 MAIN_CURRENCY = "EUR"
@@ -82,7 +82,7 @@ def api_key():
 def bi_quotes(log=print, refresh=False):
     """{(LWIN7, vintage, size in cl): GBP per bottle} from the Bordeaux Index portfolio (the copy shared with the
     Cellar view, unless refresh), or {} without a BI login (or when BI can't be reached: then WineLabs)."""
-    from winelib_utils import bordeaux_index as bi
+    from tasks import bordeaux_index as bi
     if not bi.configured():
         return {}
     try:
@@ -93,7 +93,7 @@ def bi_quotes(log=print, refresh=False):
 
 
 def pricing_available():
-    from winelib_utils import bordeaux_index as bi
+    from tasks import bordeaux_index as bi
     return bool(api_key()) or bi.configured()
 
 
@@ -101,7 +101,7 @@ def bi_price(b, quotes, log, market=None):
     """The bottle's Bordeaux Index price in its own currency: from the portfolio `quotes`, else (with a `market`
     cache dict) the LiveTrade market; None when BI doesn't quote that wine."""
     from sqlalchemy.orm import object_session
-    from winelib_utils import bordeaux_index as bi
+    from tasks import bordeaux_index as bi
     wine = b.wine
     key = (str(wine.lwin), bi.vintage_key(wine.vintage), bi.size_cl(b.bottle_size))
     gbp = quotes.get(key) if quotes else None
@@ -248,7 +248,7 @@ def refresh_prices(session, bottles, log=print):
     """Fetches and saves the market price of each bottle: Bordeaux Index first (one portfolio read), then one
     WineLabs call per wine, vintage and currency; commits as it goes. Shared by the nightly script and the app's
     Settings page. [(bottle, old price, new price or None)]."""
-    from winelib_utils import bordeaux_index as bi_api
+    from tasks import bordeaux_index as bi_api
     cache, done = {}, []
     bi = bi_quotes(log, refresh=True)  # a price run starts from a fresh portfolio
     market = {} if bi_api.configured() else None
@@ -266,8 +266,8 @@ def refresh_prices(session, bottles, log=print):
 
 
 def main(commit=False, limit=None):
-    import config
-    session = sessionmaker(bind=create_engine(config.DB_URL))()
+    import paths
+    session = sessionmaker(bind=create_engine(paths.DB_URL))()
     try:
         # Bottles in the cellar with an LWIN whose price is missing or older than 90 days
         bottles = cellar_bottles(session)

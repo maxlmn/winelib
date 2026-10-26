@@ -1,4 +1,4 @@
-"""Merging two spellings of a cuvée (winelib_utils/merge_cuvees.py), from the similar cuvée names report."""
+"""Merging two spellings of a cuvée (app/api/tasks/merge_cuvees.py), from the similar cuvée names report."""
 import time
 
 import pytest
@@ -88,7 +88,7 @@ def test_merge_moves_lines_keeps_notes_and_leaves_no_orphans(client):
 
 
 def test_a_merge_that_would_orphan_is_undone(client, monkeypatch):
-    from winelib_utils import merge_cuvees
+    from tasks import merge_cuvees
     real = merge_cuvees.find_orphans
     calls = []
 

@@ -1,5 +1,5 @@
 """Lookups against outside services, on demand: a bottle's market price (Bordeaux Index, else WineLabs.ai) and place coordinates
-(OpenStreetMap). The shared code is in winelib_utils/ (update_market_prices.py, geocode.py)."""
+(OpenStreetMap). The shared code is in app/api/tasks/ (update_market_prices.py, geocode.py)."""
 import logging
 import urllib.error
 from datetime import datetime
@@ -30,8 +30,8 @@ def market_price(bottle_id: int, session: Session = Depends(get_session)):
     in the cellar, whatever their price's age, and returns them for a look before saving (nothing is saved: see
     /market-price/save): Bordeaux Index (your portfolio, else the LiveTrade market for its LWIN18), else WineLabs.ai
     (one call per currency; scaled to each bottle's format)."""
-    from winelib_utils import bordeaux_index as bi_api
-    from winelib_utils import update_market_prices as prices
+    from tasks import bordeaux_index as bi_api
+    from tasks import update_market_prices as prices
     b = (session.query(Bottle).options(joinedload(Bottle.wine).joinedload(Wine.producer))
          .filter(Bottle.id == bottle_id).one_or_none())
     if b is None:
@@ -84,7 +84,7 @@ def save_market_price(bottle_id: int, body: SavePrices, session: Session = Depen
 def lwin(producer: str, cuvee: str = "", appellation: str = ""):
     """LWIN candidates for a wine from the Liv-ex list (data/lwin/lwin.sqlite, built on a PC by match_lwin.py
     --build-index): {"available", "suggestions": [{"lwin", "name", "colour", "match"}]}."""
-    from winelib_utils import match_lwin
+    from tasks import match_lwin
     try:
         entries = match_lwin.entries_for(producer)
     except FileNotFoundError:
@@ -97,7 +97,7 @@ def lwin(producer: str, cuvee: str = "", appellation: str = ""):
 @router.get("/api/lookups/geocode")
 def geocode(q: str):
     """Places matching a free-text query on OpenStreetMap: [{"name", "address", "lat", "lng", "category", "type"}]."""
-    from winelib_utils.geocode import search
+    from tasks.geocode import search
     if not q.strip():
         return []
     try:

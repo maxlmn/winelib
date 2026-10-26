@@ -3,8 +3,8 @@ The Liv-ex LWIN list for the app: the wine form's LWIN suggestions and Settings 
 matches cellar wines without one (fill_missing_lwin; a run gives each LWIN it saves to the cuvée's other vintages).
 
 The list, prepared once on a computer:
-    python winelib_utils/match_lwin.py --preprocess    # data/LWINdatabase.xlsx -> data/lwin_lookup.json
-    python winelib_utils/match_lwin.py --build-index   # -> data/lwin/lwin.sqlite, the file the app reads (copy it
+    python app/api/tasks/match_lwin.py --preprocess    # data/LWINdatabase.xlsx -> data/lwin_lookup.json
+    python app/api/tasks/match_lwin.py --build-index   # -> data/lwin/lwin.sqlite, the file the app reads (copy it
                                                        #    to the server's data/lwin/)
 """
 import os
@@ -17,9 +17,9 @@ from collections import defaultdict
 
 from unidecode import unidecode
 
-# Add parent directory to path to import config and models
+# app/api on the path (models, paths, tasks), for running this file as a script
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from winelib_utils.models import Bottle, Wine
+from models import Bottle, Wine
 
 # --- Constants ---
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")

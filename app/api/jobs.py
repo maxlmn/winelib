@@ -1,4 +1,4 @@
-"""Maintenance jobs: the scripts in winelib_utils/, run from the Settings page.
+"""Maintenance jobs: the scripts in app/api/tasks/, run from the Settings page.
 
 One job at a time, in a background thread with its own database session. The page polls the job for its log.
 Each task can be previewed (a dry run, nothing written) and/or run; its last run is remembered in the cache

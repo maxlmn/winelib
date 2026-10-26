@@ -1,4 +1,4 @@
-"""Imports every module of the app (app/api, its routers, winelib_utils) with only the packages installed: run after
+"""Imports every module of the app (app/api, its routers, its tasks) with only the packages installed: run after
 `pip install -r app/api/requirements.txt` (CI's fresh-install job), it fails on a package the release doesn't list.
 
     python scripts/check_imports.py
@@ -14,10 +14,9 @@ sys.path[:0] = [API, ROOT]
 
 
 def modules():
-    for path in sorted(glob.glob(os.path.join(API, "*.py")) + glob.glob(os.path.join(API, "routers", "*.py"))):
-        yield os.path.relpath(path, API)[:-3].replace(os.sep, ".")
-    for path in sorted(glob.glob(os.path.join(ROOT, "winelib_utils", "*.py"))):
-        yield "winelib_utils." + os.path.basename(path)[:-3]
+    for folder in ("", "routers", "tasks", os.path.join("tasks", "housekeeping")):
+        for path in sorted(glob.glob(os.path.join(API, folder, "*.py"))):
+            yield os.path.relpath(path, API)[:-3].replace(os.sep, ".")
 
 
 failed = []

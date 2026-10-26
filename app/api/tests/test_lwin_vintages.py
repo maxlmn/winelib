@@ -25,7 +25,7 @@ def lwin(client, wine_id):
 
 
 def test_spread_to_other_vintages(client):
-    from winelib_utils.match_lwin import spread_lwin
+    from tasks.match_lwin import spread_lwin
     from db import get_session
     from main import app
     s = next(app.dependency_overrides[get_session]())

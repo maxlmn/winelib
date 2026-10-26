@@ -17,10 +17,10 @@ left out, so importing the same file twice adds nothing. Ratings out of 5 (Vivin
 import re
 from collections import defaultdict
 
-from winelib_utils.blends import blend_style, names_a_style
-from winelib_utils.import_scores import COLOURS, date_of, read, vintage_of  # noqa: F401  (read: for the task)
-from winelib_utils.matching import Producers, cuvee_key, is_rose, norm, same_wine
-from winelib_utils.models import Appellation, Bottle, Producer, Region, TastingNote, Varietal, Wine
+from tasks.blends import blend_style, names_a_style
+from tasks.import_scores import COLOURS, date_of, read, vintage_of  # noqa: F401  (read: for the task)
+from tasks.matching import Producers, cuvee_key, is_rose, norm, same_wine
+from models import Appellation, Bottle, Producer, Region, TastingNote, Varietal, Wine
 
 FIELDS = ["producer", "cuvee", "vintage", "colour", "category", "grape", "appellation", "region", "country",
           "quantity", "location", "bin", "size", "price", "currency", "purchase_date", "vendor",

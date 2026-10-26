@@ -28,7 +28,7 @@ def seed(s):
 
 @pytest.fixture
 def index(tmp_path, monkeypatch):
-    from winelib_utils import match_lwin
+    from tasks import match_lwin
     src = tmp_path / "lookup.json"
     entries = ENTRIES["jamet"] + [
         {"lwin": "1999001", "display_name": "Domaine Jamet, Collines Rhodaniennes", "display_name_norm":
@@ -72,7 +72,7 @@ def test_preview_then_run(client, index):
 
 
 def test_without_the_index(client, monkeypatch):
-    from winelib_utils import match_lwin
+    from tasks import match_lwin
     monkeypatch.setattr(match_lwin.entries_for, "__defaults__", ("/nowhere/lwin.sqlite",))
     client.post("/api/maintenance/lwin", json={})
     job = wait(client)

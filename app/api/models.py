@@ -133,7 +133,7 @@ class Wine(Base):
     varietal = relationship("Varietal", back_populates="wines")
     vineyard = relationship("Vineyard", back_populates="wines")
     region_obj = relationship("Region", back_populates="wines")
-    blend = Column(String)  # its style, one of winelib_utils.blends.BLEND_STYLES ("Bordeaux blend", "Field blend")
+    blend = Column(String)  # its style, one of tasks.blends.BLEND_STYLES ("Bordeaux blend", "Field blend")
     # Its grapes in order, the first the main one (varietal_id is kept equal to it: see sync_grapes)
     grapes = relationship("WineGrape", back_populates="wine", order_by="WineGrape.position",
                           cascade="all, delete-orphan", lazy="selectin")

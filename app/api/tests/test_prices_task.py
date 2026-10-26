@@ -31,7 +31,7 @@ def wait(client):
 
 
 def test_preview_then_run(client, monkeypatch):
-    from winelib_utils import update_market_prices as prices
+    from tasks import update_market_prices as prices
     calls = []
     monkeypatch.setattr(prices, "api_key", lambda: "k")
     monkeypatch.setattr(prices, "fetch_winelabs",
@@ -54,7 +54,7 @@ def test_preview_then_run(client, monkeypatch):
 
 
 def test_force_refresh_previews_every_bottle(client, monkeypatch):
-    from winelib_utils import update_market_prices as prices
+    from tasks import update_market_prices as prices
     monkeypatch.setattr(prices, "api_key", lambda: "k")
     client.post("/api/maintenance/prices_force", json={})
     job = wait(client)
@@ -65,7 +65,7 @@ def test_force_refresh_previews_every_bottle(client, monkeypatch):
 def test_prices_younger_than_90_days_are_kept(client):
     from datetime import timedelta
 
-    from winelib_utils import update_market_prices as prices
+    from tasks import update_market_prices as prices
     from db import get_session
     from main import app
     session = next(app.dependency_overrides[get_session]())
@@ -82,8 +82,8 @@ def test_prices_younger_than_90_days_are_kept(client):
 def test_market_price_button_previews_every_sibling(client, fetch_price, monkeypatch):
     """The button proposes a price for every bottle of the wine in the cellar, however recent; nothing is saved
     until it's confirmed."""
-    from winelib_utils import bordeaux_index as bi
-    from winelib_utils import update_market_prices as prices
+    from tasks import bordeaux_index as bi
+    from tasks import update_market_prices as prices
     from db import get_session
     from main import app
     monkeypatch.setattr(prices, "api_key", lambda: "k")
@@ -116,8 +116,8 @@ def test_market_price_button_previews_every_sibling(client, fetch_price, monkeyp
 def test_bordeaux_index_first_then_winelabs(client, monkeypatch):
     """A wine in the BI portfolio takes BI's price (last trade per bottle, GBP -> the bottle's currency); WineLabs
     is only asked for the others."""
-    from winelib_utils import bordeaux_index as bi
-    from winelib_utils import update_market_prices as prices
+    from tasks import bordeaux_index as bi
+    from tasks import update_market_prices as prices
     from db import get_session
     from main import app
     winelabs = []
@@ -144,8 +144,8 @@ def test_bordeaux_index_first_then_winelabs(client, monkeypatch):
 
 
 def test_market_price_button_falls_back_to_winelabs(client, fetch_price, monkeypatch):
-    from winelib_utils import bordeaux_index as bi
-    from winelib_utils import update_market_prices as prices
+    from tasks import bordeaux_index as bi
+    from tasks import update_market_prices as prices
     monkeypatch.setattr(prices, "api_key", lambda: "k")
     monkeypatch.setattr(bi, "configured", lambda: True)
     monkeypatch.setattr(bi, "portfolio", lambda: [])  # BI doesn't hold it
@@ -159,8 +159,8 @@ def test_market_price_button_falls_back_to_winelabs(client, fetch_price, monkeyp
 
 def test_bi_market_prices_wines_not_in_the_portfolio(client, monkeypatch):
     """Not in the portfolio: GET /v2/market/lwin18/{LWIN7 + vintage + pack + ml}, trying 6 then 12 bottles."""
-    from winelib_utils import bordeaux_index as bi
-    from winelib_utils import update_market_prices as prices
+    from tasks import bordeaux_index as bi
+    from tasks import update_market_prices as prices
     from db import get_session
     from main import app
     asked = []
@@ -190,7 +190,7 @@ def test_bi_market_prices_wines_not_in_the_portfolio(client, monkeypatch):
 
 
 def test_lwin18():
-    from winelib_utils.bordeaux_index import lwin18
+    from tasks.bordeaux_index import lwin18
     assert lwin18("1080098", "2023", 6, 75) == "108009820230600750"
     assert lwin18("1000013", "NV - Oct 2024", 6, 150) == "100001310000601500"
     assert lwin18("108009", "2023", 6, 75) is None and lwin18("1080098", "2023", 6, None) is None

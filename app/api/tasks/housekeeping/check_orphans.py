@@ -6,9 +6,9 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
-import config  # noqa: E402
+import paths
 
-DB_URL = config.DB_URL
+DB_URL = paths.DB_URL
 
 
 def find_orphans(session):

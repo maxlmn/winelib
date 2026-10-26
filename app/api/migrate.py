@@ -2,7 +2,7 @@
 schema the code expects. A database made before migrations (it has tables but no alembic_version) is taken as the
 baseline (0001) first, then upgraded like any other.
 
-A schema change: edit winelib_utils/models.py, then from app/api
+A schema change: edit app/api/models.py, then from app/api
     python migrate.py revision "add critic_scores"     # writes migrations/versions/<rev>_....py (autogenerate)
 read and adjust it (data to move, a default for existing rows), and it runs at the next start. By hand:
     python migrate.py upgrade                           # DB_URL, else data/winelib.db

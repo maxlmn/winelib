@@ -22,7 +22,7 @@ def bordeaux_index(refresh: bool = False, session: Session = Depends(get_session
     """{"available", "error", "fetched", "lines": [...], "totals": {...}, "app_only": [...]}: each BI line per bottle
     in GBP (cost, best bid, best offer, last trade) with the app's bottles of that wine, vintage and size held at BI
     (location containing Settings' bi_location: the warehouse holding them), and the app's bottles there that BI doesn't list."""
-    from winelib_utils import bordeaux_index as bi
+    from tasks import bordeaux_index as bi
     if not bi.configured():
         return {"available": False, "error": "No Bordeaux Index login in .secrets.env (BI_EMAIL, BI_PASSWORD, "
                                              "BI_SALES_LEDGER, BI_PURCHASE_LEDGER)", "lines": [], "totals": None}
@@ -141,7 +141,7 @@ def apply_values(body: ApplyValues, session: Session = Depends(get_session)):
     from datetime import datetime
 
     from db import Bottle
-    from winelib_utils import update_market_prices as prices
+    from tasks import update_market_prices as prices
     view = bordeaux_index(refresh=False, session=session)
     if view.get("error") or not view.get("available"):
         raise HTTPException(503, view.get("error") or "No Bordeaux Index login")

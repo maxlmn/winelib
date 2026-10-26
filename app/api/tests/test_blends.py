@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from db import Base, Producer, Varietal, Wine
-from winelib_utils.blends import blend_style
+from tasks.blends import blend_style
 
 
 def session(tmp_path):

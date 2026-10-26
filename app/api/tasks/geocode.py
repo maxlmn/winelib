@@ -8,7 +8,7 @@ import time
 import urllib.parse
 import urllib.request
 
-from winelib_utils import USER_AGENT
+from tasks import USER_AGENT
 
 NOMINATIM = "https://nominatim.openstreetmap.org/search"
 HEADERS = {"User-Agent": USER_AGENT, "Accept-Language": "en"}
@@ -39,7 +39,7 @@ def place_query(place):
 
 def missing(session):
     """Places without coordinates (names starting with "@" are placeholders, not places)."""
-    from winelib_utils.models import Place
+    from models import Place
     return (session.query(Place).filter(Place.lat.is_(None), ~Place.name.startswith("@"))
             .order_by(Place.name).all())
 

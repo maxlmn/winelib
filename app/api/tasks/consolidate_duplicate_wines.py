@@ -3,8 +3,8 @@ so their tasting notes, which point at the lines) move to the oldest wine of the
 lacks (critics' scores, LWIN, drinking window...); each emptied duplicate is then deleted. The orphan check runs
 before committing and undoes everything if it finds one.
 
-    python winelib_utils/consolidate_duplicate_wines.py            # dry run
-    python winelib_utils/consolidate_duplicate_wines.py --commit
+    python app/api/tasks/consolidate_duplicate_wines.py            # dry run
+    python app/api/tasks/consolidate_duplicate_wines.py --commit
 
 The same functions back the Settings page's maintenance section in the app.
 """
@@ -16,11 +16,11 @@ from collections import defaultdict
 from sqlalchemy import create_engine
 from sqlalchemy.orm import joinedload, sessionmaker
 
-# Add parent directory to path to import config and models
+# app/api on the path (models, paths, tasks), for running this file as a script
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from winelib_utils.housekeeping.check_orphans import find_orphans  # noqa: E402
-from winelib_utils.merge_cuvees import carry  # noqa: E402
-from winelib_utils.models import Bottle, Wine  # noqa: E402
+from tasks.housekeeping.check_orphans import find_orphans  # noqa: E402
+from tasks.merge_cuvees import carry  # noqa: E402
+from models import Bottle, Wine  # noqa: E402
 
 
 def find_duplicate_groups(session):
@@ -89,8 +89,8 @@ def describe(groups, log=print):
 
 
 def consolidate_duplicate_wines(dry_run=True, limit=None):
-    import config
-    session = sessionmaker(bind=create_engine(config.DB_URL))()
+    import paths
+    session = sessionmaker(bind=create_engine(paths.DB_URL))()
     try:
         groups = find_duplicate_groups(session)[:limit] if limit else find_duplicate_groups(session)
         if not groups:

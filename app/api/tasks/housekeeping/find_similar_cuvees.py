@@ -12,8 +12,8 @@ PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, "../.."))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-import config
-from winelib_utils.models import Wine, Producer
+import paths
+from models import Wine, Producer
 
 def normalize_cuvee(name):
     """
@@ -71,7 +71,7 @@ def find_similar(session):
 
 def find_similar_cuvees():
     print("🚀 Connecting to database...")
-    session = sessionmaker(bind=create_engine(config.DB_URL))()
+    session = sessionmaker(bind=create_engine(paths.DB_URL))()
     try:
         pairs = find_similar(session)
         for p in pairs:

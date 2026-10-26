@@ -30,7 +30,7 @@ def seed(s):
 
 @pytest.fixture
 def bi(monkeypatch):
-    from winelib_utils import bordeaux_index as bi
+    from tasks import bordeaux_index as bi
     for k in ("BI_EMAIL", "BI_PASSWORD", "BI_SALES_LEDGER", "BI_PURCHASE_LEDGER"):
         monkeypatch.setenv(k, "x")
     monkeypatch.setattr(bi, "portfolio", lambda: PORTFOLIO)
@@ -69,7 +69,7 @@ def test_bi_location_comes_from_settings(client, bi):
 
 
 def test_sizes_compare_in_cl():
-    from winelib_utils.bordeaux_index import size_cl
+    from tasks.bordeaux_index import size_cl
     assert size_cl("75cl") == size_cl("750ml") == size_cl("0.75l") == size_cl(75) == size_cl(None) == 75
     assert size_cl("37.5cl") == 37.5 and size_cl("Magnum") == 150 and size_cl("Barrel") is None
 
@@ -89,13 +89,13 @@ def test_api_error_is_reported(client, bi, monkeypatch):
 
 
 def test_split_lwin18():
-    from winelib_utils.bordeaux_index import split_lwin18
+    from tasks.bordeaux_index import split_lwin18
     assert split_lwin18(100006920071200750) == ("1000069", "2007", 12, 750)
     assert split_lwin18("123") == (None, None, None, None)
 
 
 def test_no_trade_nor_bid_is_valued_at_cost(client, bi, monkeypatch):
-    from winelib_utils import update_market_prices as prices
+    from tasks import update_market_prices as prices
     bare = {**PORTFOLIO[1], "portfolioRef": "ST_1_3", "bids": [], "lastTrade": None}
     monkeypatch.setattr(bi, "portfolio", lambda: [PORTFOLIO[0], bare])
     bi.forget_portfolio()
@@ -108,7 +108,7 @@ def test_no_trade_nor_bid_is_valued_at_cost(client, bi, monkeypatch):
 
 
 def test_bi_values_become_the_apps_market_prices(client, bi, monkeypatch):
-    from winelib_utils import update_market_prices as prices
+    from tasks import update_market_prices as prices
     monkeypatch.setattr(prices, "exchange_rates", lambda session=None: {"SGD": 1.0, "GBP": 1.7, "EUR": 1.5})
     bi.forget_portfolio()
     preview = client.post("/api/bordeaux-index/apply-values", json={}).json()

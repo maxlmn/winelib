@@ -1,6 +1,6 @@
 """App settings editable from the Settings page, stored as one JSON row in `app_settings`.
 
-The table is the app's own (not in winelib_utils/models.py) and is created on first use. Values are
+The table is the app's own (not in app/api/models.py) and is created on first use. Values are
 applied in place to module-level objects (cellar.EXCHANGE_RATES...), so code that imported them sees
 edits without restarting; `refresh` re-reads the row at the start of each request.
 """

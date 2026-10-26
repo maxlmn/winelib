@@ -21,7 +21,7 @@ ENTRIES = {"jamet": [
 
 @pytest.fixture
 def index(tmp_path, monkeypatch):
-    from winelib_utils import match_lwin
+    from tasks import match_lwin
     src = tmp_path / "lookup.json"
     src.write_text(json.dumps({"domaine jamet": ENTRIES["jamet"], "jamet": ENTRIES["jamet"]}))
     db = tmp_path / "lwin.sqlite"
@@ -43,6 +43,6 @@ def test_no_cuvee_takes_the_plain_wine_first(client, index):
 
 def test_unknown_producer_and_no_index(client, index, monkeypatch):
     assert client.get("/api/lookups/lwin", params={"producer": "Nobody"}).json() == {"available": True, "suggestions": []}
-    from winelib_utils import match_lwin
+    from tasks import match_lwin
     monkeypatch.setattr(match_lwin.entries_for, "__defaults__", ("/nowhere/lwin.sqlite",))
     assert client.get("/api/lookups/lwin", params={"producer": "Domaine Jamet"}).json()["available"] is False

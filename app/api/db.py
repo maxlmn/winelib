@@ -1,16 +1,10 @@
-import sys
-
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 
-import paths  # noqa: E402  (where the files are)
+import paths  # where the files are
 
-# Models live in winelib_utils/models.py
-ROOT_DIR = paths.ROOT_DIR
-if ROOT_DIR not in sys.path:
-    sys.path.insert(0, ROOT_DIR)
-
-from winelib_utils.models import (  # noqa: E402,F401
+# The tables: models.py
+from models import (  # noqa: F401
     Appellation, Base, Bottle, CriticScore, CustomShape, Place, Producer, ReferenceKey, Region, RestaurantVisit,
     TastingNote, Varietal, Vineyard, Wine, WineGrape,
 )
