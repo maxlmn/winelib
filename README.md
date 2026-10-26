@@ -4,37 +4,92 @@
 worth, every wine you've tasted and where, and puts them on the map of the world's appellations, down to the
 vineyard. It runs on your own computer: your data stays yours.
 
-![A wine with its appellation and vineyard on the map](screenshots/wine.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/wine-dark.png">
+  <img alt="A wine with its appellation and vineyard on the map" src="screenshots/wine.png">
+</picture>
 
 ## What it does
+
+**Your cellar at a glance.** What to drink soon, an idea for tonight from what's at home, your latest tastings and
+purchases.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/home-dark.png">
+  <img alt="The home page: drink soon, what to open, recent tastings and purchases" src="screenshots/home.png">
+</picture>
 
 **The maps.** Every appellation of France (INAO), the EU, the US and Australia outlined, and Burgundy's premiers
 crus; regions in their colours, your cellar and your tastings on them. A wine page shows its appellation and
 vineyard; a region's page, where what you drink comes from.
 
-![A region: its map, what you drink from it](screenshots/map.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/worldmap-dark.png">
+  <img alt="The world map, wine regions in their colours" src="screenshots/worldmap.png">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/map-dark.png">
+  <img alt="A region: its map, what you drink from it" src="screenshots/map.png">
+</picture>
 
 **Draw what the map doesn't have.** A lieu-dit, a monopole, an appellation without an official outline: draw it on
 the satellite view, start from the official outline and refine it, or import a GeoJSON or KML file.
 
-![Drawing an outline over the satellite view](screenshots/draw.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/draw-dark.png">
+  <img alt="Drawing an outline over the satellite view" src="screenshots/draw.png">
+</picture>
 
-**The cellar map.** Your shelves bin by bin, filled against their capacity and coloured by region; click a bin to
-see what's in it. Cards, a list, a vintage chart, prices and their changes.
+**The cellar.** Each storage place as a wine rack: a bottle end per bottle in its region's colour, the wine's colour
+as the cork, magnums bigger; hover one for the wine, click to open it. Then the wines, reds and whites apart, with
+the critics' scores and whether each is ready to drink. Also a shelf map bin by bin, a list, a vintage
+chart, prices and their changes.
 
-![The shelf map](screenshots/cellar.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/cellar-dark.png">
+  <img alt="The cellar as wine racks, the wines listed below" src="screenshots/cellar.png">
+</picture>
 
 **The tasting journal.** Tastings by occasion (a dinner, a restaurant, a trip), with your notes, ratings, photos and
-the places on a map; trends over the years.
+the places on a map; every wine you've tasted in one line of region colours; trends over the years.
 
-![Tasting cards by occasion](screenshots/tastings.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/tastings-dark.png">
+  <img alt="Tasting cards by occasion" src="screenshots/tastings.png">
+</picture>
+
+**The summary.** Your best-scored wines, the places you go back to, the busiest evening; what you've drunk or hold,
+by region, colour, producer, appellation, grape and vintage.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/summary-dark.png">
+  <img alt="The summary: highlights, the palette of regions, the breakdowns" src="screenshots/summary.png">
+</picture>
 
 **The grapes' family.** 635 grapes with their colour, origin and parents (from VIVC, the Vitis International Variety
 Catalogue): a network of every known parent → offspring link, your wines on it, and each grape's family tree.
 
-![The grape family network](screenshots/grapes.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/grapes-dark.png">
+  <img alt="The grape family network" src="screenshots/grapes.png">
+</picture>
 
-![A grape: its profile, its family](screenshots/grape.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/grape-dark.png">
+  <img alt="A grape: its profile, its family" src="screenshots/grape.png">
+</picture>
+
+**Search everything.** ⌘K (Ctrl K) from any page: wines, producers, appellations, grapes, places, pages.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/search-dark.png">
+  <img alt="Searching for Saumur: a grape, wines and appellations" src="screenshots/search.png">
+</picture>
+
+**Light or dark**, following your system, in nine colour palettes.
+
+![The home page in light and dark](screenshots/themes.png)
 
 And more:
 
@@ -42,7 +97,7 @@ And more:
   other countries' official registers), 635 grapes with their synonyms, ready on the first start.
 - **A wine's grapes and blend**: a list of grapes with their share, a blend style (Bordeaux, Rhône, Champagne, field
   blend), filters that find a grape in any blend.
-- **Vintages**, **producers**, **places** and **summary** pages; ⌘K search everywhere.
+- **Vintages**, **producers** and **places** pages.
 - **Critics' scores** from any critic (a CSV of reviews), shown together.
 - **Market prices** by LWIN, from Bordeaux Index or WineLabs (with your own keys).
 - **Imports** from CellarTracker, Vivino or any spreadsheet; **export** of everything as JSON or CSV.
