@@ -1,0 +1,9 @@
+Source: Intellectual Property Office of New Zealand (IPONZ) - Geographical indications register
+URL (filtered: New Zealand, Wine): https://www.iponz.govt.nz/get-ip/geographical-indications/register/?location=nz&type=wine&sort=alphabet
+URL (enduring GIs, Part 1): https://www.iponz.govt.nz/get-ip/geographical-indications/register/?country=new-zealand&sort=alphabet
+Detail pages used for "within" (Local geographical indications section): https://www.iponz.govt.nz/get-ip/geographical-indications/register/{auckland,canterbury,central-otago,hawkes-bay,wairarapa}/
+Legal basis: Geographical Indications (Wine and Spirits) Registration Act 2006
+Document title: "Geographical indications register" (live online register)
+Date/version: retrieved 2026-10-25 (online register, no version number). 19 registered NZ wine GIs (Part 2, IP numbers 1004-1022, 1028) + 3 enduring GIs (Part 1, IP 1001-1003: New Zealand, North Island, South Island, registered by statute 27 July 2017).
+Notes: Names and alternate forms as displayed by the register ("Hawke’s Bay / Hawkes Bay", "Waipara Valley / Waipara", "Waitaki Valley North Otago / Waitaki Valley", "Central Hawke's Bay / Central Hawkes Bay"). "within" reflects only the register's statement that a GI lies "wholly or partly within" another GI's area; North/South Island containment is not stated by the register and is left empty.
+Licence/terms: Crown copyright (c) 2026. IPONZ copyright page (https://www.iponz.govt.nz/about-iponz/copyright/) permits free reproduction of website information for personal or in-house use with acknowledgement, but expressly EXCLUDES the intellectual property registers from that permission; no open licence is stated for register data (GI names themselves are public legal designations).

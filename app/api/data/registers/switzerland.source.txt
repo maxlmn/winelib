@@ -1,0 +1,18 @@
+Switzerland - wine AOC (KUB / DOC)
+
+Source:
+  Title: "Répertoire suisse des appellations d'origine contrôlée (AOC) / Schweizerisches Verzeichnis der kontrollierten
+         Ursprungsbezeichnungen (KUB/AOC) / Repertorio svizzero delle denominazioni di origine controllata (DOC)"
+  Publisher: Office fédéral de l'agriculture OFAG / BLW, Secteur Produits végétaux (per art. 25 Ordonnance sur le vin, RS 916.140)
+  Date/version: Situation au 1er janvier 2026 (PDF modified 2026-02-12)
+  URL: https://www.blw.admin.ch/dam/fr/sd-web/bQQd5jj01Ivw/AOC_KUB-AOC_DOC_1er%20janvier%202026.pdf
+  Linked from: https://www.blw.admin.ch/fr/vin
+
+Content: 63 AOC in total (register count). Columns: AOC cantonale / AOC régionale / AOC locale.
+  In the CSV, the register's cantonal-level AOC are typed "AOC (canton)" (incl. Rosso/Bianco/Rosato del Ticino, which
+  the register lists as cantonal); regional and local AOC are typed "AOC". Names as spelled in the register.
+  Intercantonal AOC: Vully (Vaud + Fribourg) and Zürichsee (Zürich + Schwyz) are written once (within = Vaud / Zürich).
+  Fribourg has no cantonal AOC in the register; Cheyres has within = "Fribourg" (no Fribourg row exists).
+
+Licence/terms: Swiss federal administration website (admin.ch); no specific licence stated on the document.
+  Official federal publications are generally free to reuse with source attribution (admin.ch terms).

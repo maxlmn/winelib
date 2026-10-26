@@ -1,0 +1,17 @@
+Source: Biblioteca del Congreso Nacional de Chile (BCN) - LeyChile, consolidated official text
+Document: Decreto 464 (Ministerio de Agricultura), "Establece zonificación vitícola y fija normas para su utilización", promulgated 1994-12-14, published Diario Oficial 1995-05-26 (No. 35177); idNorma 13601
+Version used: consolidated version dated 2026-07-14 (fechaVersion in the BCN XML), i.e. including all amendments up to that date
+URLs:
+  https://www.bcn.cl/leychile/navegar?idNorma=13601
+  https://www.bcn.cl/leychile/consulta/obtxml?opt=7&idNorma=13601 (XML export used for extraction)
+Content used: Artículo 1º (regions, subregions, zones, areas, incl. item 7 "Área Rapa Nui - Isla de Pascua"), the label table images embedded in Art. 1 (464-1.jpeg / 464-2.jpeg, cross-checked), Artículo 3º Bis (special DO "Secano Interior"), Artículo 5º bis (complementary terms "Andes", "Entre Cordilleras", "Costa").
+Mapping notes:
+  - Region names are given in short label form (e.g. "Valle Central") with the decree's full form ("Región Vitícola del Valle Central") as alias.
+  - Zapallar and Valle del Marga-Marga are areas placed directly in the Aconcagua region (not within a subregion), per Art. 1 No. 3 and the table.
+  - Lo Abarca, Cartagena, Algarrobo are areas of Valle de San Antonio; San Juan and Santo Domingo are areas of the Valle de Leyda zone.
+  - Rapa Nui - Isla de Pascua is a stand-alone area outside any region (Art. 1 No. 7).
+  - Non-standard types: "Special DO" (Secano Interior, Art. 3º Bis) and "Mention" (Andes / Entre Cordilleras / Costa, Art. 5º bis, complementary label information tied to listed areas, not separate territories).
+  - Aliases include unaccented spellings (as in the uppercase table) and common short/English forms ("Elqui", "Elqui Valley").
+Licence/terms: no licence or terms statement on the norm page; it is an official published legal text (decree of the Ministerio de Agricultura).
+
+Not imported as appellations: the Art. 5 bis mentions (Andes, Entre Cordilleras, Costa), which qualify a valley's name on the label ("Valle de Colchagua Andes") rather than name a place of their own.

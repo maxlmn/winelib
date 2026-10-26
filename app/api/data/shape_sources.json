@@ -1,0 +1,188 @@
+{
+  "_doc": [
+    "The boundary sources geo_scripts/build_shapes.py converts into data/geo/shapes/<name>.parquet.",
+    "To add one: put its files under data/geo/, add an entry here, run build_shapes.py --only <name>.",
+    "name: the source's key; a shape's link is '<name>:<id>'. files: globs relative to data/geo (GeoJSON, Shapefile,",
+    "GeoPackage, GeoParquet, KML...; other coordinate systems are converted to lon/lat).",
+    "id: the id column(s), first found; or id_from_name: true (the name as a slug, barossa-valley). name / level:",
+    "columns, first found (level values zone / region / subregion: one shape per id, the smallest level wins).",
+    "id_prefix: 'file' puts the file's region before the id (pfalz_12.parquet -> pfalz:7); file_regions renames a file.",
+    "kind: appellation or vineyard (how much detail the display outline keeps). display_merge_m (and display_crs, a",
+    "metric projection): parts closer than ~2x that many meters fused in the display outline (INAO's scattered parcels).",
+    "assume_crs: the coordinate system",
+    "to read the files in when their own tag is wrong (the Weinlagen files say EPSG:4324 for plain lon/lat).",
+    "link: how the app's rows find their shape (geo_scripts/link_shapes.py fills the boundary column): table",
+    "(appellations or vineyards) and by: an id column of it (strip_prefix: only values starting with it, prefix",
+    "removed; region: the row's region before the id, as in the file names, region_aliases renaming some or naming",
+    "several files' keys: an id in more than one takes the shape with the row's name, else isn't linked), or 'name'",
+    "with country (the appellation's name as a slug, the aliases of geo_scripts/au_gi.py applied), or 'store_name':",
+    "the shape's own name in the store within the row's country (country_codes; for ids like PDO-IT-A1234), only when",
+    "the when_empty column is empty, aliases ('Country / our name': source_id) first: same denomination, other spelling",
+    "or renamed / merged (checked by hand; a sub-zone like Valpolicella Classico isn't one).",
+    "'country_name': the shape's id is '<country>:<appellation name>' (admin: build_admin_areas.py).",
+    "store_name with 'country': a one-country source whose ids don't carry it (INAO, France). inao_denom: the vines of each",
+    "AOC and complementary name (build_inao_areas.py); inao_aires: the areas of appellations and IGPs, for what has no parcels.",
+    "inao_denom comes first: a French name with its own INAO outline (Gevrey-Chambertin premier cru) takes it before",
+    "the INAO id, which the village and its premier crus share.",
+    "link can be a list of rules. A row is linked to the first rule, in this order, that finds its shape.",
+    "vineyard: INAO's premiers crus (etl_inao_fr.py vineyards). An installation's own sources go in data/geo/sources.local.json",
+    "(same format): one named like a source here replaces it (its own vineyard files: Weinlagen-info's...), others are added."
+  ],
+  "sources": [
+    {
+      "name": "inao_denom",
+      "files": ["inao_denoms/denominations.parquet"],
+      "display_merge_m": 300,
+      "display_crs": "EPSG:2154",
+      "id": ["id_denom"],
+      "name_columns": ["denom"],
+      "kind": "appellation",
+      "link": {
+        "table": "appellations", "by": "store_name", "country": "France",
+        "aliases": {
+          "France / Vin de Pays du Languedoc": "2136",
+          "France / Vin de Pays du Vaucluse": "2252",
+          "France / Vin de Pays de l'Ardeche": "2149",
+          "France / Vin de Pays des Alpilles": "2164",
+          "France / Vin de Pays des Collines Rhodaniennes": "2151",
+          "France / Vin de Pays des Allobroges": "2320",
+          "France / Figari": "1388",
+          "France / Francs Cotes de Bordeaux": "2080",
+          "France / Saint Jean de la Porte": "1219",
+          "France / Muscadet-Sevre-et-Maine sur Lie": "214"
+        }
+      }
+    },
+    {
+      "name": "inao",
+      "files": ["france.parquet"],
+      "display_merge_m": 300,
+      "display_crs": "EPSG:2154",
+      "id": ["id_app"],
+      "name_columns": ["app", "name"],
+      "kind": "appellation",
+      "link": {"table": "appellations", "by": "inao_id"}
+    },
+    {
+      "name": "eu",
+      "files": ["*_pdo.parquet"],
+      "id": ["pdo_id", "osm_id"],
+      "name_columns": ["name", "pdo_name", "pdoname"],
+      "kind": "appellation",
+      "link": [
+        {"table": "appellations", "by": "pdo_id"},
+        {
+          "table": "appellations", "by": "store_name", "when_empty": "pdo_id",
+          "country_codes": {"Austria": "AT", "Belgium": "BE", "Bulgaria": "BG", "Croatia": "HR", "Cyprus": "CY", "Czech Republic": "CZ", "Denmark": "DK", "France": "FR", "Germany": "DE", "Greece": "GR", "Hungary": "HU", "Italy": "IT", "Luxembourg": "LU", "Malta": "MT", "Netherlands": "NL", "Portugal": "PT", "Romania": "RO", "Slovakia": "SK", "Slovenia": "SI", "Spain": "ES", "United Kingdom": "GB"},
+          "aliases": {
+            "Austria / Elsenberg": "PDO-AT-A0215",
+            "France / Bellet Ou Vin-De-Bellet": "PDO-FR-A0663",
+            "Greece / Santorini": "PDO-GR-A1065",
+            "Italy / Albana di Romagna": "PDO-IT-A0285",
+            "Italy / Asolo Prosecco": "PDO-IT-A0514",
+            "Italy / Aversa Asprinio": "PDO-IT-A0238",
+            "Italy / Bianco Pisano di San Torpè": "PDO-IT-A1488",
+            "Italy / Bianco della Valdinievole": "PDO-IT-A1512",
+            "Italy / Bonarda dell'Otrepo Pavese": "PDO-IT-A0973",
+            "Italy / Cagnina di Romagna": "PDO-IT-A0507",
+            "Italy / Castel del Monte Nero di Troia Reserva": "PDO-IT-A0538",
+            "Italy / Cesanese del Piglio or Piglio": "PDO-IT-A0680",
+            "Italy / Colli Bolognesi Pignoletto": "PDO-IT-A0284",
+            "Italy / Colli Orientali del Friuli": "PDO-IT-A0953",
+            "Italy / Colli di Imola": "PDO-IT-A0290",
+            "Italy / Colline Joniche Taratine": "PDO-IT-A0546",
+            "Italy / Colline Teramane Montepulciano d'Abruzzo": "PDO-IT-A0876",
+            "Italy / Conegliano Valdobbiadene Prosecco": "PDO-IT-A0515",
+            "Italy / Dolcetto di Dogliani": "PDO-IT-A1330",
+            "Italy / Dolcetto di Dogliani Superiore": "PDO-IT-A1330",
+            "Italy / Falerio dei Colli Ascolani": "PDO-IT-A0433",
+            "Italy / Golfo del Tigullio": "PDO-IT-A0355",
+            "Italy / Malvasia di Cagliari": "PDO-IT-A1313",
+            "Italy / Monica di Cagliari": "PDO-IT-A1313",
+            "Italy / Moscato di Cagliari": "PDO-IT-A1313",
+            "Italy / Moscato di Siracusa": "PDO-IT-A0802",
+            "Italy / Moscato di Sorso Sennori": "PDO-IT-A0909",
+            "Italy / Ortrugo": "PDO-IT-A0350",
+            "Italy / Pagadebit di Romagna": "PDO-IT-A0507",
+            "Italy / Rosso Barletta": "PDO-IT-A0542",
+            "Italy / Sagrantino di Montefalco": "PDO-IT-A0833",
+            "Italy / Sangiovese di Romagna": "PDO-IT-A0507",
+            "Italy / Sant'Anna di Isola Capo Rizzuto": "PDO-IT-A0629",
+            "Italy / Terracina or Moscato di Terracina": "PDO-IT-A0761",
+            "Italy / Tintilia": "PDO-IT-A0677",
+            "Italy / Trebbiano di Romagna": "PDO-IT-A0507",
+            "Italy / Vin Santo di Gambellara": "PDO-IT-A0469",
+            "Spain / Otazu": "PDO-ES-A0184",
+            "Spain / Pago Aylés": "PDO-ES-A1522",
+            "Spain / Pago Calzadilla": "PDO-ES-A0056",
+            "Hungary / Tokaji Aszú": "PDO-HU-A1254",
+            "Greece / Sitia": "PDO-GR-A1613",
+            "Italy / Valpolicella Classico": "PDO-IT-A0442",
+            "Italy / Valpolicella Superiore": "PDO-IT-A0442",
+            "Italy / Soave Classico": "PDO-IT-A0472",
+            "Italy / Bolgheri Superiore": "PDO-IT-A1348"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ava",
+      "files": ["us_avas_combined.parquet"],
+      "id": ["ava_id"],
+      "name_columns": ["name"],
+      "kind": "appellation",
+      "link": {"table": "appellations", "by": "pdo_id", "strip_prefix": "US-AVA-"}
+    },
+    {
+      "name": "au",
+      "files": ["australia/*.geojson"],
+      "id_from_name": true,
+      "name_columns": ["GI_NAME", "Name", "name"],
+      "level_columns": ["GI_TYPE"],
+      "kind": "appellation",
+      "link": {"table": "appellations", "by": "name", "country": "Australia"}
+    },
+    {
+      "name": "inao_aires",
+      "files": ["inao_aires/areas.parquet"],
+      "id": ["id_denom"],
+      "name_columns": ["denom"],
+      "kind": "appellation",
+      "link": {
+        "table": "appellations", "by": "store_name", "country": "France",
+        "aliases": {
+          "France / Vin de Pays du Languedoc": "2136",
+          "France / Vin de Pays du Vaucluse": "2252",
+          "France / Vin de Pays de l'Ardeche": "2149",
+          "France / Vin de Pays des Alpilles": "2164",
+          "France / Vin de Pays des Collines Rhodaniennes": "2151",
+          "France / Vin de Pays des Allobroges": "2320",
+          "France / Figari": "1388",
+          "France / Francs Cotes de Bordeaux": "2080",
+          "France / Saint Jean de la Porte": "1219",
+          "France / Muscadet-Sevre-et-Maine sur Lie": "214"
+        }
+      }
+    },
+    {
+      "name": "admin",
+      "files": ["admin/*.geojson"],
+      "id": ["id"],
+      "name_columns": ["name"],
+      "kind": "appellation",
+      "link": {"table": "appellations", "by": "country_name"}
+    },
+    {
+      "name": "vineyard",
+      "files": ["vineyards/vineyards_premier_crus_inao.parquet"],
+      "id": ["id", "vineyard_id"],
+      "id_prefix": "file",
+      "file_regions": {"vineyards_premier_crus_inao": "inao-pc"},
+      "assume_crs": "EPSG:4326",
+      "name_columns": ["name", "lage", "nom", "denom"],
+      "kind": "vineyard",
+      "link": {"table": "vineyards", "by": "vineyard_id", "region": true,
+               "region_aliases": {"bourgogne": ["inao-pc"], "burgundy": ["inao-pc"], "loire": ["inao-pc"]}}
+    }
+  ]
+}

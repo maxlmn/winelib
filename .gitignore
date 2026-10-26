@@ -5,9 +5,9 @@ __pycache__/
 app/api/.cache/
 app/api/dev.db
 
-# Your data and keys: never in git
-data/
-backups/
+# Your data and keys: never in git (anchored at the root: app/api/data/ is the shipped reference data)
+/data/
+/backups/
 .secrets.env
 .env
 

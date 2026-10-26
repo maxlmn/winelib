@@ -1,0 +1,21 @@
+Georgia - wine Appellations of Origin registered by Sakpatenti
+
+Source:
+  Title: "State registry - Appellations of Origin registered in Georgia" (Sakpatenti, National Intellectual Property Center of Georgia)
+  URL (EN): https://www.sakpatenti.gov.ge/en/state_registry/
+  URL (KA, Georgian-script names): https://www.sakpatenti.gov.ge/ka/state_registry/
+  Date/version: as retrieved 2026-10-25; register lists 44 AOs, latest No. 991 (Narchvi, 29/10/2025).
+  Product type (wine vs. other) checked against each AO's registered specification PDF linked from the registry
+  (e.g. https://www.sakpatenti.gov.ge/media/django-summernote/2025-11-18/f3999ba7-fdcd-4735-8ced-6a9073ba87be.pdf for Khvanchkara);
+  for Obcha (986), Lechkhumi (987) and Racha (989) only the Georgian-language specifications are linked (product: ღვინო = wine).
+  Background: Decree of the President of Georgia N 88 of 28 Feb 2002, Annex 1 (original list of 18 wine AOs):
+  https://www.sakpatenti.gov.ge/en/page/117/
+
+Selection: 33 of the 44 AOs are for wine. Excluded as non-wine: Tushetian Guda (cheese), Nabeghlavi, Sairme, Borjomi,
+  Mitarbi, Skuri, Utsera, Bolnisi (mineral water), Zvare (mineral waters), Askhi Mountain Sulguni, Narchvi (cheeses).
+Names: register's Latin spelling (case normalised from upper case); register qualifiers dropped where only
+  disambiguating ("Bolnisi (wine)" -> Bolnisi); additional signs in brackets given as aliases (Kakhuri, Atenuri, Akhmetis Mtsvane).
+within: left empty - the registry list does not state a historical region (the specifications describe locations,
+  but "Kakheti", "Racha", "Lechkhumi" are themselves AOs, so a region value would be ambiguous).
+
+Licence/terms: no licence or terms of reuse stated on the registry page.

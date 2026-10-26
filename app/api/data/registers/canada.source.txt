@@ -1,0 +1,40 @@
+ONTARIO
+Source: Government of Ontario, e-Laws (official consolidated law)
+Document: O. Reg. 406/00, "Rules of Vintners Quality Alliance Ontario Relating to Terms for VQA Wine", under the Vintners Quality Alliance Act, 1999, S.O. 1999, c. 3
+Version used: consolidation period July 6, 2026 - e-Laws currency date October 21, 2026 (last amendment O. Reg. 226/26); accessed 2026-10-25
+URL: https://www.ontario.ca/laws/regulation/000406
+Content used: s. 2 and Table 1 "Viticultural Areas" (items 1-17), cross-checked against s. 3 (2) list of protected terms (items 3-20).
+Supporting (hierarchy terminology only): VQA Ontario, https://vqaontario.ca/ontario-appellations/niagara-peninsula/west-niagara/ (West Niagara described as the third regional appellation within the Niagara Peninsula, after Niagara Escarpment and Niagara-on-the-Lake).
+Mapping notes:
+  - "Ontario" is the provincial geographical indication (s. 3 (2) item 3; s. 3 (6) (d) "the geographical indication Ontario"); included as top-level row, type "Provincial appellation".
+  - DVAs (type "DVA"): Niagara Peninsula, Lake Erie North Shore, Prince Edward County, South Islands.
+  - Table 1 items 4-6 (Niagara Escarpment, Niagara-on-the-Lake, West Niagara) are defined as unions of sub-viticultural areas; typed "Regional appellation" (VQA Ontario's term), within Niagara Peninsula. West Niagara was added by O. Reg. 359/24.
+  - The ten sub-viticultural areas (type "Sub-appellation") are assigned to Niagara-on-the-Lake or West Niagara, which together partition them exactly. Niagara Escarpment overlaps: it consists of Beamsville Bench, Twenty Mile Bench, Short Hills Bench (also West Niagara) and St. David’s Bench (also Niagara-on-the-Lake). Because "within" is single-valued, this second membership is not encoded.
+  - The regulation spells "St. David’s Bench" with a typographic apostrophe; straight-apostrophe spelling given as alias.
+Licence/terms: published by the King's Printer for Ontario on e-Laws; official legal text (Ontario permits reproduction of e-Laws legislation; no specific licence line on the page).
+
+BRITISH COLUMBIA
+Source: BC Laws (King's Printer, Victoria, British Columbia)
+Document: B.C. Reg. 168/2018, "Wines of Marked Quality Regulation", under the Food and Agricultural Products Classification Act; Part 4, s. 56 (1) table "Geographical indication / Geographical area"
+Version used: consolidation current to October 20, 2026; regulation last amended July 14, 2025 by B.C. Reg. 118/2025 (s. 56 amended by B.C. Regs. 100/2019, 69/2020, 254/2021, 158/2022); accessed 2026-10-25
+URL: https://www.bclaws.gov.bc.ca/civix/document/id/complete/statreg/168_2018
+Mapping notes:
+  - The table lists 24 geographical indications (items 1-15 incl. 2.1, 4.1, 5.1, 13.1-13.4). Entries written "X, a subdivision of Y" are typed "Sub-GI" with within = Y; the others are "GI" within British Columbia; "British Columbia" (item 1) is the top level.
+  - Administrator: British Columbia Wine Authority (s. 3), which publishes the boundary maps referenced in column 2.
+Licence/terms: Copyright King's Printer, Victoria, British Columbia; BC Laws content is provided under the King's Printer Licence (free reproduction permitted with attribution).
+
+QUEBEC
+Sources: Gazette officielle du Québec (Publications du Québec); CARTV (Conseil des appellations réservées et des termes valorisants)
+Documents:
+  - Avis de reconnaissance d'une appellation réservée (IGP « Vin du Québec » ou « Québec Wine »), Gazette officielle du Québec, Partie 2, 16 janvier 2019, 151e année, no 3, p. 229 (replaces the notice of 17 November 2018, (2018) 150-46 G.O.Q. I, 745)
+    https://www.publicationsduquebec.gouv.qc.ca/fileadmin/gazette/pdf_encrypte/lois_reglements/2019F/69880.pdf
+  - Avis de reconnaissance d'une appellation réservée (IGP « Vin de glace du Québec » et sa version anglaise « Québec Icewine »), Gazette officielle du Québec, Partie 2, 30 décembre 2014, 146e année, no 53
+    https://www.publicationsduquebec.gouv.qc.ca/fileadmin/gazette/pdf_encrypte/lois_reglements/2014F/62533.pdf
+  - CARTV list of reserved appellations (accessed 2026-10-25): https://cartv.gouv.qc.ca/appellations-reservees/
+  - CARTV, Cahier des charges IGP Vin de glace du Québec, version 1.5, 6 December 2022: https://cartv.gouv.qc.ca/app/uploads/2022/12/cc_igpvinglaceqc_v1_5_06122022.pdf
+  - Quebec.ca, "Appellation réservée « Vin du Québec »" (page updated 28 Oct 2025)
+Mapping notes: both IGPs cover the delimited area within the province (no sub-units); type "IGP"; official English versions given as aliases. "Cidre de glace du Québec" omitted (cider, not wine).
+Licence/terms: official government publications; no specific licence stated in the notices.
+
+NOVA SCOTIA
+"Tidal Bay" is NOT included: it is a wine-style appellation whose standards are set and administered by the Winery Association of Nova Scotia (industry body; launched 2012). No provincial or federal regulation designating it as a geographical indication was found.

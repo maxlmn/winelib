@@ -1,0 +1,130 @@
+id,name,country,color,iso_code
+1,Alsace,France,#ac79a2,FR
+2,Argentina,Argentina,#b7b7b7,
+3,Australia,Australia,#f1c232,
+4,Austria,Austria,#d0e0e3,AT
+5,Beaujolais,France,#d97693,FR
+6,Belgium,Belgium,,BE
+7,Bordeaux,France,#d96663,FR
+8,Bourgogne,France,#d97693,FR
+9,Bulgaria,Bulgaria,,BG
+11,California,United States,#f6b26b,
+12,Canada,Canada,#d9ead3,
+13,Champagne,France,#ffe599,FR
+14,Charentes,France,,
+15,Chile,Chile,#fce5cd,
+16,China,China,#d9ead3,
+17,Corsica,France,#cd92a3,FR
+18,Croatia,Croatia,,HR
+19,Cyprus,Cyprus,,CY
+20,Czech Republic,Czech Republic,,
+21,Denmark,Denmark,,
+22,England,United Kingdom,#ffffff,
+23,Georgia,Georgia,#ead1dc,
+24,Germany,Germany,#a2c4c9,DE
+25,Greece,Greece,#ead1dc,EL
+26,Hungary,Hungary,#b7b7b7,HU
+27,Italy,Italy,#ea9999,IT
+28,Japan,Japan,#d9ead3,
+29,Jura,France,#ac79a2,FR
+30,Languedoc,France,#d5be00,FR
+31,Lebanon,Lebanon,#ead1dc,
+32,Limousin,France,,
+33,Loire,France,#abc96c,
+34,Lorraine,France,,
+35,Luxembourg,Luxembourg,,LU
+36,Lyonnais,France,,
+37,Malta,Malta,,MT
+38,Mendoza,Argentina,,
+39,Netherlands,Netherlands,,NL
+40,New Zealand,New Zealand,#a4c2f4,
+41,Pacific Northwest,United States,#f9cb9c,
+42,Piemonte,Italy,#ea9999,IT
+43,Portugal,Portugal,#fff2cc,PT
+44,Provence,France,#cd92a3,FR
+45,Rhone,France,#ce9178,FR
+46,Romania,Romania,,RO
+47,Savoie,France,#ac79a2,FR
+48,Slovakia,Slovakia,,SK
+49,Slovenia,Slovenia,,SI
+50,South Africa,South Africa,#b7b7b7,
+51,Sud-Ouest,France,#7f8c2a,FR
+52,Spain,Spain,#fff2cc,ES
+53,Switzerland,Switzerland,#c27ba0,
+54,Toscana,Italy,#ea9999,IT
+55,United Kingdom,United Kingdom,,
+56,United States,United States,#f6b26b,
+58,Valle d'Aosta,Italy,#dc5555,
+59,Lombardia,Italy,#f5cdcd,
+60,Trentino-Alto Adige,Italy,#df6464,
+61,Veneto,Italy,#f2bebe,
+62,Friuli-Venezia Giulia,Italy,#e27373,
+63,Liguria,Italy,#efafaf,
+64,Emilia-Romagna,Italy,#e58282,
+65,Umbria,Italy,#eba0a0,
+66,Marche,Italy,#e89191,
+67,Lazio,Italy,#e89191,
+68,Abruzzo,Italy,#eba0a0,
+69,Molise,Italy,#e58282,
+70,Campania,Italy,#efafaf,
+71,Puglia,Italy,#e27373,
+72,Basilicata,Italy,#f2bebe,
+73,Calabria,Italy,#df6464,
+74,Sicilia,Italy,#de5d5d,
+75,Sardegna,Italy,#e16c6c,
+76,España Verde,Spain,#ffdd7a,
+77,Castilla y León,Spain,#fff2cc,
+78,Alto Ebro,Spain,#ffe18b,
+79,Aragón,Spain,#ffeebc,
+80,Catalunya,Spain,#ffe69b,
+81,Levante,Spain,#ffeaab,
+82,Castilla-La Mancha y Madrid,Spain,#ffeaab,
+83,Extremadura,Spain,#ffe69b,
+84,Andalucía,Spain,#ffeebc,
+85,Islas Baleares,Spain,#ffe18b,
+86,Islas Canarias,Spain,#ffdf83,
+87,Ahr,Germany,#65aab5,
+88,Baden,Germany,#c0dde1,
+89,Franken,Germany,#aed3d8,
+90,Hessische Bergstraße,Germany,#9cc9cf,
+91,Mittelrhein,Germany,#77b5be,
+92,Mosel,Germany,#d3e7ea,
+93,Nahe,Germany,#c0dde1,
+94,Pfalz,Germany,#9cc9cf,
+95,Rheingau,Germany,#89bfc6,
+96,Rheinhessen,Germany,#aed3d8,
+97,Saale-Unstrut,Germany,#77b5be,
+98,Sachsen,Germany,#6eafb9,
+99,Württemberg,Germany,#89bfc6,
+100,Vinho Verde,Portugal,#ffc970,
+101,Trás-os-Montes,Portugal,#ffeccc,
+102,Douro,Portugal,#ffcf80,
+103,Dão,Portugal,#ffe6bd,
+104,Bairrada,Portugal,#ffd58f,
+105,Beira Interior,Portugal,#ffe0ad,
+106,Lisboa,Portugal,#ffdb9e,
+107,Tejo,Portugal,#ffdb9e,
+108,Península de Setúbal,Portugal,#ffe0ad,
+109,Alentejo,Portugal,#ffd58f,
+110,Algarve,Portugal,#ffe6bd,
+111,Madeira,Portugal,#ffcf80,
+112,Açores,Portugal,#ffcc78,
+113,Niederösterreich,Austria,#95c3cc,
+114,Burgenland,Austria,#add1d8,
+115,Steiermark,Austria,#ddecee,
+116,Wien,Austria,#c5dee3,
+117,South Australia,Australia,#f4d061,
+118,Victoria,Australia,#f0be25,
+119,New South Wales,Australia,#e6b110,
+120,Western Australia,Australia,#c99b0e,
+121,Tasmania,Australia,#f0be25,
+122,Queensland,Australia,#f2c743,
+123,New York,United States,#f18a1e,
+124,Virginia,United States,#f39738,
+125,Texas,United States,#f4a551,
+126,Michigan,United States,#f8bf85,
+127,Ohio,United States,#f4a551,
+128,Pennsylvania,United States,#fbdab8,
+129,Missouri,United States,#f8bf85,
+130,France,France,#d9d2e9,
+131,Brazil,Brazil,,

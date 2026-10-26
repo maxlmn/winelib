@@ -1,0 +1,28 @@
+South Africa - Wine of Origin production areas
+
+Primary source (list and hierarchy):
+  Title: "Production Areas Defined in Terms of the Wine of Origin Scheme" (English/Afrikaans)
+  Date/version: February 2026 (PDF author Jackie Cupido, SAWIS; created 2026-03-19)
+  URL: https://terroirwineawards.co.za/wp-content/uploads/2026/05/Jongwynskou-Production-areas-Eng-Afr-Feb26.pdf
+  Note: this is the SAWIS / Wine Certification Authority list; the February 2026 edition was found re-hosted by the
+  Terroir Wine Awards (the latest edition on sawis.co.za itself is June 2024, below).
+
+Cross-checks:
+  - "Production Areas Defined in Terms of the Wine of Origin Scheme", June 2024 (SAWIS)
+    https://www.sawis.co.za/cert/download/Production_areas_-_June_2024.pdf
+  - SAWIS "Production Areas & Maps" page: https://www.sawis.co.za/cert/productionareas.php
+    Maps: Wards (dated 2026/01/21) https://www.sawis.co.za/cert/download/Wards_-__Jan2026.pdf
+          Districts (2026/01/21) https://www.sawis.co.za/cert/download/Districts_-_Jan2026.pdf
+          Regions (2026/01/21) https://www.sawis.co.za/cert/download/Regions_-_Jan2026.pdf
+          Geographical Units (2019/03/27) https://www.sawis.co.za/cert/download/Geographical_Units_-_Mrt2020.pdf
+  - SAWIS "Wine Law" newsletters (demarcation notices), e.g. No. 104 (11 Oct 2024, Nuveld-Karoo proposed district),
+    No. 103 (15 Mar 2024, Moordkuil ward), No. 86 (16 Oct 2019, Greater Cape / Cape West Coast / Central Orange River):
+    https://www.sawis.co.za/winelaw/newsletter.php
+  Legal basis: Wine of Origin Scheme, Government Notice R.1434 of 29 June 1990 (Liquor Products Act 60 of 1989).
+
+Changes vs June 2024: new wards Shaw's Mountain (Overberg), Goukou River Valley (in new district Still Bay/Stilbaai,
+replacing the former district-less ward "Still Bay East"), Agter-Pakhuis Rocklands Valley (Western Cape, no district);
+new district Nuveld-Karoo (Western Cape, no region). Afrikaans names added in 2026 edition are given as aliases.
+
+Licence/terms: SAWIS site states "(c) SAWIS. All Rights Reserved"; no open licence stated. Wine Law newsletters carry a
+disclaimer that they are not legal advice. Underlying demarcations are public law (Government Gazette notices).

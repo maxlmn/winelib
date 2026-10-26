@@ -1,0 +1,31 @@
+Primary source: Instituto Nacional de Vitivinicultura (INV), "Indicaciones Geográficas y Denominaciones de Origen reconocidas y protegidas de la República Argentina"
+URL: https://www.argentina.gob.ar/sites/default/files/i.g._y_d.o.c._de_la_republica_argentina_1.pdf
+  (linked from https://www.argentina.gob.ar/inv/proteccion-del-origen)
+Date/version: PDF created 2021-06-01, last modified 2022-04-11 (server Last-Modified 11 Apr 2022); 107 entries (105 IG + 2 DOC), latest included resolution RESOL-2021-5-APN-INV (Victoria, Entre Ríos).
+
+Supplementary official sources (IGs recognised after that list), INV resolutions under Ley 25.163, texts from argentina.gob.ar/normativa (Infoleg), found via Infoleg "Normas que modifican y/o complementan a Ley 25163" (https://servicios.infoleg.gob.ar/infolegInternet/verVinculos.do?modo=2&id=60510, retrieved 2026-10-25):
+  Res 11/2022 Balcarce (Buenos Aires)                     https://www.argentina.gob.ar/normativa/nacional/norma-367112/texto
+  Res 12/2022 Vistalba (Luján de Cuyo, Mendoza)           https://www.argentina.gob.ar/normativa/nacional/norma-370402/texto
+  Res 7/2022 Cordón El Cepillo (San Carlos, Mendoza)      https://www.argentina.gob.ar/normativa/nacional/norma-377091/texto
+  Res 1/2022 [publ. 25-01-2023] El Peral (Tupungato, Mza) https://www.argentina.gob.ar/normativa/nacional/norma-378693/texto
+  Res 9/2023 Sarmiento (Dpto Sarmiento, Chubut)           https://www.argentina.gob.ar/normativa/nacional/norma-384302/texto
+  Res 25/2023 El Hoyo (Cushamen, Chubut)                  https://www.argentina.gob.ar/normativa/nacional/norma-389593/texto
+  Res 35/2023 Tamberías - Valle de Calingasta (San Juan)  https://www.argentina.gob.ar/normativa/nacional/norma-396439/texto
+  Res 36/2023 Sorocayense (Calingasta, San Juan)          https://www.argentina.gob.ar/normativa/nacional/norma-396440/texto
+  Res 37/2023 Hilario - Valle de Calingasta (San Juan)    https://www.argentina.gob.ar/normativa/nacional/norma-396441/texto
+  Res 8/2024 La Ciénaga - Zonda (Zonda, San Juan)         https://www.argentina.gob.ar/normativa/nacional/norma-398922/texto
+  Res 24/2024 Tandil (Buenos Aires)                       https://www.argentina.gob.ar/normativa/nacional/norma-401613/texto
+  Res 8/2025 Valle de Pucará - Salta (San Carlos, Salta)  https://www.argentina.gob.ar/normativa/nacional/norma-410611/texto
+  Res 27/2025 Alto Agrelo (Luján de Cuyo, Mendoza)        https://www.argentina.gob.ar/normativa/nacional/norma-415443/texto
+  Res 28/2025 Valles Templados (Jujuy)                    https://www.argentina.gob.ar/normativa/nacional/norma-417093/texto
+  Res 6/2026 Huaco / Valle de Huaco (Sanagasta, La Rioja) https://www.argentina.gob.ar/normativa/nacional/norma-431487/texto
+  Also checked (no new IG): Res 1/2022 (Patagonia = Patagonia Argentina synonym clarification, norma-360343), Res E 82/2017 (Paraje Altamira boundary extension, norma-275470), Res 20/2023 (Los Chacayes boundary extension, norma-389241).
+Base resolutions for spellings: Res C.32/2002 Anexo I (https://www.argentina.gob.ar/sites/default/files/resolucionnc32-02.pdf) and Res C.37/2002 (https://www.argentina.gob.ar/sites/default/files/resolucionnc37-02.pdf).
+
+Mapping notes:
+  - "within" = the department/region named in the INV list's "Departamento y Provincia" column or the recognising resolution, only where that unit is itself a listed IG (e.g. Agrelo -> Luján de Cuyo, Maipú -> Mendoza). Mendoza, San Juan and La Rioja Argentina are set within Cuyo because the INV list describes Cuyo as the region including those three provinces. Valle de Uco within Mendoza (INV: departments San Carlos, Tunuyán, Tupungato of Mendoza).
+  - Duplicate names exist officially: Rivadavia, San Carlos, San Martín (Mendoza and San Juan/Salta), Sarmiento (San Juan dept IG and Chubut 2023 IG), and Luján de Cuyo / San Rafael (each both IG and DOC). Duplicates carry a "(Province)" alias; "within" references to these names are ambiguous by name alone (children of San Carlos-Mendoza: Paraje Altamira, La Consulta, Pampa El Cepillo, Cordón El Cepillo; of San Carlos-Salta: Valle de Pucará - Salta; of Rivadavia-Mendoza: Reducción; of Sarmiento-San Juan: Valle del Pedernal; IG Luján de Cuyo is the parent of Agrelo, Las Compuertas, Vistalba, Alto Agrelo).
+  - Cafayate: INV Disposición 08/2005 authorises only "Valle de Cafayate" on labels (Cafayate is a registered trademark).
+Licence/terms: argentina.gob.ar footer: "Los contenidos de Argentina.gob.ar están licenciados bajo Creative Commons Atribución 4.0 Internacional" (CC BY 4.0); resolutions are official legal texts published in the Boletín Oficial.
+
+Gualtallary: added by hand (no recognising INV resolution found; widely used on labels), with a note in its details.

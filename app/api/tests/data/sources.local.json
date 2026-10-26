@@ -1,0 +1,63 @@
+{
+  "_doc": [
+    "An installation's own shape sources (tests): a vineyard source with region files (vineyards/*.parquet, like",
+    "Weinlagen-info's) next to INAO's premiers crus, merged over app/api/data/shape_sources.json."
+  ],
+  "sources": [
+    {
+      "name": "vineyard",
+      "files": [
+        "vineyards/*.parquet"
+      ],
+      "id": [
+        "id",
+        "vineyard_id"
+      ],
+      "id_prefix": "file",
+      "file_regions": {
+        "vineyards_premier_crus_inao": "inao-pc"
+      },
+      "assume_crs": "EPSG:4326",
+      "name_columns": [
+        "name",
+        "lage",
+        "nom",
+        "denom"
+      ],
+      "kind": "vineyard",
+      "link": {
+        "table": "vineyards",
+        "by": "vineyard_id",
+        "region": true,
+        "region_aliases": {
+          "bourgogne": [
+            "bourgogne",
+            "inao-pc"
+          ],
+          "burgundy": [
+            "bourgogne",
+            "inao-pc"
+          ],
+          "loire": [
+            "loire",
+            "inao-pc"
+          ],
+          "germany": [
+            "ahr",
+            "baden",
+            "franken",
+            "mittelrhein",
+            "mosel",
+            "nahe",
+            "pfalz",
+            "rheingau",
+            "rheinhessen",
+            "saale-unstrut",
+            "sachsen",
+            "württemberg"
+          ]
+        }
+      }
+    }
+  ]
+}

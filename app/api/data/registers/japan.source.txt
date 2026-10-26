@@ -1,0 +1,13 @@
+Source: National Tax Agency (NTA), Japan - GIs designated by the NTA Commissioner under the Act on Securing of Liquor Tax and on Liquor Business Associations (Liquor Business Act) GI labelling standard
+URLs (accessed 2026-10-25; no page version date shown):
+  - 酒類の地理的表示一覧 (List of geographical indications for liquor), section 1 "国税庁長官が指定した酒類の地理的表示(GI)": https://www.nta.go.jp/taxes/sake/hyoji/chiri/ichiran.htm
+  - English: "Information on GIs protected in Japan": https://www.nta.go.jp/english/taxes/liquor_administration/geographical/02.htm
+Wine (ぶどう酒) GIs, with production area and designation date:
+  - 山梨 Yamanashi - 山梨県 - 2013-07-16 (平成25年7月16日)
+  - 北海道 Hokkaido - 北海道 - 2018-06-28 (平成30年6月28日)
+  - 山形 Yamagata - 山形県 - 2021-06-30 (令和3年6月30日)
+  - 大阪 Osaka - 大阪府 - 2021-06-30
+  - 長野 Nagano - 長野県 - 2021-06-30
+No other wine GIs appear in the current list (remaining entries are sake, distilled spirits and other liquors). Each wine GI's area is the whole prefecture.
+Mapping notes: Latin-script name per the NTA English page; Japanese name as alias. On labels these appear as "GI Yamanashi" etc.
+Licence/terms: not checked in detail; Japanese government website content is generally reusable under the Government of Japan Standard Terms of Use (CC BY 4.0 compatible).

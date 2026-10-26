@@ -1,0 +1,670 @@
+id,vineyard_id,name,region_id,sub_region,village,boundary
+1013,257,Aloxe-Corton premier cru,8,,Aloxe-Corton,vineyard:inao-pc:257
+1014,243,Aloxe-Corton premier cru Clos des Maréchaudes,8,,Aloxe-Corton,vineyard:inao-pc:243
+1015,244,Aloxe-Corton premier cru Clos du Chapitre,8,,Aloxe-Corton,vineyard:inao-pc:244
+1016,245,Aloxe-Corton premier cru La Coutière,8,,Aloxe-Corton,vineyard:inao-pc:245
+1017,246,Aloxe-Corton premier cru La Maréchaude,8,,Aloxe-Corton,vineyard:inao-pc:246
+1018,247,Aloxe-Corton premier cru La Toppe au Vert,8,,Aloxe-Corton,vineyard:inao-pc:247
+1019,248,Aloxe-Corton premier cru Les Chaillots blanc,8,,Aloxe-Corton,vineyard:inao-pc:248
+1020,249,Aloxe-Corton premier cru Les Fournières,8,,Aloxe-Corton,vineyard:inao-pc:249
+1021,250,Aloxe-Corton premier cru Les Guérets,8,,Aloxe-Corton,vineyard:inao-pc:250
+1022,251,Aloxe-Corton premier cru Les Maréchaudes,8,,Aloxe-Corton,vineyard:inao-pc:251
+1023,252,Aloxe-Corton premier cru Les Moutottes,8,,Aloxe-Corton,vineyard:inao-pc:252
+1024,253,Aloxe-Corton premier cru Les Paulands,8,,Aloxe-Corton,vineyard:inao-pc:253
+1025,254,Aloxe-Corton premier cru Les Petites Folières,8,,Aloxe-Corton,vineyard:inao-pc:254
+1026,255,Aloxe-Corton premier cru Les Valozières,8,,Aloxe-Corton,vineyard:inao-pc:255
+1027,256,Aloxe-Corton premier cru Les Vercots,8,,Aloxe-Corton,vineyard:inao-pc:256
+1028,272,Auxey-Duresses premier cru,8,,Auxey-Duresses,vineyard:inao-pc:272
+1029,263,Auxey-Duresses premier cru Bas des Duresses,8,,Auxey-Duresses,vineyard:inao-pc:263
+1030,264,Auxey-Duresses premier cru Climat du Val,8,,Auxey-Duresses,vineyard:inao-pc:264
+1031,265,Auxey-Duresses premier cru Clos du Val,8,,Auxey-Duresses,vineyard:inao-pc:265
+1032,266,Auxey-Duresses premier cru La Chapelle,8,,Auxey-Duresses,vineyard:inao-pc:266
+1033,267,Auxey-Duresses premier cru Les Bréterins,8,,Auxey-Duresses,vineyard:inao-pc:267
+1034,268,Auxey-Duresses premier cru Les Duresses,8,,Auxey-Duresses,vineyard:inao-pc:268
+1035,269,Auxey-Duresses premier cru Les Ecussaux,8,,Auxey-Duresses,vineyard:inao-pc:269
+1036,270,Auxey-Duresses premier cru Les Grands Champs,8,,Auxey-Duresses,vineyard:inao-pc:270
+1037,271,Auxey-Duresses premier cru Reugne,8,,Auxey-Duresses,vineyard:inao-pc:271
+1038,350,Beaune premier cru,8,,Beaune,vineyard:inao-pc:350
+1039,308,Beaune premier cru A l'Ecu,8,,Beaune,vineyard:inao-pc:308
+1040,309,Beaune premier cru Aux Coucherias,8,,Beaune,vineyard:inao-pc:309
+1041,310,Beaune premier cru Aux Cras,8,,Beaune,vineyard:inao-pc:310
+1042,311,Beaune premier cru Belissand,8,,Beaune,vineyard:inao-pc:311
+1043,312,Beaune premier cru Blanches Fleurs,8,,Beaune,vineyard:inao-pc:312
+1044,313,Beaune premier cru Champs Pimont,8,,Beaune,vineyard:inao-pc:313
+1045,314,Beaune premier cru Clos Saint-Landry,8,,Beaune,vineyard:inao-pc:314
+1046,315,Beaune premier cru Clos de l'Ecu,8,,Beaune,vineyard:inao-pc:315
+1047,316,Beaune premier cru Clos de la Feguine,8,,Beaune,vineyard:inao-pc:316
+1048,317,Beaune premier cru Clos de la Mousse,8,,Beaune,vineyard:inao-pc:317
+1049,318,Beaune premier cru Clos des Avaux,8,,Beaune,vineyard:inao-pc:318
+1050,319,Beaune premier cru Clos des Ursules,8,,Beaune,vineyard:inao-pc:319
+1051,320,Beaune premier cru Clos du Roi,8,,Beaune,vineyard:inao-pc:320
+1052,321,Beaune premier cru En Genêt,8,,Beaune,vineyard:inao-pc:321
+1053,322,Beaune premier cru En l'Orme,8,,Beaune,vineyard:inao-pc:322
+1054,323,Beaune premier cru La Mignotte,8,,Beaune,vineyard:inao-pc:323
+1055,324,Beaune premier cru Le Bas des Teurons,8,,Beaune,vineyard:inao-pc:324
+1056,325,Beaune premier cru Le Clos des Mouches,8,,Beaune,vineyard:inao-pc:325
+1057,326,Beaune premier cru Les Aigrots,8,,Beaune,vineyard:inao-pc:326
+1058,327,Beaune premier cru Les Avaux,8,,Beaune,vineyard:inao-pc:327
+1059,328,Beaune premier cru Les Boucherottes,8,,Beaune,vineyard:inao-pc:328
+1060,329,Beaune premier cru Les Bressandes,8,,Beaune,vineyard:inao-pc:329
+1061,330,Beaune premier cru Les Cents Vignes,8,,Beaune,vineyard:inao-pc:330
+1062,331,Beaune premier cru Les Chouacheux,8,,Beaune,vineyard:inao-pc:331
+1063,332,Beaune premier cru Les Epenotes,8,,Beaune,vineyard:inao-pc:332
+1064,333,Beaune premier cru Les Fèves,8,,Beaune,vineyard:inao-pc:333
+1065,334,Beaune premier cru Les Grèves,8,,Beaune,vineyard:inao-pc:334
+1066,335,Beaune premier cru Les Marconnets,8,,Beaune,vineyard:inao-pc:335
+1067,336,Beaune premier cru Les Montrevenots,8,,Beaune,vineyard:inao-pc:336
+1068,337,Beaune premier cru Les Perrières,8,,Beaune,vineyard:inao-pc:337
+1069,338,Beaune premier cru Les Reversés,8,,Beaune,vineyard:inao-pc:338
+1070,339,Beaune premier cru Les Sceaux,8,,Beaune,vineyard:inao-pc:339
+1071,340,Beaune premier cru Les Seurey,8,,Beaune,vineyard:inao-pc:340
+1072,341,Beaune premier cru Les Sizies,8,,Beaune,vineyard:inao-pc:341
+1073,342,Beaune premier cru Les Teurons,8,,Beaune,vineyard:inao-pc:342
+1074,343,Beaune premier cru Les Toussaints,8,,Beaune,vineyard:inao-pc:343
+1075,344,Beaune premier cru Les Tuvilains,8,,Beaune,vineyard:inao-pc:344
+1076,345,Beaune premier cru Les Vignes Franches,8,,Beaune,vineyard:inao-pc:345
+1077,346,Beaune premier cru Montée Rouge,8,,Beaune,vineyard:inao-pc:346
+1078,347,Beaune premier cru Pertuisots,8,,Beaune,vineyard:inao-pc:347
+1079,348,Beaune premier cru Sur les Grèves,8,,Beaune,vineyard:inao-pc:348
+1080,349,Beaune premier cru Sur les Grèves - Clos Saint-Anne,8,,Beaune,vineyard:inao-pc:349
+1081,360,Blagny premier cru,8,,Blagny,vineyard:inao-pc:360
+1082,353,Blagny premier cru Hameau de Blagny,8,,Blagny,vineyard:inao-pc:353
+1083,354,Blagny premier cru La Garenne ou sur la Garenne,8,,Blagny,vineyard:inao-pc:354
+1084,355,Blagny premier cru La Jeunellotte,8,,Blagny,vineyard:inao-pc:355
+1085,356,Blagny premier cru La Pièce sous le Bois,8,,Blagny,vineyard:inao-pc:356
+1086,357,Blagny premier cru Sous Blagny,8,,Blagny,vineyard:inao-pc:357
+1087,358,Blagny premier cru Sous le Dos d'Ane,8,,Blagny,vineyard:inao-pc:358
+1088,359,Blagny premier cru Sous le Puits,8,,Blagny,vineyard:inao-pc:359
+1089,438,Chablis premier cru,8,,Chablis,vineyard:inao-pc:438
+1090,404,Chablis premier cru Chaume de Talvat,8,,Chablis,vineyard:inao-pc:404
+1091,408,Chablis premier cru Côte de Jouan,8,,Chablis,vineyard:inao-pc:408
+1092,414,Chablis premier cru Fourchaume,8,,Chablis,vineyard:inao-pc:414
+1093,416,Chablis premier cru Les Beauregards,8,,Chablis,vineyard:inao-pc:416
+1094,418,Chablis premier cru Les Fourneaux,8,,Chablis,vineyard:inao-pc:418
+1095,420,Chablis premier cru Mont de Milieu,8,,Chablis,vineyard:inao-pc:420
+1096,432,Chablis premier cru Vaucoupin,8,,Chablis,vineyard:inao-pc:432
+1097,433,Chablis premier cru Vaugiraut,8,,Chablis,vineyard:inao-pc:433
+1098,435,Chablis premier cru Vaupulent,8,,Chablis,vineyard:inao-pc:435
+1099,437,Chablis premier cru Vosgros,8,,Chablis,vineyard:inao-pc:437
+1100,474,Chambolle-Musigny premier cru,8,,Chambolle-Musigny,vineyard:inao-pc:474
+1101,450,Chambolle-Musigny premier cru Aux Beaux Bruns,8,,Chambolle-Musigny,vineyard:inao-pc:450
+1102,451,Chambolle-Musigny premier cru Aux Combottes,8,,Chambolle-Musigny,vineyard:inao-pc:451
+1103,452,Chambolle-Musigny premier cru Aux Echanges,8,,Chambolle-Musigny,vineyard:inao-pc:452
+1104,453,Chambolle-Musigny premier cru Derrière la Grange,8,,Chambolle-Musigny,vineyard:inao-pc:453
+1105,454,Chambolle-Musigny premier cru La Combe d'Orveau,8,,Chambolle-Musigny,vineyard:inao-pc:454
+1106,455,Chambolle-Musigny premier cru Les Amoureuses,8,,Chambolle-Musigny,vineyard:inao-pc:455
+1107,456,Chambolle-Musigny premier cru Les Baudes,8,,Chambolle-Musigny,vineyard:inao-pc:456
+1108,457,Chambolle-Musigny premier cru Les Borniques,8,,Chambolle-Musigny,vineyard:inao-pc:457
+1109,458,Chambolle-Musigny premier cru Les Carrières,8,,Chambolle-Musigny,vineyard:inao-pc:458
+1110,459,Chambolle-Musigny premier cru Les Chabiots,8,,Chambolle-Musigny,vineyard:inao-pc:459
+1111,460,Chambolle-Musigny premier cru Les Charmes,8,,Chambolle-Musigny,vineyard:inao-pc:460
+1112,461,Chambolle-Musigny premier cru Les Chatelots,8,,Chambolle-Musigny,vineyard:inao-pc:461
+1113,462,Chambolle-Musigny premier cru Les Combottes,8,,Chambolle-Musigny,vineyard:inao-pc:462
+1114,463,Chambolle-Musigny premier cru Les Cras,8,,Chambolle-Musigny,vineyard:inao-pc:463
+1115,464,Chambolle-Musigny premier cru Les Feusselottes ou Les Feusselotes,8,,Chambolle-Musigny,vineyard:inao-pc:464
+1116,465,Chambolle-Musigny premier cru Les Fuées,8,,Chambolle-Musigny,vineyard:inao-pc:465
+1117,466,Chambolle-Musigny premier cru Les Groseilles,8,,Chambolle-Musigny,vineyard:inao-pc:466
+1118,467,Chambolle-Musigny premier cru Les Gruenchers,8,,Chambolle-Musigny,vineyard:inao-pc:467
+1119,468,Chambolle-Musigny premier cru Les Hauts Doix,8,,Chambolle-Musigny,vineyard:inao-pc:468
+1120,469,Chambolle-Musigny premier cru Les Lavrottes,8,,Chambolle-Musigny,vineyard:inao-pc:469
+1121,470,Chambolle-Musigny premier cru Les Noirots,8,,Chambolle-Musigny,vineyard:inao-pc:470
+1122,471,Chambolle-Musigny premier cru Les Plantes,8,,Chambolle-Musigny,vineyard:inao-pc:471
+1123,472,Chambolle-Musigny premier cru Les Sentiers,8,,Chambolle-Musigny,vineyard:inao-pc:472
+1124,473,Chambolle-Musigny premier cru Les Véroilles,8,,Chambolle-Musigny,vineyard:inao-pc:473
+1125,534,Chassagne-Montrachet premier cru,8,,Chassagne-Montrachet,vineyard:inao-pc:534
+1126,479,Chassagne-Montrachet premier cru Abbaye de Morgeot,8,,Chassagne-Montrachet,vineyard:inao-pc:479
+1127,480,Chassagne-Montrachet premier cru Blanchot dessus,8,,Chassagne-Montrachet,vineyard:inao-pc:480
+1128,481,Chassagne-Montrachet premier cru Bois de Chassagne,8,,Chassagne-Montrachet,vineyard:inao-pc:481
+1129,482,Chassagne-Montrachet premier cru Cailleret,8,,Chassagne-Montrachet,vineyard:inao-pc:482
+1130,483,Chassagne-Montrachet premier cru Champs Jendreau,8,,Chassagne-Montrachet,vineyard:inao-pc:483
+1131,484,Chassagne-Montrachet premier cru Chassagne,8,,Chassagne-Montrachet,vineyard:inao-pc:484
+1132,485,Chassagne-Montrachet premier cru Chassagne du Clos Saint-Jean,8,,Chassagne-Montrachet,vineyard:inao-pc:485
+1133,486,Chassagne-Montrachet premier cru Clos Chareau,8,,Chassagne-Montrachet,vineyard:inao-pc:486
+1134,487,Chassagne-Montrachet premier cru Clos Pitois,8,,Chassagne-Montrachet,vineyard:inao-pc:487
+1135,488,Chassagne-Montrachet premier cru Clos Saint-Jean,8,,Chassagne-Montrachet,vineyard:inao-pc:488
+1136,489,Chassagne-Montrachet premier cru Dent de Chien,8,,Chassagne-Montrachet,vineyard:inao-pc:489
+1137,490,Chassagne-Montrachet premier cru En Cailleret,8,,Chassagne-Montrachet,vineyard:inao-pc:490
+1138,491,Chassagne-Montrachet premier cru En Remilly,8,,Chassagne-Montrachet,vineyard:inao-pc:491
+1139,492,Chassagne-Montrachet premier cru En Virondot,8,,Chassagne-Montrachet,vineyard:inao-pc:492
+1140,493,Chassagne-Montrachet premier cru Ez Crets,8,,Chassagne-Montrachet,vineyard:inao-pc:493
+1141,494,Chassagne-Montrachet premier cru Ez Crottes,8,,Chassagne-Montrachet,vineyard:inao-pc:494
+1142,495,Chassagne-Montrachet premier cru Francemont,8,,Chassagne-Montrachet,vineyard:inao-pc:495
+1143,496,Chassagne-Montrachet premier cru Guerchère,8,,Chassagne-Montrachet,vineyard:inao-pc:496
+1144,497,Chassagne-Montrachet premier cru La Boudriotte,8,,Chassagne-Montrachet,vineyard:inao-pc:497
+1145,498,Chassagne-Montrachet premier cru La Cardeuse,8,,Chassagne-Montrachet,vineyard:inao-pc:498
+1146,499,Chassagne-Montrachet premier cru La Chapelle,8,,Chassagne-Montrachet,vineyard:inao-pc:499
+1147,500,Chassagne-Montrachet premier cru La Grande Borne,8,,Chassagne-Montrachet,vineyard:inao-pc:500
+1148,501,Chassagne-Montrachet premier cru La Grande Montagne,8,,Chassagne-Montrachet,vineyard:inao-pc:501
+1149,502,Chassagne-Montrachet premier cru La Maltroie,8,,Chassagne-Montrachet,vineyard:inao-pc:502
+1150,503,Chassagne-Montrachet premier cru La Romanée,8,,Chassagne-Montrachet,vineyard:inao-pc:503
+1151,504,Chassagne-Montrachet premier cru La Roquemaure,8,,Chassagne-Montrachet,vineyard:inao-pc:504
+1152,505,Chassagne-Montrachet premier cru Les Baudines,8,,Chassagne-Montrachet,vineyard:inao-pc:505
+1153,506,Chassagne-Montrachet premier cru Les Boirettes,8,,Chassagne-Montrachet,vineyard:inao-pc:506
+1154,507,Chassagne-Montrachet premier cru Les Bondues,8,,Chassagne-Montrachet,vineyard:inao-pc:507
+1155,508,Chassagne-Montrachet premier cru Les Brussonnes,8,,Chassagne-Montrachet,vineyard:inao-pc:508
+1156,509,Chassagne-Montrachet premier cru Les Champs gain,8,,Chassagne-Montrachet,vineyard:inao-pc:509
+1157,510,Chassagne-Montrachet premier cru Les Chaumes,8,,Chassagne-Montrachet,vineyard:inao-pc:510
+1158,511,Chassagne-Montrachet premier cru Les Chaumées,8,,Chassagne-Montrachet,vineyard:inao-pc:511
+1159,512,Chassagne-Montrachet premier cru Les Chenevottes,8,,Chassagne-Montrachet,vineyard:inao-pc:512
+1160,513,Chassagne-Montrachet premier cru Les Combards,8,,Chassagne-Montrachet,vineyard:inao-pc:513
+1161,514,Chassagne-Montrachet premier cru Les Commes,8,,Chassagne-Montrachet,vineyard:inao-pc:514
+1162,515,Chassagne-Montrachet premier cru Les Embazées,8,,Chassagne-Montrachet,vineyard:inao-pc:515
+1163,516,Chassagne-Montrachet premier cru Les Fairendes,8,,Chassagne-Montrachet,vineyard:inao-pc:516
+1164,517,Chassagne-Montrachet premier cru Les Grandes Ruchottes,8,,Chassagne-Montrachet,vineyard:inao-pc:517
+1165,518,Chassagne-Montrachet premier cru Les Grands Clos,8,,Chassagne-Montrachet,vineyard:inao-pc:518
+1166,519,Chassagne-Montrachet premier cru Les Macherelles,8,,Chassagne-Montrachet,vineyard:inao-pc:519
+1167,520,Chassagne-Montrachet premier cru Les Murées,8,,Chassagne-Montrachet,vineyard:inao-pc:520
+1168,521,Chassagne-Montrachet premier cru Les Pasquelles,8,,Chassagne-Montrachet,vineyard:inao-pc:521
+1169,522,Chassagne-Montrachet premier cru Les Petites Fairendes,8,,Chassagne-Montrachet,vineyard:inao-pc:522
+1170,523,Chassagne-Montrachet premier cru Les Petits Clos,8,,Chassagne-Montrachet,vineyard:inao-pc:523
+1171,524,Chassagne-Montrachet premier cru Les Places,8,,Chassagne-Montrachet,vineyard:inao-pc:524
+1172,525,Chassagne-Montrachet premier cru Les Rebichets,8,,Chassagne-Montrachet,vineyard:inao-pc:525
+1173,526,Chassagne-Montrachet premier cru Les Vergers,8,,Chassagne-Montrachet,vineyard:inao-pc:526
+1174,527,Chassagne-Montrachet premier cru Morgeot,8,,Chassagne-Montrachet,vineyard:inao-pc:527
+1175,528,Chassagne-Montrachet premier cru Petingeret,8,,Chassagne-Montrachet,vineyard:inao-pc:528
+1176,529,Chassagne-Montrachet premier cru Tonton Marcel,8,,Chassagne-Montrachet,vineyard:inao-pc:529
+1177,530,Chassagne-Montrachet premier cru Tête du Clos,8,,Chassagne-Montrachet,vineyard:inao-pc:530
+1178,531,Chassagne-Montrachet premier cru Vide Bourse,8,,Chassagne-Montrachet,vineyard:inao-pc:531
+1179,532,Chassagne-Montrachet premier cru Vigne Blanche,8,,Chassagne-Montrachet,vineyard:inao-pc:532
+1180,533,Chassagne-Montrachet premier cru Vigne Derrière,8,,Chassagne-Montrachet,vineyard:inao-pc:533
+1181,187,Coteaux du Layon premier cru Chaume,33,,Coteaux du Layon,vineyard:inao-pc:187
+1182,574,Fixin premier cru,8,,Fixin,vineyard:inao-pc:574
+1183,569,Fixin premier cru Arvelets,8,,Fixin,vineyard:inao-pc:569
+1184,570,Fixin premier cru Clos Napoléon,8,,Fixin,vineyard:inao-pc:570
+1185,571,Fixin premier cru Clos de la Perrière,8,,Fixin,vineyard:inao-pc:571
+1186,572,Fixin premier cru Clos du Chapitre,8,,Fixin,vineyard:inao-pc:572
+1187,573,Fixin premier cru Hervelets,8,,Fixin,vineyard:inao-pc:573
+1188,2372,Fixin premier cru Les Meix Bas,8,,Fixin,vineyard:inao-pc:2372
+1189,616,Gevrey-Chambertin premier cru,8,,Gevrey-Chambertin,vineyard:inao-pc:616
+1190,590,Gevrey-Chambertin premier cru Au Closeau,8,,Gevrey-Chambertin,vineyard:inao-pc:590
+1191,591,Gevrey-Chambertin premier cru Aux Combottes,8,,Gevrey-Chambertin,vineyard:inao-pc:591
+1192,592,Gevrey-Chambertin premier cru Bel Air,8,,Gevrey-Chambertin,vineyard:inao-pc:592
+1193,593,Gevrey-Chambertin premier cru Champeaux,8,,Gevrey-Chambertin,vineyard:inao-pc:593
+1194,594,Gevrey-Chambertin premier cru Champonnet,8,,Gevrey-Chambertin,vineyard:inao-pc:594
+1195,595,Gevrey-Chambertin premier cru Cherbaudes,8,,Gevrey-Chambertin,vineyard:inao-pc:595
+1196,596,Gevrey-Chambertin premier cru Clos Prieur,8,,Gevrey-Chambertin,vineyard:inao-pc:596
+1197,597,Gevrey-Chambertin premier cru Clos Saint-Jacques,8,,Gevrey-Chambertin,vineyard:inao-pc:597
+1198,598,Gevrey-Chambertin premier cru Clos des Varoilles,8,,Gevrey-Chambertin,vineyard:inao-pc:598
+1199,599,Gevrey-Chambertin premier cru Clos du Chapitre,8,,Gevrey-Chambertin,vineyard:inao-pc:599
+1200,600,Gevrey-Chambertin premier cru Combe au Moine,8,,Gevrey-Chambertin,vineyard:inao-pc:600
+1201,601,Gevrey-Chambertin premier cru Craipillot,8,,Gevrey-Chambertin,vineyard:inao-pc:601
+1202,602,Gevrey-Chambertin premier cru En Ergot,8,,Gevrey-Chambertin,vineyard:inao-pc:602
+1203,603,Gevrey-Chambertin premier cru Estournelles-Saint-Jacques,8,,Gevrey-Chambertin,vineyard:inao-pc:603
+1204,604,Gevrey-Chambertin premier cru Fonteny,8,,Gevrey-Chambertin,vineyard:inao-pc:604
+1205,605,Gevrey-Chambertin premier cru Issarts,8,,Gevrey-Chambertin,vineyard:inao-pc:605
+1206,606,Gevrey-Chambertin premier cru La Bossière,8,,Gevrey-Chambertin,vineyard:inao-pc:606
+1207,607,Gevrey-Chambertin premier cru La Perrière,8,,Gevrey-Chambertin,vineyard:inao-pc:607
+1208,608,Gevrey-Chambertin premier cru La Romanée,8,,Gevrey-Chambertin,vineyard:inao-pc:608
+1209,609,Gevrey-Chambertin premier cru Lavaut Saint-Jacques,8,,Gevrey-Chambertin,vineyard:inao-pc:609
+1210,610,Gevrey-Chambertin premier cru Les Cazetiers,8,,Gevrey-Chambertin,vineyard:inao-pc:610
+1211,611,Gevrey-Chambertin premier cru Les Corbeaux,8,,Gevrey-Chambertin,vineyard:inao-pc:611
+1212,612,Gevrey-Chambertin premier cru Les Goulots,8,,Gevrey-Chambertin,vineyard:inao-pc:612
+1213,613,Gevrey-Chambertin premier cru Petite Chapelle,8,,Gevrey-Chambertin,vineyard:inao-pc:613
+1214,614,Gevrey-Chambertin premier cru Petits Cazetiers,8,,Gevrey-Chambertin,vineyard:inao-pc:614
+1215,615,Gevrey-Chambertin premier cru Poissenot,8,,Gevrey-Chambertin,vineyard:inao-pc:615
+1216,644,Givry premier cru,8,,Givry,vineyard:inao-pc:644
+1217,638,Givry premier cru A Vigne Rouge,8,,Givry,vineyard:inao-pc:638
+1218,2324,Givry premier cru Champ Nalot,8,,Givry,vineyard:inao-pc:2324
+1219,619,Givry premier cru Clos Charlé,8,,Givry,vineyard:inao-pc:619
+1220,620,Givry premier cru Clos Jus,8,,Givry,vineyard:inao-pc:620
+1221,621,Givry premier cru Clos Marceaux,8,,Givry,vineyard:inao-pc:621
+1222,622,Givry premier cru Clos Marole,8,,Givry,vineyard:inao-pc:622
+1223,625,Givry premier cru Clos Salomon,8,,Givry,vineyard:inao-pc:625
+1224,626,Givry premier cru Clos de la Baraude,8,,Givry,vineyard:inao-pc:626
+1225,618,Givry premier cru Clos du Cellier aux Moines,8,,Givry,vineyard:inao-pc:618
+1226,627,Givry premier cru Clos du Cras long,8,,Givry,vineyard:inao-pc:627
+1227,628,Givry premier cru Clos du Vernoy,8,,Givry,vineyard:inao-pc:628
+1228,623,Givry premier cru Clos-Saint-Paul,8,,Givry,vineyard:inao-pc:623
+1229,624,Givry premier cru Clos-Saint-Pierre,8,,Givry,vineyard:inao-pc:624
+1230,640,Givry premier cru Crausot,8,,Givry,vineyard:inao-pc:640
+1231,641,Givry premier cru Crémillons,8,,Givry,vineyard:inao-pc:641
+1232,643,Givry premier cru En Choué,8,,Givry,vineyard:inao-pc:643
+1233,2325,Givry premier cru En Veau,8,,Givry,vineyard:inao-pc:2325
+1234,2326,Givry premier cru La Brûlée,8,,Givry,vineyard:inao-pc:2326
+1235,642,Givry premier cru La Grande Berge,8,,Givry,vineyard:inao-pc:642
+1236,2327,Givry premier cru La Matrosse,8,,Givry,vineyard:inao-pc:2327
+1237,2328,Givry premier cru La Petite Berge,8,,Givry,vineyard:inao-pc:2328
+1238,639,Givry premier cru La Plante,8,,Givry,vineyard:inao-pc:639
+1239,2329,Givry premier cru Le Champ Lalot,8,,Givry,vineyard:inao-pc:2329
+1240,2330,Givry premier cru Le Médenchot,8,,Givry,vineyard:inao-pc:2330
+1241,635,Givry premier cru Le Paradis,8,,Givry,vineyard:inao-pc:635
+1242,634,Givry premier cru Le Petit Prétan,8,,Givry,vineyard:inao-pc:634
+1243,2331,Givry premier cru Le Pied de Chaume,8,,Givry,vineyard:inao-pc:2331
+1244,2332,Givry premier cru Le Pied du Clou,8,,Givry,vineyard:inao-pc:2332
+1245,636,Givry premier cru Le Vigron,8,,Givry,vineyard:inao-pc:636
+1246,629,Givry premier cru Les Bois Chevaux,8,,Givry,vineyard:inao-pc:629
+1247,637,Givry premier cru Les Bois Gautiers,8,,Givry,vineyard:inao-pc:637
+1248,2334,Givry premier cru Les Combes,8,,Givry,vineyard:inao-pc:2334
+1249,2335,Givry premier cru Les Galaffres,8,,Givry,vineyard:inao-pc:2335
+1250,630,Givry premier cru Les Grandes Vignes,8,,Givry,vineyard:inao-pc:630
+1251,631,Givry premier cru Les Grands Prétans,8,,Givry,vineyard:inao-pc:631
+1252,632,Givry premier cru Petit Marole,8,,Givry,vineyard:inao-pc:632
+1253,633,Givry premier cru Servoisine,8,,Givry,vineyard:inao-pc:633
+1254,665,Ladoix premier cru,8,,Ladoix,vineyard:inao-pc:665
+1255,658,Ladoix premier cru Basses Mourottes,8,,Ladoix,vineyard:inao-pc:658
+1256,659,Ladoix premier cru Bois Roussot,8,,Ladoix,vineyard:inao-pc:659
+1257,1987,Ladoix premier cru En Naget,8,,Ladoix,vineyard:inao-pc:1987
+1258,660,Ladoix premier cru Hautes Mourottes,8,,Ladoix,vineyard:inao-pc:660
+1259,661,Ladoix premier cru La Corvée,8,,Ladoix,vineyard:inao-pc:661
+1260,662,Ladoix premier cru La Micaude,8,,Ladoix,vineyard:inao-pc:662
+1261,663,Ladoix premier cru Le Clou d'Orge,8,,Ladoix,vineyard:inao-pc:663
+1262,1988,Ladoix premier cru Le Rognet et Corton,8,,Ladoix,vineyard:inao-pc:1988
+1263,1989,Ladoix premier cru Les Buis,8,,Ladoix,vineyard:inao-pc:1989
+1264,1990,Ladoix premier cru Les Grêchons et Foutrières,8,,Ladoix,vineyard:inao-pc:1990
+1265,664,Ladoix premier cru Les Joyeuses,8,,Ladoix,vineyard:inao-pc:664
+1266,805,Maranges premier cru,8,,Maranges,vineyard:inao-pc:805
+1267,798,Maranges premier cru Clos de la Boutière,8,,Maranges,vineyard:inao-pc:798
+1268,799,Maranges premier cru Clos de la Fussière,8,,Maranges,vineyard:inao-pc:799
+1269,800,Maranges premier cru La Fussière,8,,Maranges,vineyard:inao-pc:800
+1270,801,Maranges premier cru Le Clos des Loyères,8,,Maranges,vineyard:inao-pc:801
+1271,802,Maranges premier cru Le Clos des Rois,8,,Maranges,vineyard:inao-pc:802
+1272,803,Maranges premier cru Le Croix Moines,8,,Maranges,vineyard:inao-pc:803
+1273,804,Maranges premier cru Les Clos Roussots,8,,Maranges,vineyard:inao-pc:804
+1274,817,Mercurey Premier Cru Clos des Montaigus,8,,Mercurey,vineyard:inao-pc:817
+1275,819,Mercurey Premier Cru Clos du Château de Montaigu,8,,Mercurey,vineyard:inao-pc:819
+1276,843,Mercurey premier cru,8,,Mercurey,vineyard:inao-pc:843
+1277,811,Mercurey premier cru Clos Marcilly,8,,Mercurey,vineyard:inao-pc:811
+1278,812,Mercurey premier cru Clos Tonnerre,8,,Mercurey,vineyard:inao-pc:812
+1279,813,Mercurey premier cru Clos Voyens,8,,Mercurey,vineyard:inao-pc:813
+1280,814,Mercurey premier cru Clos de Paradis,8,,Mercurey,vineyard:inao-pc:814
+1281,815,Mercurey premier cru Clos des Barraults,8,,Mercurey,vineyard:inao-pc:815
+1282,818,Mercurey premier cru Clos des Myglands,8,,Mercurey,vineyard:inao-pc:818
+1283,816,Mercurey premier cru Clos des grands Voyens,8,,Mercurey,vineyard:inao-pc:816
+1284,820,Mercurey premier cru Grand Clos Fortoul,8,,Mercurey,vineyard:inao-pc:820
+1285,821,Mercurey premier cru Griffères,8,,Mercurey,vineyard:inao-pc:821
+1286,822,Mercurey premier cru La Bondue,8,,Mercurey,vineyard:inao-pc:822
+1287,823,Mercurey premier cru La Cailloute,8,,Mercurey,vineyard:inao-pc:823
+1288,824,Mercurey premier cru La Chassière,8,,Mercurey,vineyard:inao-pc:824
+1289,825,Mercurey premier cru La Levrière,8,,Mercurey,vineyard:inao-pc:825
+1290,826,Mercurey premier cru La Mission,8,,Mercurey,vineyard:inao-pc:826
+1291,827,Mercurey premier cru Le Clos du Roy,8,,Mercurey,vineyard:inao-pc:827
+1292,828,Mercurey premier cru Le Clos l'Evêque,8,,Mercurey,vineyard:inao-pc:828
+1293,829,Mercurey premier cru Les Byots,8,,Mercurey,vineyard:inao-pc:829
+1294,830,Mercurey premier cru Les Champs Martin,8,,Mercurey,vineyard:inao-pc:830
+1295,831,Mercurey premier cru Les Combins,8,,Mercurey,vineyard:inao-pc:831
+1296,832,Mercurey premier cru Les Croichots,8,,Mercurey,vineyard:inao-pc:832
+1297,833,Mercurey premier cru Les Crêts,8,,Mercurey,vineyard:inao-pc:833
+1298,834,Mercurey premier cru Les Fourneaux,8,,Mercurey,vineyard:inao-pc:834
+1299,835,Mercurey premier cru Les Montaigus,8,,Mercurey,vineyard:inao-pc:835
+1300,836,Mercurey premier cru Les Naugues,8,,Mercurey,vineyard:inao-pc:836
+1301,841,Mercurey premier cru Les Puillets,8,,Mercurey,vineyard:inao-pc:841
+1302,837,Mercurey premier cru Les Ruelles,8,,Mercurey,vineyard:inao-pc:837
+1303,842,Mercurey premier cru Les Saumonts,8,,Mercurey,vineyard:inao-pc:842
+1304,838,Mercurey premier cru Les Vasées,8,,Mercurey,vineyard:inao-pc:838
+1305,839,Mercurey premier cru Les Velley,8,,Mercurey,vineyard:inao-pc:839
+1306,840,Mercurey premier cru Sazenay,8,,Mercurey,vineyard:inao-pc:840
+1307,862,Meursault premier cru,8,,Meursault,vineyard:inao-pc:862
+1308,2373,Meursault premier cru Blagny,8,,Meursault,vineyard:inao-pc:2373
+1309,845,Meursault premier cru Charmes,8,,Meursault,vineyard:inao-pc:845
+1310,846,Meursault premier cru Clos des Perrières,8,,Meursault,vineyard:inao-pc:846
+1311,847,Meursault premier cru Genevrières,8,,Meursault,vineyard:inao-pc:847
+1312,848,Meursault premier cru La Jeunellotte,8,,Meursault,vineyard:inao-pc:848
+1313,849,Meursault premier cru La Pièce sous le Bois,8,,Meursault,vineyard:inao-pc:849
+1314,850,Meursault premier cru Le Porusot,8,,Meursault,vineyard:inao-pc:850
+1315,851,Meursault premier cru Les Bouchères,8,,Meursault,vineyard:inao-pc:851
+1316,852,Meursault premier cru Les Caillerets,8,,Meursault,vineyard:inao-pc:852
+1317,853,Meursault premier cru Les Cras,8,,Meursault,vineyard:inao-pc:853
+1318,854,Meursault premier cru Les Gouttes d'Or,8,,Meursault,vineyard:inao-pc:854
+1319,855,Meursault premier cru Les Plures,8,,Meursault,vineyard:inao-pc:855
+1320,1991,Meursault premier cru Les Ravelles,8,,Meursault,vineyard:inao-pc:1991
+1321,856,Meursault premier cru Les Santenots Blancs,8,,Meursault,vineyard:inao-pc:856
+1322,857,Meursault premier cru Les Santenots du Milieu,8,,Meursault,vineyard:inao-pc:857
+1323,858,Meursault premier cru Perrières,8,,Meursault,vineyard:inao-pc:858
+1324,859,Meursault premier cru Porusot,8,,Meursault,vineyard:inao-pc:859
+1325,860,Meursault premier cru Sous Blagny,8,,Meursault,vineyard:inao-pc:860
+1326,861,Meursault premier cru Sous le Dos d'Ane,8,,Meursault,vineyard:inao-pc:861
+1327,913,Montagny premier cru,8,,Montagny,vineyard:inao-pc:913
+1328,864,Montagny premier cru Champ Toizeau,8,,Montagny,vineyard:inao-pc:864
+1329,865,Montagny premier cru Chazelle,8,,Montagny,vineyard:inao-pc:865
+1330,866,Montagny premier cru Cornevent,8,,Montagny,vineyard:inao-pc:866
+1331,867,Montagny premier cru Creux de Beaux Champs,8,,Montagny,vineyard:inao-pc:867
+1332,868,Montagny premier cru L'Epaule,8,,Montagny,vineyard:inao-pc:868
+1333,869,Montagny premier cru La Condemine du Vieux Château,8,,Montagny,vineyard:inao-pc:869
+1334,870,Montagny premier cru La Grande Pièce,8,,Montagny,vineyard:inao-pc:870
+1335,871,Montagny premier cru La Moullière,8,,Montagny,vineyard:inao-pc:871
+1336,872,Montagny premier cru Le Clos Chaudron,8,,Montagny,vineyard:inao-pc:872
+1337,883,Montagny premier cru Le Cloux,8,,Montagny,vineyard:inao-pc:883
+1338,873,Montagny premier cru Le Clouzot,8,,Montagny,vineyard:inao-pc:873
+1339,874,Montagny premier cru Le Vieux Château,8,,Montagny,vineyard:inao-pc:874
+1340,875,Montagny premier cru Les Bassets,8,,Montagny,vineyard:inao-pc:875
+1341,876,Montagny premier cru Les Beaux Champs,8,,Montagny,vineyard:inao-pc:876
+1342,877,Montagny premier cru Les Bonneveaux,8,,Montagny,vineyard:inao-pc:877
+1343,878,Montagny premier cru Les Bordes,8,,Montagny,vineyard:inao-pc:878
+1344,879,Montagny premier cru Les Bouchots,8,,Montagny,vineyard:inao-pc:879
+1345,880,Montagny premier cru Les Burnins,8,,Montagny,vineyard:inao-pc:880
+1346,881,Montagny premier cru Les Chaniots,8,,Montagny,vineyard:inao-pc:881
+1347,882,Montagny premier cru Les Chaumelottes,8,,Montagny,vineyard:inao-pc:882
+1348,884,Montagny premier cru Les Combes,8,,Montagny,vineyard:inao-pc:884
+1349,885,Montagny premier cru Les Coudrettes,8,,Montagny,vineyard:inao-pc:885
+1350,886,Montagny premier cru Les Coères,8,,Montagny,vineyard:inao-pc:886
+1351,887,Montagny premier cru Les Craboulettes,8,,Montagny,vineyard:inao-pc:887
+1352,888,Montagny premier cru Les Garchères,8,,Montagny,vineyard:inao-pc:888
+1353,889,Montagny premier cru Les Gouresses,8,,Montagny,vineyard:inao-pc:889
+1354,890,Montagny premier cru Les Jardins,8,,Montagny,vineyard:inao-pc:890
+1355,891,Montagny premier cru Les Las,8,,Montagny,vineyard:inao-pc:891
+1356,892,Montagny premier cru Les Macles,8,,Montagny,vineyard:inao-pc:892
+1357,893,Montagny premier cru Les Maroques,8,,Montagny,vineyard:inao-pc:893
+1358,894,Montagny premier cru Les Paquiers,8,,Montagny,vineyard:inao-pc:894
+1359,895,Montagny premier cru Les Perrières,8,,Montagny,vineyard:inao-pc:895
+1360,896,Montagny premier cru Les Pidances,8,,Montagny,vineyard:inao-pc:896
+1361,897,Montagny premier cru Les Platières,8,,Montagny,vineyard:inao-pc:897
+1362,898,Montagny premier cru Les Resses,8,,Montagny,vineyard:inao-pc:898
+1363,899,Montagny premier cru Les Treuffères,8,,Montagny,vineyard:inao-pc:899
+1364,900,Montagny premier cru Les Vignes Derrière,8,,Montagny,vineyard:inao-pc:900
+1365,902,Montagny premier cru Les Vignes des Prés,8,,Montagny,vineyard:inao-pc:902
+1366,901,Montagny premier cru Les Vignes longues,8,,Montagny,vineyard:inao-pc:901
+1367,905,Montagny premier cru Mont Laurent,8,,Montagny,vineyard:inao-pc:905
+1368,904,Montagny premier cru Montcuchot,8,,Montagny,vineyard:inao-pc:904
+1369,906,Montagny premier cru Montorge,8,,Montagny,vineyard:inao-pc:906
+1370,908,Montagny premier cru Saint-Ytages,8,,Montagny,vineyard:inao-pc:908
+1371,907,Montagny premier cru Sainte-Morille,8,,Montagny,vineyard:inao-pc:907
+1372,909,Montagny premier cru Sous les Feilles,8,,Montagny,vineyard:inao-pc:909
+1373,910,Montagny premier cru Vigne du soleil,8,,Montagny,vineyard:inao-pc:910
+1374,911,Montagny premier cru Vignes Couland,8,,Montagny,vineyard:inao-pc:911
+1375,912,Montagny premier cru Vignes Saint-Pierre,8,,Montagny,vineyard:inao-pc:912
+1376,903,Montagny premier cru Vignes sur le Cloux,8,,Montagny,vineyard:inao-pc:903
+1377,926,Monthélie premier cru,8,,Monthélie,vineyard:inao-pc:926
+1378,1992,Monthélie premier cru Clos des Toisières,8,,Monthélie,vineyard:inao-pc:1992
+1379,915,Monthélie premier cru La Taupine,8,,Monthélie,vineyard:inao-pc:915
+1380,916,Monthélie premier cru Le Cas Rougeot,8,,Monthélie,vineyard:inao-pc:916
+1381,917,Monthélie premier cru Le Château Gaillard,8,,Monthélie,vineyard:inao-pc:917
+1382,918,Monthélie premier cru Le Clos Gauthey,8,,Monthélie,vineyard:inao-pc:918
+1383,1993,Monthélie premier cru Le Clou des Chênes,8,,Monthélie,vineyard:inao-pc:1993
+1384,919,Monthélie premier cru Le Meix Bataille,8,,Monthélie,vineyard:inao-pc:919
+1385,920,Monthélie premier cru Le Village,8,,Monthélie,vineyard:inao-pc:920
+1386,1994,Monthélie premier cru Les Barbières,8,,Monthélie,vineyard:inao-pc:1994
+1387,921,Monthélie premier cru Les Champs Fulliots,8,,Monthélie,vineyard:inao-pc:921
+1388,1995,Monthélie premier cru Les Clous,8,,Monthélie,vineyard:inao-pc:1995
+1389,922,Monthélie premier cru Les Duresses,8,,Monthélie,vineyard:inao-pc:922
+1390,923,Monthélie premier cru Les Riottes,8,,Monthélie,vineyard:inao-pc:923
+1391,924,Monthélie premier cru Les Vignes Rondes,8,,Monthélie,vineyard:inao-pc:924
+1392,925,Monthélie premier cru Sur la Velle,8,,Monthélie,vineyard:inao-pc:925
+1393,949,Morey-Saint-Denis premier cru,8,,Morey-Saint-Denis,vineyard:inao-pc:949
+1394,929,Morey-Saint-Denis premier cru Aux Charmes,8,,Morey-Saint-Denis,vineyard:inao-pc:929
+1395,930,Morey-Saint-Denis premier cru Aux Cheseaux,8,,Morey-Saint-Denis,vineyard:inao-pc:930
+1396,931,Morey-Saint-Denis premier cru Clos Baulet,8,,Morey-Saint-Denis,vineyard:inao-pc:931
+1397,932,Morey-Saint-Denis premier cru Clos Sorbè,8,,Morey-Saint-Denis,vineyard:inao-pc:932
+1398,933,Morey-Saint-Denis premier cru Clos des Ormes,8,,Morey-Saint-Denis,vineyard:inao-pc:933
+1399,934,Morey-Saint-Denis premier cru Côte Rotie,8,,Morey-Saint-Denis,vineyard:inao-pc:934
+1400,935,Morey-Saint-Denis premier cru La Bussière,8,,Morey-Saint-Denis,vineyard:inao-pc:935
+1401,936,Morey-Saint-Denis premier cru La Riotte,8,,Morey-Saint-Denis,vineyard:inao-pc:936
+1402,937,Morey-Saint-Denis premier cru Le Village,8,,Morey-Saint-Denis,vineyard:inao-pc:937
+1403,938,Morey-Saint-Denis premier cru Les Blanchards,8,,Morey-Saint-Denis,vineyard:inao-pc:938
+1404,939,Morey-Saint-Denis premier cru Les Chaffots,8,,Morey-Saint-Denis,vineyard:inao-pc:939
+1405,940,Morey-Saint-Denis premier cru Les Charrières,8,,Morey-Saint-Denis,vineyard:inao-pc:940
+1406,941,Morey-Saint-Denis premier cru Les Chenevery,8,,Morey-Saint-Denis,vineyard:inao-pc:941
+1407,942,Morey-Saint-Denis premier cru Les Faconnières,8,,Morey-Saint-Denis,vineyard:inao-pc:942
+1408,943,Morey-Saint-Denis premier cru Les Genavrières,8,,Morey-Saint-Denis,vineyard:inao-pc:943
+1409,944,Morey-Saint-Denis premier cru Les Gruenchers,8,,Morey-Saint-Denis,vineyard:inao-pc:944
+1410,945,Morey-Saint-Denis premier cru Les Millandes,8,,Morey-Saint-Denis,vineyard:inao-pc:945
+1411,946,Morey-Saint-Denis premier cru Les Ruchots,8,,Morey-Saint-Denis,vineyard:inao-pc:946
+1412,947,Morey-Saint-Denis premier cru Les Sorbès,8,,Morey-Saint-Denis,vineyard:inao-pc:947
+1413,948,Morey-Saint-Denis premier cru Monts Luisants,8,,Morey-Saint-Denis,vineyard:inao-pc:948
+1414,1016,Nuits-Saint-Georges premier cru,8,,Nuits-Saint-Georges,vineyard:inao-pc:1016
+1415,975,Nuits-Saint-Georges premier cru Aux Argillas,8,,Nuits-Saint-Georges,vineyard:inao-pc:975
+1416,976,Nuits-Saint-Georges premier cru Aux Boudots,8,,Nuits-Saint-Georges,vineyard:inao-pc:976
+1417,977,Nuits-Saint-Georges premier cru Aux Bousselots,8,,Nuits-Saint-Georges,vineyard:inao-pc:977
+1418,978,Nuits-Saint-Georges premier cru Aux Chaignots,8,,Nuits-Saint-Georges,vineyard:inao-pc:978
+1419,979,Nuits-Saint-Georges premier cru Aux Champs Perdrix,8,,Nuits-Saint-Georges,vineyard:inao-pc:979
+1420,980,Nuits-Saint-Georges premier cru Aux Cras,8,,Nuits-Saint-Georges,vineyard:inao-pc:980
+1421,981,Nuits-Saint-Georges premier cru Aux Murgers,8,,Nuits-Saint-Georges,vineyard:inao-pc:981
+1422,982,Nuits-Saint-Georges premier cru Aux Perdrix,8,,Nuits-Saint-Georges,vineyard:inao-pc:982
+1423,983,Nuits-Saint-Georges premier cru Aux Thorey,8,,Nuits-Saint-Georges,vineyard:inao-pc:983
+1424,984,Nuits-Saint-Georges premier cru Aux Vignerondes,8,,Nuits-Saint-Georges,vineyard:inao-pc:984
+1425,985,Nuits-Saint-Georges premier cru Chaines Carteaux,8,,Nuits-Saint-Georges,vineyard:inao-pc:985
+1426,986,Nuits-Saint-Georges premier cru Château Gris,8,,Nuits-Saint-Georges,vineyard:inao-pc:986
+1427,987,Nuits-Saint-Georges premier cru Clos Arlot,8,,Nuits-Saint-Georges,vineyard:inao-pc:987
+1428,988,Nuits-Saint-Georges premier cru Clos Saint-Marc,8,,Nuits-Saint-Georges,vineyard:inao-pc:988
+1429,989,Nuits-Saint-Georges premier cru Clos de la Maréchale,8,,Nuits-Saint-Georges,vineyard:inao-pc:989
+1430,990,Nuits-Saint-Georges premier cru Clos des Argillières,8,,Nuits-Saint-Georges,vineyard:inao-pc:990
+1431,991,Nuits-Saint-Georges premier cru Clos des Corvées,8,,Nuits-Saint-Georges,vineyard:inao-pc:991
+1432,992,Nuits-Saint-Georges premier cru Clos des Corvées Pagets,8,,Nuits-Saint-Georges,vineyard:inao-pc:992
+1433,993,Nuits-Saint-Georges premier cru Clos des Forêts Saint-Georges,8,,Nuits-Saint-Georges,vineyard:inao-pc:993
+1434,994,Nuits-Saint-Georges premier cru Clos des Grandes Vignes,8,,Nuits-Saint-Georges,vineyard:inao-pc:994
+1435,995,Nuits-Saint-Georges premier cru Clos des Porrets-Saint-Georges,8,,Nuits-Saint-Georges,vineyard:inao-pc:995
+1436,996,Nuits-Saint-Georges premier cru En la Perrière Noblot,8,,Nuits-Saint-Georges,vineyard:inao-pc:996
+1437,997,Nuits-Saint-Georges premier cru La Richemone,8,,Nuits-Saint-Georges,vineyard:inao-pc:997
+1438,998,Nuits-Saint-Georges premier cru Les Argillières,8,,Nuits-Saint-Georges,vineyard:inao-pc:998
+1439,999,Nuits-Saint-Georges premier cru Les Cailles,8,,Nuits-Saint-Georges,vineyard:inao-pc:999
+1440,1000,Nuits-Saint-Georges premier cru Les Chabœufs,8,,Nuits-Saint-Georges,vineyard:inao-pc:1000
+1441,1001,Nuits-Saint-Georges premier cru Les Crots,8,,Nuits-Saint-Georges,vineyard:inao-pc:1001
+1442,1002,Nuits-Saint-Georges premier cru Les Damodes,8,,Nuits-Saint-Georges,vineyard:inao-pc:1002
+1443,1003,Nuits-Saint-Georges premier cru Les Didiers,8,,Nuits-Saint-Georges,vineyard:inao-pc:1003
+1444,1004,Nuits-Saint-Georges premier cru Les Hauts Pruliers,8,,Nuits-Saint-Georges,vineyard:inao-pc:1004
+1445,1005,Nuits-Saint-Georges premier cru Les Perrières,8,,Nuits-Saint-Georges,vineyard:inao-pc:1005
+1446,1006,Nuits-Saint-Georges premier cru Les Porrets-Saint-Georges,8,,Nuits-Saint-Georges,vineyard:inao-pc:1006
+1447,1007,Nuits-Saint-Georges premier cru Les Poulettes,8,,Nuits-Saint-Georges,vineyard:inao-pc:1007
+1448,1008,Nuits-Saint-Georges premier cru Les Procès,8,,Nuits-Saint-Georges,vineyard:inao-pc:1008
+1449,1009,Nuits-Saint-Georges premier cru Les Pruliers,8,,Nuits-Saint-Georges,vineyard:inao-pc:1009
+1450,1010,Nuits-Saint-Georges premier cru Les Saints-Georges,8,,Nuits-Saint-Georges,vineyard:inao-pc:1010
+1451,1011,Nuits-Saint-Georges premier cru Les Terres Blanches,8,,Nuits-Saint-Georges,vineyard:inao-pc:1011
+1452,1012,Nuits-Saint-Georges premier cru Les Vallerots,8,,Nuits-Saint-Georges,vineyard:inao-pc:1012
+1453,1013,Nuits-Saint-Georges premier cru Les Vaucrains,8,,Nuits-Saint-Georges,vineyard:inao-pc:1013
+1454,1014,Nuits-Saint-Georges premier cru Roncière,8,,Nuits-Saint-Georges,vineyard:inao-pc:1014
+1455,1015,Nuits-Saint-Georges premier cru Rue de Chaux,8,,Nuits-Saint-Georges,vineyard:inao-pc:1015
+1456,1023,Pernand-Vergelesses premier cru,8,,Pernand-Vergelesses,vineyard:inao-pc:1023
+1457,1985,Pernand-Vergelesses premier cru Clos Berthet,8,,Pernand-Vergelesses,vineyard:inao-pc:1985
+1458,1018,Pernand-Vergelesses premier cru Creux de la Net,8,,Pernand-Vergelesses,vineyard:inao-pc:1018
+1459,1019,Pernand-Vergelesses premier cru En Caradeux,8,,Pernand-Vergelesses,vineyard:inao-pc:1019
+1460,1020,Pernand-Vergelesses premier cru Ile des Vergelesses,8,,Pernand-Vergelesses,vineyard:inao-pc:1020
+1461,1021,Pernand-Vergelesses premier cru Les Fichots,8,,Pernand-Vergelesses,vineyard:inao-pc:1021
+1462,1984,Pernand-Vergelesses premier cru Sous Frétille,8,,Pernand-Vergelesses,vineyard:inao-pc:1984
+1463,1022,Pernand-Vergelesses premier cru Vergelesses,8,,Pernand-Vergelesses,vineyard:inao-pc:1022
+1464,1986,Pernand-Vergelesses premier cru Village de Pernand,8,,Pernand-Vergelesses,vineyard:inao-pc:1986
+1465,1054,Pommard premier cru,8,,Pommard,vineyard:inao-pc:1054
+1466,1026,Pommard premier cru Clos Blanc,8,,Pommard,vineyard:inao-pc:1026
+1467,1027,Pommard premier cru Clos de Verger,8,,Pommard,vineyard:inao-pc:1027
+1468,1028,Pommard premier cru Clos de la Commaraine,8,,Pommard,vineyard:inao-pc:1028
+1469,1029,Pommard premier cru Clos des Epeneaux,8,,Pommard,vineyard:inao-pc:1029
+1470,1030,Pommard premier cru Derrière Saint-Jean,8,,Pommard,vineyard:inao-pc:1030
+1471,1031,Pommard premier cru En Largillière,8,,Pommard,vineyard:inao-pc:1031
+1472,1032,Pommard premier cru La Chanière,8,,Pommard,vineyard:inao-pc:1032
+1473,1033,Pommard premier cru La Platière,8,,Pommard,vineyard:inao-pc:1033
+1474,1034,Pommard premier cru La Refène,8,,Pommard,vineyard:inao-pc:1034
+1475,1035,Pommard premier cru Le Clos Micot,8,,Pommard,vineyard:inao-pc:1035
+1476,1036,Pommard premier cru Le Village,8,,Pommard,vineyard:inao-pc:1036
+1477,1037,Pommard premier cru Les Arvelets,8,,Pommard,vineyard:inao-pc:1037
+1478,1038,Pommard premier cru Les Bertins,8,,Pommard,vineyard:inao-pc:1038
+1479,1039,Pommard premier cru Les Boucherottes,8,,Pommard,vineyard:inao-pc:1039
+1480,1040,Pommard premier cru Les Chanlins-Bas,8,,Pommard,vineyard:inao-pc:1040
+1481,1041,Pommard premier cru Les Chaponnières,8,,Pommard,vineyard:inao-pc:1041
+1482,1042,Pommard premier cru Les Charmots,8,,Pommard,vineyard:inao-pc:1042
+1483,1043,Pommard premier cru Les Combes Dessus,8,,Pommard,vineyard:inao-pc:1043
+1484,1044,Pommard premier cru Les Croix Noires,8,,Pommard,vineyard:inao-pc:1044
+1485,1045,Pommard premier cru Les Fremiers,8,,Pommard,vineyard:inao-pc:1045
+1486,1046,Pommard premier cru Les Grands Epenots,8,,Pommard,vineyard:inao-pc:1046
+1487,1047,Pommard premier cru Les Jarolières,8,,Pommard,vineyard:inao-pc:1047
+1488,1048,Pommard premier cru Les Petits Epenots,8,,Pommard,vineyard:inao-pc:1048
+1489,1049,Pommard premier cru Les Poutures,8,,Pommard,vineyard:inao-pc:1049
+1490,1050,Pommard premier cru Les Pézerolles,8,,Pommard,vineyard:inao-pc:1050
+1491,1051,Pommard premier cru Les Rugiens Bas,8,,Pommard,vineyard:inao-pc:1051
+1492,1052,Pommard premier cru Les Rugiens Hauts,8,,Pommard,vineyard:inao-pc:1052
+1493,1053,Pommard premier cru Les Saussilles,8,,Pommard,vineyard:inao-pc:1053
+1494,2865,Pouilly-Fuissé premier cru,8,,Pouilly-Fuissé,vineyard:inao-pc:2865
+1495,2877,Pouilly-Fuissé premier cru Au Vignerais,8,,Pouilly-Fuissé,vineyard:inao-pc:2877
+1496,2878,Pouilly-Fuissé premier cru Aux Bouthières,8,,Pouilly-Fuissé,vineyard:inao-pc:2878
+1497,2879,Pouilly-Fuissé premier cru Aux Chailloux,8,,Pouilly-Fuissé,vineyard:inao-pc:2879
+1498,2866,Pouilly-Fuissé premier cru Aux Quarts,8,,Pouilly-Fuissé,vineyard:inao-pc:2866
+1499,2884,Pouilly-Fuissé premier cru En France,8,,Pouilly-Fuissé,vineyard:inao-pc:2884
+1500,2880,Pouilly-Fuissé premier cru En Servy,8,,Pouilly-Fuissé,vineyard:inao-pc:2880
+1501,2881,Pouilly-Fuissé premier cru La Frérie,8,,Pouilly-Fuissé,vineyard:inao-pc:2881
+1502,2885,Pouilly-Fuissé premier cru La Maréchaude,8,,Pouilly-Fuissé,vineyard:inao-pc:2885
+1503,2870,Pouilly-Fuissé premier cru Le Clos,8,,Pouilly-Fuissé,vineyard:inao-pc:2870
+1504,2867,Pouilly-Fuissé premier cru Le Clos Reyssier,8,,Pouilly-Fuissé,vineyard:inao-pc:2867
+1505,2868,Pouilly-Fuissé premier cru Le Clos de Monsieur Noly,8,,Pouilly-Fuissé,vineyard:inao-pc:2868
+1506,2882,Pouilly-Fuissé premier cru Le Clos de Solutré,8,,Pouilly-Fuissé,vineyard:inao-pc:2882
+1507,2871,Pouilly-Fuissé premier cru Les Brulés,8,,Pouilly-Fuissé,vineyard:inao-pc:2871
+1508,2869,Pouilly-Fuissé premier cru Les Chevrières,8,,Pouilly-Fuissé,vineyard:inao-pc:2869
+1509,2886,Pouilly-Fuissé premier cru Les Crays,8,,Pouilly-Fuissé,vineyard:inao-pc:2886
+1510,2872,Pouilly-Fuissé premier cru Les Ménétrières,8,,Pouilly-Fuissé,vineyard:inao-pc:2872
+1511,2873,Pouilly-Fuissé premier cru Les Perrières,8,,Pouilly-Fuissé,vineyard:inao-pc:2873
+1512,2874,Pouilly-Fuissé premier cru Les Reisses,8,,Pouilly-Fuissé,vineyard:inao-pc:2874
+1513,2875,Pouilly-Fuissé premier cru Les Vignes Blanches,8,,Pouilly-Fuissé,vineyard:inao-pc:2875
+1514,2883,Pouilly-Fuissé premier cru Pouilly,8,,Pouilly-Fuissé,vineyard:inao-pc:2883
+1515,2887,Pouilly-Fuissé premier cru Sur la Roche,8,,Pouilly-Fuissé,vineyard:inao-pc:2887
+1516,2876,Pouilly-Fuissé premier cru Vers Cras,8,,Pouilly-Fuissé,vineyard:inao-pc:2876
+1517,2931,Pouilly-Loché premier cru,8,,Pouilly-Loché,vineyard:inao-pc:2931
+1518,2932,Pouilly-Loché premier cru les Mûres,8,,Pouilly-Loché,vineyard:inao-pc:2932
+1519,2927,Pouilly-Vinzelles premier cru,8,,Pouilly-Vinzelles,vineyard:inao-pc:2927
+1520,2929,Pouilly-Vinzelles premier cru Les Longeays,8,,Pouilly-Vinzelles,vineyard:inao-pc:2929
+1521,2928,Pouilly-Vinzelles premier cru Les Pétaux,8,,Pouilly-Vinzelles,vineyard:inao-pc:2928
+1522,2930,Pouilly-Vinzelles premier cru Les Quarts,8,,Pouilly-Vinzelles,vineyard:inao-pc:2930
+1523,1079,Puligny-Montrachet premier cru,8,,Puligny-Montrachet,vineyard:inao-pc:1079
+1524,1062,Puligny-Montrachet premier cru Champ Canet,8,,Puligny-Montrachet,vineyard:inao-pc:1062
+1525,1063,Puligny-Montrachet premier cru Champ Gain,8,,Puligny-Montrachet,vineyard:inao-pc:1063
+1526,1064,Puligny-Montrachet premier cru Clavaillon,8,,Puligny-Montrachet,vineyard:inao-pc:1064
+1527,1065,Puligny-Montrachet premier cru Clos de la Garenne,8,,Puligny-Montrachet,vineyard:inao-pc:1065
+1528,1066,Puligny-Montrachet premier cru Clos de la Mouchère,8,,Puligny-Montrachet,vineyard:inao-pc:1066
+1529,1067,Puligny-Montrachet premier cru Hameau de Blagny,8,,Puligny-Montrachet,vineyard:inao-pc:1067
+1530,1068,Puligny-Montrachet premier cru La Garenne,8,,Puligny-Montrachet,vineyard:inao-pc:1068
+1531,1069,Puligny-Montrachet premier cru La Truffière,8,,Puligny-Montrachet,vineyard:inao-pc:1069
+1532,1070,Puligny-Montrachet premier cru Le Cailleret,8,,Puligny-Montrachet,vineyard:inao-pc:1070
+1533,1071,Puligny-Montrachet premier cru Les Chalumaux,8,,Puligny-Montrachet,vineyard:inao-pc:1071
+1534,1072,Puligny-Montrachet premier cru Les Combettes,8,,Puligny-Montrachet,vineyard:inao-pc:1072
+1535,1073,Puligny-Montrachet premier cru Les Demoiselles,8,,Puligny-Montrachet,vineyard:inao-pc:1073
+1536,1074,Puligny-Montrachet premier cru Les Folatières,8,,Puligny-Montrachet,vineyard:inao-pc:1074
+1537,1075,Puligny-Montrachet premier cru Les Perrières,8,,Puligny-Montrachet,vineyard:inao-pc:1075
+1538,1076,Puligny-Montrachet premier cru Les Pucelles,8,,Puligny-Montrachet,vineyard:inao-pc:1076
+1539,1077,Puligny-Montrachet premier cru Les Referts,8,,Puligny-Montrachet,vineyard:inao-pc:1077
+1540,1078,Puligny-Montrachet premier cru Sous le Puits,8,,Puligny-Montrachet,vineyard:inao-pc:1078
+1541,1111,Rully premier cru,8,,Rully,vineyard:inao-pc:1111
+1542,1088,Rully premier cru Agneux,8,,Rully,vineyard:inao-pc:1088
+1543,1089,Rully premier cru Champs Cloux,8,,Rully,vineyard:inao-pc:1089
+1544,1090,Rully premier cru Chapitre,8,,Rully,vineyard:inao-pc:1090
+1545,1091,Rully premier cru Clos St Jacques,8,,Rully,vineyard:inao-pc:1091
+1546,1092,Rully premier cru Clos du Chaigne,8,,Rully,vineyard:inao-pc:1092
+1547,1093,Rully premier cru Cloux,8,,Rully,vineyard:inao-pc:1093
+1548,1094,Rully premier cru Grésigny,8,,Rully,vineyard:inao-pc:1094
+1549,1095,Rully premier cru La Bressande,8,,Rully,vineyard:inao-pc:1095
+1550,1096,Rully premier cru La Fosse,8,,Rully,vineyard:inao-pc:1096
+1551,1097,Rully premier cru La Pucelle,8,,Rully,vineyard:inao-pc:1097
+1552,1098,Rully premier cru La Renarde,8,,Rully,vineyard:inao-pc:1098
+1553,1102,Rully premier cru Le Meix Cadot,8,,Rully,vineyard:inao-pc:1102
+1554,1103,Rully premier cru Le Meix Caillet,8,,Rully,vineyard:inao-pc:1103
+1555,1099,Rully premier cru Les Pierres,8,,Rully,vineyard:inao-pc:1099
+1556,1100,Rully premier cru Margotés,8,,Rully,vineyard:inao-pc:1100
+1557,1101,Rully premier cru Marissou,8,,Rully,vineyard:inao-pc:1101
+1558,1104,Rully premier cru Molesme,8,,Rully,vineyard:inao-pc:1104
+1559,1105,Rully premier cru Montpalais,8,,Rully,vineyard:inao-pc:1105
+1560,1106,Rully premier cru Pillot,8,,Rully,vineyard:inao-pc:1106
+1561,1107,Rully premier cru Préaux,8,,Rully,vineyard:inao-pc:1107
+1562,1108,Rully premier cru Rabourcé,8,,Rully,vineyard:inao-pc:1108
+1563,1109,Rully premier cru Raclot,8,,Rully,vineyard:inao-pc:1109
+1564,1110,Rully premier cru Vauvry,8,,Rully,vineyard:inao-pc:1110
+1565,1156,Saint-Aubin premier cru,8,,Saint-Aubin,vineyard:inao-pc:1156
+1566,1126,Saint-Aubin premier cru Bas de Vermarain à l'Est,8,,Saint-Aubin,vineyard:inao-pc:1126
+1567,1127,Saint-Aubin premier cru Derrière Chez Edouard,8,,Saint-Aubin,vineyard:inao-pc:1127
+1568,1128,Saint-Aubin premier cru Derrière la Tour,8,,Saint-Aubin,vineyard:inao-pc:1128
+1569,1129,Saint-Aubin premier cru Echaille,8,,Saint-Aubin,vineyard:inao-pc:1129
+1570,1130,Saint-Aubin premier cru En Créot,8,,Saint-Aubin,vineyard:inao-pc:1130
+1571,1131,Saint-Aubin premier cru En Montceau,8,,Saint-Aubin,vineyard:inao-pc:1131
+1572,1132,Saint-Aubin premier cru En Remilly,8,,Saint-Aubin,vineyard:inao-pc:1132
+1573,1133,Saint-Aubin premier cru En Vollon à l'Est,8,,Saint-Aubin,vineyard:inao-pc:1133
+1574,1134,Saint-Aubin premier cru En la Ranché,8,,Saint-Aubin,vineyard:inao-pc:1134
+1575,1135,Saint-Aubin premier cru Es Champs,8,,Saint-Aubin,vineyard:inao-pc:1135
+1576,1136,Saint-Aubin premier cru La Chatenière,8,,Saint-Aubin,vineyard:inao-pc:1136
+1577,1137,Saint-Aubin premier cru Le Bas de Gamay à l'Est,8,,Saint-Aubin,vineyard:inao-pc:1137
+1578,1138,Saint-Aubin premier cru Le Charmois,8,,Saint-Aubin,vineyard:inao-pc:1138
+1579,1139,Saint-Aubin premier cru Le Puits,8,,Saint-Aubin,vineyard:inao-pc:1139
+1580,1140,Saint-Aubin premier cru Les Castets,8,,Saint-Aubin,vineyard:inao-pc:1140
+1581,1141,Saint-Aubin premier cru Les Champlots,8,,Saint-Aubin,vineyard:inao-pc:1141
+1582,1142,Saint-Aubin premier cru Les Combes,8,,Saint-Aubin,vineyard:inao-pc:1142
+1583,1143,Saint-Aubin premier cru Les Combes au Sud,8,,Saint-Aubin,vineyard:inao-pc:1143
+1584,1144,Saint-Aubin premier cru Les Cortons,8,,Saint-Aubin,vineyard:inao-pc:1144
+1585,1145,Saint-Aubin premier cru Les Frionnes,8,,Saint-Aubin,vineyard:inao-pc:1145
+1586,1146,Saint-Aubin premier cru Les Murgers des dents de chien,8,,Saint-Aubin,vineyard:inao-pc:1146
+1587,1147,Saint-Aubin premier cru Les Perrières,8,,Saint-Aubin,vineyard:inao-pc:1147
+1588,1148,Saint-Aubin premier cru Les Travers de Marinot,8,,Saint-Aubin,vineyard:inao-pc:1148
+1589,1149,Saint-Aubin premier cru Marinot,8,,Saint-Aubin,vineyard:inao-pc:1149
+1590,1150,Saint-Aubin premier cru Pitangeret,8,,Saint-Aubin,vineyard:inao-pc:1150
+1591,1151,Saint-Aubin premier cru Sous Roche Dumay,8,,Saint-Aubin,vineyard:inao-pc:1151
+1592,1152,Saint-Aubin premier cru Sur Gamay,8,,Saint-Aubin,vineyard:inao-pc:1152
+1593,1153,Saint-Aubin premier cru Sur le sentier du Clou,8,,Saint-Aubin,vineyard:inao-pc:1153
+1594,1154,Saint-Aubin premier cru Vignes Moingeon,8,,Saint-Aubin,vineyard:inao-pc:1154
+1595,1155,Saint-Aubin premier cru Village,8,,Saint-Aubin,vineyard:inao-pc:1155
+1596,1172,Santenay premier cru,8,,Santenay,vineyard:inao-pc:1172
+1597,1160,Santenay premier cru Beauregard,8,,Santenay,vineyard:inao-pc:1160
+1598,1161,Santenay premier cru Beaurepaire,8,,Santenay,vineyard:inao-pc:1161
+1599,1162,Santenay premier cru Clos Faubard,8,,Santenay,vineyard:inao-pc:1162
+1600,1163,Santenay premier cru Clos Rousseau,8,,Santenay,vineyard:inao-pc:1163
+1601,1164,Santenay premier cru Clos de Tavannes,8,,Santenay,vineyard:inao-pc:1164
+1602,1165,Santenay premier cru Clos des Mouches,8,,Santenay,vineyard:inao-pc:1165
+1603,1166,Santenay premier cru Grand Clos Rousseau,8,,Santenay,vineyard:inao-pc:1166
+1604,1167,Santenay premier cru La Comme,8,,Santenay,vineyard:inao-pc:1167
+1605,1168,Santenay premier cru La Maladière,8,,Santenay,vineyard:inao-pc:1168
+1606,1169,Santenay premier cru Les Gravières,8,,Santenay,vineyard:inao-pc:1169
+1607,1170,Santenay premier cru Les Gravières-Clos de Tavannes,8,,Santenay,vineyard:inao-pc:1170
+1608,1171,Santenay premier cru Passetemps,8,,Santenay,vineyard:inao-pc:1171
+1609,1196,Savigny-lès-Beaune premier cru,8,,Savigny-lès-Beaune,vineyard:inao-pc:1196
+1610,1174,Savigny-lès-Beaune premier cru Aux Clous,8,,Savigny-lès-Beaune,vineyard:inao-pc:1174
+1611,1175,Savigny-lès-Beaune premier cru Aux Fourneaux,8,,Savigny-lès-Beaune,vineyard:inao-pc:1175
+1612,1176,Savigny-lès-Beaune premier cru Aux Gravains,8,,Savigny-lès-Beaune,vineyard:inao-pc:1176
+1613,1177,Savigny-lès-Beaune premier cru Aux Guettes,8,,Savigny-lès-Beaune,vineyard:inao-pc:1177
+1614,1178,Savigny-lès-Beaune premier cru Aux Serpentières,8,,Savigny-lès-Beaune,vineyard:inao-pc:1178
+1615,1179,Savigny-lès-Beaune premier cru Basses Vergelesses,8,,Savigny-lès-Beaune,vineyard:inao-pc:1179
+1616,1180,Savigny-lès-Beaune premier cru Bataillère,8,,Savigny-lès-Beaune,vineyard:inao-pc:1180
+1617,1181,Savigny-lès-Beaune premier cru Champ Chevrey,8,,Savigny-lès-Beaune,vineyard:inao-pc:1181
+1618,1182,Savigny-lès-Beaune premier cru La Dominode,8,,Savigny-lès-Beaune,vineyard:inao-pc:1182
+1619,1183,Savigny-lès-Beaune premier cru Les Charnières,8,,Savigny-lès-Beaune,vineyard:inao-pc:1183
+1620,1184,Savigny-lès-Beaune premier cru Les Hauts Jarrons,8,,Savigny-lès-Beaune,vineyard:inao-pc:1184
+1621,1185,Savigny-lès-Beaune premier cru Les Hauts Marconnets,8,,Savigny-lès-Beaune,vineyard:inao-pc:1185
+1622,1186,Savigny-lès-Beaune premier cru Les Jarrons,8,,Savigny-lès-Beaune,vineyard:inao-pc:1186
+1623,1187,Savigny-lès-Beaune premier cru Les Lavières,8,,Savigny-lès-Beaune,vineyard:inao-pc:1187
+1624,1188,Savigny-lès-Beaune premier cru Les Marconnets,8,,Savigny-lès-Beaune,vineyard:inao-pc:1188
+1625,1189,Savigny-lès-Beaune premier cru Les Narbantons,8,,Savigny-lès-Beaune,vineyard:inao-pc:1189
+1626,1190,Savigny-lès-Beaune premier cru Les Peuillets,8,,Savigny-lès-Beaune,vineyard:inao-pc:1190
+1627,1191,Savigny-lès-Beaune premier cru Les Rouvrettes,8,,Savigny-lès-Beaune,vineyard:inao-pc:1191
+1628,1192,Savigny-lès-Beaune premier cru Les Talmettes,8,,Savigny-lès-Beaune,vineyard:inao-pc:1192
+1629,1193,Savigny-lès-Beaune premier cru Les Vergelesses,8,,Savigny-lès-Beaune,vineyard:inao-pc:1193
+1630,1194,Savigny-lès-Beaune premier cru Petits Godeaux,8,,Savigny-lès-Beaune,vineyard:inao-pc:1194
+1631,1195,Savigny-lès-Beaune premier cru Redrescul,8,,Savigny-lès-Beaune,vineyard:inao-pc:1195
+1632,1261,Volnay premier cru,8,,Volnay,vineyard:inao-pc:1261
+1633,1226,Volnay premier cru Carelle sous la Chapelle,8,,Volnay,vineyard:inao-pc:1226
+1634,1228,Volnay premier cru Champans,8,,Volnay,vineyard:inao-pc:1228
+1635,1230,Volnay premier cru Clos de l'Audignac,8,,Volnay,vineyard:inao-pc:1230
+1636,1231,Volnay premier cru Clos de la Barre,8,,Volnay,vineyard:inao-pc:1231
+1637,1232,Volnay premier cru Clos de la Bousse-d'Or,8,,Volnay,vineyard:inao-pc:1232
+1638,1233,Volnay premier cru Clos de la Cave des Ducs,8,,Volnay,vineyard:inao-pc:1233
+1639,1234,Volnay premier cru Clos de la Chapelle,8,,Volnay,vineyard:inao-pc:1234
+1640,1235,Volnay premier cru Clos de la Rougeotte,8,,Volnay,vineyard:inao-pc:1235
+1641,1252,Volnay premier cru Clos des 60 ouvrées,8,,Volnay,vineyard:inao-pc:1252
+1642,1236,Volnay premier cru Clos des Chênes,8,,Volnay,vineyard:inao-pc:1236
+1643,1237,Volnay premier cru Clos des Ducs,8,,Volnay,vineyard:inao-pc:1237
+1644,1238,Volnay premier cru Clos du Château des Ducs,8,,Volnay,vineyard:inao-pc:1238
+1645,1239,Volnay premier cru Clos du Verseuil,8,,Volnay,vineyard:inao-pc:1239
+1646,1240,Volnay premier cru En Chevret,8,,Volnay,vineyard:inao-pc:1240
+1647,1242,Volnay premier cru Frémiets,8,,Volnay,vineyard:inao-pc:1242
+1648,1243,Volnay premier cru Frémiets - Clos de la Rougeotte,8,,Volnay,vineyard:inao-pc:1243
+1649,1244,Volnay premier cru La Gigotte,8,,Volnay,vineyard:inao-pc:1244
+1650,1245,Volnay premier cru Lassolle,8,,Volnay,vineyard:inao-pc:1245
+1651,1246,Volnay premier cru Le Ronceret,8,,Volnay,vineyard:inao-pc:1246
+1652,1247,Volnay premier cru Le Village,8,,Volnay,vineyard:inao-pc:1247
+1653,1248,Volnay premier cru Les Angles,8,,Volnay,vineyard:inao-pc:1248
+1654,1250,Volnay premier cru Les Brouillards,8,,Volnay,vineyard:inao-pc:1250
+1655,1251,Volnay premier cru Les Caillerets,8,,Volnay,vineyard:inao-pc:1251
+1656,1254,Volnay premier cru Les Lurets,8,,Volnay,vineyard:inao-pc:1254
+1657,1255,Volnay premier cru Les Mitans,8,,Volnay,vineyard:inao-pc:1255
+1658,1256,Volnay premier cru Pitures Dessus,8,,Volnay,vineyard:inao-pc:1256
+1659,1258,Volnay premier cru Robardelle,8,,Volnay,vineyard:inao-pc:1258
+1660,1259,Volnay premier cru Santenots,8,,Volnay,vineyard:inao-pc:1259
+1661,1260,Volnay premier cru Taille Pieds,8,,Volnay,vineyard:inao-pc:1260
+1662,1277,Vosne-Romanée premier cru,8,,Vosne-Romanée,vineyard:inao-pc:1277
+1663,1263,Vosne-Romanée premier cru Au-dessus des Malconsorts,8,,Vosne-Romanée,vineyard:inao-pc:1263
+1664,1264,Vosne-Romanée premier cru Aux Brulées,8,,Vosne-Romanée,vineyard:inao-pc:1264
+1665,1265,Vosne-Romanée premier cru Aux Malconsorts,8,,Vosne-Romanée,vineyard:inao-pc:1265
+1666,1266,Vosne-Romanée premier cru Aux Raignots,8,,Vosne-Romanée,vineyard:inao-pc:1266
+1667,1268,Vosne-Romanée premier cru Clos des Réas,8,,Vosne-Romanée,vineyard:inao-pc:1268
+1668,1267,Vosne-Romanée premier cru Cros Parantoux,8,,Vosne-Romanée,vineyard:inao-pc:1267
+1669,1269,Vosne-Romanée premier cru En Orveaux,8,,Vosne-Romanée,vineyard:inao-pc:1269
+1670,1270,Vosne-Romanée premier cru La Croix Rameau,8,,Vosne-Romanée,vineyard:inao-pc:1270
+1671,1271,Vosne-Romanée premier cru Les Beaux Monts,8,,Vosne-Romanée,vineyard:inao-pc:1271
+1672,1272,Vosne-Romanée premier cru Les Chaumes,8,,Vosne-Romanée,vineyard:inao-pc:1272
+1673,1273,Vosne-Romanée premier cru Les Gaudichots,8,,Vosne-Romanée,vineyard:inao-pc:1273
+1674,1274,Vosne-Romanée premier cru Les Petis Monts,8,,Vosne-Romanée,vineyard:inao-pc:1274
+1675,1275,Vosne-Romanée premier cru Les Rouges,8,,Vosne-Romanée,vineyard:inao-pc:1275
+1676,1276,Vosne-Romanée premier cru Les Suchots,8,,Vosne-Romanée,vineyard:inao-pc:1276
+1677,1283,Vougeot premier cru,8,,Vougeot,vineyard:inao-pc:1283
+1678,1279,Vougeot premier cru Clos de la Perrière,8,,Vougeot,vineyard:inao-pc:1279
+1679,1280,Vougeot premier cru Le Clos Blanc,8,,Vougeot,vineyard:inao-pc:1280
+1680,1281,Vougeot premier cru Les Crâs,8,,Vougeot,vineyard:inao-pc:1281
+1681,1282,Vougeot premier cru Les Petits Vougeots,8,,Vougeot,vineyard:inao-pc:1282
