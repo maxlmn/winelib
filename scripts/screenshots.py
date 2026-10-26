@@ -1,6 +1,6 @@
-"""The README's screenshots, from a running app on the public demo database, into docs/release/screenshots/.
+"""The README's screenshots, from a running app on a demo database (data/demo.db: a cellar to show, without personal
+details), into screenshots/.
 
-    python scripts/make_demo_db.py --from <your DB_URL> --public                 # data/demo.db
     DB_URL=sqlite:///../../data/demo.db GEO_DIR=../../data/geo uvicorn main:app --port 8020     # from app/api
     API_URL=http://localhost:8020 npx vite dev --port 5176                       # from app/web
     python scripts/screenshots.py [--base http://localhost:5176] [--only map,cellar]
@@ -13,7 +13,7 @@ import os
 import time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "docs", "release", "screenshots")
+OUT = os.path.join(ROOT, "screenshots")
 
 # name: (path, JavaScript to run once loaded, seconds to wait after)
 SHOTS = {
