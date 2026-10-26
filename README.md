@@ -91,6 +91,13 @@ Catalogue): a network of every known parent → offspring link, your wines on it
 
 ![The home page in light and dark](screenshots/themes.png)
 
+**On your phone** too: the same app in a phone layout, with a menu that folds away.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/mobile-dark.png">
+  <img alt="Home, the cellar's racks and a wine page on a phone" src="screenshots/mobile.png">
+</picture>
+
 And more:
 
 - **A complete reference**: 129 wine regions, 2,900 appellations (every INAO name, AVA, EU PDO and PGI, and eight
