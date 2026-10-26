@@ -1,0 +1,236 @@
+:root {
+	--accent: var(--accent-light, #c27ba0);
+	--accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
+	/* Resting links in the content; a palette can mute them (--link-mix) so the full accent marks actions,
+	   selection and hovers */
+	--link: color-mix(in srgb, var(--accent) var(--link-mix, 100%), var(--text));
+	/* Neutrals carry a hint of the accent, so each palette feels like its own room */
+	--bg: color-mix(in srgb, var(--accent) 4%, #f7f6f4);
+	--surface: #ffffff;
+	--surface-2: color-mix(in srgb, var(--accent) 3%, #f2f0ee);
+	--border: color-mix(in srgb, var(--accent) 6%, #e3e0dc);
+	--text: #2a2522;
+	--muted: #776f69;
+	--gold: #d4af37;
+	--up: #2e8b57;
+	--down: #c0392b;
+	--radius: 10px;
+	--shadow: 0 1px 2px #0000000d, 0 4px 16px #00000010;
+	--heading-font: inherit;
+	color-scheme: light;
+}
+
+/* data-theme is always resolved to light or dark (see theme.svelte.ts / app.html) */
+:root[data-theme='dark'] {
+	--accent: var(--accent-dark, #d690b5);
+	--accent-soft: color-mix(in srgb, var(--accent) 20%, transparent);
+	--link: color-mix(in srgb, var(--accent) var(--link-mix, 100%), var(--text));
+	--bg: color-mix(in srgb, var(--accent) 5%, #141216);
+	--surface: color-mix(in srgb, var(--accent) 4%, #1f1c22);
+	--surface-2: color-mix(in srgb, var(--accent) 5%, #28252c);
+	--border: color-mix(in srgb, var(--accent) 8%, #36323a);
+	--text: #ece8ef;
+	--muted: #9d96a3;
+	--up: #5cc98a;
+	--down: #ef6f5e;
+	--shadow: 0 1px 2px #0000004d, 0 4px 16px #00000040;
+	color-scheme: dark;
+}
+
+/* Obsidian (after its default theme): untinted greys, flat cards, tighter corners */
+:root[data-palette='obsidian'] {
+	--bg: #f8f8f8;
+	--surface: #ffffff;
+	--surface-2: #f2f2f2;
+	--border: #e4e4e4;
+	--text: #222222;
+	--muted: #7a7a7a;
+	--radius: 6px;
+	--shadow: none;
+}
+
+:root[data-palette='obsidian'][data-theme='dark'] {
+	--bg: #1e1e1e;
+	--surface: #262626;
+	--surface-2: #2e2e2e;
+	--border: #363636;
+	--text: #dadada;
+	--muted: #8f8f8f;
+}
+
+/* Minimal (after kepano's Minimal theme for Obsidian, its default colors): neutral greys, a slate accent,
+   flat cards, underlined links */
+:root[data-palette='minimal'] {
+	--bg: #f5f5f5;
+	--surface: #ffffff;
+	--surface-2: #efefef;
+	--border: #e6e6e6;
+	--text: #0f0f0f;
+	--muted: #828282;
+	--radius: 8px;
+	--shadow: none;
+	--link-decoration: underline;
+}
+
+:root[data-palette='minimal'][data-theme='dark'] {
+	--bg: #212121;
+	--surface: #262626;
+	--surface-2: #2e2e2e;
+	--border: #333333;
+	--text: #d1d1d1;
+	--muted: #999999;
+}
+
+:root[data-font='serif'] {
+	--heading-font: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	background: var(--bg);
+	color: var(--text);
+	font: 14px/1.45 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+	-webkit-font-smoothing: antialiased;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+a:hover {
+	color: var(--accent);
+}
+
+button,
+input,
+select {
+	font: inherit;
+	color: inherit;
+}
+
+h1 {
+	font-size: 22px;
+	margin: 0;
+	letter-spacing: -0.01em;
+}
+
+/* Part of a page in a color of its own (--tint: a region's page) as its accent; darkened in light mode, where
+   some region colors (Champagne's pale yellow) would be too light for text */
+.tinted {
+	--accent: color-mix(in oklab, var(--tint) 72%, #000);
+	--accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
+	--link: color-mix(in srgb, var(--accent) var(--link-mix, 100%), var(--text));
+}
+
+:root[data-theme='dark'] .tinted {
+	--accent: var(--tint);
+	--accent-soft: color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+/* A page's header: its title, then its actions or controls on the right */
+.page-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 10px 14px;
+	margin-bottom: 18px;
+}
+
+h1,
+h2,
+h3 {
+	font-family: var(--heading-font);
+}
+
+:root[data-font='serif'] h1 {
+	font-size: 25px;
+	font-weight: 600;
+	letter-spacing: 0;
+}
+
+.card {
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+}
+
+.muted {
+	color: var(--muted);
+}
+
+.num {
+	font-variant-numeric: tabular-nums;
+}
+
+.dot {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	flex: none;
+	box-shadow: inset 0 0 0 1px #0000001a;
+}
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 12px;
+	border-radius: 8px;
+	border: 1px solid var(--border);
+	background: var(--surface);
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.btn:hover {
+	border-color: var(--accent);
+	color: var(--accent);
+}
+
+.btn.primary {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: white;
+}
+
+/* Segmented buttons: a few choices side by side, the chosen one filled (.on) */
+.seg {
+	display: inline-flex;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	overflow: hidden;
+	background: var(--surface);
+}
+.seg button {
+	border: none;
+	background: none;
+	padding: 6px 12px;
+	cursor: pointer;
+}
+.seg button.on {
+	background: var(--accent);
+	color: white;
+}
+
+/* A sortable table header: the whole cell a button, so keyboards reach it */
+button.sort {
+	width: 100%;
+	border: none;
+	background: none;
+	padding: 0;
+	text-align: inherit;
+	font-weight: inherit;
+	text-transform: inherit;
+	letter-spacing: inherit;
+	cursor: pointer;
+	white-space: nowrap;
+}

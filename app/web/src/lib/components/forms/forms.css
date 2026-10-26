@@ -1,0 +1,78 @@
+/* Shared control styles for every form (scoped under .form, imported by FormPage) */
+.form input:not([type='checkbox']):not([type='radio']):not([type='range']),
+.form select,
+.form textarea {
+	width: 100%;
+	padding: 8px 10px;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--surface-2);
+	outline: none;
+	transition: border-color 0.12s, background 0.12s;
+}
+
+.form textarea {
+	resize: vertical;
+	min-height: 84px;
+	font: inherit;
+	color: inherit;
+}
+
+.form input:focus,
+.form select:focus,
+.form textarea:focus {
+	border-color: var(--accent);
+	background: var(--surface);
+}
+
+.form input[aria-invalid='true'],
+.form select[aria-invalid='true'] {
+	border-color: var(--down);
+}
+
+.form input[type='checkbox'],
+.form input[type='radio'] {
+	accent-color: var(--accent);
+}
+
+.form .grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 14px 16px;
+}
+
+.form .grid.three {
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.form .span {
+	grid-column: 1 / -1;
+}
+
+.form .btn.danger {
+	color: var(--down);
+}
+
+.form .btn.danger:hover {
+	border-color: var(--down);
+}
+
+.form .btn:disabled {
+	opacity: 0.55;
+	cursor: default;
+}
+
+.form .link {
+	border: none;
+	background: none;
+	padding: 0;
+	color: var(--accent);
+	cursor: pointer;
+}
+
+@media (max-width: 640px) {
+	.form .grid,
+	.form .grid.three {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}

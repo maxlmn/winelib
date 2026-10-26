@@ -1,0 +1,3 @@
+# The tests (pytest from app/api): the app's requirements, and these
+pytest
+httpx

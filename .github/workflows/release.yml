@@ -1,0 +1,47 @@
+# A release: push a tag (git tag v0.1.0 && git push origin v0.1.0). The tests run, the web app is built, and a zip
+# (the code with the built web app, so no Node.js is needed to run it) is attached to the tag's GitHub release.
+# To run it: unzip, pip install -r app/api/requirements.txt, python run.py.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: app/api/requirements*.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app/web/package-lock.json
+      - name: Tests
+        run: |
+          pip install -r app/api/requirements.txt -r app/api/requirements-rp.txt -r app/api/requirements-dev.txt
+          cd app/api && python -m pytest -q tests
+      - name: Build the web app
+        working-directory: app/web
+        run: npm ci && npm run build
+      - name: Zip
+        run: |
+          name="winelib-${GITHUB_REF_NAME}"
+          git archive --format=tar --prefix="$name/" HEAD | tar -x
+          cp -r app/web/build "$name/app/web/build"
+          # Not for others: personal data and private plug-ins (until the public repository has none)
+          rm -rf "$name/data" "$name/plugins" "$name/backups" "$name/obsidian"
+          zip -qr "$name.zip" "$name"
+          echo "ZIP=$name.zip" >> "$GITHUB_ENV"
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" "$ZIP" --title "$GITHUB_REF_NAME" --generate-notes

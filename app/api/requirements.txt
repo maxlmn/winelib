@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+# 2.1 makes postgresql:// use psycopg (v3) instead of psycopg2: stay on 2.0 with psycopg2
+sqlalchemy>=2.0,<2.1
+# Database migrations, run at startup (migrate.py, migrations/)
+alembic>=1.13,<2
+psycopg2-binary
+# Map boundaries (optional: without them the map shows no polygons)
+geopandas
+shapely
+pyarrow
+# Photo thumbnails
+pillow
+# Name matching (imports, merges, LWIN suggestions)
+unidecode
+rapidfuzz

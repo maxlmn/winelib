@@ -1,0 +1,22 @@
+# Python
+.venv/
+__pycache__/
+**/__pycache__/
+app/api/.cache/
+app/api/dev.db
+
+# Your data and keys: never in git
+data/
+backups/
+.secrets.env
+.env
+
+# The web app's build
+app/web/node_modules/
+app/web/.svelte-kit/
+app/web/build/
+
+# The map data pack (geo_scripts/build_map_pack.py)
+dist/
+
+.DS_Store
