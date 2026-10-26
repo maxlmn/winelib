@@ -17,6 +17,7 @@
 	import Change from '#lib/components/Change.svelte';
 	import { inCurrency, pct } from '#lib/format.ts';
 	import { appSettings, configured } from '#lib/settings.svelte.ts';
+	import { links } from '#lib/links.ts';
 
 	let { data } = $props();
 
@@ -125,6 +126,7 @@
 				<button class:on={c === cur} onclick={() => setCurrency(c)}>{c}</button>
 			{/each}
 		</div>
+		<a class="btn" href="{links.wineList()}?{toParams(filters)}">Wine list</a>
 		<button class="btn" onclick={exportMarkdown}>↓ Export</button>
 	</div>
 </div>
