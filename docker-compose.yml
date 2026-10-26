@@ -1,0 +1,21 @@
+# WineLib with Docker: docker compose up -d, then http://localhost:8000 (the first start opens on a short setup page).
+services:
+  winelib:
+    image: ghcr.io/maxlmn/winelib:latest
+    build: .  # docker compose up -d --build: from this checkout instead
+    container_name: winelib
+    restart: unless-stopped
+    # This computer only. To reach it from elsewhere, put your own sign-in in front (Tailscale, a proxy with
+    # login): never expose it bare
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - winelib-data:/data  # the database, photos, map outlines, backups, plug-ins
+    # Optional, for market prices (Settings › Integrations says what each needs):
+    # environment:
+    #   - WINELABS_API_KEY=...
+    #   - BI_EMAIL=...
+    #   - BI_PASSWORD=...
+
+volumes:
+  winelib-data:
