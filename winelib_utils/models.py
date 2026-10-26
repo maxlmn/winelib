@@ -55,7 +55,7 @@ class Varietal(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)
     aliases = Column(String) # e.g. "Shiraz, Syrah"
-    # From VIVC (the Vitis International Variety Catalogue; scripts/reference/grapes.py)
+    # From VIVC (the Vitis International Variety Catalogue), in the reference data
     color = Column(String)  # its berries: White, Red, Pink, Grey
     origin = Column(String)  # the country it comes from
     vivc = Column(Integer)  # its VIVC variety number

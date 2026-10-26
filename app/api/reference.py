@@ -1,5 +1,5 @@
 """Reference data: regions, appellations, grapes, vineyards and producers, from app/api/data/reference/*.csv (shipped with the
-code; exported from a database with winelib_utils/export_seed_data.py). At startup, after the migrations:
+code; how they were built: data/docs/how-built.md). At startup, after the migrations:
 
 - a database without any region is given the lot (seed);
 - every database then gets what a newer version ships (update), row by row by a stable key (a region's, grape's or
@@ -30,7 +30,7 @@ REFERENCE_DIR = paths.REFERENCE_DIR
 TABLES = [("regions.csv", Region), ("appellations.csv", Appellation), ("varietals.csv", Varietal),
           ("vineyards.csv", Vineyard), ("producers.csv", Producer)]
 # Never reference data, whatever a file holds: a producer's notes, lists and importers are yours, its description and
-# profile link copied text (winelib_utils/export_seed_data.py leaves them out too)
+# profile link copied text (the export that made these files leaves them out too)
 PRIVATE = {"producers": {"notes", "lists", "importers", "description", "profile_url", "website"}}
 
 

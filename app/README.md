@@ -49,8 +49,8 @@ installation. `tests/test_schema.py` fails if the models and the migrations disa
 
 - **Reference data**: `api/data/reference/*.csv` (regions, appellations, grapes, producers, vineyards), with stable
   keys so updates reach existing installations (`api/reference.py`). How they were built: `api/data/docs/`.
-- **Map outlines**: the shape store in `data/geo/shapes/`, built by `geo_scripts/` (see its README) or installed
-  from the map pack (Settings › Maintenance).
+- **Map outlines**: the shape store in `data/geo/shapes/`, installed from the map pack (Settings › Maintenance ›
+  Map outlines); outlines drawn or imported in the app are kept in the database.
 - **Your data**: the database, `data/images/` (tasting photos), `backups/`. `api/paths.py` decides where: `data/` in
   a checkout, your user folder for a release.
 - **Plug-ins**: Python modules in `plugins/` (not part of this repository), each with a `register(api)` that can add

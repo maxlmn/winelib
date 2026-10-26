@@ -110,14 +110,36 @@ def local_sources(geo_dir):
     shutil.copy(os.path.join(API_DIR, "tests", "data", "sources.local.json"), os.path.join(geo_dir, "sources.local.json"))
 
 
+def write_shapes(out_dir, source, rows, kind="appellation"):
+    """<out_dir>/<source>.parquet in the shape store's format (the map pack's, a store built on a PC): rows are
+    (source_id, name, level, geometry WKB). The display outline is the shape, lightly simplified like the store's."""
+    import json
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    import shapely
+    geoms = [shapely.from_wkb(r[3]) for r in rows]
+    boxes = [g.bounds for g in geoms]
+    shown = [shapely.to_wkb(shapely.simplify(g, ((b[2] - b[0]) ** 2 + (b[3] - b[1]) ** 2) ** 0.5 / 500)) for g, b in zip(geoms, boxes)]
+    table = pa.table({
+        "source": pa.array([source] * len(rows), pa.string()),
+        "source_id": pa.array([r[0] for r in rows], pa.string()),
+        "name": pa.array([r[1] for r in rows], pa.string()),
+        "level": pa.array([r[2] for r in rows], pa.string()),
+        "geometry": pa.array([r[3] for r in rows], pa.binary()),
+        "display": pa.array(shown, pa.binary()),
+        **{f"bbox_{k}": pa.array([b[i] for b in boxes], pa.float64()) for i, k in enumerate("wsen")},
+    })
+    meta = {"version": "1.0.0", "primary_column": "geometry", "columns": {
+        "geometry": {"encoding": "WKB", "geometry_types": []}, "display": {"encoding": "WKB", "geometry_types": []}}}
+    os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, f"{source}.parquet")
+    pq.write_table(table.replace_schema_metadata({b"geo": json.dumps(meta).encode()}), path, row_group_size=64)
+    return path
+
+
 def write_store(geo_dir, source, shapes, kind="appellation"):
-    """Writes data/geo/shapes/<source>.parquet as geo_scripts/build_shapes.py does: shapes is {source_id: geometry}."""
-    import importlib.util
-    spec = importlib.util.spec_from_file_location(
-        "build_shapes", os.path.join(API_DIR, "..", "..", "geo_scripts", "build_shapes.py"))
-    build = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(build)
-    build.write(os.path.join(geo_dir, "shapes"), source, [(sid, sid, None, g.wkb) for sid, g in shapes.items()], kind)
+    """data/geo/shapes/<source>.parquet and its manifest entry: shapes is {source_id: geometry}."""
+    write_shapes(os.path.join(geo_dir, "shapes"), source, [(sid, sid, None, g.wkb) for sid, g in shapes.items()], kind)
     path = os.path.join(geo_dir, "shapes", "manifest.json")
     import json
     manifest = json.load(open(path)) if os.path.exists(path) else {}

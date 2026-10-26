@@ -21,7 +21,7 @@ router = APIRouter()
 
 
 def mappable_app(session=None):
-    """The SQL filter for appellations with something to draw: linked to a shape in the store (geo_scripts/
+    """The SQL filter for appellations with something to draw: linked to a shape in the store (
     shape_links.py sets boundary only when the store has it)."""
     return Appellation.boundary.isnot(None)
 

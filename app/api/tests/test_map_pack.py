@@ -1,14 +1,11 @@
-"""The map data pack: geo_scripts/build_map_pack.py packs the sources that may ship (vineyards: INAO's premiers crus
-only), Maintenance › Map outlines installs it into an empty store and links the rows, Settings lists the credits."""
-import importlib.util
+"""The map data pack: Maintenance › Map outlines installs one into an empty store (each file checked against the
+pack's checksums) and links the rows; Settings lists the credits."""
 import json
 import os
 import time
 import zipfile
 
 from db import Appellation, Region, Vineyard
-
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 
 def seed(s):
@@ -27,24 +24,16 @@ def wait(client):
 
 
 def build_pack(tmp_path):
-    from shapely.geometry import box
-    from tests.conftest import write_store
-    store = tmp_path / "pc_geo"
-    write_store(str(store), "inao", {"104": box(3, 47, 4, 48)})
-    write_store(str(store), "vineyard", {"inao-pc:7": box(4, 47, 4.01, 47.01),       # a premier cru: ships
-                                         "bourgogne:7": box(4, 47, 4.02, 47.02)}, "vineyard")  # Weinlagen: doesn't
-    spec = importlib.util.spec_from_file_location("build_map_pack", os.path.join(ROOT, "geo_scripts", "build_map_pack.py"))
-    build = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(build)
+    """A small pack (tests/data/map-pack.zip, made by the map pack's builder from two sources): INAO's 104 and one
+    premier cru (a Weinlagen vineyard filtered out)."""
+    import shutil
     out = tmp_path / "pack.zip"
-    pack = build.build(str(store), str(out), log=lambda line: None)
-    return out, pack
+    shutil.copy(os.path.join(os.path.dirname(__file__), "data", "map-pack.zip"), out)
+    return out
 
 
 def test_pack_then_install(client, tmp_path, monkeypatch):
-    out, pack = build_pack(tmp_path)
-    assert set(pack["sources"]) == {"inao", "vineyard"} and pack["sources"]["vineyard"]["rows"] == 1  # filtered
-    assert pack["sources"]["inao"]["licence"].startswith("Licence Ouverte")
+    out = build_pack(tmp_path)
     assert {"pack.json", "CREDITS.md", "shapes/manifest.json", "shapes/inao.parquet"} <= set(zipfile.ZipFile(out).namelist())
 
     import map_pack
@@ -76,7 +65,7 @@ def test_pack_then_install(client, tmp_path, monkeypatch):
 
 
 def test_a_damaged_pack_is_refused(client, tmp_path, monkeypatch):
-    out, _ = build_pack(tmp_path)
+    out = build_pack(tmp_path)
     damaged = tmp_path / "damaged.zip"
     with zipfile.ZipFile(out) as src, zipfile.ZipFile(damaged, "w") as dst:
         for item in src.infolist():

@@ -4,8 +4,8 @@ data/shape_sources.json, only where the store has that shape (docs/plans/shape-s
 nor touch wines: the map draws a row's boundary, and a row without one isn't drawn.
 
 Settings › Maintenance › Shape links runs it (after downloading or building the store, or adding appellations and
-vineyards); geo_scripts/link_shapes.py on a PC. The name rules shared with the PC's scripts (norm, key, ALIASES:
-Australia's GIs, linked by name) are here, and geo_scripts/build_shapes.py takes them from here.
+vineyards). The name rules (norm, key, ALIASES: Australia's GIs, linked by name) are here; the tools that build the
+published outlines share them.
 """
 import json
 import os
@@ -131,7 +131,7 @@ def candidates(row, link, names=None):
     """The source_ids a row could have under one link rule ([] when the rule doesn't apply to it)."""
     by = link["by"]
     if by == "country_name":
-        # The shape's id is "<country>:<appellation name>" (build_admin_areas.py writes them so)
+        # The shape's id is "<country>:<appellation name>" (the admin areas' outlines are built so)
         return [f"{row['country']}:{row['name']}"] if row["country"] and row["name"] else []
     if by == "store_name":
         # By the shape's own name within the row's country, only for rows without the id (when_empty): an alias
@@ -229,12 +229,12 @@ def in_store(boundary, store):
 def link(engine, geo_dir, commit=False, sources_file=SOURCES_FILE):
     """Works out (and with commit saves) every row's boundary. {"store": {source: shapes}, "absent": [sources not
     built], "tables": {table: {"rows", "added", "linked": {source: n}, "missing", "ambiguous", "mismatched",
-    "none", "changes": [(row, old boundary, new boundary)]}}}. Settings › Maintenance › Shape links, and geo_scripts/link_shapes.py on a PC.
+    "none", "changes": [(row, old boundary, new boundary)]}}}. Settings › Maintenance › Shape links.
     ValueError without a store."""
     sources = load_sources(sources_file, geo_dir)
     store = store_ids(geo_dir, sources)
     if not store:
-        raise ValueError(f"No shape store in {os.path.join(geo_dir, 'shapes')}: download the map outlines, or build them (geo_scripts/build_shapes.py)")
+        raise ValueError(f"No shape store in {os.path.join(geo_dir, 'shapes')}: download the map outlines (Settings › Maintenance › Map outlines)")
     out = {"store": {s: len(ids) for s, ids in store.items()}, "absent": [s for s in sources if s not in store],
            "tables": {}}
     for table in TABLES:

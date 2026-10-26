@@ -1,29 +1,22 @@
-"""Shape links (app/api/shape_links.py, and geo_scripts/link_shapes.py printing its report): the boundary column,
+"""Shape links (app/api/shape_links.py, as Settings › Maintenance › Shape links runs them): the boundary column,
 filled from shape_sources.json's link rules and the store."""
-import importlib.util
 import os
 
 import pytest
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-
-
-def load(name):
-    spec = importlib.util.spec_from_file_location(name, os.path.join(ROOT, "geo_scripts", f"{name}.py"))
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
 
 @pytest.fixture(scope="module")
 def link():
-    """The PC's command (main), the app's module (names_match) and build_shapes (to write a store)."""
+    """The app's linking (main: shape_links.link on a database URL, its result), names_match, and a store writer."""
     from types import SimpleNamespace
     import shape_links
-    return SimpleNamespace(main=load("link_shapes").main, names_match=shape_links.names_match,
-                           build_shapes=load("build_shapes"))
+    from tests.conftest import write_shapes
+
+    def main(geo, url, commit=False):
+        return shape_links.link(create_engine(url), geo, commit, shape_links.SOURCES_FILE)
+    return SimpleNamespace(main=main, names_match=shape_links.names_match, store=SimpleNamespace(write=write_shapes))
 
 
 @pytest.fixture
@@ -57,7 +50,7 @@ def setup(tmp_path, link):
     s.close()
     geo = tmp_path / "geo"
     b = box(0, 0, 1, 1).wkb
-    build = link.build_shapes
+    build = link.store
     from tests.conftest import local_sources
     local_sources(str(geo))  # Weinlagen-info's vineyard files, as on the PC
     for source, ids, kind in (("inao", ["101"], "appellation"), ("eu", ["PDO-FR-A0001", "PDO-IT-A1234"], "appellation"),
@@ -74,21 +67,23 @@ def boundaries(engine, table):
         return dict(c.execute(text(f"SELECT name, boundary FROM {table}")).fetchall())
 
 
-def test_dry_run_reports_and_saves_nothing(setup, link, capsys):
+def test_dry_run_reports_and_saves_nothing(setup, link):
     geo, url, engine = setup
-    link.main(geo, url)
-    out = capsys.readouterr().out
+    result = link.main(geo, url)
     assert set(boundaries(engine, "appellations").values()) == {None}  # nothing saved
-    assert "linked to inao: 1" in out and "linked to eu: 2" in out and "linked to ava: 1" in out and "linked to au: 1" in out
-    assert "Ghost (Loire, France): no inao:555" in out
-    assert "nothing to link by (no id, not a linked country): 1" in out  # Rioja
-    assert "linked to vineyard: 4" in out and "Lost (Pfalz, Germany): no vineyard:pfalz:99" in out
-    assert "ambiguous (their id is in several files, none or several with their name): 1" in out
-    assert "Clos Blanc (Burgundy): vineyard:bourgogne:7 (Clos de Vougeot) or vineyard:inao-pc:7 (Les Amoureuses)" in out
-    assert "Pechstein (Pfalz) -> vineyard:pfalz:8, named Jesuitengarten" in out
+    apps, vines = result["tables"]["appellations"], result["tables"]["vineyards"]
+    assert apps["linked"] == {"inao": 1, "eu": 2, "ava": 1, "au": 1}
+    assert [(row["name"], tried) for row, tried in apps["missing"]] == [("Ghost", ["inao:555"])]
+    assert apps["none"] == 1  # Rioja: nothing to link by
+    assert vines["linked"] == {"vineyard": 4}
+    assert [(row["name"], tried) for row, tried in vines["missing"]] == [("Lost", ["vineyard:pfalz:99"])]
+    assert [(row["name"], options) for row, options in vines["ambiguous"]] == [
+        ("Clos Blanc", ["vineyard:bourgogne:7 (Clos de Vougeot)", "vineyard:inao-pc:7 (Les Amoureuses)"])]
+    assert [(row["name"], found, name) for row, found, name in vines["mismatched"]] == [
+        ("Pechstein", "vineyard:pfalz:8", "Jesuitengarten")]
 
 
-def test_commit_links_and_a_rerun_changes_nothing(setup, link, capsys):
+def test_commit_links_and_a_rerun_changes_nothing(setup, link):
     geo, url, engine = setup
     link.main(geo, url, commit=True)
     assert boundaries(engine, "appellations") == {
@@ -97,9 +92,8 @@ def test_commit_links_and_a_rerun_changes_nothing(setup, link, capsys):
     assert boundaries(engine, "vineyards") == {
         "Les Amoureuses": "vineyard:inao-pc:7", "Clos Blanc": None, "Les Genevrières": "vineyard:bourgogne:9",
         "Kirchenstück": "vineyard:pfalz:7", "Pechstein": "vineyard:pfalz:8", "Lost": None}
-    capsys.readouterr()
-    link.main(geo, url, commit=True)
-    assert capsys.readouterr().out.count("changes: 0") == 2
+    rerun = link.main(geo, url, commit=True)
+    assert [len(t["changes"]) for t in rerun["tables"].values()] == [0, 0]
 
 
 def test_links_survive_a_machine_without_the_local_sources(setup, link):
@@ -120,7 +114,7 @@ def test_a_link_set_by_hand_is_kept_and_a_gone_shape_unlinked(setup, link):
     with engine.begin() as c:
         c.execute(text("UPDATE appellations SET boundary = 'custom:1' WHERE name = 'Rioja'"))
     from shapely.geometry import box
-    link.build_shapes.write(os.path.join(geo, "shapes"), "inao", [("102", "x", None, box(0, 0, 1, 1).wkb)],
+    link.store.write(os.path.join(geo, "shapes"), "inao", [("102", "x", None, box(0, 0, 1, 1).wkb)],
                             "appellation")  # rebuilt without 101
     link.main(geo, url, commit=True)
     found = boundaries(engine, "appellations")
@@ -150,7 +144,7 @@ def test_eu_by_name_when_there_is_no_pdo_id(tmp_path, link):
     s.close()
     geo = tmp_path / "geo"
     b = box(0, 0, 1, 1).wkb
-    link.build_shapes.write(str(geo / "shapes"), "eu", [
+    link.store.write(str(geo / "shapes"), "eu", [
         ("PDO-ES-A0626", "Ribera del Duero", None, b), ("PDO-IT-A0833", "Montefalco Sagrantino", None, b),
         ("PDO-FR-A0663", "Bellet / Vin de Bellet", None, b), ("PDO-ES-A0117", "Rioja", None, b),
         ("PDO-IT-A0908", "Collio Goriziano / Collio", None, b),
@@ -188,7 +182,7 @@ def test_admin_areas_by_country_and_name(tmp_path, link):
     s.commit()
     s.close()
     geo = tmp_path / "geo"
-    link.build_shapes.write(str(geo / "shapes"), "admin", [("Italy:Toscana", "Toscana", None, box(10, 43, 12, 44).wkb),
+    link.store.write(str(geo / "shapes"), "admin", [("Italy:Toscana", "Toscana", None, box(10, 43, 12, 44).wkb),
                                                             ("Japan:Yamanashi-ken", "Yamanashi-ken", None, box(138, 35, 139, 36).wkb)],
                             "appellation")
     link.main(str(geo), url, commit=True)
@@ -213,7 +207,7 @@ def test_one_country_source_by_name_and_alias(tmp_path, link):
     s.close()
     geo = tmp_path / "geo"
     b = box(4, 47, 5, 48).wkb
-    link.build_shapes.write(str(geo / "shapes"), "inao_aires", [
+    link.store.write(str(geo / "shapes"), "inao_aires", [
         ("364", "Bourgogne Hautes Côtes de Nuits", None, b), ("2252", "Vaucluse", None, b),
         ("9", "Coteaux du Layon Faye d'Anjou ou Faye", None, b), ("1737", "Mâcon Verzé", None, b)], "appellation")
     link.main(str(geo), url, commit=True)

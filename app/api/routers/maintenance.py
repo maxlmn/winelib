@@ -493,8 +493,7 @@ def _no_price_source():
 
 def _no_map_pack():
     import map_pack
-    return None if map_pack.MAP_PACK_URL else ("No download address set (MAP_PACK_URL). Outlines can also be built on "
-                                                "a computer: geo_scripts/README.md.")
+    return None if map_pack.MAP_PACK_URL else "No download address set (MAP_PACK_URL)."
 
 
 TASKS = {

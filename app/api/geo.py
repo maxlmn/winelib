@@ -1,4 +1,4 @@
-"""Appellation and vineyard boundaries, from the shape store (GEO_DIR/shapes/, built by geo_scripts/build_shapes.py).
+"""Appellation and vineyard boundaries, from the shape store (GEO_DIR/shapes/: the map pack, or outlines built alike).
 
 Each appellation or vineyard row names its shape in `boundary` ("inao:291", "eu:PDO-IT-A0281",
 "vineyard:bourgogne:1282"), filled by shape links (shape_links.py); a row without one has nothing to draw. An outline
@@ -156,7 +156,7 @@ DETAIL_DIGITS = 6  # ~0.1 m
 @lru_cache
 def _full_index(name):
     """{source_id: (row group, row)} of a store file with the full outlines; {} without (a map pack's file, which only
-    has the display ones). build_shapes.py writes small row groups, so one outline reads only its own group."""
+    has the display ones). The store's files have small row groups, so one outline reads only its own group."""
     path = os.path.join(SHAPES_DIR, f"{name}.parquet")
     if not os.path.exists(path):
         return {}
@@ -202,7 +202,7 @@ def detail(boundary):
 # --- Region outlines -------------------------------------------------------------------------------------
 
 # One coarse outline per wine region, built from Natural Earth boundaries by
-# geo_scripts/build_region_outlines.py and committed: read here, never computed
+# built from Natural Earth and committed: read here, never computed
 REGION_OUTLINES = os.getenv("REGION_OUTLINES", os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "region_outlines.geojson"))
 
 
@@ -267,7 +267,7 @@ def collection_json(kind, objs, stats):
 
 @lru_cache
 def _manifest_stamp():
-    """Changes whenever the store is rebuilt (build_shapes.py rewrites manifest.json)."""
+    """Changes whenever the store changes (a new manifest.json: the map pack installed, or rebuilt)."""
     try:
         with open(os.path.join(SHAPES_DIR, "manifest.json"), "rb") as f:
             return hashlib.sha1(f.read()).hexdigest()[:16]

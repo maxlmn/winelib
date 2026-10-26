@@ -1,4 +1,4 @@
-"""The map data pack (geo_scripts/build_map_pack.py): the published outlines, downloaded into the shape store by
+"""The map data pack: the published outlines (the openly licensed sources, credited), downloaded into the shape store by
 Settings › Maintenance › Map outlines. MAP_PACK_URL is where it is: an https address (a GitHub release's file), or a
 local file. Each file is checked against the pack's checksums before it replaces the store's, and the store's
 manifest keeps each source's licence and credit (listed in Settings).

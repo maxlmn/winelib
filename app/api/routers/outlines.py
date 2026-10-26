@@ -17,7 +17,7 @@ from db import Appellation, CustomShape, Vineyard, Wine, get_session, same_cuvee
 router = APIRouter()
 
 KINDS = {"appellations": (Appellation, "appellation"), "vineyards": (Vineyard, "vineyard")}
-# Like the shape store's display outlines (geo_scripts/build_shapes.py): tolerance in degrees, coordinate decimals
+# Like the shape store's display outlines: tolerance in degrees, coordinate decimals
 DETAIL = {"appellation": (0.0005, 4), "vineyard": (0.00005, 5)}
 RELATIVE_TOLERANCE = 1 / 2500
 

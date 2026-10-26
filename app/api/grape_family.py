@@ -1,4 +1,4 @@
-"""Grape families, from varietals.parents (VIVC's parents, by name: scripts/reference/grapes.py): a grape's
+"""Grape families, from varietals.parents (VIVC's parents, by name, in the reference data): a grape's
 parents and grandparents, and its offspring (the grapes naming it as a parent)."""
 from reference import norm as _key  # a name as a key, the reference data's way
 
