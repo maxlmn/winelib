@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- **What happened to a bottle**: gifted, sold (and for how much), broken or otherwise, not only drunk. "Took some
+  out" on a bottle's page takes them off the count, with a date and a note; the bottle page tells its story (drunk,
+  gifted...), and each can be undone.
+- **Find in the lists**: a list, a wine or a note across every list (the matching bottle ends stay bright), and in a
+  list its entries by name, note, appellation or region.
+- **Faster maps**: every map opens where it's going and draws its outlines without waiting for the background's
+  tiles; the home page's map opens on the region of your latest tasting.
+- The producer page shows its lists once; the wines' legend wraps on a phone; the wine list's From stays in its card.
+
 ## v0.2.0
 
 Lists to taste through, a new home page, a wine list to print and your tastings as stickers for a story.
