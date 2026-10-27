@@ -19,6 +19,22 @@ purchases.
   <img alt="The home page: drink soon, what to open, recent tastings and purchases" src="screenshots/home.png">
 </picture>
 
+**Lists, a treasure hunt.** Wines to find and taste: a critic's top 100, Noble Rot's wines of the decade, the 1855
+classification, your wishlist. An entry is a wine, a cuvée (any vintage) or a producer, and ticks itself once you've
+tasted it: each list is a mosaic of bottle ends that fill in, in their region's colours, as you go. A wine's or a
+producer's page says which lists it's on. Print your bottles from a list as a wine list, or the whole list as a
+checklist.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/lists-dark.png">
+  <img alt="Your lists as mosaics of bottle ends, filled in as you taste them" src="screenshots/lists.png">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/list-dark.png">
+  <img alt="A list: what you've tasted and what's left, with your bottles" src="screenshots/list.png">
+</picture>
+
 **The maps.** Every appellation of France (INAO), the EU, the US and Australia outlined, and Burgundy's premiers
 crus; regions in their colours, your cellar and your tastings on them. A wine page shows its appellation and
 vineyard; a region's page, where what you drink comes from.
@@ -51,11 +67,6 @@ as the cork, magnums bigger; hover one for the wine, click to open it. Then the 
 the critics' scores and whether each is ready to drink. Also a shelf map bin by bin, a list, a vintage
 chart, prices and their changes, and a **wine list** to print: the cellar or a selection laid out like a
 restaurant's, saved as a PDF.
-
-**Lists, a treasure hunt.** Wines to find and taste: a critic's top 100, Noble Rot's wines of the decade, the 1855
-classification, your wishlist. An entry is a wine, a cuvée (any vintage) or a producer, and ticks itself once you've
-tasted it; a wine's page says which lists it's on. Print your bottles from a list as a wine list, or the whole list as
-a checklist.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="screenshots/cellar-dark.png">
