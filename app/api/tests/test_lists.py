@@ -120,3 +120,20 @@ def test_marks_beside_the_vintages(client):
     assert "Marks" in poyeux["lists"]
     w = client.get(f"/api/wines/{wine('le bourg 2017')}").json()
     assert "Marks" in next(v for v in w["vintages"] if v["vintage"] == "2016")["lists"] and "Marks" not in w["cuvee_lists"]
+
+
+def test_dot_labels_and_what_waits_in_the_cellar(client):
+    _, wine, producer = ids(client)
+    lst = client.post("/api/lists", json={"name": "Loire"}).json()["id"]
+    add = lambda **b: client.post(f"/api/lists/{lst}/items", json=b).json()  # noqa: E731
+    add(kind="cuvee", wine_id=wine("le bourg 2016"), note="#1")
+    add(kind="wine", wine_id=wine("les poyeux 2018"))
+    add(kind="producer", producer_id=producer("chave"))
+    summary = next(x for x in client.get("/api/lists").json() if x["id"] == lst)
+    assert [d["label"] for d in summary["dots"]] == [
+        "Clos Rougeard Le Bourg (any vintage)", "Clos Rougeard Les Poyeux 2018", "Jean-Louis Chave (any of its wines)"]
+    # Le Bourg 2017 is in the cellar and the list's Le Bourg isn't ticked: suggested; Chave is ticked (the 2019)
+    waiting = client.get("/api/lists/in-cellar").json()
+    mine = {wid: [x for x in found if x["list_id"] == lst] for wid, found in waiting.items()}
+    assert {wid: found for wid, found in mine.items() if found} == {
+        str(wine("le bourg 2017")): [{"list_id": lst, "list": "Loire", "note": "#1", "as": "cuvee"}]}

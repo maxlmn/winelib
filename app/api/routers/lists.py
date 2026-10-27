@@ -95,6 +95,17 @@ def _region(item):
     return (w.region_obj if w and w.region_obj else None) or (p.region_obj if p else None)
 
 
+def _label(item):
+    """An entry in a few words: "Producer Cuvée 2016", "Producer Cuvée (any vintage)", "Producer (any of its wines)" """
+    w, p = item.wine, item.producer
+    name = p.name if p else ""
+    if item.kind == "producer" or w is None:
+        return f"{name} (any of its wines)"
+    words = " ".join(x for x in (name, w.cuvee or (w.appellation.name if w.appellation else ""),
+                                 vintage_label(w.vintage, w.disgorgement_date) if item.kind == "wine" else "") if x)
+    return words + (" (any vintage)" if item.kind == "cuvee" else "")
+
+
 def item_json(item, facts):
     w, p = item.wine, item.producer
     region = _region(item)
@@ -151,9 +162,27 @@ def lists(session: Session = Depends(get_session)):
         for i in lst.items:
             st, region = facts.status(i), _region(i)
             row["dots"].append({"tasted": st["tasted"], "owned": bool(st["owned"]), "region": region.name if region else None,
-                                "color": i.wine.type if i.wine and i.kind != "producer" else None, "note": i.note})
+                                "color": i.wine.type if i.wine and i.kind != "producer" else None, "note": i.note,
+                                "label": _label(i)})
         out.append(row)
     return out
+
+
+@router.get("/api/lists/in-cellar")
+def in_cellar(session: Session = Depends(get_session)):
+    """What the lists ask you to taste that's already in the cellar: per wine owned, the lists naming it (that
+    vintage, its cuvée, or its producer) whose entry isn't ticked yet. "What should I open?" suggests them first."""
+    found = _lists(session)
+    facts = _facts_for(session, found)
+    out = defaultdict(list)
+    for lst in found:
+        for i in lst.items:
+            if facts.status(i)["tasted"]:
+                continue
+            for wid in facts.wines_of(i):
+                if facts.owned.get(wid) and not any(x["list_id"] == lst.id for x in out[wid]):
+                    out[wid].append({"list_id": lst.id, "list": lst.name, "note": i.note, "as": i.kind})
+    return dict(out)
 
 
 @router.post("/api/lists/wishlist")

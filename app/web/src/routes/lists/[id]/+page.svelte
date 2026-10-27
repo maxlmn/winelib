@@ -49,7 +49,17 @@
 	}
 	const dimmed = (i: ListEntry) => (dim.tasted && i.tasted) || (dim.owned && i.owned > 0);
 	// the mosaic in the entries' order (the whole list, whatever's shown)
-	const dots = $derived(sorted.map((i) => ({ tasted: i.tasted, owned: i.owned > 0, region: i.region, color: i.wine?.color ?? null })));
+	const dots = $derived(
+		sorted.map((i) => ({
+			tasted: i.tasted,
+			owned: i.owned > 0,
+			region: i.region,
+			color: i.wine?.color ?? null,
+			note: i.note,
+			label: `${entryName(i)}${i.kind === 'wine' ? '' : ` (${KIND_LABEL[i.kind]})`}`,
+			href: href(i)
+		}))
+	);
 	const pct = $derived(list.entries ? Math.round((100 * list.tasted) / list.entries) : 0);
 	const when = (d: string | null) => (d ? new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '');
 	const href = (i: ListEntry) => (i.kind === 'producer' || !i.wine ? links.producer(i.producer!.id) : links.wine(i.wine.id));

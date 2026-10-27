@@ -115,6 +115,10 @@ export interface Dot {
 	region: string | null;
 	color: string | null;
 	note?: string | null;
+	/** the entry in a few words, for the hover card */
+	label?: string;
+	/** its page (the list's own mosaic; the lists page's cards are links already) */
+	href?: string;
 }
 
 export type DotOrder = 'list' | 'note' | 'tasted' | 'todo' | 'region';
