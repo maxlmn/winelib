@@ -92,3 +92,14 @@ export function entryName(e: Pick<ListEntry, 'kind' | 'producer' | 'wine'>) {
 }
 
 export const KIND_LABEL: Record<EntryKind, string> = { wine: 'this vintage', cuvee: 'any vintage', producer: 'any of its wines' };
+
+/** A note as it sorts: by its first number when it has one ("#7" 7, "3-1" 3.1, "2nd Growth" 2), then by its text;
+ * no note last. Notes hold a list's ranks and tiers. */
+export function noteKey(note: string | null): [number, number, string] {
+	if (!note?.trim()) return [2, 0, ''];
+	const m = note.match(/(\d+)(?:[-.](\d+))?/);
+	return m ? [0, Number(m[1]) + (m[2] ? Number(`0.${m[2]}`) : 0), note.toLowerCase()] : [1, 0, note.toLowerCase()];
+}
+
+export const compareKeys = (a: [number, number, string], b: [number, number, string]) =>
+	a[0] - b[0] || a[1] - b[1] || a[2].localeCompare(b[2]);

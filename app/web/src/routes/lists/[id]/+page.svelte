@@ -2,7 +2,7 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
 	import ListDots from '#lib/components/ListDots.svelte';
-	import { addEntry, deleteList, editEntry, editList, entryName, KIND_LABEL, removeEntry, type EntryKind, type ListEntry } from '#lib/api/lists.ts';
+	import { addEntry, compareKeys, deleteList, editEntry, editList, entryName, KIND_LABEL, noteKey, removeEntry, type EntryKind, type ListEntry } from '#lib/api/lists.ts';
 	import { links } from '#lib/links.ts';
 	import { regionColor, regionLabel } from '#lib/regions.svelte.ts';
 
@@ -10,9 +10,24 @@
 	const list = $derived(data.list);
 
 	let show = $state<'all' | 'todo' | 'tasted' | 'owned'>('all');
+	// Sorted by the list's order, its notes (they hold ranks and tiers: "#7", "Premier Grand Cru Classé"), the names,
+	// or what's left to taste first
+	let sort = $state<'list' | 'note' | 'name' | 'todo'>('list');
+	const byName = (a: ListEntry, b: ListEntry) => entryName(a).localeCompare(entryName(b));
 	const shown = $derived(
-		list.items.filter((i) => (show === 'todo' ? !i.tasted : show === 'tasted' ? i.tasted : show === 'owned' ? i.owned > 0 : true))
+		list.items
+			.filter((i) => (show === 'todo' ? !i.tasted : show === 'tasted' ? i.tasted : show === 'owned' ? i.owned > 0 : true))
+			.sort((a, b) =>
+				sort === 'note'
+					? compareKeys(noteKey(a.note), noteKey(b.note)) || byName(a, b)
+					: sort === 'name'
+						? byName(a, b)
+						: sort === 'todo'
+							? Number(a.tasted) - Number(b.tasted) || a.position - b.position
+							: a.position - b.position
+			)
 	);
+	const hasNotes = $derived(list.items.some((i) => i.note));
 	const dots = $derived(list.items.map((i) => ({ tasted: i.tasted, owned: i.owned > 0, region: i.region, color: i.wine?.color ?? null })));
 	const pct = $derived(list.entries ? Math.round((100 * list.tasted) / list.entries) : 0);
 	const when = (d: string | null) => (d ? new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '');
@@ -147,11 +162,22 @@
 </section>
 
 {#if list.items.length}
+	<div class="tools">
 	<div class="filters" role="group" aria-label="Show">
 		<button class:on={show === 'all'} onclick={() => (show = 'all')}>All <span class="num">{list.entries}</span></button>
 		<button class:on={show === 'todo'} onclick={() => (show = 'todo')}>To taste <span class="num">{list.entries - list.tasted}</span></button>
 		<button class:on={show === 'tasted'} onclick={() => (show = 'tasted')}>Tasted <span class="num">{list.tasted}</span></button>
 		<button class:on={show === 'owned'} onclick={() => (show = 'owned')}>In the cellar <span class="num">{list.owned}</span></button>
+	</div>
+	<label class="sort">
+		<span class="muted">Sort</span>
+		<select bind:value={sort}>
+			<option value="list">The list’s order</option>
+			{#if hasNotes}<option value="note">By note (ranks, tiers)</option>{/if}
+			<option value="name">By name</option>
+			<option value="todo">To taste first</option>
+		</select>
+	</label>
 	</div>
 
 	<ol class="entries card">
@@ -330,12 +356,25 @@
 		margin: 0 2px;
 		font-size: 13px;
 	}
+	.tools {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 10px 16px;
+		margin-bottom: 10px;
+	}
 	.filters {
 		display: inline-flex;
 		border: 1px solid var(--border);
 		border-radius: 8px;
 		overflow: hidden;
-		margin-bottom: 10px;
+	}
+	.sort {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 13px;
+		margin-left: auto;
 	}
 	.filters button {
 		border: none;
