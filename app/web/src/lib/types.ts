@@ -17,6 +17,8 @@ export interface Bottle {
 	varietal: string | null;
 	/** every grape of the wine, main first (the Grape filter matches any) */
 	grapes: string[];
+	/** its style tags, set or tasted ("fresh", "mineral") */
+	tags?: string[];
 	vintage: string;
 	price: number | null;
 	currency: string | null;

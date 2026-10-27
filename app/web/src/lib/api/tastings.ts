@@ -74,6 +74,8 @@ export interface TastingDetail {
 	rating: number | null;
 	notes: string;
 	tags: string | null;
+	/** the wine's style found that day ("fresh", "mineral") */
+	styles?: string[];
 	location: string | null;
 	place: Place | null;
 	photo: string | null;

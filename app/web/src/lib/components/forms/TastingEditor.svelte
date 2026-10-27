@@ -22,6 +22,8 @@
 	import Section from './Section.svelte';
 	import WineCard from './WineCard.svelte';
 	import WinePicker from './WinePicker.svelte';
+	import TagPicker from '#lib/components/TagPicker.svelte';
+	import { suggestions } from '#lib/api/tags.ts';
 	import {
 		blank, bottleDraft, check, lookup, num, placeChoice, remove, save, scoped, toBottleDetails, toPlaceRef, toWineIn, today, wineErrors
 	} from '#lib/api/forms.ts';
@@ -80,6 +82,10 @@
 			: 'Order in the day’s line-up'
 	);
 	let tags = $state(blank(t?.tags));
+	// the wine's style as found that day ("fresh", "mineral"): not the occasion's tags above
+	let styles = $state<string[]>(t?.styles ?? []);
+	let styleWords = $state<string[]>([]);
+	suggestions().then((s) => (styleWords = s));
 	let notes = $state(blank(t?.notes));
 	let errors = $state<Record<string, string>>({});
 	// Purchase details are secondary when logging a tasting: folded, unless one of them has a problem
@@ -104,7 +110,7 @@
 			...(!t && source === 'other' && !wine && !draft ? { wine: 'Pick the wine, or create a new one' } : {}),
 			...(!t && source === 'other' && draft ? wineErrors(draft, 'wine.') : {})
 		});
-		const note = { date, place: toPlaceRef(place), rating, glasses, sequence, tags, notes };
+		const note = { date, place: toPlaceRef(place), rating, glasses, sequence, tags, notes, styles };
 		if (t) {
 			await save('tastings', t.id, { ...note, bottle: toBottleDetails(details) });
 			await applyPhotoChange(place?.name, date, photo);
@@ -207,7 +213,10 @@
 					oninput={(e) => ((sequenceTouched = true), (sequence = num(e.currentTarget.value)))}
 				/>
 			</Field>
-			<Field label="Tags" for="t-tags" span hint="Comma separated, e.g. Dinner, Gift, corked">
+			<Field label="Style" for="t-styles" span hint="The wine as you found it: shown on its page, and filters the cellar">
+				<TagPicker id="t-styles" bind:value={styles} suggestions={styleWords} />
+			</Field>
+			<Field label="Tags" for="t-tags" span hint="The occasion or this bottle, comma separated: Dinner, Gift, corked">
 				<input id="t-tags" bind:value={tags} />
 			</Field>
 			<div class="span">

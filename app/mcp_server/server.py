@@ -458,11 +458,13 @@ def _place(name):
 @mcp.tool(annotations=WRITE)
 async def add_tasting(ctx: Context, wine_id: int = 0, new_wine: NewWine | None = None, notes: str = "",
                       rating: int = 0, on: str = "", place: str = "", from_cellar: bool = False,
-                      confirm_token: str = "") -> dict:
+                      styles: list[str] | None = None, confirm_token: str = "") -> dict:
     """Logs a tasting: a wine in WineLib (wine_id, from search) or one that isn't yet (new_wine, read off its label:
     it's added with the tasting). Dated today unless `on` (YYYY-MM-DD) says otherwise; the user's notes in their words;
     rating out of 100 only if they gave one; place by name (a restaurant, "Home", "@Mia" for a friend's home).
-    from_cellar: a bottle of theirs was opened (one comes off the cellar's count). The user sees it and must say yes."""
+    from_cellar: a bottle of theirs was opened (one comes off the cellar's count). styles: the wine's style in a few
+    words when the user says so ("fresh", "mineral", "full-bodied"; GET their words with tags()). The user sees it
+    and must say yes."""
     wine, label = _which_wine(wine_id, new_wine)
     if isinstance(label, dict):
         return label
@@ -470,7 +472,8 @@ async def add_tasting(ctx: Context, wine_id: int = 0, new_wine: NewWine | None =
         return {"error": "rating: out of 100 (50 to 100), or 0 for none"}
     day = on or date.today().isoformat()
     where, where_label = _place(place)
-    body = {"date": day, "notes": notes or None, "rating": rating or None, "place": where, "glasses": 1}
+    body = {"date": day, "notes": notes or None, "rating": rating or None, "place": where, "glasses": 1,
+            "styles": styles or []}
     bottle = None
     if from_cellar:
         if not wine_id:
@@ -489,6 +492,7 @@ async def add_tasting(ctx: Context, wine_id: int = 0, new_wine: NewWine | None =
     message = "\n".join(x for x in (
         f"Log a tasting of {label}", f"on {day}" + (f" {where_label}" if where_label else ""),
         f"rated {rating}" if rating else "", f"notes: “{notes}”" if notes else "",
+        f"style: {', '.join(styles)}" if styles else "",
         f"a bottle from the cellar ({bottle['location']}) comes off the count" if bottle else "") if x)
 
     def do():
@@ -522,6 +526,13 @@ async def add_bottle(ctx: Context, wine_id: int = 0, new_wine: NewWine | None = 
         return {"done": True, "bottle_id": r["id"], "wine_id": r["wine_id"], "see": f"{URL}/bottles/{r['id']}",
                 "undo": "Delete the bottle on its page (Edit bottle › Delete)"}
     return await _ask_and_do(ctx, message, ("add_bottle", body), confirm_token, do)
+
+
+@mcp.tool(annotations=READ)
+def tags() -> dict:
+    """The style words: the shared vocabulary ("fresh", "mineral", "full-bodied"...) and the user's own in use, with
+    how many wines carry each. For add_tasting's styles, and to read the user's words."""
+    return get("/api/tags")
 
 
 @mcp.tool(annotations=READ)

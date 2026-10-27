@@ -169,6 +169,8 @@ export interface TastingForm {
 	sequence: number | null;
 	tags: string | null;
 	notes: string | null;
+	/** the wine's style found in this tasting ("fresh", "mineral") */
+	styles?: string[];
 	place: PlaceOption | null;
 	source: 'cellar' | 'other';
 	bottle_id: number;

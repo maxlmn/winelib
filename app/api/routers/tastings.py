@@ -132,6 +132,7 @@ def tasting_detail(tasting_id: int, session: Session = Depends(get_session)):
     return {
         "id": t.id, "date": iso(t.date), "seq": t.sequence, "glasses": t.glasses, "rating": t.rating,
         "notes": (t.notes or "").strip(), "tags": t.tags, "location": t.place.name if t.place else t.location,
+        "styles": [s.tag for s in t.styles],
         "place": place_dict(t.place) if t.place else None,
         "photo": photo_url(photo_index(), t.place.name if t.place else t.location, t.date),
         "bottle": {

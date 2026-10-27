@@ -12,7 +12,7 @@
 	import BordeauxIndex from '#lib/components/cellar/BordeauxIndex.svelte';
 	import StorageDonuts from '#lib/components/cellar/StorageDonuts.svelte';
 	import { FALLBACK_REGION, TYPE_COLORS } from '#lib/colors.ts';
-	import { activeCount, emptyFilters, filterLocations, filterWines, fromParams, grapeOptions, options, toParams, totals } from '#lib/filters.ts';
+	import { activeCount, emptyFilters, filterLocations, filterWines, fromParams, grapeOptions, options, styleOptions, toParams, totals } from '#lib/filters.ts';
 	import type { Filters, ListKey } from '#lib/filters.ts';
 	import Change from '#lib/components/Change.svelte';
 	import { inCurrency, pct, today } from '#lib/format.ts';
@@ -169,6 +169,9 @@
 		<MultiSelect label="Producer" options={options(all, 'producer')} selected={filters.producer} onchange={(v) => setList('producer', v)} />
 		<MultiSelect label="Appellation" options={options(all, 'appellation')} selected={filters.appellation} onchange={(v) => setList('appellation', v)} />
 		<MultiSelect label="Grape" options={grapeOptions(all)} selected={filters.grape} onchange={(v) => setList('grape', v)} />
+		{#if styleOptions(all).length}
+			<MultiSelect label="Style" options={styleOptions(all)} selected={filters.style} onchange={(v) => setList('style', v)} />
+		{/if}
 		<MultiSelect label="Vintage" options={options(all, 'vintage')} selected={filters.vintage} onchange={(v) => setList('vintage', v)} />
 		<MultiSelect label="Storage" options={options(all, 'location_group')} selected={filters.group} onchange={(v) => setList('group', v)} />
 		<MultiSelect label="Bin" options={options(all, 'location')} selected={filters.loc} onchange={(v) => setList('loc', v)} />

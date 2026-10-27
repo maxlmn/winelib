@@ -67,7 +67,7 @@ def test_wine_tastings_search(tools):
 def test_two_tools_add_the_rest_read():
     import asyncio
     listed = asyncio.run(server.mcp.list_tools())
-    assert {t.name for t in listed} >= {"search", "cellar", "what_to_open", "wine", "tastings", "lists", "wishlist", "region", "producer"}
+    assert {t.name for t in listed} >= {"search", "cellar", "what_to_open", "wine", "tastings", "lists", "wishlist", "region", "producer", "tags"}
     writes = {t.name for t in listed if not t.annotations.read_only_hint}
     assert writes == {"create_list", "add_to_list", "add_wine", "add_tasting", "add_bottle"}  # the others only read
     assert not any(t.annotations.destructive_hint for t in listed if t.name in writes)  # they only add
@@ -153,8 +153,10 @@ def test_a_label_to_a_tasting(tools, client, monkeypatch):
     assert not [x for x in tools.search("poyeux 2018") if x["kind"] == "wine"]
 
     # Accepted: the wine (its producer the one there) and the tasting, today, at Mia's
-    r = asyncio.run(tools.add_tasting(FakeCtx(True), new_wine=poyeux, notes="Graphite, cherries", place="@Mia", rating=94))
+    r = asyncio.run(tools.add_tasting(FakeCtx(True), new_wine=poyeux, notes="Graphite, cherries", place="@Mia", rating=94,
+                                      styles=["Fresh", "mineral"]))
     t = client.get(f"/api/tastings/{r['tasting_id']}").json()
+    assert t["styles"] == ["fresh", "mineral"]
     assert (t["date"], t["notes"], t["rating"], t["place"]["type"]) == (date.today().isoformat(), "Graphite, cherries", 94, "Friend's Place")
     assert len([p for p in client.get("/api/lookups/producers", params={"q": "rougeard"}).json()]) == 1  # not doubled
 
