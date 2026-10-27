@@ -375,3 +375,32 @@ class WishlistItem(Base):
     def price(self):
         """What a fetched price is checked against besides the last one (a bottle's purchase price): nothing."""
         return None
+
+
+class WineList(Base):
+    """A list of wines to find and taste: Noble Rot's wines of the decade, a critic's top 100, every cuvée of a
+    producer. Its entries can be wines, cuvées (any vintage) and producers, mixed."""
+    __tablename__ = 'lists'
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False, unique=True)
+    description = Column(Text)
+    source = Column(String)  # who made it: "Noble Rot", "The Wine Advocate"
+    url = Column(String)  # where it was published
+    created = Column(Date)
+    items = relationship("ListItem", back_populates="list", cascade="all, delete-orphan", order_by="ListItem.position")
+
+
+class ListItem(Base):
+    """One entry of a list: a wine (that vintage), a cuvée (any vintage of the wine's cuvée) or a producer. Tasted
+    and owned are worked out from the tastings and the cellar, never stored."""
+    __tablename__ = 'list_items'
+    id = Column(Integer, primary_key=True)
+    list_id = Column(Integer, ForeignKey('lists.id', ondelete='CASCADE'), nullable=False, index=True)
+    kind = Column(String, nullable=False)  # "wine", "cuvee" or "producer"
+    wine_id = Column(Integer, ForeignKey('wines.id', ondelete='CASCADE'), index=True)  # a wine, or a cuvée's
+    producer_id = Column(Integer, ForeignKey('producers.id', ondelete='CASCADE'), nullable=False, index=True)
+    note = Column(Text)
+    position = Column(Integer, nullable=False, default=0)
+    list = relationship("WineList", back_populates="items")
+    wine = relationship("Wine")
+    producer = relationship("Producer")

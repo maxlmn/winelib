@@ -21,7 +21,7 @@ from display import vineyard_label
 from textsearch import fold, search
 from tasks.matching import is_rose
 from tasks.blends import BLEND_STYLES, blend_style
-from db import same, Appellation, Bottle, Place, Producer, Region, RestaurantVisit, TastingNote, Varietal, Vineyard, Wine, get_session, same_cuvee
+from db import same, Appellation, Bottle, ListItem, Place, Producer, Region, RestaurantVisit, TastingNote, Varietal, Vineyard, Wine, get_session, same_cuvee
 
 router = APIRouter()
 
@@ -358,6 +358,7 @@ def delete_producer(producer_id: int, session: Session = Depends(get_session)):
     p = _get(session, Producer, producer_id, "Producer")
     n = session.query(Wine).filter_by(producer_id=p.id).count()
     _refuse_if(n, f"{p.name} still has {n} wine{'s' * (n != 1)}: delete or move them first")
+    session.query(ListItem).filter_by(producer_id=p.id).delete()  # off the lists it was on
     session.delete(p)
     session.commit()
     return {"deleted": producer_id}
@@ -535,6 +536,7 @@ def delete_wine(wine_id: int, session: Session = Depends(get_session)):
     n = session.query(Bottle).filter_by(wine_id=w.id).count()
     _refuse_if(n, f"This wine still has {n} bottle{'s' * (n != 1)} (in the cellar or tasted): delete them first")
     producer_id = w.producer_id
+    session.query(ListItem).filter_by(wine_id=w.id).delete()  # off the lists it was on
     session.delete(w)
     session.commit()
     return {"deleted": wine_id, "producer_id": producer_id}

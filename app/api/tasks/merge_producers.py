@@ -91,6 +91,9 @@ def merge_producer(session, keep_id, drop_id, log=print):
             setattr(keep, field, f"{mine}\n\n{theirs}" if mine else theirs)
             filled.append(field)
     session.flush()
+    # its list entries follow it (its own, and its wines': moved or merged above, their producer is now keep)
+    from models import ListItem
+    session.query(ListItem).filter(ListItem.producer_id == drop.id).update({ListItem.producer_id: keep.id})
     session.expire(drop, ["wines"])
     session.delete(drop)
     session.flush()
