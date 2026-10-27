@@ -95,7 +95,7 @@
 	</section>
 
 	<section class="card">
-		<h2>That {t.place?.type === 'Home' ? 'day' : 'evening'} <span class="muted num">{plural(t.occasion.length, 'wine')}</span></h2>
+		<h2>That session <span class="muted num">{plural(t.occasion.length, 'wine')}</span></h2>
 		<ol class="occasion">
 			{#each t.occasion as o (o.id)}
 				<li class:current={o.id === t.id}>

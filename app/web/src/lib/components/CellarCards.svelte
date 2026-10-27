@@ -19,7 +19,7 @@
 	}: {
 		bottles: Bottle[];
 		regionColors: RegionColors;
-		/** each line's price paid a bottle, in its currency (the home page's recent purchases) */
+		/** each line's price paid a bottle, in its currency, and where it was bought (the home page's recent purchases) */
 		prices?: boolean;
 	} = $props();
 	const paid = (b: Bottle) => (b.price ? `${symbol(b.currency ?? appSettings.currency)}${Math.round(b.price).toLocaleString()}` : null);
@@ -92,6 +92,7 @@
 							{#if b.appellation}<span class="muted">({b.appellation})</span>{/if}
 							<span class="meta num">[{b.vintage}]</span><CriticPills scores={b.scores} />
 							{#if prices && paid(b)}<span class="paid num" title="Paid a bottle">{paid(b)}</span>{/if}
+							{#if prices && b.vendor}<span class="vendor muted" title="Bought from">{b.vendor}</span>{/if}
 								{#if b.maturity}<span class="mat"><MaturityBadge maturity={b.maturity} from={b.drink_from} to={b.drink_to} /></span>{/if}
 						</span>
 					</li>
@@ -198,6 +199,10 @@
 	}
 	.label {
 		min-width: 0;
+	}
+	.vendor {
+		margin-left: 6px;
+		font-size: 12px;
 	}
 	.paid {
 		margin-left: 6px;

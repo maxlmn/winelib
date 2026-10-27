@@ -29,6 +29,8 @@ export interface Bottle {
 	scores?: string | null;
 	lwin: string | null;
 	purchase_date: string | null;
+	/** where it was bought */
+	vendor?: string | null;
 	/** drinking window (set on the wine) and where the wine stands in it */
 	drink_from: number | null;
 	drink_to: number | null;
