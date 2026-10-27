@@ -46,7 +46,8 @@ class Facts:
 
     def __init__(self, session, producer_ids):
         ids = set(producer_ids)
-        wines = session.query(Wine).filter(Wine.producer_id.in_(ids)).all() if ids else []
+        wines = (session.query(Wine.id, Wine.producer_id, Wine.cuvee, Wine.appellation_id, Wine.varietal_id)
+                 .filter(Wine.producer_id.in_(ids)).all()) if ids else []
         self.wine = {w.id: w for w in wines}
         self.by_family, self.by_producer = defaultdict(list), defaultdict(list)
         for w in wines:
@@ -69,7 +70,7 @@ class Facts:
         """The wines that count for an entry: that one, its cuvée's vintages, or its producer's wines."""
         if item.kind == "producer":
             return self.by_producer.get(item.producer_id, [])
-        w = self.wine.get(item.wine_id)
+        w = self.wine.get(item.wine_id) or item.wine
         if w is None:
             return []
         return [w.id] if item.kind == "wine" else self.by_family.get(family(w), [w.id])
@@ -89,9 +90,14 @@ class Facts:
         }
 
 
+def _region(item):
+    w, p = item.wine, item.producer
+    return (w.region_obj if w and w.region_obj else None) or (p.region_obj if p else None)
+
+
 def item_json(item, facts):
     w, p = item.wine, item.producer
-    region = (w.region_obj if w and w.region_obj else None) or (p.region_obj if p else None)
+    region = _region(item)
     return {
         "id": item.id, "kind": item.kind, "note": item.note, "position": item.position,
         "producer": {"id": p.id, "name": p.name} if p else None,
@@ -115,8 +121,10 @@ def summary(lst, facts):
 
 
 def _lists(session, *filters):
-    q = session.query(WineList).options(joinedload(WineList.items).joinedload(ListItem.wine),
-                                        joinedload(WineList.items).joinedload(ListItem.producer))
+    items = joinedload(WineList.items)
+    q = session.query(WineList).options(items.joinedload(ListItem.wine).joinedload(Wine.region_obj),
+                                        items.joinedload(ListItem.wine).joinedload(Wine.appellation),
+                                        items.joinedload(ListItem.producer).joinedload(Producer.region_obj))
     return q.filter(*filters).order_by(WineList.name).all()
 
 
@@ -139,9 +147,11 @@ def lists(session: Session = Depends(get_session)):
     out = []
     for lst in found:
         row = summary(lst, facts)
-        row["dots"] = [{"tasted": s["tasted"], "owned": bool(s["owned"]), "region": j["region"],
-                        "color": (j["wine"] or {}).get("color")}
-                       for j, s in ((item_json(i, facts), facts.status(i)) for i in lst.items)]
+        row["dots"] = []
+        for i in lst.items:
+            st, region = facts.status(i), _region(i)
+            row["dots"].append({"tasted": st["tasted"], "owned": bool(st["owned"]), "region": region.name if region else None,
+                                "color": i.wine.type if i.wine and i.kind != "producer" else None, "note": i.note})
         out.append(row)
     return out
 
