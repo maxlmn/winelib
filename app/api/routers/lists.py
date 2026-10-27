@@ -98,6 +98,9 @@ def item_json(item, facts):
         "wine": {"id": w.id, "cuvee": w.cuvee or "", "vintage": vintage_label(w.vintage, w.disgorgement_date),
                  "color": w.type, "appellation": w.appellation.name if w.appellation else None} if w and item.kind != "producer" else None,
         "region": region.name if region else None,
+        # the wines that count for it (that one, its cuvée's vintages, its producer's): the wine list prints your
+        # bottles of them
+        "wine_ids": facts.wines_of(item),
         **facts.status(item),
     }
 

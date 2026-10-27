@@ -26,6 +26,8 @@ export interface ListEntry extends EntryStatus {
 	/** the wine (that vintage) or the cuvée's wine; null for a producer */
 	wine: { id: number; cuvee: string; vintage: string; color: string | null; appellation: string | null } | null;
 	region: string | null;
+	/** the wines that count for it (that one, its cuvée's vintages, its producer's) */
+	wine_ids: number[];
 }
 
 export interface ListSummary {

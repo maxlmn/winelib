@@ -52,6 +52,9 @@ def test_a_mixed_list_and_its_ticks(client):
     # A producer with nothing tasted
     assert by_id[coche["id"]]["tasted"] is False and by_id[coche["id"]]["wine"] is None
     assert (d["entries"], d["tasted"], d["owned"]) == (4, 1, 1)
+    # The wines that count for each entry: that one; the cuvée's two vintages; none for a producer without wines
+    assert len(by_id[florentin["id"]]["wine_ids"]) == 1 and len(by_id[florentin_any["id"]]["wine_ids"]) == 2
+    assert by_id[coche["id"]]["wine_ids"] == []
 
     summary = next(x for x in client.get("/api/lists").json() if x["id"] == lst)
     assert [dot["tasted"] for dot in summary["dots"]] == [False, True, False, False]
