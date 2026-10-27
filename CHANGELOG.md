@@ -1,16 +1,30 @@
 # Changelog
 
-## Unreleased
+## v0.2.0
 
-- **Wine list**: the cellar, or a selection from its filters, laid out like a restaurant's list (sparkling to
-  sweet, by region and appellation, a cuvée's vintages on one line, no prices), to print or save as a PDF.
-- **Lists**: wines to find and taste (a critic's top 100, a classification, your wishlist); entries are wines,
-  cuvées (any vintage) or producers, mixed, each ticked once tasted, sorted by note (ranks, tiers); on the wine and
-  producer pages; printed as a wine list or a checklist. The wishlist is one of them (☆ Wishlist on a wine's page).
+Lists to taste through, a new home page, a wine list to print and your tastings as stickers for a story.
+
+- **Lists, a treasure hunt**: wines to find and taste (a critic's top 100, Noble Rot's wines of the decade, the 1855
+  classification, your wishlist). An entry is a wine, a cuvée (any vintage) or a producer, mixed, and ticks itself
+  once you've tasted it. Each list is a mosaic of bottle ends that fills in, in its regions' colours, as you go:
+  hover one for the wine, sort them all (the list's order, by note, tasted first, by region). Grey out what you've
+  tasted or own; sort a list by its notes (ranks, tiers). The wishlist is one of them (☆ Wishlist on a wine's page).
+- **On the wine and producer pages**: the lists naming them, and beside each vintage the critic's score as a pill
+  and a mark when it's on a list.
+- **A new home page**: the map of the regions you drink, your latest tastings, the past year in one line of colours,
+  what to open tonight (the bottles your lists are waiting for first, then those to drink soon) and your latest
+  purchases as the cellar's racks, with their prices and where they were bought.
+- **A wine list to print**: the cellar, a selection or your bottles from a list, laid out like a restaurant's (by
+  colour and region, a cuvée's vintages on one line, no prices), to print or save as a PDF; a whole list as a
+  checklist.
+- **Share a tasting**: a tasting note or a whole session as a sticker for your Instagram story (transparent, with
+  white or dark text, or a card), framed like the journal's cards.
 - **Fill a wine from a link**: a shop's or Vivino's page fills the new wine's fields.
 - **Installable on a phone** (Add to Home Screen).
-- **An MCP server**: Claude or another assistant reads your cellar, journal and lists (app/mcp_server).
-- The README opens on a short demo clip.
+- **An MCP server** (app/mcp_server): Claude or another assistant reads your cellar, journal and lists, and makes
+  lists for you ("every wine I drank on 3 October", "every note that says wow") once you've said yes.
+- The tasting page draws its wines as bottle ends; the lists page loads in a few queries, not one per entry.
+- Upgrading: the database is migrated on start (lists, the wishlist moved into them). Back it up first, as always.
 
 ## v0.1.0
 
