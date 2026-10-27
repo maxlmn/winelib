@@ -1,5 +1,6 @@
-"""Lookups against outside services, on demand: a bottle's market price (Bordeaux Index, else WineLabs.ai) and place coordinates
-(OpenStreetMap). The shared code is in app/api/tasks/ (update_market_prices.py, geocode.py)."""
+"""Lookups against outside services, on demand: a bottle's market price (Bordeaux Index, else WineLabs.ai), place coordinates
+(OpenStreetMap), a wine from a shop's page. The shared code is in app/api/tasks/ (update_market_prices.py, geocode.py,
+from_link.py)."""
 import logging
 import urllib.error
 from datetime import datetime
@@ -105,3 +106,14 @@ def geocode(q: str):
     except (urllib.error.URLError, TimeoutError, OSError, ValueError) as e:
         log.info("OpenStreetMap lookup failed: %s", e)
         raise HTTPException(502, "OpenStreetMap couldn't be reached")
+
+
+@router.get("/api/lookups/from-link")
+def from_link(url: str, session: Session = Depends(get_session)):
+    """A wine from a shop's or Vivino's page (the wine form's Fill from a link): its producer, cuvée, vintage,
+    appellation, colour and size read from the page, its picture and price; a draft, nothing saved."""
+    from tasks import from_link as link
+    try:
+        return link.from_link(session, url.strip())
+    except link.LinkError as e:
+        raise HTTPException(422, str(e))

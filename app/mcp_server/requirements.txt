@@ -1,0 +1,2 @@
+# The MCP server (server.py): the MCP SDK (it brings httpx). Not needed by the app itself.
+mcp>=2,<3

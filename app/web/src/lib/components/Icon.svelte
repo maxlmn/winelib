@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	export const ICONS = ['person', 'globe', 'map', 'grape', 'home', 'home-solid', 'grid', 'bottle', 'glass', 'chart', 'calendar', 'pin', 'help', 'sliders', 'star'] as const;
+	export const ICONS = ['person', 'globe', 'map', 'grape', 'home', 'home-solid', 'grid', 'bottle', 'glass', 'chart', 'calendar', 'pin', 'help', 'sliders', 'star', 'list'] as const;
 	export type IconName = (typeof ICONS)[number];
 	/** for fields holding either a text glyph ('✦') or one of these icons */
 	export const isIcon = (s: string): s is IconName => (ICONS as readonly string[]).includes(s);
@@ -35,6 +35,10 @@
 		<path d="M10 20v-5h4v5" />
 	{:else if name === 'star'}
 		<path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5z" />
+	{:else if name === 'list'}
+		<path d="M9 6h11M9 12h11M9 18h11" />
+		<path d="m3.5 6 1.2 1.2L7 5M3.5 12l1.2 1.2L7 11" />
+		<circle cx="5" cy="18" r="1.4" />
 	{:else if name === 'grid'}
 		<rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
 		<rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />

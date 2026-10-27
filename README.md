@@ -96,6 +96,10 @@ Catalogue): a network of every known parent → offspring link, your wines on it
   <img alt="Searching for Saumur: a grape, wines and appellations" src="screenshots/search.png">
 </picture>
 
+**Ask your AI assistant.** An MCP server lets Claude (or any assistant that speaks MCP) read your cellar, journal
+and wishlist: *what should I open from home tonight?*, *which 2019 Burgundies do I have?* Read-only:
+[app/mcp_server](app/mcp_server/README.md).
+
 **Light or dark**, following your system, in nine colour palettes.
 
 ![The home page in light and dark](screenshots/themes.png)

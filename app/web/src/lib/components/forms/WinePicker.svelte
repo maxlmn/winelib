@@ -71,7 +71,7 @@
 			<b>New wine</b>
 			<button type="button" class="link" onclick={() => (draft = null)}>← Pick an existing wine instead</button>
 		</div>
-		<WineFields bind:value={draft} {options} prefix="{prefix}-new" {errors} compact />
+		<WineFields bind:value={draft} {options} prefix="{prefix}-new" {errors} compact fromLink />
 	</div>
 {:else}
 	<Field label="Wine" for="{prefix}-wine" required error={errors.wine} hint="Producer, cuvée, appellation, vintage, e.g. “coulaine chinon 2020”">

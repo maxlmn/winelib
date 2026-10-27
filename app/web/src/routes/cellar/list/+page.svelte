@@ -5,22 +5,43 @@
 	import { activeCount, filterLocations, filterWines, fromParams, toParams, emptyFilters } from '#lib/filters.ts';
 	import { links } from '#lib/links.ts';
 	import { regionLabel } from '#lib/regions.svelte.ts';
-	import { formatName, wineList } from '#lib/wineList.ts';
+	import { formatName, vintageKey, wineList } from '#lib/wineList.ts';
+	import type { Bottle } from '#lib/types.ts';
 
 	let { data } = $props();
 
 	// Everything lives in the URL, like the cellar's filters: a list can be bookmarked and made again
 	const params = $derived(page.url.searchParams);
 	const filters = $derived(fromParams(params));
-	const title = $derived(params.get('title') ?? 'Wine list');
+	// From one of your lists: your bottles of it, or (whole) every entry as a checklist, ✓ when tasted
+	const list = $derived(data.list);
+	const whole = $derived(!!list && params.get('whole') === '1');
+	const title = $derived(params.get('title') ?? list?.name ?? 'Wine list');
 	const today = new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
 	const subtitle = $derived(params.get('sub') ?? today);
 	const leftOut = $derived(new Set(params.getAll('x')));
 	const ends = $derived(params.get('ends') !== '0');
 	const grapes = $derived(params.get('grapes') === '1');
 
-	const bottles = $derived(filterLocations(filterWines(data.cellar.bottles, filters), filters));
-	const sections = $derived(wineList(bottles, leftOut));
+	const inCellar = $derived(filterLocations(filterWines(data.cellar.bottles, filters), filters));
+	const onList = $derived(new Set(list?.items.flatMap((i) => i.wine_ids) ?? []));
+	// A list's entries as lines of the menu: a wine its vintage, a cuvée "any vintage", a producer alone
+	const entries = $derived(
+		(list?.items ?? []).map(
+			(i) =>
+				({
+					bottle_id: -i.id, wine_id: -i.id, producer: i.producer?.name ?? '', cuvee: i.kind === 'producer' ? '' : (i.wine?.cuvee ?? ''),
+					vintage: i.kind === 'wine' ? (i.wine?.vintage ?? '') : i.kind === 'cuvee' ? 'any vintage' : '',
+					color: i.kind === 'producer' ? null : (i.wine?.color ?? null), region: i.region ?? '', appellation: i.wine?.appellation ?? null,
+					grapes: [], format: null, qty: 1
+				}) as unknown as Bottle
+		)
+	);
+	const tastedKeys = $derived(new Set((list?.items ?? []).filter((i) => i.tasted).map((i) => vintageKey({ wine_id: -i.id, format: null }))));
+	const bottles = $derived(whole ? entries : list ? inCellar.filter((b) => onList.has(b.wine_id)) : inCellar);
+	const sections = $derived(
+		wineList(bottles, leftOut).map((s) => (whole && s.title === 'Other' ? { ...s, title: 'Producers' } : s))
+	);
 	const count = $derived(sections.flatMap((s) => s.regions.flatMap((r) => r.appellations.flatMap((a) => a.lines))).length);
 	const filtered = $derived(activeCount(filters) > 0);
 
@@ -34,6 +55,13 @@
 	const leaveOut = (keys: string[]) => set((p) => keys.forEach((k) => p.append('x', k)));
 	const putBack = () => set((p) => p.delete('x'));
 	const wholeCellar = () => goto(`?${toParams(emptyFilters(), params)}`, { replace: true, reset: false });
+	const pickList = (id: string) =>
+		set((p) => {
+			p.delete('x');
+			p.delete('whole');
+			if (id) p.set('from', id);
+			else p.delete('from');
+		});
 	// Back to the cellar with the same filters, to change the selection
 	const cellarHref = $derived(`${links.cellar()}?${toParams(filters)}`);
 </script>
@@ -58,8 +86,25 @@
 		<label class="check"><input type="checkbox" checked={ends} onchange={(e) => set((p) => (e.currentTarget.checked ? p.delete('ends') : p.set('ends', '0')))} /> Bottle ends</label>
 		<label class="check"><input type="checkbox" checked={grapes} onchange={(e) => set((p) => (e.currentTarget.checked ? p.set('grapes', '1') : p.delete('grapes')))} /> Grapes</label>
 	</div>
+	<div class="from">
+		<label>
+			<span class="label">From</span>
+			<select value={params.get('from') ?? ''} onchange={(e) => pickList(e.currentTarget.value)}>
+				<option value="">The cellar</option>
+				{#each data.lists as l (l.id)}<option value={String(l.id)}>{l.name}</option>{/each}
+			</select>
+		</label>
+		{#if list}
+			<div class="seg" role="group" aria-label="What to print">
+				<button class:on={!whole} onclick={() => set((p) => p.delete('whole'))}>Your bottles of it</button>
+				<button class:on={whole} onclick={() => set((p) => p.set('whole', '1'))}>The whole list</button>
+			</div>
+		{/if}
+	</div>
 	<p class="muted scope">
-		{#if filtered}
+		{#if list}
+			{whole ? `Every entry of “${list.name}”, ✓ when tasted: a checklist.` : `Your bottles of the wines on “${list.name}”${filtered ? ', within the cellar’s filters' : ''}.`}
+		{:else if filtered}
 			The wines matching the <a href={cellarHref}>cellar's filters</a> · <button class="link" onclick={wholeCellar}>the whole cellar</button>
 		{:else}
 			The whole cellar · <a href={links.cellar()}>filter it in the cellar</a> to make a selection
@@ -95,7 +140,7 @@
 									<span class="producer">{l.producer}</span>{#if l.cuvee}<span class="cuvee">{l.cuvee}</span>{/if}{#if formatName(l.format)}<span class="format">{formatName(l.format)}</span>{/if}{#if grapes && l.grapes.length}<span class="grapes">{l.grapes.join(', ')}</span>{/if}
 								</div>
 								<div class="vintages">
-									{#each l.vintages as v, i (v.key)}{#if i}<span class="sep">·</span>{/if}<button class="vintage" title="Leave {v.vintage} out" onclick={() => leaveOut([v.key])}>{v.vintage}</button>{/each}
+									{#each l.vintages as v, i (v.key)}{#if i}<span class="sep">·</span>{/if}<button class="vintage" title="Leave {v.vintage || 'it'} out" onclick={() => leaveOut([v.key])}>{v.vintage}</button>{#if whole && tastedKeys.has(v.key)}<span class="tick" title="Tasted">✓</span>{/if}{/each}
 								</div>
 								<button class="out no-print" title="Leave out of the list" aria-label="Leave {l.producer} {l.cuvee} out" onclick={() => leaveOut(l.vintages.map((v) => v.key))}>✕</button>
 							</div>
@@ -280,6 +325,41 @@
 		max-width: 45%;
 		text-align: right;
 		font-variant-numeric: tabular-nums;
+	}
+	.tick {
+		margin-left: 0.3em;
+		color: #2e7d57;
+		font-weight: 600;
+	}
+	.from {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: 10px 16px;
+	}
+	.from label {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+	.seg {
+		display: inline-flex;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		overflow: hidden;
+	}
+	.seg button {
+		border: none;
+		background: none;
+		padding: 7px 12px;
+		cursor: pointer;
+		color: var(--muted);
+		font: inherit;
+		font-size: 13px;
+	}
+	.seg button.on {
+		background: var(--accent);
+		color: #fff;
 	}
 	.sep {
 		color: var(--ink-soft);

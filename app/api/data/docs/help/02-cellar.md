@@ -9,6 +9,11 @@ bottles: how many, their size, the purchase price and date, the vendor, the prov
 brought it) and the **location**. A location
 named after a storage group's prefix (`H4` for Home's prefix `H`) goes in that group's bin 4.
 
+A new wine can start from a link: paste its page at a shop or on Vivino in **Fill from a link** (at the top of the new
+wine's fields), and its producer, cuvée, vintage, colour and appellation are filled in; a cuvée you already have
+brings its spelling, grapes and LWIN, as a new vintage of it. The page's picture and price show beside, to check. Some
+shops don't let apps read their pages: then fill it in by hand.
+
 ## The views
 
 - **Cards** and **List**: every line in stock, with its value (the list sorts by any column).
@@ -36,6 +41,14 @@ list's own search: **＋ New vintage** for another vintage of a wine you know, *
 yet (created with it, producer too). Each one takes its size, a note and where to find it; **Any vintage** when the
 cuvée is what matters. The list says when you already have some in the cellar. With an LWIN, its market price comes
 with the cellar's (**Market prices** in Maintenance, nightly as well), or now with its own **Market price** link.
+
+## Lists
+
+**Lists** (in the menu) are wines to find and taste: a critic's top 100, Noble Rot's wines of the decade, every cuvée
+of a producer. An entry is a **wine** (that vintage), a **cuvée** (any vintage of it) or a **producer** (any of its
+wines), mixed as you like. Each ticks itself once you've tasted it, from your tasting notes: that vintage, any
+vintage, any of the producer's wines. The bottles you own show apart. Add entries by searching on the list, or with
+**＋ Add to a list** on a wine's or a producer's page, which also shows the lists it's on.
 
 ## Values and market prices
 
