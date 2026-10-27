@@ -90,7 +90,7 @@
 			<h2>Your wine map</h2>
 			<a class="more" href={links.map()}>The map →</a>
 		</div>
-		<HomeMap />
+		<HomeMap focus={latest[0]?.wines[0]?.region ?? null} />
 	</section>
 	<div class="side">
 		<section class="latest">

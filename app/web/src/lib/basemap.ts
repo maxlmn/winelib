@@ -43,7 +43,17 @@ export function setBasemap(map: MlMap, kind: Basemap, dark: boolean) {
 export const isDark = () => document.documentElement.dataset.theme === 'dark';
 
 /** A MapLibre map with the raster basemap and zoom controls; resolves once the style has loaded. */
-export async function createMap(container: HTMLElement, basemap: Basemap, view = { center: [4.5, 46.5] as [number, number], zoom: 5 }) {
+/** A map on a basemap, opened at a view: a centre and zoom, or `bounds` to fit (opening there at once, rather than
+ * loading one place's tiles to move elsewhere). Resolves once its style is there (sources and layers can be added),
+ * not after the first tiles: they stream in while the caller draws */
+export async function createMap(
+	container: HTMLElement,
+	basemap: Basemap,
+	view: { center: [number, number]; zoom: number } | { bounds: [number, number, number, number]; fitBoundsOptions?: { padding: number } } = {
+		center: [4.5, 46.5],
+		zoom: 5
+	}
+) {
 	const maplibre = await import('maplibre-gl');
 	maplibre.setWorkerUrl(workerUrl);
 	const map = new maplibre.Map({
@@ -57,6 +67,6 @@ export async function createMap(container: HTMLElement, basemap: Basemap, view =
 	});
 	map.addControl(new maplibre.NavigationControl({ showCompass: false }), 'top-right');
 	map.addControl(new maplibre.ScaleControl({}), 'bottom-left');
-	await new Promise<void>((resolve) => map.once('load', () => resolve()));
+	await new Promise<void>((resolve) => map.once('style.load', () => resolve()));
 	return map as MlMap;
 }
