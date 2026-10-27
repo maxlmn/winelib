@@ -4,8 +4,10 @@ Ask Claude, or any assistant that speaks MCP (the Model Context Protocol), about
 with lamb tonight from what's at home?*, *which 2019 Burgundies do I have?*, *what did I drink at Noble Rot?*, *which
 Loire wines did I score above 93?*, *what's left to taste on the Noble Rot list?*
 
-`server.py` is a small MCP server that reads WineLib through its API: the running app, never the database. It's
-**read-only**: it can't add, change or delete anything.
+`server.py` is a small MCP server that works with WineLib through its API: the running app, never the database.
+It reads, and it can **add lists** for you (*make a list of every wine I drank on 3 October at Claude's*, *…of the
+wines whose note says "wow"*): it shows you the list and its entries and does nothing until you say yes. It never
+changes or deletes anything; a list it made can be deleted in the app.
 
 ## What it can read
 
@@ -15,9 +17,14 @@ Loire wines did I score above 93?*, *what's left to taste on the Noble Rot list?
 | `cellar` | the bottles you own, where they are, scores, ready or not; by words, colour, region, storage place |
 | `what_to_open` | the bottles to drink soon and the ready ones, in one storage place or colour |
 | `wine` | one wine in full: its vintages, critics, bottles and your tastings |
-| `tastings` | your journal: date, wine, your rating and notes, where; since a date, at a place, above a rating |
+| `tastings` | your journal: date, wine, your rating and notes, where; by dates or one day, a place (a friend's home: with them), words in the notes, a rating |
 | `lists`, `wishlist` | your lists and your progress on them: each entry tasted or not, owned or not, its note |
 | `region`, `producer` | what you hold and have tasted from a region or a producer |
+| `create_list`, `add_to_list` | **add**: a new list with its entries, or entries on one of your lists; after your yes |
+
+Your yes comes through the assistant's own confirmation dialog when it has one (Claude Desktop, Claude Code); with
+one that hasn't, the assistant shows you the preview and asks, and the tool acts only when called again with the
+preview's token.
 
 ## Setting it up
 
@@ -56,4 +63,4 @@ Other assistants: the same command (`python …/server.py`) as a stdio MCP serve
 ## Privacy
 
 The assistant sees what the tools return (your bottles, tastings and notes) and sends it to its model provider like
-the rest of the conversation. Nothing else leaves WineLib, and nothing in it can be changed through this server.
+the rest of the conversation. Nothing else leaves WineLib, and nothing is changed through this server without your yes.
