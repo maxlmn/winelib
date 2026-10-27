@@ -1,7 +1,4 @@
 <script lang="ts">
-	import { FALLBACK_REGION } from '#lib/colors.ts';
-	import BottleEnd from '#lib/components/BottleEnd.svelte';
-	import { regionColor, regionLabel } from '#lib/regions.svelte.ts';
 	import { fmtDate } from '#lib/components/details/wine.ts';
 	import { links } from '#lib/links.ts';
 	import Change from '#lib/components/Change.svelte';
@@ -18,33 +15,37 @@
 	const gain = $derived(pct(d.cellar.cost, d.cellar.market));
 	const year = $derived(d.today.slice(0, 4));
 
-	// The latest evening, as a card of the tasting journal
-	const latest = $derived(occasions(data.journal, data.journal.tastings, []).find((o) => o.wines.length) ?? null);
+	// The latest evenings, as cards of the tasting journal: the last one, and the ones before while they stay short
+	// (about 8 wines in all)
+	const latest = $derived.by(() => {
+		const out = [];
+		let wines = 0;
+		for (const o of occasions(data.journal, data.journal.tastings, [])) {
+			if (!o.wines.length) continue;
+			if (out.length && wines + o.wines.length > 8) break;
+			out.push(o);
+			wines += o.wines.length;
+			if (out.length === 3) break;
+		}
+		return out;
+	});
 	// The past year's wines as one line of region colours
 	const yearAgo = $derived(`${Number(d.today.slice(0, 4)) - 1}${d.today.slice(4)}`);
 	const recentTastings = $derived(data.journal.tastings.filter((t) => t.date >= yearAgo));
-	// Bottles bought in the last three months still in the cellar, as the cellar's cards (at least the last few)
-	const recentBottles = $derived.by(() => {
-		const dated = data.cellar.bottles.filter((b) => b.purchase_date).sort((a, b) => b.purchase_date!.localeCompare(a.purchase_date!));
-		const since = new Date(Date.parse(d.today) - 92 * 86_400_000).toISOString().slice(0, 10);
-		const recent = dated.filter((b) => b.purchase_date! >= since);
-		return recent.length >= 6 ? recent : dated.slice(0, 12);
-	});
+	// The last dozen purchases still in the cellar, as the cellar's cards
+	const recentBottles = $derived(
+		data.cellar.bottles
+			.filter((b) => b.purchase_date)
+			.sort((a, b) => b.purchase_date!.localeCompare(a.purchase_date!))
+			.slice(0, 12)
+	);
 	const recentQty = $derived(recentBottles.reduce((n, b) => n + b.qty, 0));
-	// A bottle end per bottle (a mosaic), up to a point
-	const MOSAIC = 36;
-	const times = (n: number) => Array.from({ length: Math.min(n, MOSAIC) }, (_, i) => i);
 
 	const greeting = (() => {
 		const h = new Date().getHours();
 		return h < 5 ? 'Good evening' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
 	})();
 
-	const since = (iso: string | null) => {
-		if (!iso) return 'never opened';
-		const years = (Date.parse(d.today) - Date.parse(iso)) / (365.25 * 86_400_000);
-		return years >= 2 ? `last opened ${Math.floor(years)} years ago` : 'last opened over a year ago';
-	};
 </script>
 
 <svelte:head><title>Home · WineLib</title></svelte:head>
@@ -81,7 +82,9 @@
 	</a>
 </div>
 
-<div class="top">
+<!-- Two rows, their columns as tall as each other: the map beside the latest tasting and the year's wines; what to
+     open beside what came in, half and half -->
+<div class="row">
 	<section class="card map-card">
 		<div class="sec-head">
 			<h2>Your wine map</h2>
@@ -89,61 +92,41 @@
 		</div>
 		<HomeMap />
 	</section>
-	<section class="latest">
-		<div class="sec-head">
-			<h2>Latest tasting</h2>
-			<a class="more" href={links.tastings()}>All tasting notes →</a>
-		</div>
-		{#if latest}
-			<OccasionCard occasion={latest} regionColors={data.regionColors} />
-		{:else}
-			<p class="card muted pad">No tastings yet. <a class="more" href={links.newTasting()}>Add the first one</a></p>
+	<div class="side">
+		<section class="latest">
+			<div class="sec-head">
+				<h2>Latest {latest.length > 1 ? 'tastings' : 'tasting'}</h2>
+				<a class="more" href={links.tastings()}>All tasting notes →</a>
+			</div>
+			{#each latest as o (o.key)}
+				<OccasionCard occasion={o} regionColors={data.regionColors} />
+			{:else}
+				<p class="card muted pad">No tastings yet. <a class="more" href={links.newTasting()}>Add the first one</a></p>
+			{/each}
+		</section>
+		{#if recentTastings.length > 1}
+			<TastingRibbon tastings={recentTastings} label="The past year, a wine per bar: its region’s colour (its own below)" />
 		{/if}
-	</section>
+	</div>
 </div>
 
-{#if recentTastings.length > 1}
-	<TastingRibbon tastings={recentTastings} label="Recent tastings: every wine of the past year, its region’s colour (its own below)" />
-{/if}
-
-<div class="drink">
+<div class="row even">
 	<WhatToOpen bottles={data.cellar.bottles} totals={d.drink_soon.bottles} />
-	{#if d.nudges.length}
-		<section class="card nudges">
-			<h2>Waiting in the cellar</h2>
-			<p class="muted">Regions you hold bottles from but haven't opened anything from in over a year.</p>
-			<div class="chips">
-				{#each d.nudges as n (n.region)}
-					<a class="nudge" href={links.region(n.region)} style:--c={n.color ?? FALLBACK_REGION}>
-						<b>{regionLabel(n.region)}</b>
-						<span class="mosaic" title={plural(n.bottles, 'bottle')}>
-							{#each times(n.bottles) as i (i)}<BottleEnd region={n.color ?? FALLBACK_REGION} color={null} size={9} />{/each}
-							{#if n.bottles > MOSAIC}<span class="muted more-n num">+{n.bottles - MOSAIC}</span>{/if}
-						</span>
-						<span class="muted">{plural(n.bottles, 'bottle')} · {since(n.last_tasted)}</span>
-					</a>
-				{/each}
+	<!-- Without any purchase dates (none recorded), there's nothing recent to show -->
+	{#if recentBottles.length || !data.cellar.bottles.length}
+		<section class="card purchases-card">
+			<div class="sec-head">
+				<h2>Recent purchases <span class="muted num">{plural(recentQty, 'bottle')}</span></h2>
+				<a class="more" href={links.cellar()}>The cellar →</a>
 			</div>
+			{#if recentBottles.length}
+				<CellarCards bottles={recentBottles} regionColors={data.regionColors} prices />
+			{:else}
+				<p class="muted">No purchases yet. <a class="more" href={links.newBottle()}>Add one</a></p>
+			{/if}
 		</section>
 	{/if}
 </div>
-
-
-
-<!-- Without any purchase dates (none recorded), there's nothing recent to show -->
-{#if recentBottles.length || !data.cellar.bottles.length}
-<section class="card purchases-card">
-	<div class="sec-head">
-		<h2>Recent purchases <span class="muted num">{plural(recentQty, 'bottle')}</span></h2>
-		<a class="more" href={links.cellar()}>The cellar →</a>
-	</div>
-	{#if recentBottles.length}
-		<CellarCards bottles={recentBottles} regionColors={data.regionColors} />
-	{:else}
-		<p class="muted">No purchases yet. <a class="more" href={links.newBottle()}>Add one</a></p>
-	{/if}
-</section>
-{/if}
 
 <style>
 	.page-head {
@@ -195,39 +178,6 @@
 		font-size: 15px;
 		margin: 0;
 	}
-	.drink .nudges {
-		margin-bottom: 0;
-		align-self: start;
-	}
-	.nudges p {
-		margin: 4px 0 10px;
-		font-size: 12px;
-	}
-	.chips {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-	}
-	.nudge {
-		display: flex;
-		flex-direction: column;
-		gap: 1px;
-		padding: 8px 12px;
-		border-radius: 10px;
-		border: 1px solid var(--border);
-		border-left: 4px solid var(--c);
-		color: inherit;
-		text-decoration: none;
-		font-size: 13px;
-		min-width: 150px;
-	}
-	.nudge:hover {
-		border-color: var(--accent);
-		border-left-color: var(--c);
-	}
-	.nudge .muted {
-		font-size: 11px;
-	}
 	.sec-head {
 		display: flex;
 		align-items: baseline;
@@ -242,24 +192,48 @@
 	.more:hover {
 		color: var(--accent);
 	}
-	.top {
+	.row {
 		display: grid;
 		grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
 		gap: 14px;
 		margin-bottom: 14px;
-		align-items: start;
 	}
-	@media (max-width: 900px) {
-		.top {
+	.row.even {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	}
+	@media (max-width: 1000px) {
+		.row,
+		.row.even {
 			grid-template-columns: minmax(0, 1fr);
 		}
 	}
+	.side {
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+		min-width: 0;
+	}
+	.side > :global(*),
+	.row > :global(*) {
+		margin: 0;
+	}
+	/* Beside the map: the latest tasting at the top, the year's ribbon at the bottom, level with the map */
+	.side > :global(.ribbon) {
+		margin-top: auto;
+	}
+	/* The map grows to its row's height (the latest tasting and the ribbon beside it) */
 	.map-card {
-		margin-bottom: 0;
+		display: flex;
+		flex-direction: column;
 		padding: 14px 14px 12px;
 	}
 	.latest .sec-head {
-		padding: 14px 4px 0;
+		padding: 4px 4px 0;
+	}
+	.latest {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
 	}
 	.latest :global(.occ) {
 		margin: 0;
@@ -267,31 +241,9 @@
 	.pad {
 		padding: 16px 18px;
 	}
-	.mosaic {
-		display: inline-flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 2px;
-		vertical-align: middle;
-		margin-left: 4px;
-	}
-	.nudge .mosaic {
-		margin: 3px 0 2px;
-		max-width: 220px;
-	}
-	.more-n {
-		font-size: 11px;
-		margin-left: 3px;
-	}
 	.purchases-card h2 .muted {
 		font-weight: 400;
 		font-size: 13px;
 		margin-left: 6px;
-	}
-	.drink {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
-		gap: 14px;
-		margin-bottom: 14px;
 	}
 </style>
