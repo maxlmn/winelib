@@ -73,6 +73,8 @@ export interface VintageRef {
 	score?: string | null;
 	/** every critic\'s score, "RP 95 · VI 94" */
 	scores?: string | null;
+	/** the lists naming this vintage */
+	lists?: string[];
 }
 
 /** A cuvée (same cuvée, appellation and grape) with all its vintages */
@@ -84,6 +86,8 @@ export interface CatalogEntry {
 	varietal: string | null;
 	color: string | null;
 	vintages: VintageRef[];
+	/** the lists naming the cuvée, any vintage */
+	lists?: string[];
 }
 
 export interface ProducerDetail extends RegionInfo {
@@ -159,6 +163,8 @@ export interface WineDetail extends RegionInfo {
 	maturity: import('#lib/maturity.ts').Maturity;
 	/** every vintage of this cuvée, this one included */
 	vintages: VintageRef[];
+	/** the lists naming the cuvée, any vintage */
+	cuvee_lists?: string[];
 	/** bottles and tastings of all those vintages */
 	cellar: Bottle[];
 	tastings: Tasting[];

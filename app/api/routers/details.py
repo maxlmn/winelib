@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session, joinedload
 
+from routers.lists import family as list_family, marks as list_marks
 from routers.map import MAPPABLE_VINE, map_stats, shapes_response
 from cellar import load_cellar, location_group, maturity, to_base
 from display import iso, vineyard_label, vintage_label
@@ -93,6 +94,7 @@ def _vintage_sort_key(v):
 def wine_catalog(session, wines):
     """Wines grouped by cuvée (same cuvée, appellation and grape), each with its vintages."""
     bottles, tasted = _wine_counts(session, [w.id for w in wines])
+    on_lists, cuvee_lists = list_marks(session, wines)
     families = {}
     for w in wines:
         key = (w.cuvee or "", w.appellation_id, w.varietal_id)
@@ -100,10 +102,14 @@ def wine_catalog(session, wines):
             "cuvee": w.cuvee or "", "producer_id": w.producer_id, "producer": w.producer.name,
             "appellation": {"id": w.appellation.id, "name": w.appellation.name} if w.appellation else None,
             "varietal": w.varietal.name if w.varietal else None, "color": w.type, "vintages": [],
+            "lists": [],  # lists naming the cuvée, any vintage
         })
+        for name in cuvee_lists.get(list_family(w), []):
+            if name not in fam["lists"]:
+                fam["lists"].append(name)
         fam["vintages"].append({"id": w.id, "vintage": vintage_label(w.vintage, w.disgorgement_date), "bottles": bottles.get(w.id, 0),
                                 "tastings": tasted.get(w.id, 0), "score": scores.preferred_score(w.scores),
-                                "scores": scores.label(w.scores)})
+                                "scores": scores.label(w.scores), "lists": on_lists.get(w.id, [])})
     for fam in families.values():
         fam["vintages"].sort(key=_vintage_sort_key, reverse=True)
     return sorted(families.values(), key=lambda f: (f["producer"].lower(), f["cuvee"].lower()))
@@ -177,9 +183,11 @@ def wine_detail(wine_id: int, session: Session = Depends(get_session)):
     )
     ids = [x.id for x in family]
     bottles, tasted = _wine_counts(session, ids)
+    on_lists, cuvee_lists = list_marks(session, family)
     vintages = sorted(
         ({"id": x.id, "vintage": vintage_label(x.vintage, x.disgorgement_date), "bottles": bottles.get(x.id, 0), "tastings": tasted.get(x.id, 0),
-          "score": scores.preferred_score(x.scores), "scores": scores.label(x.scores)} for x in family),
+          "score": scores.preferred_score(x.scores), "scores": scores.label(x.scores), "lists": on_lists.get(x.id, [])}
+         for x in family),
         key=_vintage_sort_key, reverse=True)
     v = w.vineyard
     return {
@@ -194,6 +202,8 @@ def wine_detail(wine_id: int, session: Session = Depends(get_session)):
         "actions": plugins.wine_actions(w),  # buttons the plug-ins add (plugins.py)
         "maturity": maturity(w.drink_window_start, w.drink_window_end),
         "vintages": vintages,
+        # lists naming the cuvée, any vintage (those naming a vintage: on it)
+        "cuvee_lists": cuvee_lists.get(list_family(w), []),
         "cellar": cellar_lines(session, "wine_id", ids),
         "tastings": tastings(session, Bottle.wine_id.in_(ids)),
     }

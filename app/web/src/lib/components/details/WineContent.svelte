@@ -16,6 +16,7 @@
 	import TastingHistory from './TastingHistory.svelte';
 	import WishButton from './WishButton.svelte';
 	import ListsPanel from './ListsPanel.svelte';
+	import Icon from '#lib/components/Icon.svelte';
 
 	interface Props {
 		wine: WineDetail;
@@ -90,7 +91,9 @@
 		<CriticScores wineId={wine.id} scores={wine.scores} actions={wine.actions} />
 		{#if showVintages}
 			<section class="card vintages">
-				<h2>Vintages <span class="muted num">{wine.vintages.length}</span></h2>
+				<h2>Vintages <span class="muted num">{wine.vintages.length}</span>
+					{#if wine.cuvee_lists?.length}<span class="listed any" title="Any vintage on: {wine.cuvee_lists.join(', ')}"><Icon name="bookmark" size={12} /> any vintage on {wine.cuvee_lists.join(', ')}</span>{/if}
+				</h2>
 				<div class="chips">
 					{#each wine.vintages as v (v.id)}
 						<a
@@ -98,9 +101,9 @@
 							class:current={v.id === wine.id}
 							class:owned={v.bottles > 0}
 							href={links.wine(v.id)}
-							title={[v.bottles && `${v.bottles} in cellar`, v.tastings && `tasted ${v.tastings}×`].filter(Boolean).join(' · ') || undefined}
+							title={[v.bottles && `${v.bottles} in cellar`, v.tastings && `tasted ${v.tastings}×`, v.scores, v.lists?.length && `on ${v.lists.join(', ')}`].filter(Boolean).join(' · ') || undefined}
 						>
-							{v.vintage}{#if v.bottles}<span class="n">{v.bottles}</span>{/if}{#if v.tastings}<span class="tick">✓</span>{/if}
+							{v.vintage}{#if v.bottles}<span class="n">{v.bottles}</span>{/if}{#if v.tastings}<span class="tick">✓</span>{/if}{#if v.score}<span class="score">{v.score}</span>{/if}{#if v.lists?.length}<span class="listed"><Icon name="bookmark" size={11} /></span>{/if}
 						</a>
 					{/each}
 				</div>
@@ -202,6 +205,31 @@
 	.n {
 		font-weight: 650;
 		color: var(--gold);
+	}
+	.score {
+		margin-left: 4px;
+		font-size: 10px;
+		font-weight: 600;
+		line-height: 13px;
+		padding: 0 4px;
+		border-radius: 6px;
+		border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+		color: var(--accent);
+	}
+	.listed {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		margin-left: 4px;
+		color: var(--accent);
+	}
+	.listed :global(.icon) {
+		fill: currentColor;
+	}
+	.listed.any {
+		font-size: 12px;
+		font-weight: 400;
+		margin-left: 10px;
 	}
 	.tick {
 		color: var(--accent);

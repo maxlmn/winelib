@@ -285,3 +285,22 @@ def lists_of(wine_id: int | None = None, producer_id: int | None = None, session
     if p is None:
         raise HTTPException(404, "Producer not found")
     return memberships(session, producer=p)
+
+
+def marks(session, wines):
+    """The lists naming these wines, for the marks beside each vintage: ({wine id: [list names]} for an entry of
+    that vintage, {cuvée key: [list names]} for an entry of the cuvée, any vintage). Producer entries aren't marks
+    (the Lists card shows them)."""
+    pids = {w.producer_id for w in wines}
+    if not pids:
+        return {}, {}
+    items = (session.query(ListItem).options(joinedload(ListItem.wine), joinedload(ListItem.list))
+             .filter(ListItem.producer_id.in_(pids), ListItem.kind.in_(("wine", "cuvee"))).all())
+    by_wine, by_family = defaultdict(list), defaultdict(list)
+    for i in items:
+        if i.wine is None:
+            continue
+        target = by_wine[i.wine_id] if i.kind == "wine" else by_family[family(i.wine)]
+        if i.list.name not in target:
+            target.append(i.list.name)
+    return dict(by_wine), dict(by_family)
