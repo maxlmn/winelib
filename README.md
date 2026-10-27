@@ -11,9 +11,9 @@ vineyard. It runs on your own computer: your data stays yours.
 
 ## What it does
 
-**Your cellar at a glance.** The map of the regions you drink, your latest tasting, the past year's wines in one
-line of colours, what to open tonight (the bottles your lists are waiting for first, then those to drink soon), the
-regions waiting in the cellar and your latest purchases, rack by rack.
+**Your cellar at a glance.** The map of the regions you drink, your latest tastings, the past year's wines in one
+line of colours, what to open tonight (the bottles your lists are waiting for first, then those to drink soon) and
+your latest purchases, rack by rack.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="screenshots/home-dark.png">
