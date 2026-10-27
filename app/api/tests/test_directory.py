@@ -2,7 +2,7 @@
 from datetime import date
 
 from db import Bottle, Place, Producer, Region, RestaurantVisit, TastingNote, Wine
-from routers.directory import parse_lists
+from db import ListItem, WineList
 
 
 def seed(s):
@@ -20,6 +20,10 @@ def seed(s):
     wine = Wine(producer=belargus, cuvee="Ronceray", vintage="2020", type="White", region_obj=loire)
     drunk = Bottle(wine=wine, qty=0, location="H1")
     s.add_all([roulot, Bottle(wine=wine, qty=3, location="H2"), Bottle(wine=wine, qty=0, location="H3")])
+    s.flush()
+    # on two lists: one as the producer, one through its wine
+    s.add_all([WineList(name="The New French Wine", items=[ListItem(kind="producer", producer_id=belargus.id, position=1)]),
+               WineList(name="RP100", items=[ListItem(kind="wine", wine_id=wine.id, producer_id=belargus.id, position=1)])])
     d1, d2 = date(2025, 1, 10), date(2025, 3, 5)
     s.add_all([
         # two bottles the same evening at home: one visit
@@ -33,12 +37,6 @@ def seed(s):
     ])
 
 
-def test_parse_lists():
-    assert parse_lists("[The New French Wine,'RP100']") == ["The New French Wine", "RP100"]
-    assert parse_lists('[,RP100]') == ["RP100"]
-    assert parse_lists("[]") == [] and parse_lists(None) == []
-
-
 def test_producers(client):
     rows = client.get("/api/producers").json()
     assert {r["name"] for r in rows} == {"Domaine Belargus", "Domaine Roulot", "Unplaced"}
@@ -46,7 +44,8 @@ def test_producers(client):
     b = by_name["Domaine Belargus"]
     assert b["region"] == "Loire" and b["color"] == "#a4c96b"
     assert (b["subregion"], b["village"], b["winemaker"], b["notes"]) == ("Anjou", "Saint-Lambert", "Ivan Massonnat", "Chenin")
-    assert b["lists"] == ["The New French Wine", "RP100"]
+    assert b["lists"] == ["RP100", "The New French Wine"]  # the lists it's on, by name
+    assert [x["name"] for x in b["list_refs"]] == ["RP100", "The New French Wine"] and all(x["id"] for x in b["list_refs"])
     assert b["tastings"] == 4
     assert b["bottles"] == 3  # only stocked lines
     assert by_name["Unplaced"]["region"] is None and by_name["Unplaced"]["lists"] == []

@@ -77,7 +77,7 @@
 					<td class="num">{p.tastings || ''}</td>
 					<td class="num">{p.bottles || ''}</td>
 					<td class="lists">
-						{#each p.lists as l}<button class="tag" onclick={() => onfilter('list', l)}>{l}</button>{/each}
+						{#each p.list_refs as l (l.id)}<span class="list-ref"><button class="tag" onclick={() => onfilter('list', l.name)} title="Filter by {l.name}">{l.name}</button><a class="to-region" href={links.list(l.id)} title="{l.name}: the list">↗</a></span>{/each}
 					</td>
 					<td class="notes muted" title={p.notes ?? ''}>{p.notes ?? ''}</td>
 				</tr>
@@ -192,6 +192,12 @@
 		max-width: 220px;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+	.list-ref {
+		display: inline-flex;
+		align-items: baseline;
+		margin-right: 6px;
+		white-space: nowrap;
 	}
 	.to-region {
 		margin-left: 4px;
