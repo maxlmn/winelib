@@ -2,6 +2,7 @@
 	import type { CatalogEntry } from '#lib/api/details.ts';
 	import { typeColor } from '#lib/colors.ts';
 	import { links } from '#lib/links.ts';
+	import Icon from '#lib/components/Icon.svelte';
 
 	interface Props {
 		wines: CatalogEntry[];
@@ -26,6 +27,8 @@
 	<p class="legend muted">
 		<span class="chip owned sample">n</span> bottles in cellar
 		<span class="chip tasted sample">✓</span> tasted
+		<span class="chip sample"><span class="score">94</span></span> critic
+		<span class="chip sample"><span class="listed"><Icon name="bookmark" size={11} /></span></span> on a list
 		{#if unseen}
 			<span class="chip sample">–</span> neither (a review only)
 			<label class="toggle">
@@ -46,6 +49,7 @@
 					<div>
 						{#if showProducer}<a class="producer" href={links.producer(w.producer_id)}>{w.producer}</a>{/if}
 						<!-- Without a cuvée name the appellation is the headline (then the grape, then the color) -->
+						{#if w.lists?.length}<span class="listed" title="Any vintage on: {w.lists.join(', ')}"><Icon name="bookmark" size={12} /></span>{/if}
 						{#if w.cuvee}
 							<b>{w.cuvee}</b>
 						{:else if w.appellation}
@@ -69,11 +73,13 @@
 							class:owned={v.bottles > 0}
 							class:tasted={v.tastings > 0}
 							href={links.wine(v.id)}
-							title={[v.bottles && `${v.bottles} in cellar`, v.tastings && `tasted ${v.tastings}×`, v.scores].filter(Boolean).join(' · ') || 'Not in cellar, not tasted'}
+							title={[v.bottles && `${v.bottles} in cellar`, v.tastings && `tasted ${v.tastings}×`, v.scores, v.lists?.length && `on ${v.lists.join(', ')}`].filter(Boolean).join(' · ') || 'Not in cellar, not tasted'}
 						>
 							{v.vintage}
 							{#if v.bottles}<span class="n">{v.bottles}</span>{/if}
 							{#if v.tastings}<span class="tick">✓</span>{/if}
+							{#if v.score}<span class="score">{v.score}</span>{/if}
+							{#if v.lists?.length}<span class="listed"><Icon name="bookmark" size={11} /></span>{/if}
 						</a>
 					{/each}
 				</div>
@@ -166,6 +172,23 @@
 	.tick {
 		color: var(--accent);
 		font-size: 11px;
+	}
+	/* the preferred critic's score, a pill like the lists' */
+	.score {
+		font-size: 10px;
+		font-weight: 600;
+		line-height: 13px;
+		padding: 0 4px;
+		border-radius: 6px;
+		border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+		color: var(--accent);
+	}
+	.listed {
+		display: inline-flex;
+		color: var(--accent);
+	}
+	.listed :global(.icon) {
+		fill: currentColor;
 	}
 	@media (max-width: 640px) {
 		li {

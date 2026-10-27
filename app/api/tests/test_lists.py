@@ -105,3 +105,18 @@ def test_the_wishlist_is_a_list(client):
     assert client.post("/api/lists/wishlist").json()["id"] == first  # made once
     lst = client.get(f"/api/lists/{first}").json()
     assert (lst["name"], lst["is_wishlist"]) == ("Wishlist", True)
+
+
+def test_marks_beside_the_vintages(client):
+    _, wine, producer = ids(client)
+    lst = client.post("/api/lists", json={"name": "Marks"}).json()["id"]
+    client.post(f"/api/lists/{lst}/items", json={"kind": "wine", "wine_id": wine("le bourg 2016")})
+    client.post(f"/api/lists/{lst}/items", json={"kind": "cuvee", "wine_id": wine("poyeux")})
+    p = client.get(f"/api/producers/{producer('rougeard')}").json()
+    bourg = next(c for c in p["wines"] if c["cuvee"] == "Le Bourg")
+    assert "Marks" in next(v for v in bourg["vintages"] if v["vintage"] == "2016")["lists"]
+    assert "Marks" not in next(v for v in bourg["vintages"] if v["vintage"] == "2017")["lists"]
+    poyeux = next(c for c in p["wines"] if c["cuvee"] == "Les Poyeux")
+    assert "Marks" in poyeux["lists"]
+    w = client.get(f"/api/wines/{wine('le bourg 2017')}").json()
+    assert "Marks" in next(v for v in w["vintages"] if v["vintage"] == "2016")["lists"] and "Marks" not in w["cuvee_lists"]
