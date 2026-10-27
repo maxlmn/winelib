@@ -10,11 +10,33 @@
 	import WhatToOpen from '#lib/components/home/WhatToOpen.svelte';
 	import { windowLabel } from '#lib/maturity.ts';
 	import MaturityBadge from '#lib/components/MaturityBadge.svelte';
+	import CellarCards from '#lib/components/CellarCards.svelte';
+	import HomeMap from '#lib/components/home/HomeMap.svelte';
+	import OccasionCard from '#lib/components/tastings/OccasionCard.svelte';
+	import TastingRibbon from '#lib/components/tastings/TastingRibbon.svelte';
+	import { occasions } from '#lib/components/tastings/journal.ts';
 
 	let { data } = $props();
 	const d = $derived(data.dashboard);
 	const gain = $derived(pct(d.cellar.cost, d.cellar.market));
 	const year = $derived(d.today.slice(0, 4));
+
+	// The latest evening, as a card of the tasting journal
+	const latest = $derived(occasions(data.journal, data.journal.tastings, []).find((o) => o.wines.length) ?? null);
+	// The past year's wines as one line of region colours
+	const yearAgo = $derived(`${Number(d.today.slice(0, 4)) - 1}${d.today.slice(4)}`);
+	const recentTastings = $derived(data.journal.tastings.filter((t) => t.date >= yearAgo));
+	// Bottles bought in the last three months still in the cellar, as the cellar's cards (at least the last few)
+	const recentBottles = $derived.by(() => {
+		const dated = data.cellar.bottles.filter((b) => b.purchase_date).sort((a, b) => b.purchase_date!.localeCompare(a.purchase_date!));
+		const since = new Date(Date.parse(d.today) - 92 * 86_400_000).toISOString().slice(0, 10);
+		const recent = dated.filter((b) => b.purchase_date! >= since);
+		return recent.length >= 6 ? recent : dated.slice(0, 12);
+	});
+	const recentQty = $derived(recentBottles.reduce((n, b) => n + b.qty, 0));
+	// A bottle end per bottle (a mosaic), up to a point
+	const MOSAIC = 36;
+	const times = (n: number) => Array.from({ length: Math.min(n, MOSAIC) }, (_, i) => i);
 
 	const greeting = (() => {
 		const h = new Date().getHours();
@@ -25,10 +47,6 @@
 	const wineName = (w: { producer: string; cuvee: string; appellation: string | null; varietal: string | null }) => {
 		const label = w.cuvee || [w.appellation, w.varietal].filter(Boolean).join(' · ');
 		return label ? `${w.producer} – ${label}` : w.producer;
-	};
-	const ago = (iso: string) => {
-		const days = Math.round((Date.parse(d.today) - Date.parse(iso)) / 86_400_000);
-		return days <= 0 ? 'today' : days === 1 ? 'yesterday' : days < 31 ? `${days} days ago` : fmtDate(iso);
 	};
 	const since = (iso: string | null) => {
 		if (!iso) return 'never opened';
@@ -71,6 +89,31 @@
 	</a>
 </div>
 
+<div class="top">
+	<section class="card map-card">
+		<div class="sec-head">
+			<h2>Your wine map</h2>
+			<a class="more" href={links.map()}>The map →</a>
+		</div>
+		<HomeMap />
+	</section>
+	<section class="latest">
+		<div class="sec-head">
+			<h2>Latest tasting</h2>
+			<a class="more" href={links.tastings()}>All tasting notes →</a>
+		</div>
+		{#if latest}
+			<OccasionCard occasion={latest} regionColors={data.regionColors} />
+		{:else}
+			<p class="card muted pad">No tastings yet. <a class="more" href={links.newTasting()}>Add the first one</a></p>
+		{/if}
+	</section>
+</div>
+
+{#if recentTastings.length > 1}
+	<TastingRibbon tastings={recentTastings} label="Recent tastings: every wine of the past year, its region’s colour (its own below)" />
+{/if}
+
 <div class="drink">
 	<section class="card soon">
 		<div class="sec-head">
@@ -85,7 +128,12 @@
 						<div class="p-main">
 							<a href={links.bottle(l.bottle_id)}>{wineName(l)}</a> <span class="muted num">{l.vintage}</span>
 							<CriticPills scores={l.scores} />
-							<div class="muted small"><span class="loc">{l.location}</span> · ×{l.qty} · drink {windowLabel(l.drink_from, l.drink_to)}</div>
+							<div class="muted small">
+								<span class="loc">{l.location}</span> · drink {windowLabel(l.drink_from, l.drink_to)}
+								<span class="mosaic" title={plural(l.qty, 'bottle')}>
+									{#each times(l.qty) as i (i)}<BottleEnd region={regionColor(l.region)} color={l.color} format={l.format} size={8} />{/each}
+								</span>
+							</div>
 						</div>
 						<span class="when"><MaturityBadge maturity={l.maturity} from={l.drink_from} to={l.drink_to} left={l.years_left} /></span>
 					</li>
@@ -99,7 +147,7 @@
 			{#if d.drink_soon.bottles.unknown} · {d.drink_soon.bottles.unknown} without a window{/if}
 		</p>
 	</section>
-	<WhatToOpen />
+	<WhatToOpen bottles={data.cellar.bottles} />
 </div>
 
 {#if d.nudges.length}
@@ -110,71 +158,28 @@
 			{#each d.nudges as n (n.region)}
 				<a class="nudge" href={links.region(n.region)} style:--c={n.color ?? FALLBACK_REGION}>
 					<b>{regionLabel(n.region)}</b>
-					<span class="num">{plural(n.bottles, 'bottle')}</span>
-					<span class="muted">{since(n.last_tasted)}</span>
+					<span class="mosaic" title={plural(n.bottles, 'bottle')}>
+						{#each times(n.bottles) as i (i)}<BottleEnd region={n.color ?? FALLBACK_REGION} color={null} size={9} />{/each}
+						{#if n.bottles > MOSAIC}<span class="muted more-n num">+{n.bottles - MOSAIC}</span>{/if}
+					</span>
+					<span class="muted">{plural(n.bottles, 'bottle')} · {since(n.last_tasted)}</span>
 				</a>
 			{/each}
 		</div>
 	</section>
 {/if}
 
-<div class="cols">
-	<section class="card">
-		<div class="sec-head">
-			<h2>Recent tastings</h2>
-			<a class="more" href={links.tastings()}>All tasting notes →</a>
-		</div>
-		{#each d.occasions as o (`${o.date}|${o.place}`)}
-			<div class="occasion">
-				<div class="o-head">
-					{#if o.place_id}<a class="place" href={links.place(o.place_id)}>{o.place}</a>{:else}<span class="place">{o.place}</span>{/if}
-					{#if o.stars}<span class="gold">{'★'.repeat(o.stars)}</span>{/if}
-					<span class="muted when">{ago(o.date)}</span>
-				</div>
-				<ul>
-					{#each o.wines as w (w.id)}
-						<li>
-							<span class="end"><BottleEnd region={regionColor(w.region)} color={w.color} format={w.format} size={11} title="{regionLabel(w.region)} · {w.color ?? ''}" /></span>
-							<a href={links.tasting(w.id)}>{wineName(w)}</a>
-							<span class="muted num">{w.vintage}</span>
-							<CriticPills scores={w.scores} />
-						</li>
-					{/each}
-					{#if o.count > o.wines.length}<li class="muted">and {o.count - o.wines.length} more</li>{/if}
-				</ul>
-			</div>
-		{:else}
-			<p class="muted">No tastings yet. <a class="more" href={links.newTasting()}>Add the first one</a></p>
-		{/each}
-	</section>
-
-	<section class="card">
-		<div class="sec-head">
-			<h2>Recent purchases</h2>
-			<a class="more" href={links.cellar({ view: 'list' })}>The cellar →</a>
-		</div>
-		<ul class="purchases">
-			{#each d.purchases as b (b.bottle_id)}
-				<li>
-					<span class="end"><BottleEnd region={regionColor(b.region)} color={b.color} format={b.format} size={11} title="{regionLabel(b.region)} · {b.color ?? ''}" /></span>
-					<div class="p-main">
-						<a href={links.bottle(b.bottle_id)}>{wineName(b)}</a> <span class="muted num">{b.vintage}</span>
-						<CriticPills scores={b.scores} />
-						<div class="muted small">
-							{#if b.region}<a class="quiet" href={links.region(b.region)}>{regionLabel(b.region)}</a>&nbsp;·&nbsp;{/if}{b.date ? fmtDate(b.date) : 'Undated'}
-						</div>
-					</div>
-					<div class="p-side num">
-						{#if b.qty}<span>×{b.qty}</span>{#if b.location}<span class="loc">{b.location}</span>{/if}{:else}<span class="muted">drunk</span>{/if}
-						{#if b.price}<div class="muted small">{Math.round(b.price)} {b.currency ?? ''}</div>{/if}
-					</div>
-				</li>
-			{:else}
-				<li class="muted">No purchases yet.</li>
-			{/each}
-		</ul>
-	</section>
-</div>
+<section class="card purchases-card">
+	<div class="sec-head">
+		<h2>Recent purchases <span class="muted num">{plural(recentQty, 'bottle')}</span></h2>
+		<a class="more" href={links.cellar()}>The cellar →</a>
+	</div>
+	{#if recentBottles.length}
+		<CellarCards bottles={recentBottles} regionColors={data.regionColors} />
+	{:else}
+		<p class="muted">No purchases yet. <a class="more" href={links.newBottle()}>Add one</a></p>
+	{/if}
+</section>
 
 <style>
 	.page-head {
@@ -255,14 +260,6 @@
 	.nudge .muted {
 		font-size: 11px;
 	}
-	.cols {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
-		gap: 14px;
-	}
-	.cols section.card {
-		margin-bottom: 0;
-	}
 	.sec-head {
 		display: flex;
 		align-items: baseline;
@@ -277,27 +274,6 @@
 	.more:hover {
 		color: var(--accent);
 	}
-	.occasion {
-		padding: 8px 0;
-		border-bottom: 1px solid var(--border);
-	}
-	.occasion:last-child {
-		border-bottom: none;
-	}
-	.o-head {
-		display: flex;
-		align-items: baseline;
-		gap: 8px;
-		font-size: 13px;
-	}
-	.place {
-		font-weight: 600;
-		color: inherit;
-	}
-	.gold {
-		color: var(--gold);
-		font-size: 11px;
-	}
 	.when {
 		margin-left: auto;
 		font-size: 12px;
@@ -308,35 +284,14 @@
 		padding: 0;
 		font-size: 13px;
 	}
-	.occasion li {
-		display: flex;
-		align-items: baseline;
-		gap: 6px;
-		padding: 2px 0;
-	}
 	.end {
 		display: flex;
 		flex: none;
 		align-self: center;
 	}
-	.purchases li {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		padding: 7px 0;
-		border-bottom: 1px solid var(--border);
-	}
-	.purchases li:last-child {
-		border-bottom: none;
-	}
 	.p-main {
 		flex: 1;
 		min-width: 0;
-	}
-	.p-side {
-		text-align: right;
-		white-space: nowrap;
-		font-size: 13px;
 	}
 	.loc {
 		margin-left: 6px;
@@ -348,11 +303,51 @@
 	.small {
 		font-size: 12px;
 	}
-	.quiet {
-		color: inherit;
+	.top {
+		display: grid;
+		grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+		gap: 14px;
+		margin-bottom: 14px;
+		align-items: start;
 	}
-	.quiet:hover {
-		color: var(--accent);
+	@media (max-width: 900px) {
+		.top {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+	.map-card {
+		margin-bottom: 0;
+		padding: 14px 14px 12px;
+	}
+	.latest .sec-head {
+		padding: 14px 4px 0;
+	}
+	.latest :global(.occ) {
+		margin: 0;
+	}
+	.pad {
+		padding: 16px 18px;
+	}
+	.mosaic {
+		display: inline-flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 2px;
+		vertical-align: middle;
+		margin-left: 4px;
+	}
+	.nudge .mosaic {
+		margin: 3px 0 2px;
+		max-width: 220px;
+	}
+	.more-n {
+		font-size: 11px;
+		margin-left: 3px;
+	}
+	.purchases-card h2 .muted {
+		font-weight: 400;
+		font-size: 13px;
+		margin-left: 6px;
 	}
 	.drink {
 		display: grid;

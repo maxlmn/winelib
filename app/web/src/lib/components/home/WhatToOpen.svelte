@@ -1,18 +1,23 @@
 <script lang="ts">
 	import { regionColor, regionLabel } from '#lib/regions.svelte.ts';
 	import { appSettings, groupOrder } from '#lib/settings.svelte.ts';
-	/** "What should I open?": a few bottles from the cellar for the evening, ready ones first. */
+	/** "What should I open?": a few bottles from the cellar for the evening: first those a list asks you to taste
+	 * (an entry not ticked yet), then the ready ones. */
 	import { onMount } from 'svelte';
 	import { FALLBACK_REGION, typeColor } from '#lib/colors.ts';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
 	import { links } from '#lib/links.ts';
 	import { money } from '#lib/format.ts';
 	import MaturityBadge from '#lib/components/MaturityBadge.svelte';
+	import Icon from '#lib/components/Icon.svelte';
 	import type { Bottle } from '#lib/types.ts';
 
+	let { bottles }: { bottles: Bottle[] } = $props();
+
 	const SHOWN = 5;
-	let bottles = $state<Bottle[]>([]);
-	let loaded = $state(false);
+	// Per wine in the cellar, the lists still waiting for it
+	let onLists = $state<Record<string, { list_id: number; list: string; note: string | null }[]>>({});
+	let listsOnly = $state(false);
 	let color = $state('');
 	let region = $state('');
 	let maxPrice = $state<number | null>(null);
@@ -41,9 +46,8 @@
 		} catch {
 			// private mode: the default
 		}
-		const data = await fetch('/api/cellar').then((r) => r.json());
-		bottles = data.bottles;
-		loaded = true;
+		const r = await fetch('/api/lists/in-cellar');
+		if (r.ok) onLists = await r.json();
 	});
 
 	const here = $derived(from === '*' ? bottles : bottles.filter((b) => b.location_group === from));
@@ -56,12 +60,15 @@
 	const rank = (b: Bottle) =>
 		b.maturity === 'past' ? 0 : b.maturity === 'ready' ? 1 + Math.min((b.drink_to ?? 9999) - new Date().getFullYear(), 50) / 100 : b.maturity === null ? 2 : 3;
 
+	const lists = (b: Bottle) => onLists[b.wine_id] ?? [];
+	const anyListed = $derived(here.some((b) => lists(b).length));
 	const picks = $derived(
 		here
+			.filter((b) => !listsOnly || lists(b).length)
 			.filter((b) => (!color || b.color === color) && (!region || b.region === region))
 			.filter((b) => !maxPrice || b.market_base <= maxPrice)
 			.filter((b) => includeYoung || b.maturity !== 'young')
-			.map((b) => ({ b, score: rank(b) + jitter(b.bottle_id) * 0.6 }))
+			.map((b) => ({ b, score: rank(b) + jitter(b.bottle_id) * 0.6 - (lists(b).length ? 4 : 0) }))
 			.sort((x, y) => x.score - y.score)
 			.slice(0, SHOWN)
 			.map((x) => x.b)
@@ -72,10 +79,15 @@
 <section class="card open">
 	<div class="sec-head">
 		<h2>What should I open?</h2>
-		<button class="link" onclick={() => (seed += 1)} disabled={!loaded}>Another idea ↻</button>
+		<button class="link" onclick={() => (seed += 1)}>Another idea ↻</button>
 	</div>
 	<div class="filters">
 		<div class="chips">
+			{#if anyListed}
+				<button class="chip" class:on={listsOnly} onclick={() => (listsOnly = !listsOnly)} title="Bottles a list asks you to taste">
+					<Icon name="bookmark" size={11} />On a list
+				</button>
+			{/if}
 			<button class="chip" class:on={!color} onclick={() => (color = '')}>Any</button>
 			{#each colors as c (c)}
 				<button class="chip" class:on={color === c} onclick={() => (color = c)}>
@@ -101,9 +113,7 @@
 			<label class="young"><input type="checkbox" bind:checked={includeYoung} /> include too young</label>
 		</div>
 	</div>
-	{#if !loaded}
-		<p class="muted">Looking in the cellar…</p>
-	{:else if picks.length}
+	{#if picks.length}
 		<ul>
 			{#each picks as b (b.bottle_id)}
 				<li>
@@ -116,6 +126,12 @@
 						<div class="muted small">
 							{regionLabel(b.region)} · <span class="loc">{b.location}</span> · ×{b.qty}{b.market_base ? ` · ${money(b.market_base)}` : ''}
 						</div>
+						{#if lists(b).length}
+							<div class="on-lists small">
+								<Icon name="bookmark" size={11} />
+								{#each lists(b) as l, i (l.list_id)}{i ? ', ' : ''}<a href={links.list(l.list_id)}>{l.list}</a>{#if l.note}<span class="muted"> ({l.note})</span>{/if}{/each}
+							</div>
+						{/if}
 					</div>
 					{#if b.maturity}
 						<MaturityBadge maturity={b.maturity} from={b.drink_from} to={b.drink_to} />
@@ -131,6 +147,16 @@
 <style>
 	.open {
 		padding: 16px 18px;
+	}
+	.on-lists {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0 4px;
+		color: var(--accent);
+	}
+	.on-lists a {
+		color: var(--accent);
 	}
 	.sec-head {
 		display: flex;
