@@ -5,6 +5,9 @@
 - **What happened to a bottle**: gifted, sold (and for how much), broken or otherwise, not only drunk. "Take some
   out" on a bottle's page takes them off the count, with a date and a note; the bottle page tells its story (drunk,
   gifted...), and each can be undone.
+- **From a label's photo to WineLib, through your assistant**: the MCP server adds wines, tastings and bottles after
+  your yes (`add_wine`, `add_tasting`, `add_bottle`). Share a label's picture with Claude and say what to log: it
+  reads the label, matches the producer, appellation and place to yours, shows what it will add and waits for you.
 - **Find in the lists**: a list, a wine or a note across every list (the matching bottle ends stay bright), and in a
   list its entries by name, note, appellation or region.
 - **Faster maps**: every map opens where it's going and draws its outlines without waiting for the background's
