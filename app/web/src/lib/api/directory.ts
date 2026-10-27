@@ -8,7 +8,10 @@ export interface ProducerRow {
 	subregion: string | null;
 	village: string | null;
 	winemaker: string | null;
+	/** the lists it's on (itself or one of its wines), by name: the Lists filter */
 	lists: string[];
+	/** the same, with their ids: a link to each */
+	list_refs: { id: number; name: string }[];
 	notes: string | null;
 	tastings: number;
 	bottles: number;

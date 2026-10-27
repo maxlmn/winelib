@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 	import ListDots from '#lib/components/ListDots.svelte';
-	import { createList } from '#lib/api/lists.ts';
+	import { createList, DOT_ORDERS, sortDots, type DotOrder } from '#lib/api/lists.ts';
 	import { links } from '#lib/links.ts';
 
 	let { data } = $props();
@@ -16,6 +17,24 @@
 				a.name.localeCompare(b.name)
 		)
 	);
+	// Every mosaic in one order: the lists' own, by note, tasted first... (remembered on this device)
+	let order = $state<DotOrder>('list');
+	onMount(() => {
+		try {
+			const saved = localStorage.getItem('winelib-dots-order');
+			if (DOT_ORDERS.some(([k]) => k === saved)) order = saved as DotOrder;
+		} catch {
+			/* no storage: not remembered */
+		}
+	});
+	function setOrder(o: DotOrder) {
+		order = o;
+		try {
+			localStorage.setItem('winelib-dots-order', o);
+		} catch {
+			/* no storage */
+		}
+	}
 	const pct = (l: { tasted: number; entries: number }) => (l.entries ? Math.round((100 * l.tasted) / l.entries) : 0);
 	const milestone = (l: { tasted: number; entries: number }) =>
 		!l.entries ? '' : l.tasted === l.entries ? 'Complete' : l.tasted * 2 >= l.entries ? 'Past halfway' : l.tasted ? '' : 'Not started';
@@ -39,6 +58,14 @@
 
 <div class="page-head">
 	<h1>Lists</h1>
+	{#if lists.length}
+		<label class="order">
+			<span class="muted">Sort the mosaics</span>
+			<select value={order} onchange={(e) => setOrder(e.currentTarget.value as DotOrder)}>
+				{#each DOT_ORDERS as [k, label] (k)}<option value={k}>{label}</option>{/each}
+			</select>
+		</label>
+	{/if}
 	<button class="btn primary" onclick={() => (adding = !adding)}>{adding ? 'Cancel' : '＋ New list'}</button>
 </div>
 
@@ -69,7 +96,7 @@
 					{#if milestone(l)}<span class="badge" class:done={l.tasted === l.entries}>{milestone(l)}</span>{/if}
 				</div>
 				{#if l.source}<div class="muted source">{l.source}</div>{/if}
-				<ListDots dots={l.dots} />
+				<ListDots dots={sortDots(l.dots, order)} />
 				{#if l.entries}
 					<div class="progress">
 						<span class="bar" aria-hidden="true"><span style:width="{pct(l)}%"></span></span>
@@ -85,6 +112,13 @@
 {/if}
 
 <style>
+	.order {
+		margin-left: auto;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 13px;
+	}
 	.new {
 		display: flex;
 		flex-wrap: wrap;

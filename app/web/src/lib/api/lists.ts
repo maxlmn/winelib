@@ -45,7 +45,7 @@ export interface ListSummary {
 }
 
 export interface ListCard extends ListSummary {
-	dots: { tasted: boolean; owned: boolean; region: string | null; color: string | null }[];
+	dots: Dot[];
 }
 
 export interface ListDetail extends ListSummary {
@@ -107,3 +107,42 @@ export function noteKey(note: string | null): [number, number, string] {
 
 export const compareKeys = (a: [number, number, string], b: [number, number, string]) =>
 	a[0] - b[0] || a[1] - b[1] || a[2].localeCompare(b[2]);
+
+/** An entry as a bottle end in a list's mosaic */
+export interface Dot {
+	tasted: boolean;
+	owned: boolean;
+	region: string | null;
+	color: string | null;
+	note?: string | null;
+	/** the entry in a few words, for the hover card */
+	label?: string;
+	/** its page (the list's own mosaic; the lists page's cards are links already) */
+	href?: string;
+}
+
+export type DotOrder = 'list' | 'note' | 'tasted' | 'todo' | 'region';
+export const DOT_ORDERS: [DotOrder, string][] = [
+	['list', 'The list’s order'],
+	['note', 'By note (ranks, tiers)'],
+	['tasted', 'Tasted first'],
+	['todo', 'To taste first'],
+	['region', 'By region']
+];
+
+/** A mosaic sorted (stable: the list's order within each group) */
+export function sortDots<T extends Dot>(dots: T[], order: DotOrder): T[] {
+	const at = new Map(dots.map((d, i) => [d, i]));
+	const pos = (a: T, b: T) => at.get(a)! - at.get(b)!;
+	return [...dots].sort((a, b) =>
+		order === 'note'
+			? compareKeys(noteKey(a.note ?? null), noteKey(b.note ?? null)) || pos(a, b)
+			: order === 'tasted'
+				? Number(b.tasted) - Number(a.tasted) || Number(b.owned) - Number(a.owned) || pos(a, b)
+				: order === 'todo'
+					? Number(a.tasted) - Number(b.tasted) || pos(a, b)
+					: order === 'region'
+						? (a.region ?? '~').localeCompare(b.region ?? '~') || Number(b.tasted) - Number(a.tasted) || pos(a, b)
+						: pos(a, b)
+	);
+}

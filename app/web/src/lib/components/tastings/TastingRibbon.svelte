@@ -5,7 +5,8 @@
 	import { fmtDay, wineName } from './journal.ts';
 	import type { Tasting } from '#lib/api/tastings.ts';
 
-	let { tastings }: { tastings: Tasting[] } = $props();
+	let { tastings, label = 'Every wine, oldest on the left: its region’s color, its own color below' }: { tastings: Tasting[]; label?: string } =
+		$props();
 
 	const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 	const GAP = 2; // RegionStrip's gap between bars
@@ -55,7 +56,7 @@
 
 {#if pips.length > 1}
 	<div class="ribbon card">
-		<div class="label">Every wine, oldest on the left: its region's color, its own color below</div>
+		<div class="label">{label}</div>
 		<div class="scroller" bind:this={scroller}>
 			<div class="line">
 				<RegionStrip {pips} height={18} />

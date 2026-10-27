@@ -7,17 +7,9 @@ from sqlalchemy.orm import Session
 import grape_family
 from display import iso
 import grapes as grape_profiles
-from db import Bottle, Place, Producer, Region, RestaurantVisit, TastingNote, Varietal, Wine, WineGrape, get_session
+from db import Bottle, ListItem, Place, Producer, Region, RestaurantVisit, TastingNote, Varietal, Wine, WineGrape, WineList, get_session
 
 router = APIRouter()
-
-
-def parse_lists(raw):
-    """Curated lists are stored like "[The New French Wine,'RP100']": strip brackets and quotes, split."""
-    if not raw:
-        return []
-    items = (i.strip().strip("'\"").strip() for i in raw.strip().strip("[]").split(","))
-    return [i for i in items if i]
 
 
 @router.get("/api/grapes")
@@ -50,15 +42,20 @@ def producers(session: Session = Depends(get_session)):
     bottles = dict(session.query(Wine.producer_id, func.sum(Bottle.qty))
                    .join(Bottle, Bottle.wine_id == Wine.id).filter(Bottle.qty > 0)
                    .group_by(Wine.producer_id).all())
+    # The lists each producer is on (itself, or one of its wines): the Lists filter, a link to each
+    on_lists = {}
+    for pid, lid, lname in (session.query(ListItem.producer_id, WineList.id, WineList.name)
+                            .join(WineList, WineList.id == ListItem.list_id).distinct().order_by(WineList.name)):
+        on_lists.setdefault(pid, []).append({"id": lid, "name": lname})
     rows = (session.query(Producer.id, Producer.name, Region.name, Region.color, Producer.subregion, Producer.village,
-                          Producer.winemaker, Producer.lists, Producer.notes)
+                          Producer.winemaker, Producer.notes)
             .outerjoin(Region, Producer.region_id == Region.id)
             .order_by(Region.name, Producer.subregion, Producer.village, Producer.name).all())
     return [
         {"id": pid, "name": name, "region": region, "color": color, "subregion": subregion, "village": village,
-         "winemaker": winemaker, "lists": parse_lists(lists), "notes": notes,
-         "tastings": tastings.get(pid, 0), "bottles": int(bottles.get(pid) or 0)}
-        for pid, name, region, color, subregion, village, winemaker, lists, notes in rows
+         "winemaker": winemaker, "lists": [x["name"] for x in on_lists.get(pid, [])], "list_refs": on_lists.get(pid, []),
+         "notes": notes, "tastings": tastings.get(pid, 0), "bottles": int(bottles.get(pid) or 0)}
+        for pid, name, region, color, subregion, village, winemaker, notes in rows
     ]
 
 
