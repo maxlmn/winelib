@@ -71,12 +71,6 @@
 				{ label: 'Importers', value: p.importers }
 			]}
 		/>
-		{#if p.lists.length}
-			<div class="block">
-				<div class="caption">Lists</div>
-				<div class="chips">{#each p.lists as l (l)}<span class="chip">{l}</span>{/each}</div>
-			</div>
-		{/if}
 		{#if p.description}
 			<div class="block">
 				<div class="caption">Description</div>
@@ -186,18 +180,6 @@
 		padding: 10px 14px;
 		border-radius: 8px;
 		background: var(--accent-soft);
-	}
-	.chips {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 6px;
-	}
-	.chip {
-		padding: 2px 10px;
-		border-radius: 12px;
-		background: var(--surface-2);
-		border: 1px solid var(--border);
-		font-size: 12px;
 	}
 	.map-card {
 		display: grid;

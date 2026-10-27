@@ -152,13 +152,11 @@ def producer_detail(producer_id: int, session: Session = Depends(get_session)):
     lines = cellar_lines(session, "producer_id", [producer_id])
     appellations, vineyards = _places_of(session, wines)
     history = tastings(session, Wine.producer_id == producer_id)
-    lists = [x.strip(" '\"") for x in (p.lists or "").strip("[]").split(",") if x.strip(" '\"")]
     return {
         "id": p.id, "name": p.name, **_region(p), "subregion": p.subregion, "village": p.village,
         "winemaker": p.winemaker, "owner": p.owner, "type": p.type, "importers": p.importers,
         "description": p.description, "notes": p.notes, "website": p.website, "profile_url": p.profile_url,
         "aliases": p.aliases,
-        "lists": lists,
         "stats": {**_cellar_totals(lines), "tastings": len(history), "wines": len(wines)},
         "wines": wine_catalog(session, wines),
         "appellations": appellations,

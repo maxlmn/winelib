@@ -25,12 +25,12 @@
 	<p class="muted">No wines recorded.</p>
 {:else}
 	<p class="legend muted">
-		<span class="chip owned sample">n</span> bottles in cellar
-		<span class="chip tasted sample">✓</span> tasted
-		<span class="chip sample"><span class="score">94</span></span> critic
-		<span class="chip sample"><span class="listed"><Icon name="bookmark" size={11} /></span></span> on a list
+		<span class="item"><span class="chip owned sample">n</span> bottles in cellar</span>
+		<span class="item"><span class="chip tasted sample">✓</span> tasted</span>
+		<span class="item"><span class="chip sample"><span class="score">94</span></span> critic</span>
+		<span class="item"><span class="chip sample"><span class="listed"><Icon name="bookmark" size={11} /></span></span> on a list</span>
 		{#if unseen}
-			<span class="chip sample">–</span> neither (a review only)
+			<span class="item"><span class="chip sample">–</span> neither (a review only)</span>
 			<label class="toggle">
 				<input type="checkbox" bind:checked={showAll} />
 				Show {unseen} not owned, not tasted
@@ -89,15 +89,20 @@
 {/if}
 
 <style>
+	/* wraps on a narrow screen, each sample beside its words */
 	.legend {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
-		gap: 6px;
+		gap: 6px 14px;
 		font-size: 12px;
 		margin: 0 0 10px;
 	}
-	.legend .sample {
-		margin-left: 8px;
+	.legend .item {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		white-space: nowrap;
 	}
 	.toggle {
 		margin-left: auto;
