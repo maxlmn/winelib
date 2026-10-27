@@ -4,8 +4,9 @@
 
 	/** A list's progress as bottle ends, one per entry: filled in its region's colour once tasted (the wine's colour as
 	 * the cork), a ring until then; a ring with a cork dot when owned but not yet tasted. */
-	let { dots, size = 14 }: { dots: { tasted: boolean; owned: boolean; region: string | null; color: string | null }[]; size?: number } =
-		$props();
+	import type { Dot } from '#lib/api/lists.ts';
+
+	let { dots, size = 14 }: { dots: Dot[]; size?: number } = $props();
 </script>
 
 <span class="dots" style:--d="{size}px" aria-hidden="true">
