@@ -9,6 +9,11 @@ bottles: how many, their size, the purchase price and date, the vendor, the prov
 brought it) and the **location**. A location
 named after a storage group's prefix (`H4` for Home's prefix `H`) goes in that group's bin 4.
 
+A new wine can start from a link: paste its page at a shop or on Vivino in **Fill from a link** (at the top of the new
+wine's fields), and its producer, cuvée, vintage, colour and appellation are filled in; a cuvée you already have
+brings its spelling, grapes and LWIN, as a new vintage of it. The page's picture and price show beside, to check. Some
+shops don't let apps read their pages: then fill it in by hand.
+
 ## The views
 
 - **Cards** and **List**: every line in stock, with its value (the list sorts by any column).

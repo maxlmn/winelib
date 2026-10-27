@@ -3,6 +3,7 @@
 	import { untrack } from 'svelte';
 	import Combobox from './Combobox.svelte';
 	import Field from './Field.svelte';
+	import LinkFill from './LinkFill.svelte';
 	import TypePicker from './TypePicker.svelte';
 	import { emptyGrape, lookup, num } from '#lib/api/forms.ts';
 	import type { Choice, Options, ProducerOption, WineDraft } from '#lib/api/forms.ts';
@@ -14,10 +15,12 @@
 		errors?: Record<string, string>;
 		/** fold the less used fields away (inline creation inside another form) */
 		compact?: boolean;
+		/** a new wine: offer Fill from a link above the fields */
+		fromLink?: boolean;
 	}
 
 	/** The wine's own fields; producer, appellation, varietal and region can be new. */
-	let { value = $bindable(), options, prefix, errors = {}, compact = false }: Props = $props();
+	let { value = $bindable(), options, prefix, errors = {}, compact = false, fromLink = false }: Props = $props();
 
 	// A new vintage carries the blend, LWIN and drinking window over: show them
 	const hasMore = untrack(() => !!(value.blend || value.lwin || value.drink_window_start || value.drink_window_end));
@@ -87,6 +90,7 @@
 </script>
 
 <div class="grid">
+	{#if fromLink}<LinkFill bind:value {prefix} />{/if}
 	<Field label="Producer" for="{prefix}-producer" required error={errors.producer}>
 		<Combobox
 			id="{prefix}-producer"

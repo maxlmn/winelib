@@ -41,6 +41,6 @@
 		: undefined}
 >
 	<Section title="Wine">
-		<WineFields bind:value={draft} {options} prefix="w" {errors} />
+		<WineFields bind:value={draft} {options} prefix="w" {errors} fromLink={!wine} />
 	</Section>
 </FormPage>
