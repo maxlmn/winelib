@@ -145,8 +145,6 @@ class Wine(Base):
     inventory = relationship("Bottle", back_populates="wine")
     # Critics' scores, one per critic (loaded with the wine: pages and lists show them)
     scores = relationship("CriticScore", back_populates="wine", cascade="all, delete-orphan", lazy="selectin")
-    # On the wishlist (one entry at most): gone with the wine
-    wishlist = relationship("WishlistItem", back_populates="wine", cascade="all, delete-orphan", uselist=False)
 
     def set_grapes(self, grapes):
         """Its grapes from [(Varietal, share or None)] in order: rows kept where the grape stays (the unique pair is
@@ -353,30 +351,6 @@ class ReferenceKey(Base):
     __table_args__ = (UniqueConstraint('table_name', 'key', name='uq_reference_keys_table_key'),)
 
 
-class WishlistItem(Base):
-    """A wine you'd like to have: its size, where to find it, a note. Its market price has a bottle's columns
-    (bottle_size, currency, last_price...), so tasks.update_market_prices prices it like one."""
-    __tablename__ = 'wishlist'
-    id = Column(Integer, primary_key=True)
-    wine_id = Column(Integer, ForeignKey('wines.id', ondelete='CASCADE'), nullable=False, unique=True)
-    # Any vintage of the cuvée will do (the wine is the one priced and shown)
-    any_vintage = Column(Boolean, nullable=False, default=False)
-    bottle_size = Column(String, default="75cl")
-    currency = Column(String)  # its market price's: the main currency when it was added (Settings)
-    note = Column(Text)
-    url = Column(String)  # where to find it
-    added = Column(Date)
-    last_price = Column(Float)  # its market price, in `currency`
-    last_price_date = Column(Date)
-    last_price_source = Column(String)
-    wine = relationship("Wine", back_populates="wishlist")
-
-    @property
-    def price(self):
-        """What a fetched price is checked against besides the last one (a bottle's purchase price): nothing."""
-        return None
-
-
 class WineList(Base):
     """A list of wines to find and taste: Noble Rot's wines of the decade, a critic's top 100, every cuvée of a
     producer. Its entries can be wines, cuvées (any vintage) and producers, mixed."""
@@ -387,6 +361,8 @@ class WineList(Base):
     source = Column(String)  # who made it: "Noble Rot", "The Wine Advocate"
     url = Column(String)  # where it was published
     created = Column(Date)
+    # the wishlist: the list the wine page's Wishlist button adds to (one at most)
+    is_wishlist = Column(Boolean, nullable=False, default=False)
     items = relationship("ListItem", back_populates="list", cascade="all, delete-orphan", order_by="ListItem.position")
 
 

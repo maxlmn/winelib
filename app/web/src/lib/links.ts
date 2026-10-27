@@ -15,7 +15,6 @@ export const links = {
 	cellar: (query?: Query) => withQuery('/cellar', query),
 	/** the cellar as a printable wine list (the cellar's filters as its query) */
 	wineList: () => '/cellar/list',
-	wishlist: () => '/wishlist',
 	lists: () => '/lists',
 	list: (id: Id) => `/lists/${id}`,
 	tastings: (query?: Query) => withQuery('/tastings', query),

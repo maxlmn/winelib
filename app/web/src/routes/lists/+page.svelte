@@ -6,11 +6,14 @@
 
 	let { data } = $props();
 
-	// Closest to done first, then the most tasted, then by name
+	// The wishlist first, then the closest to done, the most tasted, by name
 	const lists = $derived(
 		[...data.lists].sort(
 			(a, b) =>
-				(b.entries ? b.tasted / b.entries : 0) - (a.entries ? a.tasted / a.entries : 0) || b.tasted - a.tasted || a.name.localeCompare(b.name)
+				Number(b.is_wishlist) - Number(a.is_wishlist) ||
+				(b.entries ? b.tasted / b.entries : 0) - (a.entries ? a.tasted / a.entries : 0) ||
+				b.tasted - a.tasted ||
+				a.name.localeCompare(b.name)
 		)
 	);
 	const pct = (l: { tasted: number; entries: number }) => (l.entries ? Math.round((100 * l.tasted) / l.entries) : 0);
@@ -62,7 +65,7 @@
 		{#each lists as l (l.id)}
 			<a class="list card" href={links.list(l.id)}>
 				<div class="head">
-					<h2>{l.name}</h2>
+					<h2>{#if l.is_wishlist}<span class="star" aria-hidden="true">★</span> {/if}{l.name}</h2>
 					{#if milestone(l)}<span class="badge" class:done={l.tasted === l.entries}>{milestone(l)}</span>{/if}
 				</div>
 				{#if l.source}<div class="muted source">{l.source}</div>{/if}
@@ -136,6 +139,10 @@
 	h2 {
 		margin: 0;
 		font-size: 17px;
+	}
+	.star {
+		color: var(--accent);
+		margin-right: 4px;
 	}
 	.source {
 		margin-top: -6px;

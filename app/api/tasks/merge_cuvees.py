@@ -35,7 +35,7 @@ def _empty(value):
 
 def carry(twin, w):
     """Gives the twin what w has and it lacks: the CARRIED fields, each critic's score (with its note, link and
-    date) the twin has none from, its wishlist entry and its list entries."""
+    date) the twin has none from, and its list entries."""
     for field in CARRIED:
         if _empty(getattr(twin, field)) and not _empty(getattr(w, field)):
             setattr(twin, field, getattr(w, field))
@@ -43,9 +43,6 @@ def carry(twin, w):
         mine = twin.score_of(s.critic)
         if mine is None or (_empty(mine.score) and not _empty(s.score)):
             twin.set_score(s.critic, s.score, s.note, s.url, s.date)
-    if w.wishlist is not None and twin.wishlist is None:  # its wishlist entry follows it
-        item, w.wishlist = w.wishlist, None
-        twin.wishlist = item
     from sqlalchemy.orm import object_session
     from models import ListItem
     session = object_session(w)

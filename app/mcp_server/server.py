@@ -26,7 +26,8 @@ mcp = MCPServer(
     name="WineLib",
     instructions=(
         "WineLib is the user's wine cellar and tasting journal. Use these tools to answer questions about the bottles "
-        "they own (and where they are), the wines they've tasted (when, where, their score and notes), their wishlist, "
+        "they own (and where they are), the wines they've tasted (when, where, their score and notes), their lists "
+        "(wishlist, critics' lists, classifications) and progress on them, "
         "and wine regions. Wines, producers and places have ids: pass them to wine() for the details. Scores like "
         "'RP 95' are critics' (RP: Robert Parker); a tasting's rating is the user's own, out of 100. Everything here is "
         "read-only."
@@ -148,13 +149,38 @@ def tastings(query: str = "", since: str = "", place: str = "", min_rating: int 
     return {"tastings": len(rows), "shown": rows[:limit]}
 
 
+def _entries(detail):
+    return [{"entry": i["kind"], "producer": (i.get("producer") or {}).get("name"),
+             "wine": (i.get("wine") or {}).get("cuvee") if i["kind"] != "producer" else None,
+             "vintage": (i.get("wine") or {}).get("vintage") if i["kind"] == "wine" else None,
+             "wine_id": (i.get("wine") or {}).get("id"), "region": i.get("region"), "note": i.get("note"),
+             "tasted": i["tasted"], "last_tasted": i.get("last_tasted"), "best_rating": i.get("best_rating"),
+             "owned": i["owned"]} for i in detail["items"]]
+
+
+@mcp.tool(annotations=READ)
+def lists(name: str = "") -> dict:
+    """The user's lists of wines to find and taste (a critic's top 100, Noble Rot's wines of the decade, a
+    classification, their wishlist...): each with its progress. With a name (or part of it), that list's entries:
+    a wine (that vintage), a cuvée (any vintage) or a producer (any of its wines), each tasted or not (from the
+    user's tastings), the bottles owned, and its note (often a rank or a tier)."""
+    found = get("/api/lists")
+    if not name:
+        return {"lists": [{k: lst.get(k) for k in ("id", "name", "source", "entries", "tasted", "owned", "is_wishlist")}
+                          for lst in found]}
+    match = [lst for lst in found if fold(name) in fold(lst["name"])]
+    if not match:
+        return {"error": f"No list named like “{name}”", "lists": [lst["name"] for lst in found]}
+    d = get(f"/api/lists/{match[0]['id']}")
+    return {k: d.get(k) for k in ("name", "source", "description", "entries", "tasted", "owned")} | {"items": _entries(d)}
+
+
 @mcp.tool(annotations=READ)
 def wishlist() -> list[dict]:
-    """The wines the user would like: each with a note, where to find it, its market price when known, and how many
-    bottles of it they already have."""
-    return [{"wine_id": i["wine_id"], "wine": wine_name(i), "any_vintage": i["any_vintage"], "appellation": i.get("appellation"),
-             "region": i.get("region"), "note": i.get("note"), "url": i.get("url"), "market": i.get("market"),
-             "currency": i.get("currency"), "owned": i["owned"]} for i in get("/api/wishlist")["items"]]
+    """The wines the user would like (their wishlist, one of their lists): each tasted or not, owned or not, with
+    its note."""
+    wl = next((lst for lst in get("/api/lists") if lst.get("is_wishlist")), None)
+    return _entries(get(f"/api/lists/{wl['id']}")) if wl else []
 
 
 @mcp.tool(annotations=READ)

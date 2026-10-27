@@ -40,6 +40,8 @@ export interface ListSummary {
 	tasted: number;
 	owned: number;
 	kinds: EntryKind[];
+	/** the wishlist: the list the wine page's Wishlist button adds to */
+	is_wishlist: boolean;
 }
 
 export interface ListCard extends ListSummary {
@@ -78,6 +80,8 @@ export const listsOf = (fetch: Fetch, of: { wine_id: number } | { producer_id: n
 
 export const createList = (body: ListIn) => send<{ id: number }>('POST', '/api/lists', body);
 export const editList = (id: number, body: ListIn) => send<{ id: number }>('PUT', `/api/lists/${id}`, body);
+/** The wishlist's id, made on first use */
+export const wishlistId = () => send<{ id: number }>('POST', '/api/lists/wishlist').then((r) => r.id);
 export const deleteList = (id: number) => send<{ deleted: number }>('DELETE', `/api/lists/${id}`);
 export const addEntry = (id: number, body: { kind: EntryKind; wine_id?: number; producer_id?: number; note?: string | null }) =>
 	send<{ id: number; existing: boolean }>('POST', `/api/lists/${id}/items`, body);

@@ -4,8 +4,12 @@
 
 - **Wine list**: the cellar, or a selection from its filters, laid out like a restaurant's list (sparkling to
   sweet, by region and appellation, a cuvée's vintages on one line, no prices), to print or save as a PDF.
-- **Wishlist**: the wines you'd like, from a wine's page or the list's own search (a wine not in WineLib yet is
-  created there); size, any vintage, a note, where to find it; its market price comes with the cellar's.
+- **Lists**: wines to find and taste (a critic's top 100, a classification, your wishlist); entries are wines,
+  cuvées (any vintage) or producers, mixed, each ticked once tasted, sorted by note (ranks, tiers); on the wine and
+  producer pages; printed as a wine list or a checklist. The wishlist is one of them (☆ Wishlist on a wine's page).
+- **Fill a wine from a link**: a shop's or Vivino's page fills the new wine's fields.
+- **Installable on a phone** (Add to Home Screen).
+- **An MCP server**: Claude or another assistant reads your cellar, journal and lists (app/mcp_server).
 - The README opens on a short demo clip.
 
 ## v0.1.0
