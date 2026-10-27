@@ -1,5 +1,4 @@
 <script lang="ts">
-	import CriticPills from '#lib/components/CriticPills.svelte';
 	import { FALLBACK_REGION } from '#lib/colors.ts';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
 	import { regionColor, regionLabel } from '#lib/regions.svelte.ts';
@@ -8,8 +7,6 @@
 	import Change from '#lib/components/Change.svelte';
 	import { pct, plural, money } from '#lib/format.ts';
 	import WhatToOpen from '#lib/components/home/WhatToOpen.svelte';
-	import { windowLabel } from '#lib/maturity.ts';
-	import MaturityBadge from '#lib/components/MaturityBadge.svelte';
 	import CellarCards from '#lib/components/CellarCards.svelte';
 	import HomeMap from '#lib/components/home/HomeMap.svelte';
 	import OccasionCard from '#lib/components/tastings/OccasionCard.svelte';
@@ -43,11 +40,6 @@
 		return h < 5 ? 'Good evening' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
 	})();
 
-	// Without a cuvée name: the appellation and grape instead
-	const wineName = (w: { producer: string; cuvee: string; appellation: string | null; varietal: string | null }) => {
-		const label = w.cuvee || [w.appellation, w.varietal].filter(Boolean).join(' · ');
-		return label ? `${w.producer} – ${label}` : w.producer;
-	};
 	const since = (iso: string | null) => {
 		if (!iso) return 'never opened';
 		const years = (Date.parse(d.today) - Date.parse(iso)) / (365.25 * 86_400_000);
@@ -115,60 +107,31 @@
 {/if}
 
 <div class="drink">
-	<section class="card soon">
-		<div class="sec-head">
-			<h2>Drink soon</h2>
-			<a class="more" href={links.cellar({ view: 'list' })}>The cellar →</a>
-		</div>
-		{#if d.drink_soon.lines.length}
-			<ul class="soon-list">
-				{#each d.drink_soon.lines as l (l.bottle_id)}
-					<li>
-						<span class="end"><BottleEnd region={regionColor(l.region)} color={l.color} format={l.format} size={11} title="{regionLabel(l.region)} · {l.color ?? ''}" /></span>
-						<div class="p-main">
-							<a href={links.bottle(l.bottle_id)}>{wineName(l)}</a> <span class="muted num">{l.vintage}</span>
-							<CriticPills scores={l.scores} />
-							<div class="muted small">
-								<span class="loc">{l.location}</span> · drink {windowLabel(l.drink_from, l.drink_to)}
-								<span class="mosaic" title={plural(l.qty, 'bottle')}>
-									{#each times(l.qty) as i (i)}<BottleEnd region={regionColor(l.region)} color={l.color} format={l.format} size={8} />{/each}
-								</span>
-							</div>
-						</div>
-						<span class="when"><MaturityBadge maturity={l.maturity} from={l.drink_from} to={l.drink_to} left={l.years_left} /></span>
-					</li>
+	<WhatToOpen bottles={data.cellar.bottles} totals={d.drink_soon.bottles} />
+	{#if d.nudges.length}
+		<section class="card nudges">
+			<h2>Waiting in the cellar</h2>
+			<p class="muted">Regions you hold bottles from but haven't opened anything from in over a year.</p>
+			<div class="chips">
+				{#each d.nudges as n (n.region)}
+					<a class="nudge" href={links.region(n.region)} style:--c={n.color ?? FALLBACK_REGION}>
+						<b>{regionLabel(n.region)}</b>
+						<span class="mosaic" title={plural(n.bottles, 'bottle')}>
+							{#each times(n.bottles) as i (i)}<BottleEnd region={n.color ?? FALLBACK_REGION} color={null} size={9} />{/each}
+							{#if n.bottles > MOSAIC}<span class="muted more-n num">+{n.bottles - MOSAIC}</span>{/if}
+						</span>
+						<span class="muted">{plural(n.bottles, 'bottle')} · {since(n.last_tasted)}</span>
+					</a>
 				{/each}
-			</ul>
-		{:else}
-			<p class="muted small">No drinking windows yet: set one on a wine (Edit wine).</p>
-		{/if}
-		<p class="muted small totals">
-			{d.drink_soon.bottles.ready} bottles ready · {d.drink_soon.bottles.young} too young · {d.drink_soon.bottles.past} past
-			{#if d.drink_soon.bottles.unknown} · {d.drink_soon.bottles.unknown} without a window{/if}
-		</p>
-	</section>
-	<WhatToOpen bottles={data.cellar.bottles} />
+			</div>
+		</section>
+	{/if}
 </div>
 
-{#if d.nudges.length}
-	<section class="card nudges">
-		<h2>Waiting in the cellar</h2>
-		<p class="muted">Regions you hold bottles from but haven't opened anything from in over a year.</p>
-		<div class="chips">
-			{#each d.nudges as n (n.region)}
-				<a class="nudge" href={links.region(n.region)} style:--c={n.color ?? FALLBACK_REGION}>
-					<b>{regionLabel(n.region)}</b>
-					<span class="mosaic" title={plural(n.bottles, 'bottle')}>
-						{#each times(n.bottles) as i (i)}<BottleEnd region={n.color ?? FALLBACK_REGION} color={null} size={9} />{/each}
-						{#if n.bottles > MOSAIC}<span class="muted more-n num">+{n.bottles - MOSAIC}</span>{/if}
-					</span>
-					<span class="muted">{plural(n.bottles, 'bottle')} · {since(n.last_tasted)}</span>
-				</a>
-			{/each}
-		</div>
-	</section>
-{/if}
 
+
+<!-- Without any purchase dates (none recorded), there's nothing recent to show -->
+{#if recentBottles.length || !data.cellar.bottles.length}
 <section class="card purchases-card">
 	<div class="sec-head">
 		<h2>Recent purchases <span class="muted num">{plural(recentQty, 'bottle')}</span></h2>
@@ -180,6 +143,7 @@
 		<p class="muted">No purchases yet. <a class="more" href={links.newBottle()}>Add one</a></p>
 	{/if}
 </section>
+{/if}
 
 <style>
 	.page-head {
@@ -231,6 +195,10 @@
 		font-size: 15px;
 		margin: 0;
 	}
+	.drink .nudges {
+		margin-bottom: 0;
+		align-self: start;
+	}
 	.nudges p {
 		margin: 4px 0 10px;
 		font-size: 12px;
@@ -273,35 +241,6 @@
 	}
 	.more:hover {
 		color: var(--accent);
-	}
-	.when {
-		margin-left: auto;
-		font-size: 12px;
-	}
-	ul {
-		list-style: none;
-		margin: 4px 0 0;
-		padding: 0;
-		font-size: 13px;
-	}
-	.end {
-		display: flex;
-		flex: none;
-		align-self: center;
-	}
-	.p-main {
-		flex: 1;
-		min-width: 0;
-	}
-	.loc {
-		margin-left: 6px;
-		padding: 1px 6px;
-		border-radius: 4px;
-		background: var(--surface-2);
-		font-size: 12px;
-	}
-	.small {
-		font-size: 12px;
 	}
 	.top {
 		display: grid;
@@ -354,27 +293,5 @@
 		grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
 		gap: 14px;
 		margin-bottom: 14px;
-	}
-	.soon {
-		padding: 16px 18px;
-	}
-	.soon-list {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-	}
-	.soon-list li {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		padding: 6px 0;
-		border-top: 1px solid var(--border);
-		font-size: 13px;
-	}
-	.when {
-		flex: none;
-	}
-	.totals {
-		margin: 8px 0 0;
 	}
 </style>

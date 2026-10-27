@@ -170,19 +170,21 @@ def lists(session: Session = Depends(get_session)):
 
 @router.get("/api/lists/in-cellar")
 def in_cellar(session: Session = Depends(get_session)):
-    """What the lists ask you to taste that's already in the cellar: per wine owned, the lists naming it (that
-    vintage, its cuvée, or its producer) whose entry isn't ticked yet. "What should I open?" suggests them first."""
+    """The lists naming the wines in the cellar: per wine owned, each list naming it (that vintage, its cuvée, or its
+    producer), "waiting" when its entry isn't ticked yet: "What should I open?" suggests those first."""
     found = _lists(session)
     facts = _facts_for(session, found)
-    out = defaultdict(list)
+    out = defaultdict(dict)
     for lst in found:
         for i in lst.items:
-            if facts.status(i)["tasted"]:
-                continue
+            waiting = not facts.status(i)["tasted"]
             for wid in facts.wines_of(i):
-                if facts.owned.get(wid) and not any(x["list_id"] == lst.id for x in out[wid]):
-                    out[wid].append({"list_id": lst.id, "list": lst.name, "note": i.note, "as": i.kind})
-    return dict(out)
+                if not facts.owned.get(wid):
+                    continue
+                had = out[wid].get(lst.id)
+                if had is None or (waiting and not had["waiting"]):
+                    out[wid][lst.id] = {"list_id": lst.id, "list": lst.name, "note": i.note, "as": i.kind, "waiting": waiting}
+    return {wid: sorted(by_list.values(), key=lambda x: (not x["waiting"], x["list"])) for wid, by_list in out.items()}
 
 
 @router.post("/api/lists/wishlist")
