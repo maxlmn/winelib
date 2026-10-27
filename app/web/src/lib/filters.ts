@@ -10,15 +10,17 @@ export interface Filters {
 	appellation: string[];
 	/** any of the wine's grapes */
 	grape: string[];
+	/** any of its style tags */
+	style: string[];
 	group: string[];
 	loc: string[];
 }
 
-const LIST_KEYS = ['color', 'region', 'producer', 'vintage', 'appellation', 'grape', 'group', 'loc'] as const;
+const LIST_KEYS = ['color', 'region', 'producer', 'vintage', 'appellation', 'grape', 'style', 'group', 'loc'] as const;
 export type ListKey = (typeof LIST_KEYS)[number];
 
 export function emptyFilters(): Filters {
-	return { q: '', color: [], region: [], producer: [], vintage: [], appellation: [], grape: [], group: [], loc: [] };
+	return { q: '', color: [], region: [], producer: [], vintage: [], appellation: [], grape: [], style: [], group: [], loc: [] };
 }
 
 type Params = Pick<URLSearchParams, 'get' | 'getAll' | 'toString'>;
@@ -50,13 +52,14 @@ export function filterWines(bottles: Bottle[], f: Filters): Bottle[] {
 	const q = f.q.trim().toLowerCase();
 	return bottles.filter(
 		(b) =>
-			(!q || [b.producer, b.cuvee, b.appellation, ...b.grapes].some((s) => s?.toLowerCase().includes(q))) &&
+			(!q || [b.producer, b.cuvee, b.appellation, ...b.grapes, ...(b.tags ?? [])].some((s) => s?.toLowerCase().includes(q))) &&
 			inList(f.color, b.color) &&
 			inList(f.region, b.region) &&
 			inList(f.producer, b.producer) &&
 			inList(f.vintage, b.vintage) &&
 			inList(f.appellation, b.appellation) &&
-			anyIn(f.grape, b.grapes)
+			anyIn(f.grape, b.grapes) &&
+			anyIn(f.style, b.tags ?? [])
 	);
 }
 
@@ -79,6 +82,13 @@ export function options(bottles: Bottle[], key: keyof Bottle): { value: string; 
 export function grapeOptions(bottles: Bottle[]): { value: string; count: number }[] {
 	const counts = new Map<string, number>();
 	for (const b of bottles) for (const g of b.grapes) counts.set(g, (counts.get(g) ?? 0) + b.qty);
+	return [...counts].map(([value, count]) => ({ value, count })).sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
+}
+
+/** Each style tag with the bottles of the wines carrying it, most common first. */
+export function styleOptions(bottles: Bottle[]): { value: string; count: number }[] {
+	const counts = new Map<string, number>();
+	for (const b of bottles) for (const t of b.tags ?? []) counts.set(t, (counts.get(t) ?? 0) + b.qty);
 	return [...counts].map(([value, count]) => ({ value, count })).sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
 }
 

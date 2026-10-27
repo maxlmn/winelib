@@ -9,7 +9,9 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
+import list_query
 from db import Bottle, ListItem, Producer, TastingNote, Wine, WineList, get_session
+from list_query import Criteria
 from display import iso, vintage_label
 
 router = APIRouter()
@@ -21,6 +23,9 @@ class ListIn(BaseModel):
     description: str | None = None
     source: str | None = None
     url: str | None = None
+    # made from criteria: once (the matching wines become its entries), or live (it keeps them: `live`)
+    criteria: Criteria | None = None
+    live: bool = False
 
 
 class ItemIn(BaseModel):
@@ -122,13 +127,28 @@ def item_json(item, facts):
     }
 
 
-def summary(lst, facts):
-    statuses = [facts.status(i) for i in lst.items]
+def items_of(session, lst):
+    """A list's entries: those stored, or a live list's, made from its criteria now (kept for the request)."""
+    if not lst.criteria:
+        return lst.items
+    cache = session.info.setdefault("live_items", {})
+    if lst.id not in cache:
+        cache[lst.id] = list_query.entries(list_query.matching(session, list_query.load(lst.criteria)))
+    return cache[lst.id]
+
+
+def summary(lst, facts, items=None):
+    items = lst.items if items is None else items
+    statuses = [facts.status(i) for i in items]
     tasted = sum(s["tasted"] for s in statuses)
+    criteria = list_query.load(lst.criteria)
     return {"id": lst.id, "name": lst.name, "description": lst.description, "source": lst.source, "url": lst.url,
             "is_wishlist": bool(lst.is_wishlist),
             "entries": len(statuses), "tasted": tasted, "owned": sum(1 for s in statuses if s["owned"]),
-            "kinds": sorted({i.kind for i in lst.items})}
+            "kinds": sorted({i.kind for i in items}),
+            # a live list: its criteria, and in words
+            "criteria": criteria.model_dump() if criteria else None,
+            "live": list_query.describe(criteria) if criteria else None}
 
 
 def _lists(session, *filters):
@@ -147,7 +167,7 @@ def _get(session, list_id):
 
 
 def _facts_for(session, lists):
-    return Facts(session, {i.producer_id for lst in lists for i in lst.items})
+    return Facts(session, {i.producer_id for lst in lists for i in items_of(session, lst)})
 
 
 @router.get("/api/lists")
@@ -157,9 +177,10 @@ def lists(session: Session = Depends(get_session)):
     facts = _facts_for(session, found)
     out = []
     for lst in found:
-        row = summary(lst, facts)
+        items = items_of(session, lst)
+        row = summary(lst, facts, items)
         row["dots"] = []
-        for i in lst.items:
+        for i in items:
             st, region = facts.status(i), _region(i)
             row["dots"].append({"tasted": st["tasted"], "owned": bool(st["owned"]), "region": region.name if region else None,
                                 "color": i.wine.type if i.wine and i.kind != "producer" else None, "note": i.note,
@@ -203,7 +224,17 @@ def wishlist(session: Session = Depends(get_session)):
 def list_detail(list_id: int, session: Session = Depends(get_session)):
     lst = _get(session, list_id)
     facts = _facts_for(session, [lst])
-    return {**summary(lst, facts), "items": [item_json(i, facts) for i in lst.items]}
+    items = items_of(session, lst)
+    return {**summary(lst, facts, items), "items": [item_json(i, facts) for i in items]}
+
+
+@router.post("/api/lists/preview")
+def preview(criteria: Criteria, session: Session = Depends(get_session)):
+    """The wines some criteria take: how many, and the first ones by name (the New list form, the MCP server)."""
+    wines = list_query.matching(session, criteria)
+    return {"count": len(wines), "describe": list_query.describe(criteria),
+            "wines": [{"id": w.id, "label": " ".join(x for x in (w.producer.name if w.producer else "", w.cuvee, w.vintage) if x),
+                       "color": w.type, "region": w.region_obj.name if w.region_obj else None} for w in wines[:60]]}
 
 
 def _fill(lst, data: ListIn):
@@ -220,8 +251,16 @@ def create(data: ListIn, session: Session = Depends(get_session)):
     lst = WineList(created=date.today())
     _fill(lst, data)
     session.add(lst)
+    added = 0
+    if data.criteria is not None and not data.criteria.empty():
+        if data.live:  # it keeps its criteria
+            lst.criteria = list_query.dump(data.criteria)
+        else:  # made once: the matching wines become its entries
+            for i, w in enumerate(list_query.matching(session, data.criteria)):
+                session.add(ListItem(list=lst, kind="wine", wine_id=w.id, producer_id=w.producer_id, position=i + 1))
+                added += 1
     session.commit()
-    return {"id": lst.id}
+    return {"id": lst.id, "added": added}
 
 
 @router.put("/api/lists/{list_id}")
@@ -231,6 +270,10 @@ def edit(list_id: int, data: ListIn, session: Session = Depends(get_session)):
     if other:
         raise HTTPException(409, f"There's already a list named “{data.name.strip()}”")
     _fill(lst, data)
+    if "criteria" in data.model_fields_set and lst.criteria:  # a live list's criteria changed
+        if data.criteria is None or data.criteria.empty():
+            raise HTTPException(422, "A live list needs at least one criterion")
+        lst.criteria = list_query.dump(data.criteria)
     session.commit()
     return {"id": lst.id}
 
@@ -246,6 +289,8 @@ def remove(list_id: int, session: Session = Depends(get_session)):
 def add_item(list_id: int, data: ItemIn, session: Session = Depends(get_session)):
     """Adds a wine (that vintage), a cuvée (any vintage of the wine's) or a producer; one already there is kept."""
     lst = _get(session, list_id)
+    if lst.criteria:
+        raise HTTPException(409, "A live list shows what its criteria match: change them, not its entries")
     if data.kind not in KINDS:
         raise HTTPException(422, f"An entry is one of {', '.join(KINDS)}")
     if data.kind == "producer":

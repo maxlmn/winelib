@@ -164,6 +164,10 @@ export interface WineDetail extends RegionInfo {
 	vintages: VintageRef[];
 	/** the lists naming the cuvée, any vintage */
 	cuvee_lists?: string[];
+	/** its style: the tags set on it and its tastings' */
+	tags?: import('./tags.ts').WineTag[];
+	/** the other vintages' tags (suggestions) */
+	cuvee_tags?: string[];
 	/** bottles and tastings of all those vintages */
 	cellar: Bottle[];
 	tastings: Tasting[];

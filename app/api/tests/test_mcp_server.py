@@ -67,7 +67,7 @@ def test_wine_tastings_search(tools):
 def test_two_tools_add_the_rest_read():
     import asyncio
     listed = asyncio.run(server.mcp.list_tools())
-    assert {t.name for t in listed} >= {"search", "cellar", "what_to_open", "wine", "tastings", "lists", "wishlist", "region", "producer"}
+    assert {t.name for t in listed} >= {"search", "cellar", "what_to_open", "wine", "tastings", "lists", "wishlist", "region", "producer", "tags", "find_wines"}
     writes = {t.name for t in listed if not t.annotations.read_only_hint}
     assert writes == {"create_list", "add_to_list", "add_wine", "add_tasting", "add_bottle"}  # the others only read
     assert not any(t.annotations.destructive_hint for t in listed if t.name in writes)  # they only add
@@ -108,12 +108,12 @@ def test_writing_asks_first(tools, client, monkeypatch):
 
     # Declined: nothing written
     ctx = FakeCtx(False)
-    r = asyncio.run(tools.create_list("Wow wines", entries, ctx))
+    r = asyncio.run(tools.create_list("Wow wines", ctx, entries=entries))
     assert r["done"] is False and "Le Clos 2014" in ctx.asked[0]
     assert all(lst["name"] != "Wow wines" for lst in client.get("/api/lists").json())
 
     # Accepted: written, with how to undo it
-    r = asyncio.run(tools.create_list("Wow wines", entries, FakeCtx(True)))
+    r = asyncio.run(tools.create_list("Wow wines", FakeCtx(True), entries=entries))
     assert r["done"] is True and r["added"] == 1 and "Delete the list" in r["undo"]
 
     # A client that can't ask: a preview and a token; only that token (same request) writes
@@ -153,8 +153,10 @@ def test_a_label_to_a_tasting(tools, client, monkeypatch):
     assert not [x for x in tools.search("poyeux 2018") if x["kind"] == "wine"]
 
     # Accepted: the wine (its producer the one there) and the tasting, today, at Mia's
-    r = asyncio.run(tools.add_tasting(FakeCtx(True), new_wine=poyeux, notes="Graphite, cherries", place="@Mia", rating=94))
+    r = asyncio.run(tools.add_tasting(FakeCtx(True), new_wine=poyeux, notes="Graphite, cherries", place="@Mia", rating=94,
+                                      styles=["Fresh", "mineral"]))
     t = client.get(f"/api/tastings/{r['tasting_id']}").json()
+    assert t["styles"] == ["fresh", "mineral"]
     assert (t["date"], t["notes"], t["rating"], t["place"]["type"]) == (date.today().isoformat(), "Graphite, cherries", 94, "Friend's Place")
     assert len([p for p in client.get("/api/lookups/producers", params={"q": "rougeard"}).json()]) == 1  # not doubled
 
@@ -176,3 +178,28 @@ def test_a_label_to_a_tasting(tools, client, monkeypatch):
     r = asyncio.run(tools.add_bottle(FakeCtx(True), wine_id=le_clos, qty=3, location="H2", price=280, currency="EUR"))
     b = client.get(f"/api/bottles/{r['bottle_id']}").json()
     assert (b["qty"], b["location"], b["price"], b["purchase_date"]) == (3, "H2", 280, date.today().isoformat())
+
+
+def test_a_list_from_criteria(tools, client, monkeypatch):
+    """ "My fresh reds": the wines found by their tags, a list made once or kept live, after the user's yes."""
+    import asyncio
+    def post(path, body=None):
+        r = client.post(path, json=body)
+        if r.status_code >= 400:
+            raise ValueError(r.json().get("detail"))
+        return r.json()
+    monkeypatch.setattr(tools, "post", post)
+    le_clos = next(x["id"] for x in tools.search("le clos 2014") if x["kind"] == "wine")
+    client.put(f"/api/wines/{le_clos}/tags", json={"tags": ["fresh"]})
+    fresh = tools.Criteria(tags=["fresh"], colors=["Red"])
+    found = tools.find_wines(fresh)  # (other tests here tag wines too)
+    assert "Clos Rougeard Le Clos 2014" in [w["label"] for w in found["wines"]]
+
+    ctx = FakeCtx(True)
+    r = asyncio.run(tools.create_list("Fresh reds, live", ctx, criteria=fresh, live=True))
+    assert "a live list" in ctx.asked[0] and "Le Clos 2014" in ctx.asked[0]
+    d = client.get(f"/api/lists/{r['list_id']}").json()
+    assert r["live"] is True and d["live"] == "fresh · Red" and d["entries"] == found["count"]
+
+    r = asyncio.run(tools.create_list("Fresh reds", FakeCtx(True), criteria=fresh))
+    assert r["added"] == found["count"] and client.get(f"/api/lists/{r['list_id']}").json()["live"] is None

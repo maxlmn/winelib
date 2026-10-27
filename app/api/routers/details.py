@@ -17,6 +17,7 @@ import geo
 import grapes
 import plugins
 import scores
+import style_tags
 import wiki
 from db import same, Appellation, Bottle, Place, Producer, Region, RestaurantVisit, TastingNote, Varietal, Vineyard, Wine, WineGrape, get_session, same_cuvee
 
@@ -203,6 +204,9 @@ def wine_detail(wine_id: int, session: Session = Depends(get_session)):
         "vintages": vintages,
         # lists naming the cuvée, any vintage (those naming a vintage: on it)
         "cuvee_lists": cuvee_lists.get(list_family(w), []),
+        # its style: the tags set on it and its tastings'; the other vintages' as suggestions
+        "tags": (tags := style_tags.of_wines(session, ids)).get(w.id, []),
+        "cuvee_tags": sorted({t["tag"] for wid, ts in tags.items() if wid != w.id for t in ts}),
         "cellar": cellar_lines(session, "wine_id", ids),
         "tastings": tastings(session, Bottle.wine_id.in_(ids)),
     }

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **Lists from criteria**: a new list filled from your wines matching tags, colours, regions, grapes, vintages, in
+  the cellar or tasted, your rating or words in the name, with how many match as you pick. Made once (they become
+  its entries) or **live** (it keeps the criteria and shows whatever matches today: a wine tagged tomorrow joins it).
+  Through Claude too: "make me a live list of my fresh Loire whites" (`create_list` with criteria, `find_wines`).
+- **Style tags**: a wine's style in a few words (fresh, mineral, full-bodied, for ageing… or your own), set on the
+  wine or picked in a tasting; the wine page gathers them (×3 when three tastings found it), the cellar and *What
+  should I open?* filter by them ("something fresh tonight"), and the cellar's search finds them. The tasting's
+  own tags (Dinner, corked) stay apart: they're the occasion, these are the wine.
 - **What happened to a bottle**: gifted, sold (and for how much), broken or otherwise, not only drunk. "Take some
   out" on a bottle's page takes them off the count, with a date and a note; the bottle page tells its story (drunk,
   gifted...), and each can be undone.

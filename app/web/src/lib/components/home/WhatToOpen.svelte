@@ -27,6 +27,7 @@
 	let listsOnly = $state(false);
 	let color = $state('');
 	let region = $state('');
+	let style = $state(''); // "something fresh tonight"
 	let maxPrice = $state<number | null>(null);
 	let includeYoung = $state(false);
 	let seed = $state(0); // "Another idea" reshuffles the ties
@@ -60,6 +61,7 @@
 	const here = $derived(from === '*' ? bottles : bottles.filter((b) => b.location_group === from));
 	const colors = $derived([...new Set(here.map((b) => b.color).filter(Boolean))].sort() as string[]);
 	const regions = $derived([...new Set(here.map((b) => b.region))].sort((a, b) => a.localeCompare(b)));
+	const styles = $derived([...new Set(here.flatMap((b) => b.tags ?? []))].sort((a, b) => a.localeCompare(b)));
 
 	// A stable pseudo-random order per bottle and seed, to vary the picks among equals
 	const jitter = (id: number) => Math.abs(Math.sin(id * 12.9898 + seed * 78.233)) % 1;
@@ -77,6 +79,7 @@
 		here
 			.filter((b) => !listsOnly || waiting(b))
 			.filter((b) => (!color || b.color === color) && (!region || b.region === region))
+			.filter((b) => !style || (b.tags ?? []).includes(style))
 			.filter((b) => !maxPrice || b.market_base <= maxPrice)
 			.filter((b) => includeYoung || b.maturity !== 'young')
 			.map((b) => ({ b, score: rank(b) + jitter(b.bottle_id) * 0.6 - (waiting(b) ? 4 : 0) }))
@@ -116,6 +119,12 @@
 				<option value="">Any region</option>
 				{#each regions as r (r)}<option value={r}>{regionLabel(r)}</option>{/each}
 			</select>
+			{#if styles.length}
+				<select bind:value={style} aria-label="Style">
+					<option value="">Any style</option>
+					{#each styles as s (s)}<option value={s}>{s}</option>{/each}
+				</select>
+			{/if}
 			<label class="price">
 				up to
 				<input type="number" min="0" step="10" placeholder="any" value={maxPrice ?? ''}

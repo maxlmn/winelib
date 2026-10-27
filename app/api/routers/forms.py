@@ -21,7 +21,8 @@ from display import vineyard_label
 from textsearch import fold, search
 from tasks.matching import is_rose
 from tasks.blends import BLEND_STYLES, blend_style
-from db import same, Appellation, Bottle, BottleEvent, ListItem, Place, Producer, Region, RestaurantVisit, TastingNote, Varietal, Vineyard, Wine, get_session, same_cuvee
+import style_tags
+from db import same, Appellation, Bottle, BottleEvent, TastingTag, WineTag, ListItem, Place, Producer, Region, RestaurantVisit, TastingNote, Varietal, Vineyard, Wine, get_session, same_cuvee
 
 router = APIRouter()
 
@@ -162,6 +163,7 @@ class TastingIn(BaseModel):
     tags: Text = None
     notes: Text = None
     bottle: BottleDetails | None = None  # other wine: the ad-hoc bottle; edit: the tasted bottle's details
+    styles: list[str] | None = None  # the wine's style found ("fresh", "mineral"); None: left as it is
 
 
 class TastingCreate(TastingIn):
@@ -537,6 +539,7 @@ def delete_wine(wine_id: int, session: Session = Depends(get_session)):
     _refuse_if(n, f"This wine still has {n} bottle{'s' * (n != 1)} (in the cellar or tasted): delete them first")
     producer_id = w.producer_id
     session.query(ListItem).filter_by(wine_id=w.id).delete()  # off the lists it was on
+    session.query(WineTag).filter_by(wine_id=w.id).delete()  # and its style tags
     session.delete(w)
     session.commit()
     return {"deleted": wine_id, "producer_id": producer_id}
@@ -575,6 +578,28 @@ def delete_bottle(bottle_id: int, session: Session = Depends(get_session)):
     session.delete(b)
     session.commit()
     return {"deleted": bottle_id, "wine_id": wine_id}
+
+
+# --- Style tags -------------------------------------------------------------------------------
+
+class TagsIn(BaseModel):
+    tags: list[str]
+
+
+@router.get("/api/tags")
+def tags(session: Session = Depends(get_session)):
+    """The style vocabulary, and every tag in use with how many wines carry it."""
+    return {"vocabulary": style_tags.VOCABULARY, "used": style_tags.used(session)}
+
+
+@router.put("/api/wines/{wine_id}/tags")
+def set_wine_tags(wine_id: int, data: TagsIn, session: Session = Depends(get_session)):
+    """The style tags set on a wine by hand (its tastings' are theirs, gathered when shown)."""
+    w = _get(session, Wine, wine_id, "Wine")
+    session.query(WineTag).filter_by(wine_id=w.id).delete()
+    session.add_all(WineTag(wine_id=w.id, tag=t) for t in style_tags.clean(data.tags))
+    session.commit()
+    return {"wine_id": w.id, "tags": style_tags.of_wines(session, [w.id]).get(w.id, [])}
 
 
 # Bottles that leave other than by being drunk (that's a tasting): taken off the count, put back if undone
@@ -626,6 +651,8 @@ def _fill_tasting(session, tn, data: TastingIn):
     tn.location = place.name if place else "Unknown"
     tn.date, tn.rating, tn.glasses, tn.sequence = data.date, data.rating, data.glasses, data.sequence
     tn.tags, tn.notes = data.tags, data.notes
+    if data.styles is not None:
+        tn.styles = [TastingTag(tag=t) for t in style_tags.clean(data.styles)]
 
 
 @router.post("/api/tastings", status_code=201)
@@ -839,7 +866,7 @@ def tasting_form(tasting_id: int, session: Session = Depends(get_session)):
     b = tn.bottle
     return {
         "id": tn.id, "date": tn.date, "rating": tn.rating, "glasses": tn.glasses, "sequence": tn.sequence,
-        "tags": tn.tags, "notes": tn.notes, "place": _place_out(tn.place),
+        "tags": tn.tags, "notes": tn.notes, "place": _place_out(tn.place), "styles": [s.tag for s in tn.styles],
         "source": "other" if b.provenance == AD_HOC or b.location == CONSUMED else "cellar",
         "bottle_id": b.id, "bottle": _bottle_details(b), "wine": wine_summary(b.wine),
     }

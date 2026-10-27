@@ -11,6 +11,7 @@
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
 	import DetailMap from './DetailMap.svelte';
 	import Facts from './Facts.svelte';
+	import WineStyle from './WineStyle.svelte';
 	import CriticScores from './CriticScores.svelte';
 	import Tabs from './Tabs.svelte';
 	import TastingHistory from './TastingHistory.svelte';
@@ -85,6 +86,7 @@
 	aside={hasMap ? map : undefined}
 >
 	<Facts items={facts} />
+	<WineStyle wineId={wine.id} tags={wine.tags ?? []} cuvee={wine.cuvee_tags ?? []} />
 </DetailHeader>
 
 <div class="row">

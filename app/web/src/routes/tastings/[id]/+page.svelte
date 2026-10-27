@@ -84,6 +84,9 @@
 			{/if}
 			{#each critics as s (s.critic)}<div><div class="label">{s.critic}</div><div class="value num">{s.score}</div></div>{/each}
 		</div>
+		{#if t.styles?.length}
+			<div class="tags styles" title="The wine's style, as you found it">{#each t.styles as s (s)}<span class="tag style">{s}</span>{/each}</div>
+		{/if}
 		{#if t.tags}
 			<div class="tags">{#each t.tags.split(',').map((x) => x.trim()).filter(Boolean) as tag}<span class="tag">{tag}</span>{/each}</div>
 		{/if}
@@ -268,6 +271,11 @@
 		padding: 1px 8px;
 		border-radius: 10px;
 		background: var(--surface-2);
+	}
+	.tag.style {
+		background: none;
+		border: 1px solid var(--accent);
+		color: var(--accent);
 	}
 	.photo {
 		display: block;

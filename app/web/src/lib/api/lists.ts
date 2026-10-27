@@ -42,6 +42,36 @@ export interface ListSummary {
 	kinds: EntryKind[];
 	/** the wishlist: the list the wine page's Wishlist button adds to */
 	is_wishlist: boolean;
+	/** a live list's criteria (its entries are what matches today), and in words */
+	criteria: Criteria | null;
+	live: string | null;
+}
+
+/** Which of your wines a list takes (list_query.py) */
+export interface Criteria {
+	tags: string[];
+	tags_all: boolean;
+	colors: string[];
+	regions: string[];
+	grapes: string[];
+	vintage_from: number | null;
+	vintage_to: number | null;
+	where: 'any' | 'cellar' | 'tasted';
+	min_rating: number | null;
+	text: string;
+}
+
+export const emptyCriteria = (): Criteria => ({
+	tags: [], tags_all: false, colors: [], regions: [], grapes: [], vintage_from: null, vintage_to: null, where: 'any',
+	min_rating: null, text: ''
+});
+
+export const hasCriteria = (c: Criteria) => JSON.stringify(c) !== JSON.stringify(emptyCriteria());
+
+export interface CriteriaPreview {
+	count: number;
+	describe: string;
+	wines: { id: number; label: string; color: string | null; region: string | null }[];
 }
 
 export interface ListCard extends ListSummary {
@@ -64,6 +94,9 @@ export interface ListIn {
 	description: string | null;
 	source: string | null;
 	url: string | null;
+	/** made from criteria: once, or live */
+	criteria?: Criteria | null;
+	live?: boolean;
 }
 
 async function getJson<T>(fetch: Fetch, url: string, what: string): Promise<T> {
@@ -78,7 +111,8 @@ export const loadList = (fetch: Fetch, id: string | number) => getJson<ListDetai
 export const listsOf = (fetch: Fetch, of: { wine_id: number } | { producer_id: number }) =>
 	getJson<Membership[]>(fetch, `/api/lists-of?${new URLSearchParams(Object.entries(of).map(([k, v]) => [k, String(v)]))}`, 'Lists');
 
-export const createList = (body: ListIn) => send<{ id: number }>('POST', '/api/lists', body);
+export const createList = (body: ListIn) => send<{ id: number; added: number }>('POST', '/api/lists', body);
+export const previewCriteria = (c: Criteria) => send<CriteriaPreview>('POST', '/api/lists/preview', c);
 export const editList = (id: number, body: ListIn) => send<{ id: number }>('PUT', `/api/lists/${id}`, body);
 /** The wishlist's id, made on first use */
 export const wishlistId = () => send<{ id: number }>('POST', '/api/lists/wishlist').then((r) => r.id);
