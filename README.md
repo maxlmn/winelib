@@ -100,7 +100,8 @@ Catalogue): a network of every known parent → offspring link, your wines on it
 
 ![The home page in light and dark](screenshots/themes.png)
 
-**On your phone** too: the same app in a phone layout, with a menu that folds away.
+**On your phone** too: the same app in a phone layout, with a menu that folds away, and installable with its own
+icon (Add to Home Screen).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="screenshots/mobile-dark.png">

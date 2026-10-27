@@ -187,6 +187,8 @@
 	@media (max-width: 760px) {
 		.shell {
 			grid-template-columns: 1fr;
+			/* the bar its own height, the page the rest (a short page, an error, mustn't stretch the bar) */
+			grid-template-rows: auto 1fr;
 		}
 		/* A slim bar: the brand, search, theme and the menu button; the links open under it */
 		nav {
