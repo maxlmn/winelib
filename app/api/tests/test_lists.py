@@ -144,3 +144,35 @@ def test_dot_labels_and_what_waits_in_the_cellar(client):
     assert client.post("/api/bottles", json={"wine": wine("clos florentin 2018"), "qty": 1, "location": "H2"}).status_code == 201
     named = [x for x in client.get("/api/lists/in-cellar").json().get(str(wine("clos florentin 2018")), []) if x["list_id"] == done]
     assert named == [{"list_id": done, "list": "Northern Rhône", "note": None, "as": "producer", "waiting": False}]
+
+
+def test_lists_from_criteria_once_or_live(client):
+    _, wine, producer = ids(client)
+    bourg17 = wine("le bourg 2017")
+    # Le Bourg 2017 is tagged fresh; Clos Florentin 2019 is tasted (94)
+    client.put(f"/api/wines/{bourg17}/tags", json={"tags": ["fresh"]})
+    p = client.post("/api/lists/preview", json={"tags": ["fresh"], "colors": ["Red"]}).json()
+    assert (p["count"], p["wines"][0]["label"], p["describe"]) == (1, "Clos Rougeard Le Bourg 2017", "fresh · Red")
+    assert client.post("/api/lists/preview", json={"where": "tasted", "min_rating": 90}).json()["wines"][0]["label"] \
+        == "Jean-Louis Chave Clos Florentin 2019"
+
+    # made once: the entries are stored, and stay as they are
+    once = client.post("/api/lists", json={"name": "Fresh reds", "criteria": {"tags": ["fresh"]}}).json()
+    assert once["added"] == 1
+    d = client.get(f"/api/lists/{once['id']}").json()
+    assert d["live"] is None and [i["wine"]["vintage"] for i in d["items"]] == ["2017"]
+
+    # live: nothing stored, the entries follow the tags
+    live = client.post("/api/lists", json={"name": "Fresh, live", "criteria": {"tags": ["fresh"]}, "live": True}).json()
+    d = client.get(f"/api/lists/{live['id']}").json()
+    assert d["live"] == "fresh" and d["entries"] == 1 and d["items"][0]["id"] < 0
+    client.put(f"/api/wines/{wine('clos florentin 2019')}/tags", json={"tags": ["fresh"]})
+    d = client.get(f"/api/lists/{live['id']}").json()
+    assert d["entries"] == 2 and d["tasted"] == 1  # the Florentin 2019 joined, tasted
+    assert client.get(f"/api/lists/{once['id']}").json()["entries"] == 1  # the made-once list didn't
+    summary = next(x for x in client.get("/api/lists").json() if x["id"] == live["id"])
+    assert len(summary["dots"]) == 2
+    # a live list's entries aren't edited by hand; its criteria are
+    assert client.post(f"/api/lists/{live['id']}/items", json={"kind": "producer", "producer_id": producer("coche")}).status_code == 409
+    client.put(f"/api/lists/{live['id']}", json={"name": "Fresh, live", "criteria": {"tags": ["fresh"], "where": "cellar"}})
+    assert client.get(f"/api/lists/{live['id']}").json()["entries"] == 1  # only the Bourg is in the cellar

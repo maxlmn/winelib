@@ -401,6 +401,8 @@ class WineList(Base):
     created = Column(Date)
     # the wishlist: the list the wine page's Wishlist button adds to (one at most)
     is_wishlist = Column(Boolean, nullable=False, default=False)
+    # a live list's criteria (JSON, list_query.Criteria): its entries are whatever matches today, none stored
+    criteria = Column(Text)
     items = relationship("ListItem", back_populates="list", cascade="all, delete-orphan", order_by="ListItem.position")
 
 
