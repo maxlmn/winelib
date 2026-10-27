@@ -65,7 +65,7 @@
 {#snippet actions()}
 	<a class="btn" href={links.editWine(wine.id)}>Edit wine</a>
 	{#if !wine.vineyard}<a class="btn" href={links.newVineyard(wine.id)}>Draw vineyard</a>{/if}
-	<WishButton wineId={wine.id} item={wine.wishlist} />
+	<WishButton wineId={wine.id} />
 	<a class="btn" href={links.newBottle({ wine_id: wine.id })}>＋ Bottle</a>
 	<a class="btn primary" href={links.newTasting({ wine_id: wine.id })}>＋ Tasting</a>
 {/snippet}

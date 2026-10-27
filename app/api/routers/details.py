@@ -8,7 +8,6 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import Session, joinedload
 
 from routers.map import MAPPABLE_VINE, map_stats, shapes_response
-from routers.wishlist import item_json
 from cellar import load_cellar, location_group, maturity, to_base
 from display import iso, vineyard_label, vintage_label
 from photos import photo_index, photo_url
@@ -197,8 +196,6 @@ def wine_detail(wine_id: int, session: Session = Depends(get_session)):
         "vintages": vintages,
         "cellar": cellar_lines(session, "wine_id", ids),
         "tastings": tastings(session, Bottle.wine_id.in_(ids)),
-        # its wishlist entry (the Wishlist button), or None
-        "wishlist": item_json(session, w.wishlist) if w.wishlist else None,
     }
 
 

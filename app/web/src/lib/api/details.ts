@@ -162,8 +162,6 @@ export interface WineDetail extends RegionInfo {
 	/** bottles and tastings of all those vintages */
 	cellar: Bottle[];
 	tastings: Tasting[];
-	/** its wishlist entry, or null */
-	wishlist: import('./wishlist.ts').WishItem | null;
 }
 
 export interface BottleDetail {

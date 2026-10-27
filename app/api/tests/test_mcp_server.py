@@ -67,5 +67,14 @@ def test_wine_tastings_search(tools):
 def test_the_tools_are_read_only():
     import asyncio
     listed = asyncio.run(server.mcp.list_tools())
-    assert {t.name for t in listed} >= {"search", "cellar", "what_to_open", "wine", "tastings", "wishlist", "region", "producer"}
+    assert {t.name for t in listed} >= {"search", "cellar", "what_to_open", "wine", "tastings", "lists", "wishlist", "region", "producer"}
     assert all(t.annotations and t.annotations.read_only_hint for t in listed)
+
+
+def test_lists_and_the_wishlist(tools, client):
+    wl = client.post("/api/lists/wishlist").json()["id"]
+    wine_id = next(r["id"] for r in client.get("/api/search", params={"q": "le bourg 2016"}).json()["results"] if r["kind"] == "wine")
+    client.post(f"/api/lists/{wl}/items", json={"kind": "wine", "wine_id": wine_id, "note": "For 2030"})
+    assert [(e["wine"], e["vintage"], e["tasted"], e["note"]) for e in tools.wishlist()] == [("Le Bourg", "2016", True, "For 2030")]
+    assert tools.lists()["lists"][0]["is_wishlist"] is True
+    assert tools.lists("wish")["entries"] == 1 and "error" in tools.lists("nothing like this")

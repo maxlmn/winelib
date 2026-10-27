@@ -2,7 +2,7 @@
 
 Ask Claude, or any assistant that speaks MCP (the Model Context Protocol), about your own cellar: *what should I open
 with lamb tonight from what's at home?*, *which 2019 Burgundies do I have?*, *what did I drink at Noble Rot?*, *which
-Loire wines did I score above 93?*
+Loire wines did I score above 93?*, *what's left to taste on the Noble Rot list?*
 
 `server.py` is a small MCP server that reads WineLib through its API: the running app, never the database. It's
 **read-only**: it can't add, change or delete anything.
@@ -16,7 +16,7 @@ Loire wines did I score above 93?*
 | `what_to_open` | the bottles to drink soon and the ready ones, in one storage place or colour |
 | `wine` | one wine in full: its vintages, critics, bottles and your tastings |
 | `tastings` | your journal: date, wine, your rating and notes, where; since a date, at a place, above a rating |
-| `wishlist` | the wines you'd like, with their market price and what you already have |
+| `lists`, `wishlist` | your lists and your progress on them: each entry tasted or not, owned or not, its note |
 | `region`, `producer` | what you hold and have tasted from a region or a producer |
 
 ## Setting it up

@@ -109,6 +109,7 @@ def summary(lst, facts):
     statuses = [facts.status(i) for i in lst.items]
     tasted = sum(s["tasted"] for s in statuses)
     return {"id": lst.id, "name": lst.name, "description": lst.description, "source": lst.source, "url": lst.url,
+            "is_wishlist": bool(lst.is_wishlist),
             "entries": len(statuses), "tasted": tasted, "owned": sum(1 for s in statuses if s["owned"]),
             "kinds": sorted({i.kind for i in lst.items})}
 
@@ -143,6 +144,18 @@ def lists(session: Session = Depends(get_session)):
                        for j, s in ((item_json(i, facts), facts.status(i)) for i in lst.items)]
         out.append(row)
     return out
+
+
+@router.post("/api/lists/wishlist")
+def wishlist(session: Session = Depends(get_session)):
+    """The wishlist's id (the wine page's Wishlist button adds to it): made on first use, named Wishlist."""
+    lst = session.query(WineList).filter(WineList.is_wishlist.is_(True)).first()
+    if lst is None:
+        lst = session.query(WineList).filter(func.lower(WineList.name) == "wishlist").first()             or WineList(name="Wishlist", description="Wines you’d like", created=date.today())
+        lst.is_wishlist = True
+        session.add(lst)
+        session.commit()
+    return {"id": lst.id}
 
 
 @router.get("/api/lists/{list_id}")

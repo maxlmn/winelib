@@ -52,8 +52,10 @@ the critics' scores and whether each is ready to drink. Also a shelf map bin by 
 chart, prices and their changes, and a **wine list** to print: the cellar or a selection laid out like a
 restaurant's, saved as a PDF.
 
-**The wishlist.** The wines you'd like, found in WineLib or added as new ones, with a note, where to find them and
-their market price; it says when you already have some.
+**Lists, a treasure hunt.** Wines to find and taste: a critic's top 100, Noble Rot's wines of the decade, the 1855
+classification, your wishlist. An entry is a wine, a cuvée (any vintage) or a producer, and ticks itself once you've
+tasted it; a wine's page says which lists it's on. Print your bottles from a list as a wine list, or the whole list as
+a checklist.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="screenshots/cellar-dark.png">
@@ -97,7 +99,7 @@ Catalogue): a network of every known parent → offspring link, your wines on it
 </picture>
 
 **Ask your AI assistant.** An MCP server lets Claude (or any assistant that speaks MCP) read your cellar, journal
-and wishlist: *what should I open from home tonight?*, *which 2019 Burgundies do I have?* Read-only:
+and lists: *what should I open from home tonight?*, *which 2019 Burgundies do I have?* Read-only:
 [app/mcp_server](app/mcp_server/README.md).
 
 **Light or dark**, following your system, in nine colour palettes.

@@ -28,7 +28,7 @@ root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_dir)
 from tasks import USER_AGENT  # noqa: E402
 from tasks.bordeaux_index import size_cl  # noqa: E402
-from models import Bottle, Wine, WishlistItem  # noqa: E402
+from models import Bottle, Wine  # noqa: E402
 
 # Before the Settings page is saved: its defaults (app/api/settings.py), main currency EUR (1 unit = x euros)
 MAIN_CURRENCY = "EUR"
@@ -244,16 +244,6 @@ def cellar_bottles(session, max_age_days=PRICE_MAX_AGE_DAYS):
     return query.order_by(Bottle.price.desc().nullslast()).all()
 
 
-def wishlist_items(session, max_age_days=PRICE_MAX_AGE_DAYS):
-    """Wishlist entries whose wine has an LWIN, priced like bottles: those whose price is missing or older than
-    max_age_days (0: all of them)."""
-    query = session.query(WishlistItem).join(Wine).filter(Wine.lwin.isnot(None), Wine.lwin != "")
-    if max_age_days:
-        query = query.filter(or_(WishlistItem.last_price.is_(None), WishlistItem.last_price_date.is_(None),
-                                 WishlistItem.last_price_date < stale_before(max_age_days)))
-    return query.order_by(WishlistItem.id).all()
-
-
 def refresh_prices(session, bottles, log=print):
     """Fetches and saves the market price of each bottle: Bordeaux Index first (one portfolio read), then one
     WineLabs call per wine, vintage and currency; commits as it goes. Shared by the nightly script and the app's
@@ -280,7 +270,7 @@ def main(commit=False, limit=None):
     session = sessionmaker(bind=create_engine(paths.DB_URL))()
     try:
         # Bottles in the cellar with an LWIN whose price is missing or older than 90 days
-        bottles = cellar_bottles(session) + wishlist_items(session)  # the wishlist's wines too
+        bottles = cellar_bottles(session)
         if limit:
             bottles = bottles[:limit]
         unique_requests = {(b.wine.lwin, b.wine.vintage, b.currency) for b in bottles}

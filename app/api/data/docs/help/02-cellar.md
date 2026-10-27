@@ -34,19 +34,11 @@ selection (what's at home, the reds for tonight), or open it unfiltered for the 
 line under it; leave a wine out with its ✕, or one vintage by clicking it. Like the filters, all of it is in the
 address: bookmark a list to make it again.
 
-## The wishlist
-
-**Wishlist** (in the menu) keeps the wines you'd like. Add one from its page (**☆ Wishlist**), or find it on the
-list's own search: **＋ New vintage** for another vintage of a wine you know, **＋ New wine…** for one not in WineLib
-yet (created with it, producer too). Each one takes its size, a note and where to find it; **Any vintage** when the
-cuvée is what matters. The list says when you already have some in the cellar. With an LWIN, its market price comes
-with the cellar's (**Market prices** in Maintenance, nightly as well), or now with its own **Market price** link.
-
 ## Lists
 
 **Lists** (in the menu) are wines to find and taste: a critic's top 100, Noble Rot's wines of the decade, every cuvée
 of a producer. An entry is a **wine** (that vintage), a **cuvée** (any vintage of it) or a **producer** (any of its
-wines), mixed as you like. Each ticks itself once you've tasted it, from your tasting notes: that vintage, any
+wines), mixed as you like. Your **wishlist** is one of them: **☆ Wishlist** on a wine's page adds it there. Each ticks itself once you've tasted it, from your tasting notes: that vintage, any
 vintage, any of the producer's wines. The bottles you own show apart. Add entries by searching on the list, or with
 **＋ Add to a list** on a wine's or a producer's page, which also shows the lists it's on.
 

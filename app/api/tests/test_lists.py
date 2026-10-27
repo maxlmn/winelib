@@ -98,3 +98,10 @@ def test_a_deleted_wine_leaves_its_lists(client):
     client.post(f"/api/lists/{lst}/items", json={"kind": "wine", "wine_id": w})
     assert client.delete(f"/api/wines/{w}").status_code == 200
     assert client.get(f"/api/lists/{lst}").json()["entries"] == 0
+
+
+def test_the_wishlist_is_a_list(client):
+    first = client.post("/api/lists/wishlist").json()["id"]
+    assert client.post("/api/lists/wishlist").json()["id"] == first  # made once
+    lst = client.get(f"/api/lists/{first}").json()
+    assert (lst["name"], lst["is_wishlist"]) == ("Wishlist", True)

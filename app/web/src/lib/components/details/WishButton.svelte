@@ -1,21 +1,31 @@
 <script lang="ts">
 	import Icon from '#lib/components/Icon.svelte';
-	import { addWish, blankWish, type WishItem } from '#lib/api/wishlist.ts';
+	import { addEntry, listsOf, wishlistId } from '#lib/api/lists.ts';
 	import { links } from '#lib/links.ts';
 
-	/** The wine page's Wishlist button: adds the wine; once on the list, a link to it */
-	let { wineId, item }: { wineId: number; item: WishItem | null } = $props();
+	/** The wine page's Wishlist button: adds the wine (this vintage) to the wishlist, one of the lists; once there, a
+	 * link to it */
+	let { wineId }: { wineId: number } = $props();
 
-	let added = $state<WishItem | null>(null);
+	let listId = $state<number | null>(null);
 	let busy = $state(false);
 	let failed = $state('');
-	const on = $derived(added ?? item);
+
+	$effect(() => {
+		const id = wineId;
+		listId = null;
+		listsOf(fetch, { wine_id: id })
+			.then((on) => (listId = on.find((m) => m.is_wishlist && m.as !== 'producer')?.id ?? null))
+			.catch(() => {});
+	});
 
 	async function add() {
 		busy = true;
 		failed = '';
 		try {
-			added = await addWish(blankWish(wineId));
+			const id = await wishlistId();
+			await addEntry(id, { kind: 'wine', wine_id: wineId });
+			listId = id;
 		} catch (e) {
 			failed = e instanceof Error ? e.message : 'Couldn’t add it';
 		} finally {
@@ -24,8 +34,8 @@
 	}
 </script>
 
-{#if on}
-	<a class="btn wished" href={links.wishlist()} title="On your wishlist: see it there"><Icon name="star" size={13} /> On your wishlist</a>
+{#if listId}
+	<a class="btn wished" href={links.list(listId)} title="On your wishlist: see it"><Icon name="star" size={13} /> On your wishlist</a>
 {:else}
 	<button class="btn" onclick={add} disabled={busy} title={failed || 'Add this wine to your wishlist'}><Icon name="star" size={13} /> Wishlist</button>
 {/if}
