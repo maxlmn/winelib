@@ -2,7 +2,8 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import ListDots from '#lib/components/ListDots.svelte';
-	import { createList, DOT_ORDERS, matches, sortDots, type DotOrder } from '#lib/api/lists.ts';
+	import { createList, DOT_ORDERS, emptyCriteria, hasCriteria, matches, sortDots, type DotOrder } from '#lib/api/lists.ts';
+	import CriteriaBuilder from '#lib/components/CriteriaBuilder.svelte';
 	import { links } from '#lib/links.ts';
 
 	let { data } = $props();
@@ -51,10 +52,18 @@
 	let name = $state('');
 	let source = $state('');
 	let error = $state('');
+	// Filled from criteria (tags, colour, region...): once, or live
+	let fromCriteria = $state(false);
+	let criteria = $state(emptyCriteria());
+	let live = $state(false);
 	async function create() {
 		error = '';
+		const filled = fromCriteria && hasCriteria(criteria);
 		try {
-			const { id } = await createList({ name, source: source || null, description: null, url: null });
+			const { id } = await createList({
+				name, source: source || null, description: null, url: null,
+				criteria: filled ? criteria : null, live: filled && live
+			});
 			goto(links.list(id));
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Couldn’t create it';
@@ -83,6 +92,17 @@
 		<label><span class="label">Name</span><input bind:value={name} required placeholder="Noble Rot’s wines of the decade" /></label>
 		<label><span class="label">Made by</span><input bind:value={source} placeholder="Noble Rot, a critic, you…" /></label>
 		<button class="btn primary" disabled={!name.trim()}>Create</button>
+		<label class="from"><input type="checkbox" bind:checked={fromCriteria} /> Fill it from criteria: tags, colour, region, grape, vintages…</label>
+		{#if fromCriteria}
+			<div class="criteria-box">
+				<CriteriaBuilder bind:criteria />
+				<div class="seg kind" role="group" aria-label="Made once or live">
+					<button type="button" class:on={!live} onclick={() => (live = false)}>Made once</button>
+					<button type="button" class:on={live} onclick={() => (live = true)}>Live</button>
+				</div>
+				<p class="muted small">{live ? 'A live list keeps these criteria and shows whatever matches today: a wine tagged tomorrow joins it.' : 'The matching wines become its entries now; edit it like any list afterwards.'}</p>
+			</div>
+		{/if}
 		{#if error}<p class="error">{error}</p>{/if}
 	</form>
 {/if}
@@ -102,6 +122,7 @@
 			<a class="list card" href={links.list(l.id)}>
 				<div class="head">
 					<h2>{#if l.is_wishlist}<span class="star" aria-hidden="true">★</span> {/if}{l.name}</h2>
+					{#if l.live}<span class="badge live" title="Live: {l.live}">Live</span>{/if}
 					{#if milestone(l)}<span class="badge" class:done={l.tasted === l.entries}>{milestone(l)}</span>{/if}
 				</div>
 				{#if l.source}<div class="muted source">{l.source}</div>{/if}
@@ -133,6 +154,54 @@
 		font: inherit;
 		font-size: 13px;
 		color: inherit;
+	}
+	.from {
+		flex-basis: 100%;
+		display: flex !important;
+		flex-direction: row !important;
+		align-items: center;
+		gap: 6px;
+		font-size: 13px;
+	}
+	.criteria-box {
+		flex-basis: 100%;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		padding: 12px;
+		border: 1px solid var(--border);
+		border-radius: 10px;
+	}
+	.kind {
+		align-self: flex-start;
+	}
+	.seg {
+		display: inline-flex;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		overflow: hidden;
+	}
+	.seg button {
+		border: none;
+		background: none;
+		padding: 6px 12px;
+		font: inherit;
+		font-size: 13px;
+		color: var(--muted);
+		cursor: pointer;
+	}
+	.seg button.on {
+		background: var(--accent);
+		color: #fff;
+	}
+	.small {
+		margin: 0;
+		font-size: 12px;
+	}
+	.badge.live {
+		background: none;
+		border: 1px solid var(--accent);
+		color: var(--accent);
 	}
 	.hits {
 		font-size: 12px;

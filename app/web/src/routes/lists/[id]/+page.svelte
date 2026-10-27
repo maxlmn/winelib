@@ -3,7 +3,8 @@
 	import { onMount } from 'svelte';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
 	import ListDots from '#lib/components/ListDots.svelte';
-	import { matches, addEntry, compareKeys, deleteList, editEntry, editList, entryName, KIND_LABEL, noteKey, removeEntry, type EntryKind, type ListEntry } from '#lib/api/lists.ts';
+	import CriteriaBuilder from '#lib/components/CriteriaBuilder.svelte';
+	import { emptyCriteria, hasCriteria, matches, addEntry, compareKeys, deleteList, editEntry, editList, entryName, KIND_LABEL, noteKey, removeEntry, type EntryKind, type ListEntry } from '#lib/api/lists.ts';
 	import { links } from '#lib/links.ts';
 	import { regionColor, regionLabel } from '#lib/regions.svelte.ts';
 
@@ -107,6 +108,27 @@
 
 	// --- The list itself ---
 	let editingList = $state(false);
+	// A live list: its criteria, edited here (its entries follow)
+	let editingCriteria = $state(false);
+	let criteria = $state(emptyCriteria());
+	function openCriteria() {
+		criteria = { ...emptyCriteria(), ...(list.criteria ?? {}) };
+		editingCriteria = true;
+	}
+	async function saveCriteria() {
+		listError = '';
+		if (!hasCriteria(criteria)) {
+			listError = 'A live list needs at least one criterion';
+			return;
+		}
+		try {
+			await editList(list.id, { name: list.name, description: list.description, source: list.source, url: list.url, criteria });
+			editingCriteria = false;
+			await invalidateAll();
+		} catch (e) {
+			listError = e instanceof Error ? e.message : 'Couldn’t save';
+		}
+	}
 	let form = $state({ name: '', description: '', source: '', url: '' });
 	let listError = $state('');
 	function openEdit() {
@@ -162,6 +184,23 @@
 
 {#if list.description}<p class="about">{list.description}</p>{/if}
 
+{#if list.live}
+	<section class="live card">
+		{#if editingCriteria}
+			<CriteriaBuilder bind:criteria />
+			<div class="buttons">
+				{#if listError}<span class="error">{listError}</span>{/if}
+				<button class="btn" onclick={() => (editingCriteria = false)}>Cancel</button>
+				<button class="btn primary" onclick={saveCriteria}>Save</button>
+			</div>
+		{:else}
+			<span class="badge">Live</span>
+			<span>Your wines matching <b>{list.live}</b>: it updates itself.</span>
+			<button class="link" onclick={openCriteria}>Change the criteria</button>
+		{/if}
+	</section>
+{/if}
+
 <section class="progress card">
 	<div class="score">
 		<span class="big num">{list.tasted}<span class="of"> / {list.entries}</span></span>
@@ -172,6 +211,7 @@
 	<ListDots {dots} size={18} />
 </section>
 
+{#if !list.live}
 <section class="add card">
 	<input type="search" placeholder="Add a wine or a producer: search by name…" value={q} oninput={(e) => search(e.currentTarget.value)} />
 	{#if results.length}
@@ -195,6 +235,7 @@
 	{/if}
 	{#if addNote}<p class="muted hint">{addNote}</p>{/if}
 </section>
+{/if}
 
 {#if list.items.length}
 	<div class="tools">
@@ -255,8 +296,10 @@
 					{#if i.owned}<div class="owned">{i.owned} in the cellar</div>{/if}
 				</div>
 				<div class="row-actions">
+					{#if !list.live}
 					{#if editing !== i.id && !i.note}<button class="link" onclick={() => { editing = i.id; draftNote = ''; }}>Note</button>{/if}
 					<button class="link" onclick={() => remove(i)} aria-label="Remove {entryName(i)} from the list">Remove</button>
+					{/if}
 				</div>
 			</li>
 		{/each}
@@ -412,6 +455,40 @@
 	.none {
 		margin: 4px 2px 0;
 		font-size: 13px;
+	}
+	.live {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px 12px;
+		padding: 12px 16px;
+		margin-bottom: 14px;
+		font-size: 13px;
+	}
+	.live .badge {
+		padding: 1px 8px;
+		border: 1px solid var(--accent);
+		border-radius: 10px;
+		color: var(--accent);
+		font-size: 11px;
+	}
+	.live :global(.criteria) {
+		flex-basis: 100%;
+	}
+	.live .buttons {
+		flex-basis: 100%;
+		display: flex;
+		justify-content: flex-end;
+		gap: 8px;
+	}
+	.live .link {
+		margin-left: auto;
+		border: none;
+		background: none;
+		color: var(--accent);
+		font: inherit;
+		font-size: 13px;
+		cursor: pointer;
 	}
 	.tools {
 		display: flex;

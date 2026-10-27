@@ -248,6 +248,20 @@ class Entry(BaseModel):
     note: str | None = Field(None, description="a note: why it's there, a rank, a date")
 
 
+class Criteria(BaseModel):
+    """Which of the user's wines (each vintage, owned or tasted) a list takes; every criterion given must hold."""
+    tags: list[str] = Field(default_factory=list, description='style tags: "fresh", "mineral"... (see tags())')
+    tags_all: bool = Field(False, description="every tag (true), or any of them (false)")
+    colors: list[str] = Field(default_factory=list, description="Red, White, Rose, Bubbles, Bubbles Rose, Sweet, Orange, Fortified")
+    regions: list[str] = Field(default_factory=list, description='WineLib region names: "Loire", "Bourgogne"...')
+    grapes: list[str] = Field(default_factory=list, description="any of these grapes")
+    vintage_from: int | None = None
+    vintage_to: int | None = None
+    where: str = Field("any", description='"any" (owned or tasted), "cellar" (in it now) or "tasted"')
+    min_rating: int | None = Field(None, description="the user's best rating for it at least this (50-100)")
+    text: str = Field("", description="words in the producer, cuvée or appellation")
+
+
 class Confirm(BaseModel):
     confirm: bool = Field(description="Do it")
 
@@ -296,21 +310,46 @@ def _plural(n):
     return f"{n} entr{'y' if n == 1 else 'ies'}"
 
 
+@mcp.tool(annotations=READ)
+def find_wines(criteria: Criteria) -> dict:
+    """The user's wines (owned or tasted) matching criteria: style tags, colours, regions, grapes, vintages, in the
+    cellar or tasted, their rating, words in the name. How many, and the first 60 with their ids."""
+    return post("/api/lists/preview", criteria.model_dump())
+
+
 @mcp.tool(annotations=WRITE)
-async def create_list(name: str, entries: list[Entry], ctx: Context, description: str = "", source: str = "",
-                      confirm_token: str = "") -> dict:
-    """Creates a list in WineLib with these entries ("all the wines I drank on 3 October at Claude's", "every wine
-    whose note says wow"): find them first with tastings / cellar / search, then pass their wine_ids. The user sees
-    the list and its entries and must say yes. Only adds (deleting the list in the app undoes it)."""
+async def create_list(name: str, ctx: Context, entries: list[Entry] | None = None, criteria: Criteria | None = None,
+                      live: bool = False, description: str = "", source: str = "", confirm_token: str = "") -> dict:
+    """Creates a list in WineLib. From entries ("all the wines I drank on 3 October at Claude's", "every wine whose
+    note says wow": find them first with tastings / cellar / search, then pass their wine_ids), or from criteria
+    ("my fresh, mineral whites", "the Loire reds I rated 93+"): made once (the matching wines become its entries) or
+    live (it keeps the criteria and shows whatever matches today). The user sees the list and must say yes. Only adds
+    (deleting the list in the app undoes it)."""
+    entries = entries or []
     if any(lst["name"].lower() == name.strip().lower() for lst in get("/api/lists")):
         return {"error": f"There's already a list named “{name}”: use add_to_list"}
-    lines = _describe(entries)
-    message = f"Create the list “{name}” with {_plural(len(lines))}:\n" + "\n".join(f"  • {x}" for x in lines)
-    ok = await _confirmed(ctx, message, _token("create_list", name, [e.model_dump() for e in entries]), confirm_token)
+    if criteria is not None and entries:
+        return {"error": "Give entries or criteria, not both"}
+    if criteria is not None:
+        found = post("/api/lists/preview", criteria.model_dump())
+        what = (f"a live list: your wines matching {found['describe']} (now {found['count']}, it updates itself)" if live
+                else f"{_plural(found['count'])}, your wines matching {found['describe']}")
+        sample = "\n".join(f"  • {w['label']}" for w in found["wines"][:12]) + ("\n  …" if found["count"] > 12 else "")
+        message = f"Create the list “{name}” with {what}:\n{sample}"
+    else:
+        lines = _describe(entries)
+        message = f"Create the list “{name}” with {_plural(len(lines))}:\n" + "\n".join(f"  • {x}" for x in lines)
+    token = _token("create_list", name, [e.model_dump() for e in entries], criteria.model_dump() if criteria else None, live)
+    ok = await _confirmed(ctx, message, token, confirm_token)
     if ok is not True:
         return ok if isinstance(ok, dict) else {"done": False, "why": "Not confirmed: nothing was changed"}
-    list_id = post("/api/lists", {"name": name.strip(), "description": description or None, "source": source or None})["id"]
-    return {"done": True, "list_id": list_id, "added": _add(list_id, entries), "see": f"{URL}/lists/{list_id}",
+    body = {"name": name.strip(), "description": description or None, "source": source or None}
+    if criteria is not None:
+        body.update(criteria=criteria.model_dump(), live=live)
+    r = post("/api/lists", body)
+    list_id = r["id"]
+    added = r.get("added", 0) + (_add(list_id, entries) if entries else 0)
+    return {"done": True, "list_id": list_id, "added": added, "live": bool(criteria and live), "see": f"{URL}/lists/{list_id}",
             "undo": "Delete the list in WineLib (its page › Edit › Delete the list)"}
 
 
