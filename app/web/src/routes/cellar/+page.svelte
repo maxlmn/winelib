@@ -15,7 +15,7 @@
 	import { activeCount, emptyFilters, filterLocations, filterWines, fromParams, grapeOptions, options, toParams, totals } from '#lib/filters.ts';
 	import type { Filters, ListKey } from '#lib/filters.ts';
 	import Change from '#lib/components/Change.svelte';
-	import { inCurrency, pct } from '#lib/format.ts';
+	import { inCurrency, pct, today } from '#lib/format.ts';
 	import { appSettings, configured } from '#lib/settings.svelte.ts';
 	import { links } from '#lib/links.ts';
 
@@ -98,16 +98,15 @@
 			return cur === appSettings.currency ? n : n / (appSettings.exchange_rates[cur] ?? 1);
 		}
 		const cell = (v: string | number) => String(v).replace(/\|/g, '\\|');
-		const today = new Date().toISOString().slice(0, 10);
 		const md = [
-			`# Cellar export — ${today}`, '',
+			`# Cellar export — ${today()}`, '',
 			`${t.qty} bottles · cost ${money(t.cost)} · market ${money(t.market)} (${cur})`, '',
 			`| ${cols.map(([h]) => h).join(' | ')} |`, `|${'---|'.repeat(cols.length)}`,
 			...shown.map((b) => `| ${cols.map(([, f]) => cell(f(b))).join(' | ')} |`)
 		].join('\n');
 		const a = Object.assign(document.createElement('a'), {
 			href: URL.createObjectURL(new Blob([md], { type: 'text/markdown' })),
-			download: `cellar_${today.replace(/-/g, '')}.md`
+			download: `cellar_${today().replace(/-/g, '')}.md`
 		});
 		a.click();
 		URL.revokeObjectURL(a.href);

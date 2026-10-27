@@ -279,6 +279,24 @@ class Bottle(Base):
     last_price_source = Column(String)  # where it came from: Bordeaux Index, WineLabs.ai
     wine = relationship("Wine", back_populates="inventory")
     tastings = relationship("TastingNote", back_populates="bottle")
+    # bottles that left other than by being drunk: gifted, sold, broken
+    events = relationship("BottleEvent", back_populates="bottle", cascade="all, delete-orphan",
+                          order_by="BottleEvent.date.desc()")
+
+
+class BottleEvent(Base):
+    """Bottles that left the cellar other than by being drunk (a tasting): gifted, sold, broken, or otherwise.
+    Recording one takes them off the bottle's count; removing it puts them back."""
+    __tablename__ = 'bottle_events'
+    id = Column(Integer, primary_key=True)
+    bottle_id = Column(Integer, ForeignKey('cellar.id', ondelete='CASCADE'), nullable=False, index=True)
+    kind = Column(String, nullable=False)  # "gifted", "sold", "broken", "other"
+    qty = Column(Integer, nullable=False, default=1)
+    date = Column(Date)
+    note = Column(Text)  # to whom, why, where
+    price = Column(Float)  # what it sold for, a bottle
+    currency = Column(String)
+    bottle = relationship("Bottle", back_populates="events")
 
 class TastingNote(Base):
     """Your personal log"""

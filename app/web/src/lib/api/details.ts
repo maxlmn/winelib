@@ -186,6 +186,22 @@ export interface BottleDetail {
 	vendor: string | null;
 	provenance: string | null;
 	purchase_date: string | null;
+	/** what happened to these bottles besides being drunk */
+	events: BottleEvent[];
+	/** the tastings of these bottles: the ones drunk */
+	drunk: { id: number; date: string | null; place: string | null }[];
+}
+
+export type OutKind = 'gifted' | 'sold' | 'broken' | 'other';
+
+export interface BottleEvent {
+	id: number;
+	kind: OutKind;
+	qty: number;
+	date: string | null;
+	note: string | null;
+	price: number | null;
+	currency: string | null;
 }
 
 export interface PlaceDetail {

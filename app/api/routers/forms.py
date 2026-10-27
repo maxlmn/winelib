@@ -21,7 +21,7 @@ from display import vineyard_label
 from textsearch import fold, search
 from tasks.matching import is_rose
 from tasks.blends import BLEND_STYLES, blend_style
-from db import same, Appellation, Bottle, ListItem, Place, Producer, Region, RestaurantVisit, TastingNote, Varietal, Vineyard, Wine, get_session, same_cuvee
+from db import same, Appellation, Bottle, BottleEvent, ListItem, Place, Producer, Region, RestaurantVisit, TastingNote, Varietal, Vineyard, Wine, get_session, same_cuvee
 
 router = APIRouter()
 
@@ -575,6 +575,47 @@ def delete_bottle(bottle_id: int, session: Session = Depends(get_session)):
     session.delete(b)
     session.commit()
     return {"deleted": bottle_id, "wine_id": wine_id}
+
+
+# Bottles that leave other than by being drunk (that's a tasting): taken off the count, put back if undone
+OUT_KINDS = ("gifted", "sold", "broken", "other")
+
+
+class BottleOutIn(BaseModel):
+    kind: Literal["gifted", "sold", "broken", "other"]
+    qty: int = Field(1, ge=1)
+    date: Date | None = None
+    note: Annotated[str | None, BeforeValidator(_blank_to_none)] = None
+    price: float | None = Field(None, ge=0)  # a bottle, when sold
+    currency: Annotated[str | None, BeforeValidator(_blank_to_none)] = None
+
+
+@router.post("/api/bottles/{bottle_id}/out", status_code=201)
+def bottle_out(bottle_id: int, data: BottleOutIn, session: Session = Depends(get_session)):
+    """Some of these bottles gifted, sold, broken...: recorded, and taken off the count."""
+    b = _get(session, Bottle, bottle_id, "Bottle")
+    if data.qty > (b.qty or 0):
+        raise HTTPException(409, f"Only {b.qty or 0} left in the cellar")
+    b.qty -= data.qty
+    e = BottleEvent(bottle=b, kind=data.kind, qty=data.qty, date=data.date or Date.today(), note=data.note,
+                    price=data.price if data.kind == "sold" else None,
+                    currency=(data.currency or b.currency) if data.kind == "sold" and data.price is not None else None)
+    session.add(e)
+    session.commit()
+    return {"id": e.id, "bottle_id": b.id, "qty": b.qty}
+
+
+@router.delete("/api/bottles/{bottle_id}/out/{event_id}")
+def bottle_back(bottle_id: int, event_id: int, session: Session = Depends(get_session)):
+    """Undo: the bottles back in the cellar, the record gone."""
+    e = _get(session, BottleEvent, event_id, "Record")
+    if e.bottle_id != bottle_id:
+        raise HTTPException(404, f"Record #{event_id} not found on this bottle")
+    e.bottle.qty = (e.bottle.qty or 0) + e.qty
+    qty = e.bottle.qty
+    session.delete(e)
+    session.commit()
+    return {"bottle_id": bottle_id, "qty": qty}
 
 
 # --- Tastings ---------------------------------------------------------------------------------
