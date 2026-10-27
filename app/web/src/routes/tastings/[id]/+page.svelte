@@ -24,10 +24,10 @@
 	const fields = (rows: [string, string | number | null | undefined][]) => rows.filter(([, v]) => v !== null && v !== undefined && v !== '');
 	// The critics with a score ("-": searched, none found)
 	const critics = $derived(w.scores.filter((s) => s.score && !['-', '0'].includes(s.score.trim())));
-	// For the share sticker: this wine, the evening's wines in order
+	// For the share sticker: this wine, the evening's wines in order (no score: the journal's 90 is a default, not one)
 	const sticker = $derived({
-		wine: { producer: w.producer, cuvee: w.cuvee, vintage: w.vintage, color: w.color, region: w.region, appellation: w.appellation?.name ?? null, rating: t.rating },
-		session: t.occasion.map((o) => ({ producer: o.producer, cuvee: o.cuvee, vintage: o.vintage, color: o.color, region: o.region ?? null, appellation: o.appellation ?? null, rating: o.rating })),
+		wine: { producer: w.producer, cuvee: w.cuvee, vintage: w.vintage, color: w.color, region: w.region, appellation: w.appellation?.name ?? null, rating: null },
+		session: t.occasion.map((o) => ({ producer: o.producer, cuvee: o.cuvee, vintage: o.vintage, color: o.color, region: o.region ?? null, appellation: o.appellation ?? null, rating: null })),
 		when: t.date ? fmtDay(t.date) : '',
 		// a friend's home is named after them: "At Claude's"
 		where: [t.place?.type === "Friend's Place" ? `At ${t.place.name}’s` : (t.place?.name ?? t.location), t.place?.city].filter(Boolean).join(', '),
