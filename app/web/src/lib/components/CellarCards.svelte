@@ -9,10 +9,20 @@
 	import type { Bottle, RegionColors } from '#lib/types.ts';
 	import { FALLBACK_REGION, TYPE_COLORS } from '#lib/colors.ts';
 	import { links } from '#lib/links.ts';
-	import { money } from '#lib/format.ts';
+	import { money, plural, symbol } from '#lib/format.ts';
 	import { appSettings, groupOrder } from '#lib/settings.svelte.ts';
 
-	let { bottles, regionColors }: { bottles: Bottle[]; regionColors: RegionColors } = $props();
+	let {
+		bottles,
+		regionColors,
+		prices = false
+	}: {
+		bottles: Bottle[];
+		regionColors: RegionColors;
+		/** each line's price paid a bottle, in its currency (the home page's recent purchases) */
+		prices?: boolean;
+	} = $props();
+	const paid = (b: Bottle) => (b.price ? `${symbol(b.currency ?? appSettings.currency)}${Math.round(b.price).toLocaleString()}` : null);
 
 	// Each storage group (Settings) is one card; every other location gets its own
 	const cardName = (b: Bottle) => (b.location_group === appSettings.other_group ? b.location : b.location_group);
@@ -81,6 +91,7 @@
 							</a>
 							{#if b.appellation}<span class="muted">({b.appellation})</span>{/if}
 							<span class="meta num">[{b.vintage}]</span><CriticPills scores={b.scores} />
+							{#if prices && paid(b)}<span class="paid num" title="Paid a bottle">{paid(b)}</span>{/if}
 								{#if b.maturity}<span class="mat"><MaturityBadge maturity={b.maturity} from={b.drink_from} to={b.drink_to} /></span>{/if}
 						</span>
 					</li>
@@ -95,7 +106,7 @@
 		<summary>
 			<div class="sum-top">
 				<b>{c.name}</b>
-				<span class="muted num">{c.qty} bottles{c.value ? ` · ${money(c.value)}` : ''}</span>
+				<span class="muted num">{plural(c.qty, 'bottle')}{c.value ? ` · ${money(c.value)}` : ''}</span>
 				<span class="split num">
 					<span class="pair"><span class="dot" style:background={TYPE_COLORS.Red}></span>{c.redQty}</span>
 					<span class="pair"><span class="dot" style:background={TYPE_COLORS.White}></span>{c.otherQty}</span>
@@ -187,6 +198,11 @@
 	}
 	.label {
 		min-width: 0;
+	}
+	.paid {
+		margin-left: 6px;
+		font-size: 12px;
+		font-weight: 600;
 	}
 	.meta {
 		color: var(--muted);

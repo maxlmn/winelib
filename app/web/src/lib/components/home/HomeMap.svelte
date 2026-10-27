@@ -8,7 +8,7 @@
 	import type { Extent } from '#lib/geo.ts';
 	import type { RegionCollection, RegionProps } from '#lib/types.ts';
 
-	let { height = 340 }: { height?: number } = $props();
+	let { minHeight = 440 }: { minHeight?: number } = $props();
 
 	let overview = $state<RegionCollection | null>(null);
 	onMount(async () => {
@@ -18,15 +18,26 @@
 	const regions = $derived(
 		overview ? { ...overview, features: overview.features.filter((f) => f.properties.bottles > 0 || f.properties.tastings > 0) } : null
 	);
-	// Fitted to your regions (the whole map without any)
+	// Fitted to the regions most of your bottles and tastings come from (90%), not every one: a single wine from Canada
+	// or China would widen it to the whole world; the whole map without any
 	const extent = $derived.by((): Extent | null => {
-		const boxes = (regions?.features ?? []).map((f) => f.properties.bbox).filter((b) => b !== null);
+		const weight = (p: RegionProps) => p.bottles + p.tastings;
+		const ranked = (regions?.features ?? []).map((f) => f.properties).sort((a, b) => weight(b) - weight(a));
+		const total = ranked.reduce((n, p) => n + weight(p), 0);
+		const main: RegionProps[] = [];
+		let covered = 0;
+		for (const p of ranked) {
+			if (covered >= 0.9 * total) break;
+			main.push(p);
+			covered += weight(p);
+		}
+		const boxes = main.map((p) => p.bbox).filter((b) => b !== null);
 		if (!boxes.length) return overview?.extent ?? null;
 		return [Math.min(...boxes.map((b) => b[0])), Math.min(...boxes.map((b) => b[1])), Math.max(...boxes.map((b) => b[2])), Math.max(...boxes.map((b) => b[3]))];
 	});
 </script>
 
-<div class="home-map" style:height="{height}px">
+<div class="home-map" style:min-height="{minHeight}px">
 	{#if regions}
 		<WineMap
 			{regions}
@@ -38,6 +49,7 @@
 			fitKey="home"
 			{extent}
 			onselect={() => {}}
+			worldCopies={false}
 		/>
 	{:else}
 		<div class="loading muted">Loading the map…</div>
@@ -47,6 +59,7 @@
 <style>
 	.home-map {
 		position: relative;
+		flex: 1;
 		border-radius: calc(var(--radius) - 2px);
 		overflow: hidden;
 	}

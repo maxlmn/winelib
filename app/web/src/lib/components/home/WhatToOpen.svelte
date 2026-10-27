@@ -20,7 +20,7 @@
 		totals = null
 	}: { bottles: Bottle[]; totals?: { ready: number; young: number; past: number; unknown: number } | null } = $props();
 
-	const SHOWN = 8;
+	const SHOWN = 6;
 	const MOSAIC = 24;
 	// Per wine in the cellar, the lists still waiting for it
 	let onLists = $state<Record<string, { list_id: number; list: string; note: string | null; waiting: boolean }[]>>({});
@@ -145,7 +145,7 @@
 						{#if lists(b).length}
 							<div class="on-lists small">
 								<Icon name="bookmark" size={11} />
-								{#each lists(b) as l, i (l.list_id)}{i ? ', ' : ''}<a href={links.list(l.list_id)} class:done={!l.waiting} title={l.waiting ? 'Not ticked on this list yet' : 'Already ticked on this list'}>{l.list}</a>{#if l.note}<span class="muted"> ({l.note})</span>{/if}{/each}
+								{#each lists(b) as l, i (l.list_id)}{i ? ', ' : ''}<a href={links.list(l.list_id)} class:done={!l.waiting} title={l.waiting ? 'Not ticked on this list yet' : 'Already ticked on this list'}>{l.list}</a>{#if l.note}<span class="muted">&nbsp;({l.note})</span>{/if}{/each}
 							</div>
 						{/if}
 					</div>
@@ -186,11 +186,11 @@
 		margin-left: 4px;
 	}
 	.on-lists {
-		display: flex;
-		align-items: center;
-		flex-wrap: wrap;
-		gap: 0 4px;
 		color: var(--accent);
+	}
+	.on-lists :global(svg) {
+		vertical-align: -1px;
+		margin-right: 3px;
 	}
 	.on-lists a {
 		color: var(--accent);

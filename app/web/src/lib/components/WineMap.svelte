@@ -37,12 +37,14 @@
 		regions?: FeatureCollection<Geometry | null, RegionProps> | null;
 		/** clicking a region outline (the overview); without it, outlines are context only */
 		onregion?: ((r: RegionProps) => void) | null;
+		/** the world repeated side by side when zoomed out (off: a wide box shows one world) */
+		worldCopies?: boolean;
 	}
 
 	let {
 		appellations, vineyards, showAppellations = true, showVineyards = true,
 		selected, basemap, fitKey, extent = null, onselect, pinCard = true,
-		regions = null, onregion = null
+		regions = null, onregion = null, worldCopies = true
 	}: Props = $props();
 
 	// Vineyards are shaded by village from a family of vine-leaf greens, olives and teals: neighbouring
@@ -115,6 +117,7 @@
 		let m: MlMap | undefined;
 		(async () => {
 			m = await createMap(container, basemap);
+			if (!worldCopies) m.setRenderWorldCopies(false);
 			{
 				const mm = m;
 				mm.addSource('regions', { type: 'geojson', data: EMPTY, promoteId: 'id' });
