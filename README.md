@@ -66,12 +66,20 @@ the satellite view, start from the official outline and refine it, or import a G
 **The cellar.** Each storage place as a wine rack: a bottle end per bottle in its region's colour, the wine's colour
 as the cork, magnums bigger; hover one for the wine, click to open it. Then the wines, reds and whites apart, with
 the critics' scores and whether each is ready to drink. Also a shelf map bin by bin, a list, a vintage
-chart, prices and their changes, and a **wine list** to print: the cellar or a selection laid out like a
-restaurant's, saved as a PDF.
+chart, and prices and their changes.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="screenshots/cellar-dark.png">
   <img alt="The cellar as wine racks, the wines listed below" src="screenshots/cellar.png">
+</picture>
+
+**A wine list to print.** Your cellar, a selection of it or your bottles from a list, laid out like a restaurant's
+wine list: by colour and region, every vintage you hold on one line. Leave out what isn't for tonight, then print it
+or save it as a PDF. From a list, it prints the whole list as a checklist too.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/winelist-dark.png">
+  <img alt="The wine list: the cellar laid out like a restaurant's" src="screenshots/winelist.png">
 </picture>
 
 **The tasting journal.** Tastings by occasion (a dinner, a restaurant, a trip), with your notes, ratings, photos and
@@ -80,6 +88,15 @@ the places on a map; every wine you've tasted in one line of region colours; tre
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="screenshots/tastings-dark.png">
   <img alt="Tasting cards by occasion" src="screenshots/tastings.png">
+</picture>
+
+**Share a tasting.** Any tasting note, or a whole session's wines, as a sticker for your Instagram story, Strava-style:
+a transparent picture with white or dark text, or a card, framed like the journal's. On a phone, Share sends it
+straight to the app.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/sticker-dark.png">
+  <img alt="A tasting note as a sticker for a story" src="screenshots/sticker.png">
 </picture>
 
 **The summary.** Your best-scored wines, the places you go back to, the busiest evening; what you've drunk or hold,

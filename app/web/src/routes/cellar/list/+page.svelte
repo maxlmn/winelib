@@ -170,11 +170,26 @@
 		font-size: 12px;
 		color: var(--muted);
 	}
-	.controls input:not([type]) {
+	.controls input:not([type]),
+	.from select {
 		padding: 7px 10px;
 		border: 1px solid var(--border);
 		border-radius: 8px;
 		background: var(--surface-2);
+	}
+	/* as wide as its column, not as its longest list's name */
+	.from {
+		min-width: 0;
+	}
+	.from label {
+		min-width: 0;
+		max-width: 100%;
+	}
+	.from select {
+		width: 100%;
+		max-width: 320px;
+		font: inherit;
+		color: inherit;
 	}
 	.toggles {
 		display: flex;
