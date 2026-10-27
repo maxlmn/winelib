@@ -18,7 +18,7 @@ NON_LOCAL_KEYWORDS = list(settings.current.non_local_keywords)
 
 CELLAR_SQL = text("""
     SELECT b.id AS bottle_id, b.location, b.qty, b.bottle_size, b.price, b.currency,
-           b.last_price, b.purchase_date,
+           b.last_price, b.purchase_date, b.vendor,
            w.id AS wine_id, w.vineyard_id, w.type AS color, w.cuvee, w.vintage, w.disgorgement_date, pc.score AS score,
            w.lwin,
            w.drink_window_start, w.drink_window_end,
@@ -131,6 +131,7 @@ def _load_cellar(session):
             "drink_from": r["drink_window_start"], "drink_to": r["drink_window_end"],
             "maturity": maturity(r["drink_window_start"], r["drink_window_end"]),
             "purchase_date": r["purchase_date"].isoformat() if hasattr(r["purchase_date"], "isoformat") else r["purchase_date"],
+            "vendor": r["vendor"],
         })
 
     locations = [

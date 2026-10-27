@@ -16,7 +16,7 @@
 		open ? (what === 'session' && session.length > 1 ? sessionSticker(session, when, where, style) : tastingSticker(wine, when, where, style)) : null
 	);
 	const src = $derived(canvas?.toDataURL('image/png') ?? '');
-	const name = $derived(`${filename}${what === 'session' ? '-evening' : ''}.png`);
+	const name = $derived(`${filename}${what === 'session' ? '-session' : ''}.png`);
 	const canShare = typeof navigator !== 'undefined' && !!navigator.canShare;
 
 	async function share() {
@@ -49,7 +49,7 @@
 				{#if session.length > 1}
 					<div class="seg" role="group" aria-label="What">
 						<button class:on={what === 'wine'} onclick={() => (what = 'wine')}>This wine</button>
-						<button class:on={what === 'session'} onclick={() => (what = 'session')}>The evening · {session.length}</button>
+						<button class:on={what === 'session'} onclick={() => (what = 'session')}>The session · {session.length}</button>
 					</div>
 				{/if}
 				<div class="seg" role="group" aria-label="Style">
