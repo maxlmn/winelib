@@ -14,6 +14,7 @@
 	import CriticScores from './CriticScores.svelte';
 	import Tabs from './Tabs.svelte';
 	import TastingHistory from './TastingHistory.svelte';
+	import WishButton from './WishButton.svelte';
 
 	interface Props {
 		wine: WineDetail;
@@ -63,6 +64,7 @@
 {#snippet actions()}
 	<a class="btn" href={links.editWine(wine.id)}>Edit wine</a>
 	{#if !wine.vineyard}<a class="btn" href={links.newVineyard(wine.id)}>Draw vineyard</a>{/if}
+	<WishButton wineId={wine.id} item={wine.wishlist} />
 	<a class="btn" href={links.newBottle({ wine_id: wine.id })}>＋ Bottle</a>
 	<a class="btn primary" href={links.newTasting({ wine_id: wine.id })}>＋ Tasting</a>
 {/snippet}

@@ -45,10 +45,12 @@ def test_migrations_match_the_models(tmp_path):
 
 
 def test_a_database_at_the_last_revision_before_the_release(tmp_path):
-    """0011, the last migration before they were squashed into one 0001 at the release: the schema is already the
-    head's, the database ends up at the head without any change (re-stamped where 0011 no longer exists)."""
+    """0011, the last migration before they were squashed into one 0001 at the release: its schema is 0001's, the
+    database is re-stamped 0001 (0011 no longer exists) and upgraded from there to the head."""
+    from alembic import command
     engine = create_engine(f"sqlite:///{tmp_path / 'before.db'}")
-    migrate.upgrade(engine)
+    with engine.begin() as c:
+        command.upgrade(migrate.config(c), "0001")
     with engine.begin() as c:
         c.execute(text("UPDATE alembic_version SET version_num = '0011'"))
     migrate.upgrade(engine)
