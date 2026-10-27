@@ -3,6 +3,7 @@
 `GET /api/appellations/{id}` and `GET /api/vineyards/{id}` also feed the map's side panel: keep their fields.
 """
 
+from datetime import date
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session, joinedload
@@ -218,6 +219,11 @@ def bottle_detail(bottle_id: int, session: Session = Depends(get_session)):
         "last_price": b.last_price, "last_price_date": iso(b.last_price_date), "last_price_source": b.last_price_source,
         "change_pct": round(change, 1) if change is not None else None,
         "vendor": b.vendor, "provenance": b.provenance, "purchase_date": iso(b.purchase_date),
+        # what happened to these bottles besides being drunk (gifted, sold, broken); the tastings are the drunk ones
+        "events": [{"id": e.id, "kind": e.kind, "qty": e.qty, "date": iso(e.date), "note": e.note, "price": e.price,
+                    "currency": e.currency} for e in b.events],
+        "drunk": [{"id": t.id, "date": iso(t.date), "place": t.place.name if t.place else t.location}
+                  for t in sorted(b.tastings, key=lambda t: t.date or date.min, reverse=True)],
     }
 
 

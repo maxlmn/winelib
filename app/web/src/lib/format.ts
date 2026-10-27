@@ -25,6 +25,12 @@ export const compact = (n: number) => (n >= 1000 ? `${whole.format(n / 1000)}k` 
 
 export const pct = (from: number, to: number) => (from ? ((to - from) / from) * 100 : 0);
 
+/** Today in the browser's own time zone, YYYY-MM-DD (toISOString's is UTC: yesterday, early in the morning in Asia) */
+export const today = () => {
+	const d = new Date();
+	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 export const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 /** One bar per bottle, its width scaled by format: 37.5cl = 2px, 75cl = 4px, magnum = 8px... */

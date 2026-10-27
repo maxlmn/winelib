@@ -6,7 +6,7 @@ import paths  # where the files are
 # The tables: models.py
 from models import (  # noqa: F401
     Appellation, Base, Bottle, CriticScore, CustomShape, Place, Producer, ReferenceKey, Region, RestaurantVisit,
-    TastingNote, Varietal, Vineyard, Wine, WineGrape, WineList, ListItem,
+    TastingNote, Varietal, Vineyard, Wine, WineGrape, WineList, ListItem, BottleEvent,
 )
 
 DB_URL = paths.DB_URL

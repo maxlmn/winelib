@@ -6,7 +6,8 @@
 	import { fmtDate } from '#lib/components/details/wine.ts';
 	import { links } from '#lib/links.ts';
 	import Change from '#lib/components/Change.svelte';
-	import { amount, pct, money } from '#lib/format.ts';
+	import { amount, pct, money, today } from '#lib/format.ts';
+	import type { OutKind } from '#lib/api/details.ts';
 
 	let { data } = $props();
 	const b = $derived(data.bottle);
@@ -59,6 +60,48 @@
 		}
 	}
 
+	// Bottles that left other than by being drunk: gifted, sold, broken...; taken off the count, put back if undone
+	const KINDS: { id: OutKind; label: string; past: string; note: string }[] = [
+		{ id: 'gifted', label: 'Gifted', past: 'Gifted', note: 'To whom?' },
+		{ id: 'sold', label: 'Sold', past: 'Sold', note: 'To whom, where?' },
+		{ id: 'broken', label: 'Broken', past: 'Broken', note: 'What happened?' },
+		{ id: 'other', label: 'Other', past: 'Gone', note: 'What happened to it?' }
+	];
+	const kindOf = (id: OutKind) => KINDS.find((k) => k.id === id) ?? KINDS[3];
+	let out = $state<{ kind: OutKind; qty: number; date: string; note: string; price: number | null } | null>(null);
+	let outError = $state('');
+	function startOut() {
+		outError = '';
+		out = { kind: 'gifted', qty: 1, date: today(), note: '', price: null };
+	}
+	async function saveOut() {
+		if (!out) return;
+		outError = '';
+		const res = await fetch(`/api/bottles/${b.id}/out`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ ...out, price: out.kind === 'sold' ? out.price : null })
+		});
+		if (!res.ok) {
+			outError = (await res.json().catch(() => ({}))).detail ?? `Error ${res.status}`;
+			return;
+		}
+		out = null;
+		await invalidateAll();
+	}
+	async function undoOut(id: number) {
+		const res = await fetch(`/api/bottles/${b.id}/out/${id}`, { method: 'DELETE' });
+		if (res.ok) await invalidateAll();
+	}
+	// The bottles' story, newest first: drunk (its tastings) and the rest
+	const story = $derived(
+		[
+			...b.drunk.map((t) => ({ key: `t${t.id}`, date: t.date, tasting: t, event: null })),
+			...b.events.map((e) => ({ key: `e${e.id}`, date: e.date, tasting: null, event: e }))
+		].sort((x, y) => (y.date ?? '').localeCompare(x.date ?? ''))
+	);
+	const gone = $derived(b.drunk.length + b.events.reduce((n, e) => n + e.qty, 0));
+
 	async function savePrices() {
 		saving = true;
 		try {
@@ -93,9 +136,34 @@
 		</div>
 		<div class="actions">
 			<a class="btn" href={links.editBottle(b.id)}>Edit bottle</a>
+			{#if b.qty}<button class="btn" onclick={startOut} disabled={!!out}>Took some out</button>{/if}
 			<a class="btn primary" href={links.newTasting({ bottle_id: b.id })}>Drink</a>
 		</div>
 	</div>
+	{#if out}
+		<form class="out" onsubmit={(e) => { e.preventDefault(); saveOut(); }}>
+			<div class="seg" role="group" aria-label="What happened">
+				{#each KINDS as k (k.id)}
+					<button type="button" class:on={out.kind === k.id} onclick={() => out && (out.kind = k.id)}>{k.label}</button>
+				{/each}
+			</div>
+			<div class="fields">
+				{#if b.qty > 1}
+					<label><span class="label">How many</span><input type="number" min="1" max={b.qty} bind:value={out.qty} /></label>
+				{/if}
+				<label><span class="label">When</span><input type="date" bind:value={out.date} /></label>
+				{#if out.kind === 'sold'}
+					<label><span class="label">For, a bottle ({b.currency ?? appSettings.currency})</span><input type="number" min="0" step="any" bind:value={out.price} placeholder="Optional" /></label>
+				{/if}
+				<label class="note"><span class="label">Note</span><input bind:value={out.note} placeholder={kindOf(out.kind).note} /></label>
+			</div>
+			<div class="buttons">
+				<button class="btn primary">Take {out.qty > 1 ? `${out.qty} bottles` : 'it'} out</button>
+				<button type="button" class="btn" onclick={() => (out = null)}>Cancel</button>
+				{#if outError}<span class="msg">{outError}</span>{/if}
+			</div>
+		</form>
+	{/if}
 	<div class="grid">
 		<div class="price">
 			<div class="label">Purchase</div>
@@ -168,6 +236,27 @@
 			]}
 		/>
 	</div>
+	{#if story.length}
+		<div class="story">
+			<div class="label">What happened to {gone > 1 ? 'them' : 'it'}</div>
+			<ul>
+				{#each story as s (s.key)}
+					<li>
+						<span class="when num">{s.date ? fmtDate(s.date) : 'Undated'}</span>
+						{#if s.tasting}
+							<span class="what drunk">Drunk</span>
+							<a href={links.tasting(s.tasting.id)}>{s.tasting.place ?? 'the tasting'}</a>
+						{:else if s.event}
+							<span class="what {s.event.kind}">{kindOf(s.event.kind).past}{s.event.qty > 1 ? ` ×${s.event.qty}` : ''}</span>
+							{#if s.event.note}<span>{s.event.note}</span>{/if}
+							{#if s.event.price}<span class="muted num">{amount(s.event.price, s.event.currency)}</span>{/if}
+							<button class="undo" onclick={() => s.event && undoOut(s.event.id)} title="Put {s.event.qty > 1 ? 'them' : 'it'} back in the cellar">Undo</button>
+						{/if}
+					</li>
+				{/each}
+			</ul>
+		</div>
+	{/if}
 </section>
 
 {#key wine.id}
@@ -205,7 +294,111 @@
 	}
 	.actions {
 		display: flex;
+		flex-wrap: wrap;
 		gap: 8px;
+	}
+	.out {
+		margin-top: 14px;
+		padding: 12px 14px;
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		background: var(--surface-2);
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+	.seg {
+		display: inline-flex;
+		align-self: flex-start;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		overflow: hidden;
+	}
+	.seg button {
+		border: none;
+		background: var(--surface);
+		padding: 6px 12px;
+		font: inherit;
+		font-size: 13px;
+		color: var(--muted);
+		cursor: pointer;
+	}
+	.seg button.on {
+		background: var(--accent);
+		color: #fff;
+	}
+	.fields {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px 14px;
+	}
+	.fields label {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+	.fields .note {
+		flex: 1 1 220px;
+	}
+	.fields input {
+		padding: 6px 9px;
+		border: 1px solid var(--border);
+		border-radius: 7px;
+		background: var(--surface);
+		font: inherit;
+		font-size: 13px;
+		color: inherit;
+	}
+	.fields input[type="number"] {
+		width: 110px;
+	}
+	.out .buttons {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.story {
+		margin-top: 16px;
+		padding-top: 12px;
+		border-top: 1px solid var(--border);
+	}
+	.story ul {
+		list-style: none;
+		margin: 6px 0 0;
+		padding: 0;
+		font-size: 13px;
+	}
+	.story li {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 4px 10px;
+		padding: 4px 0;
+	}
+	.story .when {
+		width: 96px;
+		color: var(--muted);
+	}
+	.what {
+		font-weight: 600;
+	}
+	.what.drunk {
+		color: var(--up, #2e7d57);
+	}
+	.what.broken {
+		color: var(--down);
+	}
+	.undo {
+		margin-left: auto;
+		border: none;
+		background: none;
+		padding: 0;
+		font-size: 12px;
+		color: var(--muted);
+		cursor: pointer;
+	}
+	.undo:hover {
+		color: var(--accent);
 	}
 	.grid {
 		display: grid;
