@@ -149,7 +149,8 @@ def tasting_detail(tasting_id: int, session: Session = Depends(get_session)):
             "scores": scores.listing(w.scores),
             "drink_from": w.drink_window_start, "drink_to": w.drink_window_end,
         },
-        "occasion": [{"id": o.id, "seq": o.sequence, "glasses": o.glasses, "rating": o.rating, **short_wine(o)} for o in occasion],
+        "occasion": [{"id": o.id, "seq": o.sequence, "glasses": o.glasses, "rating": o.rating,
+                      "notes": (o.notes or "").strip(), **short_wine(o)} for o in occasion],
         "history": [{"id": h.id, "date": iso(h.date), "place": h.place.name if h.place else h.location,
                      "place_id": h.place_id, "rating": h.rating, "notes": (h.notes or "").strip(), **short_wine(h)}
                     for h in history],
