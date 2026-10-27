@@ -5,8 +5,8 @@ worth, every wine you've tasted and where, and puts them on the map of the world
 vineyard. It runs on your own computer: your data stays yours.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="screenshots/wine-dark.png">
-  <img alt="A wine with its appellation and vineyard on the map" src="screenshots/wine.png">
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/demo-dark.gif">
+  <img alt="A walk through WineLib: the cellar's racks, a search, a wine's vineyard on the map, the world map" src="screenshots/demo.gif">
 </picture>
 
 ## What it does
@@ -33,6 +33,11 @@ vineyard; a region's page, where what you drink comes from.
   <img alt="A region: its map, what you drink from it" src="screenshots/map.png">
 </picture>
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/wine-dark.png">
+  <img alt="A wine with its appellation and vineyard on the map" src="screenshots/wine.png">
+</picture>
+
 **Draw what the map doesn't have.** A lieu-dit, a monopole, an appellation without an official outline: draw it on
 the satellite view, start from the official outline and refine it, or import a GeoJSON or KML file.
 
@@ -44,7 +49,11 @@ the satellite view, start from the official outline and refine it, or import a G
 **The cellar.** Each storage place as a wine rack: a bottle end per bottle in its region's colour, the wine's colour
 as the cork, magnums bigger; hover one for the wine, click to open it. Then the wines, reds and whites apart, with
 the critics' scores and whether each is ready to drink. Also a shelf map bin by bin, a list, a vintage
-chart, prices and their changes.
+chart, prices and their changes, and a **wine list** to print: the cellar or a selection laid out like a
+restaurant's, saved as a PDF.
+
+**The wishlist.** The wines you'd like, found in WineLib or added as new ones, with a note, where to find them and
+their market price; it says when you already have some.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="screenshots/cellar-dark.png">
