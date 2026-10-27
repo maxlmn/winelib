@@ -199,8 +199,14 @@
 		color: white;
 	}
 	.chip.current .n,
-	.chip.current .tick {
+	.chip.current .tick,
+	.chip.current .listed {
 		color: white;
+	}
+	/* the score's pill on the selected vintage: white, as its other marks */
+	.chip.current .score {
+		color: white;
+		border-color: rgba(255, 255, 255, 0.7);
 	}
 	.n {
 		font-weight: 650;
