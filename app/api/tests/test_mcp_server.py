@@ -69,7 +69,7 @@ def test_two_tools_add_the_rest_read():
     listed = asyncio.run(server.mcp.list_tools())
     assert {t.name for t in listed} >= {"search", "cellar", "what_to_open", "wine", "tastings", "lists", "wishlist", "region", "producer"}
     writes = {t.name for t in listed if not t.annotations.read_only_hint}
-    assert writes == {"create_list", "add_to_list"}  # the others only read
+    assert writes == {"create_list", "add_to_list", "add_wine", "add_tasting", "add_bottle"}  # the others only read
     assert not any(t.annotations.destructive_hint for t in listed if t.name in writes)  # they only add
 
 
@@ -129,3 +129,50 @@ def test_tastings_by_day_place_and_words(tools):
     assert tools.tastings(on="2026-05-01")["tastings"] == 1
     assert tools.tastings(text="violets")["tastings"] == 1 and tools.tastings(text="wow")["tastings"] == 0
     assert tools.tastings(until="2025")["tastings"] == 0
+
+
+def test_a_label_to_a_tasting(tools, client, monkeypatch):
+    """A label's photo read by the assistant: the names looked up (the producer reused), the wine and the tasting
+    added after the user's yes; a wine already there is used, not doubled; a bottle from the cellar comes off."""
+    import asyncio
+    def post(path, body=None):
+        r = client.post(path, json=body)
+        if r.status_code >= 400:
+            raise ValueError(r.json().get("detail"))
+        return r.json()
+    monkeypatch.setattr(tools, "post", post)
+    poyeux = tools.NewWine(producer="Clos Rougeard", cuvee="Les Poyeux", vintage="2018", color="Red",
+                           appellation="Saumur-Champigny", grapes=["Cabernet Franc"])
+
+    # Declined: nothing written
+    ctx = FakeCtx(False)
+    r = asyncio.run(tools.add_tasting(ctx, new_wine=poyeux, notes="Graphite, cherries", place="@Mia"))
+    assert r["done"] is False and "a new wine: Clos Rougeard Les Poyeux 2018" in ctx.asked[0]
+    assert "producer Clos Rougeard" in ctx.asked[0] and "“Saumur-Champigny” (new)" in ctx.asked[0]
+    assert "Mia’s" in ctx.asked[0]
+    assert not [x for x in tools.search("poyeux 2018") if x["kind"] == "wine"]
+
+    # Accepted: the wine (its producer the one there) and the tasting, today, at Mia's
+    r = asyncio.run(tools.add_tasting(FakeCtx(True), new_wine=poyeux, notes="Graphite, cherries", place="@Mia", rating=94))
+    t = client.get(f"/api/tastings/{r['tasting_id']}").json()
+    assert (t["date"], t["notes"], t["rating"], t["place"]["type"]) == (date.today().isoformat(), "Graphite, cherries", 94, "Friend's Place")
+    assert len([p for p in client.get("/api/lookups/producers", params={"q": "rougeard"}).json()]) == 1  # not doubled
+
+    # The same wine again: it's there now, so it's used, not created twice
+    again = asyncio.run(tools.add_wine(poyeux, FakeCtx(True)))
+    assert again["already"] is True and again["wine_id"] == r["wine_id"]
+    assert "Already in WineLib" in asyncio.run(tools.add_bottle(FakeCtx(True), new_wine=poyeux))["error"]
+
+    # A bottle from the cellar opened at Home (a place it has): one fewer in the cellar
+    le_clos = next(x["id"] for x in tools.search("le clos 2014") if x["kind"] == "wine")
+    before = sum(x["qty"] for x in client.get(f"/api/wines/{le_clos}").json()["cellar"] if x["wine_id"] == le_clos)
+    ctx = FakeCtx(True)
+    asyncio.run(tools.add_tasting(ctx, wine_id=le_clos, place="Home", from_cellar=True, on="2026-10-20"))
+    assert "at Home" in ctx.asked[0] and "comes off the count" in ctx.asked[0]
+    after = sum(x["qty"] for x in client.get(f"/api/wines/{le_clos}").json()["cellar"] if x["wine_id"] == le_clos)
+    assert after == before - 1
+
+    # Bottles bought: in the cellar, today
+    r = asyncio.run(tools.add_bottle(FakeCtx(True), wine_id=le_clos, qty=3, location="H2", price=280, currency="EUR"))
+    b = client.get(f"/api/bottles/{r['bottle_id']}").json()
+    assert (b["qty"], b["location"], b["price"], b["purchase_date"]) == (3, "H2", 280, date.today().isoformat())

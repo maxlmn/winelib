@@ -5,11 +5,13 @@ with lamb tonight from what's at home?*, *which 2019 Burgundies do I have?*, *wh
 Loire wines did I score above 93?*, *what's left to taste on the Noble Rot list?*
 
 `server.py` is a small MCP server that works with WineLib through its API: the running app, never the database.
-It reads, and it can **add lists** for you (*make a list of every wine I drank on 3 October at Claude's*, *…of the
-wines whose note says "wow"*): it shows you the list and its entries and does nothing until you say yes. It never
-changes or deletes anything; a list it made can be deleted in the app.
+It reads, and it can **add** for you: lists (*make a list of every wine I drank on 3 October at Claude's*), and
+wines, tastings and bottles, from your words or **a photo of the label**: share the picture and say *I drank this
+tonight at Claudine, my notes: …*. The assistant reads the label, looks the wine up in WineLib (the producer, the
+appellation and the place are matched to yours: nothing doubled), shows you what it will add and does nothing until
+you say yes. It never changes or deletes anything; what it added can be deleted in the app.
 
-## What it can read
+## What it can do
 
 | Tool | |
 |---|---|
@@ -21,6 +23,9 @@ changes or deletes anything; a list it made can be deleted in the app.
 | `lists`, `wishlist` | your lists and your progress on them: each entry tasted or not, owned or not, its note |
 | `region`, `producer` | what you hold and have tasted from a region or a producer |
 | `create_list`, `add_to_list` | **add**: a new list with its entries, or entries on one of your lists; after your yes |
+| `add_tasting` | **add**: a tasting (today unless said, your notes, a rating if you gave one, the place), of a wine in WineLib or a new one read off its label; a bottle from your cellar comes off the count if you opened one of yours |
+| `add_bottle` | **add**: bottles bought (how many, where they're kept, the price, the vendor), of a wine in WineLib or a new one |
+| `add_wine` | **add**: a wine alone, no bottle or tasting |
 
 Your yes comes through the assistant's own confirmation dialog when it has one (Claude Desktop, Claude Code); with
 one that hasn't, the assistant shows you the preview and asks, and the tool acts only when called again with the
