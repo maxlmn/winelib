@@ -342,7 +342,13 @@ def _prices(session, job, force=False):
     """force: every cellar bottle with an LWIN, however recent its price; else not those priced in the last 90 days."""
     from tasks import update_market_prices as prices
     bottles = prices.cellar_bottles(session, max_age_days=0 if force else prices.PRICE_MAX_AGE_DAYS)
+    wished = prices.wishlist_items(session, max_age_days=0 if force else prices.PRICE_MAX_AGE_DAYS)
+    bottles += wished  # the wishlist's wines, priced like bottles
     scope = "" if force else f" not priced in {prices.PRICE_MAX_AGE_DAYS} days"
+    on_list = f" and {_n(len(wished), 'wishlist wine')}" if wished else ""
+
+    def link(b):
+        return "/wishlist" if b in wished else f"/bottles/{b.id}"
 
     def label(b):
         return " ".join(x for x in (b.wine.producer.name, b.wine.cuvee or "", b.wine.vintage or "") if x)
@@ -357,8 +363,8 @@ def _prices(session, job, force=False):
         rest = {(b.wine.lwin, b.wine.vintage, (b.currency or settings.current.currency).upper()) for b in bottles if b not in from_bi}
         items = [_item(label(b), (f"{money(b.last_price, b)} on {b.last_price_date:%d %b %Y}" if b.last_price
                                   and b.last_price_date else "no price yet")
-                       + (" · Bordeaux Index" if b in from_bi else ""), f"/bottles/{b.id}") for b in bottles]
-        return {"summary": f"{_n(len(bottles), 'cellar bottle')} with an LWIN{scope}: "
+                       + (" · Bordeaux Index" if b in from_bi else ""), link(b)) for b in bottles]
+        return {"summary": f"{_n(len(bottles) - len(wished), 'cellar bottle')}{on_list} with an LWIN{scope}: "
                            f"{len(from_bi)} from your Bordeaux Index portfolio; for the rest ({_n(len(rest), 'wine')}) "
                            f"a run asks the BI market{' then WineLabs.ai' if prices.api_key() else ''} "
                            f"(~{max(1, len(rest) // 30)} min).", "items": items[:MAX_ITEMS]}
@@ -366,7 +372,7 @@ def _prices(session, job, force=False):
         raise RuntimeError("No price source: set WINELABS_API_KEY (or the BI_ login) in .secrets.env")
     done = prices.refresh_prices(session, bottles, log=job.log)
     items = [_item(label(b), f"{money(old, b) if old else '–'} → {money(new, b) if new else 'no price'}",
-                   f"/bottles/{b.id}") for b, old, new in done if new is None or old is None or abs(new - old) >= 0.5]
+                   link(b)) for b, old, new in done if new is None or old is None or abs(new - old) >= 0.5]
     found = sum(1 for _, _, p in done if p)
     return {"summary": f"{found} of {_n(len(done), 'bottle')} priced; {len(items)} changed or without a price.",
             "items": items[:MAX_ITEMS]}

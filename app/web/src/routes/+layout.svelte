@@ -39,6 +39,7 @@
 	const nav = [
 		{ href: links.home(), label: 'Home', icon: 'grid' },
 		{ href: links.cellar(), label: 'Cellar', icon: 'bottle' },
+		{ href: links.wishlist(), label: 'Wishlist', icon: 'star' },
 		{ href: links.tastings(), label: 'Tasting Notes', icon: 'glass' },
 		{ href: links.summary(), label: 'Summary', icon: 'chart' },
 		{ href: links.producers(), label: 'Producers', icon: 'person' },

@@ -29,6 +29,14 @@ selection (what's at home, the reds for tonight), or open it unfiltered for the 
 line under it; leave a wine out with its ✕, or one vintage by clicking it. Like the filters, all of it is in the
 address: bookmark a list to make it again.
 
+## The wishlist
+
+**Wishlist** (in the menu) keeps the wines you'd like: add one from its page (**☆ Wishlist**) or by searching on the
+list; a wine not in WineLib yet is added as a new wine first. Each one takes the price you'd pay for a bottle, its
+size, a note and where to find it; **Any vintage** when the cuvée is what matters. With an LWIN, its market price comes
+with the cellar's (**Market prices** in Maintenance, nightly as well, or its own **Market price** link), and the list
+says when it's **below your price**. It also says when you already have some in the cellar.
+
 ## Values and market prices
 
 A bottle's value is its market price when it has one, else what you paid. Market prices come by the wine's **LWIN**
