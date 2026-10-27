@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
+	import { onMount } from 'svelte';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
 	import ListDots from '#lib/components/ListDots.svelte';
 	import { addEntry, compareKeys, deleteList, editEntry, editList, entryName, KIND_LABEL, noteKey, removeEntry, type EntryKind, type ListEntry } from '#lib/api/lists.ts';
@@ -28,6 +29,24 @@
 			)
 	);
 	const hasNotes = $derived(list.items.some((i) => i.note));
+	// Greyed out, not hidden: what's left to find stands out in the whole list (remembered on this device)
+	let dim = $state({ tasted: false, owned: false });
+	onMount(() => {
+		try {
+			dim = { ...dim, ...JSON.parse(localStorage.getItem('winelib-list-dim') ?? '{}') };
+		} catch {
+			/* no storage: not remembered */
+		}
+	});
+	function setDim(key: 'tasted' | 'owned', on: boolean) {
+		dim = { ...dim, [key]: on };
+		try {
+			localStorage.setItem('winelib-list-dim', JSON.stringify(dim));
+		} catch {
+			/* no storage */
+		}
+	}
+	const dimmed = (i: ListEntry) => (dim.tasted && i.tasted) || (dim.owned && i.owned > 0);
 	const dots = $derived(list.items.map((i) => ({ tasted: i.tasted, owned: i.owned > 0, region: i.region, color: i.wine?.color ?? null })));
 	const pct = $derived(list.entries ? Math.round((100 * list.tasted) / list.entries) : 0);
 	const when = (d: string | null) => (d ? new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '');
@@ -169,6 +188,11 @@
 		<button class:on={show === 'tasted'} onclick={() => (show = 'tasted')}>Tasted <span class="num">{list.tasted}</span></button>
 		<button class:on={show === 'owned'} onclick={() => (show = 'owned')}>In the cellar <span class="num">{list.owned}</span></button>
 	</div>
+	<div class="dim" role="group" aria-label="Grey out">
+		<span class="muted">Grey out</span>
+		<label><input type="checkbox" checked={dim.tasted} onchange={(e) => setDim('tasted', e.currentTarget.checked)} /> tasted</label>
+		<label><input type="checkbox" checked={dim.owned} onchange={(e) => setDim('owned', e.currentTarget.checked)} /> in the cellar</label>
+	</div>
 	<label class="sort">
 		<span class="muted">Sort</span>
 		<select bind:value={sort}>
@@ -182,7 +206,7 @@
 
 	<ol class="entries card">
 		{#each shown as i (i.id)}
-			<li class:tasted={i.tasted}>
+			<li class:tasted={i.tasted} class:dimmed={dimmed(i)}>
 				<span class="tick" role="img" aria-label={i.tasted ? 'Tasted' : 'Not tasted yet'}>{#if i.tasted}✓{/if}</span>
 				<span class="end"><BottleEnd region={regionColor(i.region)} color={i.wine?.color} size={16} /></span>
 				<div class="what">
@@ -368,6 +392,23 @@
 		border: 1px solid var(--border);
 		border-radius: 8px;
 		overflow: hidden;
+	}
+	.dim {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		font-size: 13px;
+	}
+	.dim label {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
+	.entries li.dimmed {
+		opacity: 0.38;
+	}
+	.entries li.dimmed:hover {
+		opacity: 0.8;
 	}
 	.sort {
 		display: flex;
