@@ -20,6 +20,15 @@ named after a storage group's prefix (`H4` for Home's prefix `H`) goes in that g
 The filters (colour, region, producer, appellation, grape, vintage, storage, bin) live in the address, so a filtered
 view can be bookmarked. **Grape** finds a wine by any of its grapes, a blend's too.
 
+## A wine list to print
+
+**Wine list** (at the top of the cellar) lays the wines out like a restaurant's list, ready to print or save as a
+PDF: sparkling, whites, rosés, reds, then sweet and fortified; by region and appellation; one line per cuvée with its
+vintages, the format when it isn't a 75 cl bottle, no prices. It takes the cellar's filters, so filter first for a
+selection (what's at home, the reds for tonight), or open it unfiltered for the whole cellar. Give it a title and a
+line under it; leave a wine out with its ✕, or one vintage by clicking it. Like the filters, all of it is in the
+address: bookmark a list to make it again.
+
 ## Values and market prices
 
 A bottle's value is its market price when it has one, else what you paid. Market prices come by the wine's **LWIN**

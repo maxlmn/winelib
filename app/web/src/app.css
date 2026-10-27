@@ -234,3 +234,24 @@ button.sort {
 	cursor: pointer;
 	white-space: nowrap;
 }
+
+/* Printing (the wine list): the page alone, on white, without the sidebar or the phone's bar */
+@media print {
+	@page {
+		size: A4;
+		margin: 16mm 18mm;
+	}
+	html,
+	body {
+		background: #fff !important;
+	}
+	.shell {
+		display: block !important;
+	}
+	.shell > nav {
+		display: none !important;
+	}
+	.shell > main {
+		padding: 0 !important;
+	}
+}
