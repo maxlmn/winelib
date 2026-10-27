@@ -116,7 +116,8 @@
 	onMount(() => {
 		let m: MlMap | undefined;
 		(async () => {
-			m = await createMap(container, basemap);
+			// Opened where it will be fitted, when that's already known (the home page's map)
+			m = await createMap(container, basemap, extent ? { bounds: extent, fitBoundsOptions: { padding: 40 } } : undefined);
 			if (!worldCopies) m.setRenderWorldCopies(false);
 			{
 				const mm = m;

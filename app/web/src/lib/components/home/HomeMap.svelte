@@ -1,5 +1,6 @@
 <script lang="ts">
-	/** The home page's map: the regions you drink from or keep bottles of, in their colours; a click opens the region. */
+	/** The home page's map: the regions you drink from or keep bottles of, in their colours; a click opens the region.
+	 * Opened on `focus` (the latest tasting's region) when there's one, else on where most of your wine comes from. */
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import WineMap from '#lib/components/WineMap.svelte';
@@ -8,7 +9,7 @@
 	import type { Extent } from '#lib/geo.ts';
 	import type { RegionCollection, RegionProps } from '#lib/types.ts';
 
-	let { minHeight = 440 }: { minHeight?: number } = $props();
+	let { minHeight = 440, focus = null }: { minHeight?: number; focus?: string | null } = $props();
 
 	let overview = $state<RegionCollection | null>(null);
 	onMount(async () => {
@@ -21,6 +22,8 @@
 	// Fitted to the regions most of your bottles and tastings come from (90%), not every one: a single wine from Canada
 	// or China would widen it to the whole world; the whole map without any
 	const extent = $derived.by((): Extent | null => {
+		const focused = focus ? regions?.features.find((f) => f.properties.name === focus)?.properties.bbox : null;
+		if (focused) return focused;
 		const weight = (p: RegionProps) => p.bottles + p.tastings;
 		const ranked = (regions?.features ?? []).map((f) => f.properties).sort((a, b) => weight(b) - weight(a));
 		const total = ranked.reduce((n, p) => n + weight(p), 0);
