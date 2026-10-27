@@ -2,9 +2,10 @@
 	import CriticPills from '#lib/components/CriticPills.svelte';
 	import PlaceName from '#lib/components/PlaceName.svelte';
 	import { grapesText } from '#lib/grapes.ts';
-	import { regionLabel } from '#lib/regions.svelte.ts';
+	import BottleEnd from '#lib/components/BottleEnd.svelte';
+	import { regionColor, regionLabel } from '#lib/regions.svelte.ts';
 	import { appSettings } from '#lib/settings.svelte.ts';
-	import { FALLBACK_REGION, typeColor } from '#lib/colors.ts';
+	import { FALLBACK_REGION } from '#lib/colors.ts';
 	import { links } from '#lib/links.ts';
 	import { plural, money } from '#lib/format.ts';
 	import { photoSrc } from '#lib/api/photos.ts';
@@ -43,11 +44,12 @@
 <div class="head">
 	<div>
 		<div class="kicker">
-			<span class="dot" style:background={typeColor(w.color)} title={w.color}></span>
 			{#if w.region}<span class="swatch" style:background={w.region_color ?? FALLBACK_REGION}></span><a class="kicker-link" href={links.region(w.region)}>{regionLabel(w.region)}</a>{/if}
 			{#if w.appellation} · <a class="kicker-link" href={links.appellation(w.appellation.id)}>{w.appellation.name}</a>{/if}
 		</div>
-		<h1><a href={links.wine(w.id)}>{w.producer}{w.cuvee ? ` ${w.cuvee}` : ''}</a> <span class="vintage num">{w.vintage}</span></h1>
+		<h1>
+			<span class="bottle"><BottleEnd region={w.region_color ?? FALLBACK_REGION} color={w.color} format={b.format} size={20} title="{regionLabel(w.region)} · {w.color ?? ''}" /></span>
+			<a href={links.wine(w.id)}>{w.producer}{w.cuvee ? ` ${w.cuvee}` : ''}</a> <span class="vintage num">{w.vintage}</span></h1>
 		<div class="when">
 			<span class="num">{t.date ? fmtDay(t.date) : 'Undated'}</span>
 			{#if t.place}
@@ -97,7 +99,7 @@
 		<ol class="occasion">
 			{#each t.occasion as o (o.id)}
 				<li class:current={o.id === t.id}>
-					<span class="dot" style:background={typeColor(o.color)}></span>
+					<BottleEnd region={regionColor(o.region) ?? FALLBACK_REGION} color={o.color} size={11} title="{regionLabel(o.region ?? null)} · {o.color ?? ''}" />
 					<a href={links.tasting(o.id)}><b>{o.producer}</b>{o.cuvee ? ` ${o.cuvee}` : ''} <span class="muted num">{o.vintage}</span></a>
 					{#if o.rating}<span class="mine num" title="Your score">{o.rating}</span>{/if}
 					<CriticPills scores={o.scores} />
@@ -305,9 +307,10 @@
 	.occasion li.current {
 		background: var(--accent-soft);
 	}
-	.occasion .dot {
-		width: 8px;
-		height: 8px;
+	.bottle {
+		display: inline-block;
+		margin-right: 8px;
+		transform: translateY(-2px);
 	}
 	.mine {
 		padding: 0 6px;
