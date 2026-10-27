@@ -28,6 +28,7 @@
 			href={d.href}
 			class="dot"
 			class:tasted={d.tasted}
+			class:faded={d.faded}
 			style:--region={regionColor(d.region) ?? FALLBACK_REGION}
 			style:--wine={d.color ? typeColor(d.color) : 'transparent'}
 			role={d.href ? undefined : 'img'}
@@ -69,6 +70,9 @@
 	.dot.tasted {
 		background: var(--region);
 		border-color: color-mix(in srgb, var(--region) 70%, #000);
+	}
+	.dot.faded {
+		opacity: 0.18;
 	}
 	.dot:hover,
 	.dot:focus-visible {

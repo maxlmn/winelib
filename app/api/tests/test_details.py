@@ -83,7 +83,7 @@ def wine_id(chandon, vintage, cuvee="Les Vergelesses"):
 
 def test_producer_header_and_stats(chandon):
     assert chandon["region"] == "Bourgogne" and chandon["region_color"] == "#d97693"
-    assert chandon["lists"] == ["Top Burgundy", "New French Wine"]
+    assert "lists" not in chandon  # the old text field: the lists themselves are on the page (/api/lists-of)
     assert chandon["stats"] == {"bottles": 3, "value": round(2 * 60 * 1.49 + 100), "tastings": 2, "wines": 5}
 
 

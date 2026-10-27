@@ -108,6 +108,17 @@ export function noteKey(note: string | null): [number, number, string] {
 export const compareKeys = (a: [number, number, string], b: [number, number, string]) =>
 	a[0] - b[0] || a[1] - b[1] || a[2].localeCompare(b[2]);
 
+/** Text without accents, in lower case: "Côte-Rôtie" finds "cote rotie" */
+const fold = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+
+/** Whether every word of the query is in one of these texts (names, notes...), accents aside; an empty query matches */
+export function matches(query: string, ...texts: (string | null | undefined)[]): boolean {
+	const words = fold(query).split(/\s+/).filter(Boolean);
+	if (!words.length) return true;
+	const hay = fold(texts.filter(Boolean).join(' '));
+	return words.every((w) => hay.includes(w));
+}
+
 /** An entry as a bottle end in a list's mosaic */
 export interface Dot {
 	tasted: boolean;
@@ -119,6 +130,8 @@ export interface Dot {
 	label?: string;
 	/** its page (the list's own mosaic; the lists page's cards are links already) */
 	href?: string;
+	/** faded: not what a search is after */
+	faded?: boolean;
 }
 
 export type DotOrder = 'list' | 'note' | 'tasted' | 'todo' | 'region';

@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
 	import ListDots from '#lib/components/ListDots.svelte';
-	import { addEntry, compareKeys, deleteList, editEntry, editList, entryName, KIND_LABEL, noteKey, removeEntry, type EntryKind, type ListEntry } from '#lib/api/lists.ts';
+	import { matches, addEntry, compareKeys, deleteList, editEntry, editList, entryName, KIND_LABEL, noteKey, removeEntry, type EntryKind, type ListEntry } from '#lib/api/lists.ts';
 	import { links } from '#lib/links.ts';
 	import { regionColor, regionLabel } from '#lib/regions.svelte.ts';
 
@@ -26,8 +26,12 @@
 						: a.position - b.position
 		)
 	);
+	// Find in the list: its entries' names, notes, appellations and regions
+	let find = $state('');
 	const shown = $derived(
-		sorted.filter((i) => (show === 'todo' ? !i.tasted : show === 'tasted' ? i.tasted : show === 'owned' ? i.owned > 0 : true))
+		sorted
+			.filter((i) => (show === 'todo' ? !i.tasted : show === 'tasted' ? i.tasted : show === 'owned' ? i.owned > 0 : true))
+			.filter((i) => matches(find, entryName(i), i.note, i.wine?.appellation, i.region))
 	);
 	const hasNotes = $derived(list.items.some((i) => i.note));
 	// Greyed out, not hidden: what's left to find stands out in the whole list (remembered on this device)
@@ -194,6 +198,7 @@
 
 {#if list.items.length}
 	<div class="tools">
+	<input class="find" type="search" bind:value={find} placeholder="Find in the list: a name, a note…" aria-label="Find in the list" />
 	<div class="filters" role="group" aria-label="Show">
 		<button class:on={show === 'all'} onclick={() => (show = 'all')}>All <span class="num">{list.entries}</span></button>
 		<button class:on={show === 'todo'} onclick={() => (show = 'todo')}>To taste <span class="num">{list.entries - list.tasted}</span></button>
@@ -256,6 +261,7 @@
 			</li>
 		{/each}
 	</ol>
+	{#if !shown.length && find.trim()}<p class="muted none">Nothing on the list matches “{find.trim()}”.</p>{/if}
 {/if}
 
 <style>
@@ -390,6 +396,21 @@
 	}
 	.hint {
 		margin: 0 2px;
+		font-size: 13px;
+	}
+	.find {
+		flex: 1 1 220px;
+		max-width: 320px;
+		padding: 7px 10px;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		background: var(--surface-2);
+		font: inherit;
+		font-size: 13px;
+		color: inherit;
+	}
+	.none {
+		margin: 4px 2px 0;
 		font-size: 13px;
 	}
 	.tools {

@@ -105,7 +105,6 @@ export interface ProducerDetail extends RegionInfo {
 	profile_url: string | null;
 	/** other names it goes by, comma separated */
 	aliases: string | null;
-	lists: string[];
 	stats: CellarTotals & { tastings: number; wines: number };
 	wines: CatalogEntry[];
 	/** where the wines come from, most tasted first: wines, bottles in the cellar and tastings each */

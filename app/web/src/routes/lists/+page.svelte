@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import ListDots from '#lib/components/ListDots.svelte';
-	import { createList, DOT_ORDERS, sortDots, type DotOrder } from '#lib/api/lists.ts';
+	import { createList, DOT_ORDERS, matches, sortDots, type DotOrder } from '#lib/api/lists.ts';
 	import { links } from '#lib/links.ts';
 
 	let { data } = $props();
@@ -35,6 +35,14 @@
 			/* no storage */
 		}
 	}
+	// Find a list by its name or source, or by an entry (a wine, a producer, a note): the matching bottle ends stay
+	// bright, the others fade
+	let find = $state('');
+	const named = (l: (typeof data.lists)[number]) => matches(find, l.name, l.source);
+	const hits = (l: (typeof data.lists)[number]) => l.dots.filter((d) => matches(find, d.label, d.note)).length;
+	const found = $derived(find.trim() ? lists.filter((l) => named(l) || hits(l)) : lists);
+	const dotsOf = (l: (typeof data.lists)[number]) =>
+		sortDots(find.trim() && !named(l) ? l.dots.map((d) => ({ ...d, faded: !matches(find, d.label, d.note) })) : l.dots, order);
 	const pct = (l: { tasted: number; entries: number }) => (l.entries ? Math.round((100 * l.tasted) / l.entries) : 0);
 	const milestone = (l: { tasted: number; entries: number }) =>
 		!l.entries ? '' : l.tasted === l.entries ? 'Complete' : l.tasted * 2 >= l.entries ? 'Past halfway' : l.tasted ? '' : 'Not started';
@@ -59,6 +67,7 @@
 <div class="page-head">
 	<h1>Lists</h1>
 	{#if lists.length}
+		<input class="find" type="search" bind:value={find} placeholder="Find a list, a wine, a note…" aria-label="Find in the lists" />
 		<label class="order">
 			<span class="muted">Sort the mosaics</span>
 			<select value={order} onchange={(e) => setOrder(e.currentTarget.value as DotOrder)}>
@@ -89,14 +98,15 @@
 	</div>
 {:else}
 	<div class="grid">
-		{#each lists as l (l.id)}
+		{#each found as l (l.id)}
 			<a class="list card" href={links.list(l.id)}>
 				<div class="head">
 					<h2>{#if l.is_wishlist}<span class="star" aria-hidden="true">★</span> {/if}{l.name}</h2>
 					{#if milestone(l)}<span class="badge" class:done={l.tasted === l.entries}>{milestone(l)}</span>{/if}
 				</div>
 				{#if l.source}<div class="muted source">{l.source}</div>{/if}
-				<ListDots dots={sortDots(l.dots, order)} />
+				<ListDots dots={dotsOf(l)} />
+				{#if find.trim() && !named(l)}<div class="hits muted">{hits(l)} {hits(l) === 1 ? 'entry matches' : 'entries match'}</div>{/if}
 				{#if l.entries}
 					<div class="progress">
 						<span class="bar" aria-hidden="true"><span style:width="{pct(l)}%"></span></span>
@@ -109,11 +119,25 @@
 			</a>
 		{/each}
 	</div>
+	{#if !found.length}<p class="muted">No list, wine or note matches “{find.trim()}”.</p>{/if}
 {/if}
 
 <style>
-	.order {
+	.find {
 		margin-left: auto;
+		width: min(260px, 100%);
+		padding: 6px 10px;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		background: var(--surface-2);
+		font: inherit;
+		font-size: 13px;
+		color: inherit;
+	}
+	.hits {
+		font-size: 12px;
+	}
+	.order {
 		display: flex;
 		align-items: center;
 		gap: 6px;
