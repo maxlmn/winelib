@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- **What happened to a bottle**: gifted, sold (and for how much), broken or otherwise, not only drunk. "Took some
+- **What happened to a bottle**: gifted, sold (and for how much), broken or otherwise, not only drunk. "Take some
   out" on a bottle's page takes them off the count, with a date and a note; the bottle page tells its story (drunk,
   gifted...), and each can be undone.
 - **Find in the lists**: a list, a wine or a note across every list (the matching bottle ends stay bright), and in a

@@ -136,7 +136,7 @@
 		</div>
 		<div class="actions">
 			<a class="btn" href={links.editBottle(b.id)}>Edit bottle</a>
-			{#if b.qty}<button class="btn" onclick={startOut} disabled={!!out}>Took some out</button>{/if}
+			{#if b.qty}<button class="btn" onclick={startOut} disabled={!!out}>Take some out</button>{/if}
 			<a class="btn primary" href={links.newTasting({ bottle_id: b.id })}>Drink</a>
 		</div>
 	</div>
