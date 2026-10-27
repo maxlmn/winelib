@@ -284,6 +284,24 @@ class Bottle(Base):
                           order_by="BottleEvent.date.desc()")
 
 
+class WineTag(Base):
+    """A style tag set on a wine by hand ("fresh", "for ageing"): style_tags.py"""
+    __tablename__ = 'wine_tags'
+    __table_args__ = (UniqueConstraint('wine_id', 'tag'),)
+    id = Column(Integer, primary_key=True)
+    wine_id = Column(Integer, ForeignKey('wines.id', ondelete='CASCADE'), nullable=False, index=True)
+    tag = Column(String, nullable=False)
+
+
+class TastingTag(Base):
+    """A style tag picked in a tasting: that vintage's style as found that day"""
+    __tablename__ = 'tasting_tags'
+    __table_args__ = (UniqueConstraint('tasting_id', 'tag'),)
+    id = Column(Integer, primary_key=True)
+    tasting_id = Column(Integer, ForeignKey('tasting_notes.id', ondelete='CASCADE'), nullable=False, index=True)
+    tag = Column(String, nullable=False)
+
+
 class BottleEvent(Base):
     """Bottles that left the cellar other than by being drunk (a tasting): gifted, sold, broken, or otherwise.
     Recording one takes them off the bottle's count; removing it puts them back."""
@@ -315,6 +333,8 @@ class TastingNote(Base):
     bottle = relationship("Bottle", back_populates="tastings")
     place_id = Column(Integer, ForeignKey('places.id'))
     place = relationship("Place", back_populates="tastings")
+    # the wine's style as found in this tasting ("fresh", "mineral"): style_tags.py
+    styles = relationship("TastingTag", cascade="all, delete-orphan", order_by="TastingTag.id")
 
 class Place(Base):
     __tablename__ = 'places'

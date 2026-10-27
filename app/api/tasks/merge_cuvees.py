@@ -44,11 +44,17 @@ def carry(twin, w):
         if mine is None or (_empty(mine.score) and not _empty(s.score)):
             twin.set_score(s.critic, s.score, s.note, s.url, s.date)
     from sqlalchemy.orm import object_session
-    from models import ListItem
+    from models import ListItem, WineTag
     session = object_session(w)
-    if session is not None:  # and its list entries
+    if session is not None:  # and its list entries, and the style tags set on it
         session.query(ListItem).filter(ListItem.wine_id == w.id).update(
             {ListItem.wine_id: twin.id, ListItem.producer_id: twin.producer_id})
+        has = {t for t, in session.query(WineTag.tag).filter(WineTag.wine_id == twin.id)}
+        for row in session.query(WineTag).filter(WineTag.wine_id == w.id).all():
+            if row.tag in has:
+                session.delete(row)
+            else:
+                row.wine_id = twin.id
 
 
 def twin_of(session, w, producer_id, cuvee):
