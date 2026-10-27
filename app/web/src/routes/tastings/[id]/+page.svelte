@@ -9,6 +9,7 @@
 	import { plural, money } from '#lib/format.ts';
 	import { photoSrc } from '#lib/api/photos.ts';
 	import { fmtDay, stars, wineName } from '#lib/components/tastings/journal.ts';
+	import ShareSticker from '#lib/components/tastings/ShareSticker.svelte';
 
 	let { data } = $props();
 
@@ -23,6 +24,16 @@
 	const fields = (rows: [string, string | number | null | undefined][]) => rows.filter(([, v]) => v !== null && v !== undefined && v !== '');
 	// The critics with a score ("-": searched, none found)
 	const critics = $derived(w.scores.filter((s) => s.score && !['-', '0'].includes(s.score.trim())));
+	// For the share sticker: this wine and your note, the evening's wines in order (no score: the journal's 90 is a
+	// default, not one)
+	const sticker = $derived({
+		wine: { producer: w.producer, cuvee: w.cuvee, vintage: w.vintage, color: w.color, region: w.region, appellation: w.appellation?.name ?? null, notes: t.notes },
+		session: t.occasion.map((o) => ({ producer: o.producer, cuvee: o.cuvee, vintage: o.vintage, color: o.color, region: o.region ?? null, appellation: o.appellation ?? null, notes: o.notes ?? '' })),
+		when: t.date ? fmtDay(t.date) : '',
+		// a friend's home is named after them: "At Claude's"
+		where: [t.place?.type === "Friend's Place" ? `At ${t.place.name}’s` : (t.place?.name ?? t.location), t.place?.city].filter(Boolean).join(', '),
+		filename: `${[w.producer, w.cuvee, w.vintage].filter(Boolean).join('-')}`.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+	});
 </script>
 
 <svelte:head><title>{wineName(w)} · {t.date} · WineLib</title></svelte:head>
@@ -51,6 +62,7 @@
 	<div class="actions">
 		<a class="btn primary" href={links.editTasting(t.id)}>✎ Edit tasting</a>
 		<a class="btn" href={links.editBottle(b.id)}>Edit bottle</a>
+		<ShareSticker {...sticker} />
 	</div>
 </div>
 
