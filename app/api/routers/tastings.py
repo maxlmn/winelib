@@ -95,7 +95,8 @@ def photo(name: str, size: Optional[Literal["thumb", "large"]] = None, v: Option
 def short_wine(t: TastingNote):
     w = t.bottle.wine
     return {"producer": w.producer.name, "cuvee": w.cuvee or "", "vintage": vintage_label(w.vintage, w.disgorgement_date),
-            "color": w.type, "wine_id": w.id, "score": scores.preferred_score(w.scores), "scores": scores.label(w.scores)}
+            "color": w.type, "wine_id": w.id, "score": scores.preferred_score(w.scores), "scores": scores.label(w.scores),
+            "region": w.region_obj.name if w.region_obj else None, "appellation": w.appellation.name if w.appellation else None}
 
 
 @router.get("/api/tastings/{tasting_id}")

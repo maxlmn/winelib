@@ -32,3 +32,9 @@ Maintenance › **Place coordinates** finds the missing ones.
 - **Trends**: what you drink, year by year.
 
 The period (this year, the last 30 days, all time or your own dates) and the filters narrow everything.
+
+## Share a tasting
+
+**Share** on a tasting's page makes a sticker for a story, Strava-style: the wine, your score, when and where; or
+the whole evening, its wines in order. A transparent PNG (white or dark text) to lay over a photo, or a solid card.
+On a phone, **Share…** sends it to Instagram or anywhere; elsewhere, **Download PNG**.

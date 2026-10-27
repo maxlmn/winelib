@@ -62,6 +62,8 @@ interface WineBrief {
 	cuvee: string;
 	vintage: string;
 	color: string | null;
+	region?: string | null;
+	appellation?: string | null;
 }
 
 export interface TastingDetail {
