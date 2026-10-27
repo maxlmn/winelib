@@ -132,8 +132,15 @@ def test_dot_labels_and_what_waits_in_the_cellar(client):
     summary = next(x for x in client.get("/api/lists").json() if x["id"] == lst)
     assert [d["label"] for d in summary["dots"]] == [
         "Clos Rougeard Le Bourg (any vintage)", "Clos Rougeard Les Poyeux 2018", "Jean-Louis Chave (any of its wines)"]
-    # Le Bourg 2017 is in the cellar and the list's Le Bourg isn't ticked: suggested; Chave is ticked (the 2019)
-    waiting = client.get("/api/lists/in-cellar").json()
-    mine = {wid: [x for x in found if x["list_id"] == lst] for wid, found in waiting.items()}
+    # Le Bourg 2017 is in the cellar and the list's Le Bourg isn't ticked: waiting for it
+    in_cellar = client.get("/api/lists/in-cellar").json()
+    mine = {wid: [x for x in found if x["list_id"] == lst] for wid, found in in_cellar.items()}
     assert {wid: found for wid, found in mine.items() if found} == {
-        str(wine("le bourg 2017")): [{"list_id": lst, "list": "Loire", "note": "#1", "as": "cuvee"}]}
+        str(wine("le bourg 2017")): [{"list_id": lst, "list": "Loire", "note": "#1", "as": "cuvee", "waiting": True}]}
+
+    # A list whose entry is ticked still names the bottle, not waiting: Chave's 2019 is tasted, the 2018 bought
+    done = client.post("/api/lists", json={"name": "Northern Rhône"}).json()["id"]
+    client.post(f"/api/lists/{done}/items", json={"kind": "producer", "producer_id": producer("chave")})
+    assert client.post("/api/bottles", json={"wine": wine("clos florentin 2018"), "qty": 1, "location": "H2"}).status_code == 201
+    named = [x for x in client.get("/api/lists/in-cellar").json().get(str(wine("clos florentin 2018")), []) if x["list_id"] == done]
+    assert named == [{"list_id": done, "list": "Northern Rhône", "note": None, "as": "producer", "waiting": False}]
