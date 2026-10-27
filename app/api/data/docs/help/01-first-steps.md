@@ -30,3 +30,11 @@ the EU, the US, Australia and Burgundy's premiers crus) and links them to the ap
 
 **⌘K** (Ctrl K) searches everything: producers, wines, appellations, grapes, places. Every name is a link: a wine to
 its producer, appellation, vineyard, grapes and vintage, and back.
+
+## On your phone
+
+WineLib installs like an app, with its own icon, full screen: open it in the phone's browser, then **Share › Add to
+Home Screen** (iPhone, Safari) or **Install app** (Android, Chrome; on a computer, the install button in the address
+bar). The app keeps its own files on the phone, so it opens at once; your data stays on your server, so the phone
+needs to reach it: at home on the same Wi-Fi, elsewhere through Tailscale or your own sign-in in front. Installing
+needs an https address (Tailscale gives one: `tailscale serve`), or the computer itself (`localhost`).

@@ -1,6 +1,7 @@
 """WineLib API. Run from app/api:  uvicorn main:app --reload"""
 import importlib
 import logging
+import mimetypes
 import os
 import pkgutil
 import threading
@@ -17,6 +18,9 @@ import plugins
 import reference
 import routers
 from db import engine
+
+# The installable app's manifest (app/web/static): not in every system's list of types
+mimetypes.add_type("application/manifest+json", ".webmanifest")
 
 # The app's own messages (reference updates, the maps...) next to uvicorn's, which keeps its own handlers
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:     %(name)s: %(message)s")

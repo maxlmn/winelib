@@ -1,0 +1,20 @@
+{
+	"name": "WineLib",
+	"short_name": "WineLib",
+	"description": "Your wine cellar and tasting journal, on maps",
+	"start_url": "/",
+	"scope": "/",
+	"display": "standalone",
+	"background_color": "#f6f1ee",
+	"theme_color": "#f6f1ee",
+	"icons": [
+		{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+		{ "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+		{ "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+	],
+	"shortcuts": [
+		{ "name": "Cellar", "url": "/cellar" },
+		{ "name": "Add a tasting", "url": "/tastings/new" },
+		{ "name": "Wishlist", "url": "/wishlist" }
+	]
+}
