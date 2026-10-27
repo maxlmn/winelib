@@ -42,6 +42,14 @@ yet (created with it, producer too). Each one takes its size, a note and where t
 cuvée is what matters. The list says when you already have some in the cellar. With an LWIN, its market price comes
 with the cellar's (**Market prices** in Maintenance, nightly as well), or now with its own **Market price** link.
 
+## Lists
+
+**Lists** (in the menu) are wines to find and taste: a critic's top 100, Noble Rot's wines of the decade, every cuvée
+of a producer. An entry is a **wine** (that vintage), a **cuvée** (any vintage of it) or a **producer** (any of its
+wines), mixed as you like. Each ticks itself once you've tasted it, from your tasting notes: that vintage, any
+vintage, any of the producer's wines. The bottles you own show apart. Add entries by searching on the list, or with
+**＋ Add to a list** on a wine's or a producer's page, which also shows the lists it's on.
+
 ## Values and market prices
 
 A bottle's value is its market price when it has one, else what you paid. Market prices come by the wine's **LWIN**

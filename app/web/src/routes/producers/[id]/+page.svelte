@@ -2,6 +2,7 @@
 	import { shapesUrl } from '#lib/api/details.ts';
 	import CellarSection from '#lib/components/details/CellarSection.svelte';
 	import DetailHeader from '#lib/components/details/DetailHeader.svelte';
+	import ListsPanel from '#lib/components/details/ListsPanel.svelte';
 	import DetailMap from '#lib/components/details/DetailMap.svelte';
 	import Facts from '#lib/components/details/Facts.svelte';
 	import Stats from '#lib/components/details/Stats.svelte';
@@ -137,6 +138,8 @@
 			</aside>
 		</section>
 	{/if}
+
+	<ListsPanel producerId={p.id} />
 
 	<Tabs
 		tabs={[

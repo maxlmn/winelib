@@ -15,6 +15,7 @@
 	import Tabs from './Tabs.svelte';
 	import TastingHistory from './TastingHistory.svelte';
 	import WishButton from './WishButton.svelte';
+	import ListsPanel from './ListsPanel.svelte';
 
 	interface Props {
 		wine: WineDetail;
@@ -110,6 +111,8 @@
 			</section>
 		{/if}
 	</div>
+
+<ListsPanel wineId={wine.id} />
 
 <Tabs
 	tabs={[
