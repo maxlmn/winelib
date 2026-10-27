@@ -64,11 +64,13 @@ def test_wine_tastings_search(tools):
         tools.wine(9999)
 
 
-def test_the_tools_are_read_only():
+def test_two_tools_add_the_rest_read():
     import asyncio
     listed = asyncio.run(server.mcp.list_tools())
     assert {t.name for t in listed} >= {"search", "cellar", "what_to_open", "wine", "tastings", "lists", "wishlist", "region", "producer"}
-    assert all(t.annotations and t.annotations.read_only_hint for t in listed)
+    writes = {t.name for t in listed if not t.annotations.read_only_hint}
+    assert writes == {"create_list", "add_to_list"}  # the others only read
+    assert not any(t.annotations.destructive_hint for t in listed if t.name in writes)  # they only add
 
 
 def test_lists_and_the_wishlist(tools, client):
@@ -78,3 +80,52 @@ def test_lists_and_the_wishlist(tools, client):
     assert [(e["wine"], e["vintage"], e["tasted"], e["note"]) for e in tools.wishlist()] == [("Le Bourg", "2016", True, "For 2030")]
     assert tools.lists()["lists"][0]["is_wishlist"] is True
     assert tools.lists("wish")["entries"] == 1 and "error" in tools.lists("nothing like this")
+
+
+class FakeCtx:
+    """The client's side of a confirmation: accepts, declines, or can't ask (no elicitation)."""
+
+    def __init__(self, answer):
+        self.answer, self.asked = answer, []
+
+    async def elicit(self, message, schema):
+        self.asked.append(message)
+        if self.answer == "cannot":
+            raise RuntimeError("elicitation not supported")
+        return type("R", (), {"action": "accept" if self.answer else "decline", "data": schema(confirm=bool(self.answer))})()
+
+
+def test_writing_asks_first(tools, client, monkeypatch):
+    import asyncio
+    def post(path, body=None):
+        r = client.post(path, json=body)
+        if r.status_code >= 400:
+            raise ValueError(r.json().get("detail"))
+        return r.json()
+    monkeypatch.setattr(tools, "post", post)
+    wine_id = next(r["id"] for r in client.get("/api/search", params={"q": "le clos 2014"}).json()["results"] if r["kind"] == "wine")
+    entries = [tools.Entry(kind="wine", wine_id=wine_id, note="wow")]
+
+    # Declined: nothing written
+    ctx = FakeCtx(False)
+    r = asyncio.run(tools.create_list("Wow wines", entries, ctx))
+    assert r["done"] is False and "Le Clos 2014" in ctx.asked[0]
+    assert all(lst["name"] != "Wow wines" for lst in client.get("/api/lists").json())
+
+    # Accepted: written, with how to undo it
+    r = asyncio.run(tools.create_list("Wow wines", entries, FakeCtx(True)))
+    assert r["done"] is True and r["added"] == 1 and "Delete the list" in r["undo"]
+
+    # A client that can't ask: a preview and a token; only that token (same request) writes
+    more = [tools.Entry(kind="cuvee", wine_id=wine_id)]
+    r = asyncio.run(tools.add_to_list("wow", more, FakeCtx("cannot")))
+    assert r["needs_confirmation"] is True and "any vintage" in r["preview"]
+    assert asyncio.run(tools.add_to_list("wow", more, FakeCtx("cannot"), confirm_token="wrong"))["done"] is False
+    r = asyncio.run(tools.add_to_list("wow", more, FakeCtx("cannot"), confirm_token=r["confirm_token"]))
+    assert r["done"] is True and r["added"] == 1
+
+
+def test_tastings_by_day_place_and_words(tools):
+    assert tools.tastings(on="2026-05-01")["tastings"] == 1
+    assert tools.tastings(text="violets")["tastings"] == 1 and tools.tastings(text="wow")["tastings"] == 0
+    assert tools.tastings(until="2025")["tastings"] == 0

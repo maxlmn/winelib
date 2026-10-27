@@ -15,12 +15,18 @@ import unicodedata
 from datetime import date
 
 import httpx
-from mcp.server.mcpserver import MCPServer
+import hashlib
+import json
+
+from mcp.server.mcpserver import Context, MCPServer
 from mcp.types import ToolAnnotations
+from pydantic import BaseModel, Field
 
 URL = os.environ.get("WINELIB_URL", "http://localhost:8000").rstrip("/")
 logging.getLogger("httpx").setLevel(logging.WARNING)  # not a line per request
 READ = ToolAnnotations(readOnlyHint=True, openWorldHint=False)
+# Tools that add to WineLib (never remove or change what's there): each asks the user first, then adds
+WRITE = ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 
 mcp = MCPServer(
     name="WineLib",
@@ -30,7 +36,9 @@ mcp = MCPServer(
         "(wishlist, critics' lists, classifications) and progress on them, "
         "and wine regions. Wines, producers and places have ids: pass them to wine() for the details. Scores like "
         "'RP 95' are critics' (RP: Robert Parker); a tasting's rating is the user's own, out of 100. Everything here is "
-        "read-only."
+        "read-only, except create_list and add_to_list: they show the user what they'll do and wait for the user's "
+        "yes, then add (never remove or change anything; what they add can be removed in the app). Find the wines "
+        "first (tastings, cellar, search), then pass their ids."
     ),
 )
 
@@ -128,19 +136,26 @@ def wine(wine_id: int) -> dict:
 
 
 @mcp.tool(annotations=READ)
-def tastings(query: str = "", since: str = "", place: str = "", min_rating: int = 0, limit: int = 40) -> dict:
+def tastings(query: str = "", since: str = "", until: str = "", on: str = "", place: str = "", text: str = "",
+             min_rating: int = 0, limit: int = 40) -> dict:
     """The user's tasting journal, newest first: date, wine, the user's rating (out of 100) and notes, and where
-    (a restaurant, home, a friend's). Filter by words (producer, cuvée, appellation, grape, region), a start date
-    (YYYY-MM-DD or YYYY), a place's name, or a minimum rating."""
+    (a restaurant, home, a friend's: a friend's home is a place named after them, so "with Claude" is place="Claude").
+    Filter by words in the wine (producer, cuvée, appellation, grape, region), dates (since / until, YYYY-MM-DD or
+    YYYY; on: one day), a place's name, words in the notes and where (text: "wow"), or a minimum rating. Each tasting
+    has its wine_id, for create_list / add_to_list."""
     data = get("/api/tastings")
     places = data.get("places") or {}
     places = {str(p["id"]): p for p in places} if isinstance(places, list) else {str(k): v for k, v in places.items()}
     start = since if not re.fullmatch(r"\d{4}", since or "") else f"{since}-01-01"
+    end = until if not re.fullmatch(r"\d{4}", until or "") else f"{until}-12-31"
     rows = []
     for t in sorted(data["tastings"], key=lambda t: (t.get("date") or "", t.get("seq") or 0), reverse=True):
         p = places.get(str(t.get("place_id"))) or {}
         if (query and not matches(t, query, "producer", "cuvee", "appellation", "varietal", "region", "vintage")) \
-                or (start and (t.get("date") or "") < start) or (place and fold(place) not in fold(p.get("name"))) \
+                or (start and (t.get("date") or "") < start) or (end and (t.get("date") or "") > end) \
+                or (on and (t.get("date") or "") != on) or (place and fold(place) not in fold(p.get("name"))) \
+                or (text and not all(w in fold(" ".join(str(t.get(k) or "") for k in ("notes", "location")) + " " + str(p.get("name") or ""))
+                                     for w in fold(text).split())) \
                 or (min_rating and (t.get("rating") or 0) < min_rating):
             continue
         rows.append({"date": t.get("date"), "wine_id": t.get("wine_id"), "wine": wine_name(t),
@@ -207,6 +222,109 @@ def producer(producer_id: int) -> dict:
                                    for v in w.get("vintages") or []]}
                      for w in p.get("wines") or []]
     return out
+
+
+def post(path, body=None):
+    try:
+        r = httpx.post(f"{URL}{path}", json=body, timeout=60)
+    except httpx.HTTPError as e:
+        raise RuntimeError(f"WineLib isn't reachable at {URL} ({e})") from e
+    if r.status_code >= 400:
+        raise ValueError(r.json().get("detail") if "json" in r.headers.get("content-type", "") else r.text)
+    return r.json()
+
+
+class Entry(BaseModel):
+    """One entry for a list: a wine (that vintage), a cuvée (any vintage of the wine's cuvée) or a producer."""
+    kind: str = Field("wine", description='"wine" (that vintage), "cuvee" (any vintage) or "producer"')
+    wine_id: int | None = Field(None, description="the wine (for wine and cuvee)")
+    producer_id: int | None = Field(None, description="the producer (for producer)")
+    note: str | None = Field(None, description="a note: why it's there, a rank, a date")
+
+
+class Confirm(BaseModel):
+    confirm: bool = Field(description="Do it")
+
+
+def _describe(entries):
+    lines = []
+    for e in entries:
+        if e.kind == "producer":
+            label = f"{get(f'/api/producers/{e.producer_id}')['name']} (any of its wines)"
+        else:
+            w = get(f"/api/wines/{e.wine_id}")
+            label = " ".join(x for x in (w["producer"]["name"], w["cuvee"], w["vintage"] if e.kind == "wine" else "") if x)
+            label += " (any vintage)" if e.kind == "cuvee" else ""
+        lines.append(label + (f" · “{e.note}”" if e.note else ""))
+    return lines
+
+
+def _token(*parts):
+    return hashlib.sha256(json.dumps(parts, sort_keys=True, default=str).encode()).hexdigest()[:12]
+
+
+async def _confirmed(ctx, message, token, given):
+    """The user's yes: through the client's own confirmation (MCP elicitation) when it has one; else a token the
+    tool returns with the preview, accepted only when called again with it (after the user said yes)."""
+    if given:
+        return given == token
+    try:
+        result = await ctx.elicit(message, Confirm)
+    except Exception:  # the client can't ask: the preview goes back, the user answers in the conversation
+        return {"needs_confirmation": True, "preview": message, "confirm_token": token,
+                "how": "Show the user this preview. Only if they say yes, call the tool again with the same arguments "
+                       "and confirm_token."}
+    return result.action == "accept" and bool(getattr(result.data, "confirm", False))
+
+
+def _add(list_id, entries):
+    added = 0
+    for e in entries:
+        body = {"kind": e.kind, "note": e.note}
+        body.update({"producer_id": e.producer_id} if e.kind == "producer" else {"wine_id": e.wine_id})
+        added += 0 if post(f"/api/lists/{list_id}/items", body).get("existing") else 1
+    return added
+
+
+def _plural(n):
+    return f"{n} entr{'y' if n == 1 else 'ies'}"
+
+
+@mcp.tool(annotations=WRITE)
+async def create_list(name: str, entries: list[Entry], ctx: Context, description: str = "", source: str = "",
+                      confirm_token: str = "") -> dict:
+    """Creates a list in WineLib with these entries ("all the wines I drank on 3 October at Claude's", "every wine
+    whose note says wow"): find them first with tastings / cellar / search, then pass their wine_ids. The user sees
+    the list and its entries and must say yes. Only adds (deleting the list in the app undoes it)."""
+    if any(lst["name"].lower() == name.strip().lower() for lst in get("/api/lists")):
+        return {"error": f"There's already a list named “{name}”: use add_to_list"}
+    lines = _describe(entries)
+    message = f"Create the list “{name}” with {_plural(len(lines))}:\n" + "\n".join(f"  • {x}" for x in lines)
+    ok = await _confirmed(ctx, message, _token("create_list", name, [e.model_dump() for e in entries]), confirm_token)
+    if ok is not True:
+        return ok if isinstance(ok, dict) else {"done": False, "why": "Not confirmed: nothing was changed"}
+    list_id = post("/api/lists", {"name": name.strip(), "description": description or None, "source": source or None})["id"]
+    return {"done": True, "list_id": list_id, "added": _add(list_id, entries), "see": f"{URL}/lists/{list_id}",
+            "undo": "Delete the list in WineLib (its page › Edit › Delete the list)"}
+
+
+@mcp.tool(annotations=WRITE)
+async def add_to_list(list_name: str, entries: list[Entry], ctx: Context, confirm_token: str = "") -> dict:
+    """Adds entries to one of the user's lists (by its name, or part of it). The user sees what will be added and
+    must say yes. An entry already on the list is kept, not doubled. Only adds (each can be removed on the list)."""
+    lists_ = get("/api/lists")
+    found = [lst for lst in lists_ if fold(list_name) in fold(lst["name"])]
+    if len(found) != 1:
+        return {"error": "Name one list" if found else f"No list named like “{list_name}”",
+                "lists": [lst["name"] for lst in (found or lists_)]}
+    lst = found[0]
+    lines = _describe(entries)
+    message = f"Add {_plural(len(lines))} to “{lst['name']}”:\n" + "\n".join(f"  • {x}" for x in lines)
+    ok = await _confirmed(ctx, message, _token("add_to_list", lst["id"], [e.model_dump() for e in entries]), confirm_token)
+    if ok is not True:
+        return ok if isinstance(ok, dict) else {"done": False, "why": "Not confirmed: nothing was changed"}
+    return {"done": True, "added": _add(lst["id"], entries), "see": f"{URL}/lists/{lst['id']}",
+            "undo": "Remove the entries on the list's page"}
 
 
 @mcp.tool(annotations=READ)
