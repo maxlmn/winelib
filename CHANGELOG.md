@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- **Wine list**: the cellar, or a selection from its filters, laid out like a restaurant's list (sparkling to
+  sweet, by region and appellation, a cuvée's vintages on one line, no prices), to print or save as a PDF.
+- **Wishlist**: the wines you'd like, from a wine's page or the list's own search (a wine not in WineLib yet is
+  created there); size, any vintage, a note, where to find it; its market price comes with the cellar's.
+- The README opens on a short demo clip.
+
 ## v0.1.0
 
 The first public release: your wine cellar and tasting journal, on maps, running on your own computer.
