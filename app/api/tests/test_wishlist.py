@@ -1,5 +1,5 @@
-"""The wishlist: adding, editing and removing wines, what's already in the cellar, the market price against the
-target, and its wines priced with the bottles."""
+"""The wishlist: adding, editing and removing wines (one not in the database yet: created first, by the wine form's
+API), what's already in the cellar, and its wines priced with the bottles."""
 from datetime import date
 
 from db import Bottle, Producer, Wine, WishlistItem
@@ -15,18 +15,19 @@ def seed(s):
 
 
 def test_add_edit_remove(client):
-    r = client.post("/api/wishlist", json={"wine_id": 1, "target_price": 250, "currency": "eur", "note": " For 2030 "})
+    r = client.post("/api/wishlist", json={"wine_id": 1, "note": " For 2030 "})
     assert r.status_code == 200, r.text
     item = r.json()
     assert (item["producer"], item["cuvee"], item["vintage"]) == ("Clos Rougeard", "Le Bourg", "2016")
-    assert (item["target_price"], item["currency"], item["note"], item["owned"]) == (250, "EUR", "For 2030", 0)
+    assert (item["note"], item["owned"], item["bottle_size"]) == ("For 2030", 0, "75cl")
+    assert item["currency"] == "SGD"  # the main currency (the tests' settings)
     assert item["added"] == date.today().isoformat()
     # The 2017 is in the cellar: any vintage of the cuvée counts once that's ticked
-    item = client.put(f"/api/wishlist/{item['id']}", json={"any_vintage": True, "target_price": 250, "currency": "EUR"}).json()
+    item = client.put(f"/api/wishlist/{item['id']}", json={"any_vintage": True}).json()
     assert item["owned"] == 1 and item["note"] is None
     # Adding the same wine again updates its entry
-    again = client.post("/api/wishlist", json={"wine_id": 1, "target_price": 200}).json()
-    assert again["id"] == item["id"] and again["target_price"] == 200
+    again = client.post("/api/wishlist", json={"wine_id": 1, "note": "Again"}).json()
+    assert again["id"] == item["id"] and again["note"] == "Again"
     assert [i["wine_id"] for i in client.get("/api/wishlist").json()["items"]] == [1]
     assert client.get("/api/wines/1").json()["wishlist"]["id"] == item["id"]
     assert client.get("/api/wines/2").json()["wishlist"] is None
@@ -35,20 +36,28 @@ def test_add_edit_remove(client):
     assert client.post("/api/wishlist", json={"wine_id": 999}).status_code == 404
 
 
-def test_market_price_against_the_target(client, monkeypatch):
+def test_a_wine_not_in_the_database_yet(client):
+    """The page creates it (and its producer) with the wine form's API, then lists it."""
+    wine = client.post("/api/wines", json={"producer": {"name": "Domaine Belargus"}, "cuvee": "Ronceray",
+                                           "vintage": "2020", "type": "White"}).json()
+    item = client.post("/api/wishlist", json={"wine_id": wine["id"]}).json()
+    assert (item["producer"], item["cuvee"], item["vintage"], item["color"]) == ("Domaine Belargus", "Ronceray", "2020", "White")
+    client.delete(f"/api/wishlist/{item['id']}")
+
+
+def test_market_price(client, monkeypatch):
     from tasks import update_market_prices as prices
     monkeypatch.setattr(prices, "api_key", lambda: "k")
     monkeypatch.setattr(prices, "fetch_winelabs", lambda lwin, vintage, target_currency="GBP", log=print:
                         {"price": 240.0, "currency": target_currency, "sales": 9})
-    item = client.post("/api/wishlist", json={"wine_id": 1, "target_price": 250, "currency": "EUR"}).json()
+    item = client.post("/api/wishlist", json={"wine_id": 1}).json()
     item = client.post(f"/api/wishlist/{item['id']}/price").json()
     assert item["market"]["price"] == 240 and item["market"]["source"] == "WineLabs.ai"
-    assert item["below_target"] is True
     # A magnum: twice a bottle's price; a change of size forgets the old one
-    item = client.put(f"/api/wishlist/{item['id']}", json={"bottle_size": "150cl", "target_price": 400, "currency": "EUR"}).json()
+    item = client.put(f"/api/wishlist/{item['id']}", json={"bottle_size": "150cl"}).json()
     assert item["market"] is None
     item = client.post(f"/api/wishlist/{item['id']}/price").json()
-    assert item["market"]["price"] == 480 and item["below_target"] is False
+    assert item["market"]["price"] == 480
     # Without an LWIN there's nothing to ask
     other = client.post("/api/wishlist", json={"wine_id": 3}).json()
     assert client.post(f"/api/wishlist/{other['id']}/price").status_code == 400

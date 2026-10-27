@@ -31,11 +31,11 @@ address: bookmark a list to make it again.
 
 ## The wishlist
 
-**Wishlist** (in the menu) keeps the wines you'd like: add one from its page (**☆ Wishlist**) or by searching on the
-list; a wine not in WineLib yet is added as a new wine first. Each one takes the price you'd pay for a bottle, its
-size, a note and where to find it; **Any vintage** when the cuvée is what matters. With an LWIN, its market price comes
-with the cellar's (**Market prices** in Maintenance, nightly as well, or its own **Market price** link), and the list
-says when it's **below your price**. It also says when you already have some in the cellar.
+**Wishlist** (in the menu) keeps the wines you'd like. Add one from its page (**☆ Wishlist**), or find it on the
+list's own search: **＋ New vintage** for another vintage of a wine you know, **＋ New wine…** for one not in WineLib
+yet (created with it, producer too). Each one takes its size, a note and where to find it; **Any vintage** when the
+cuvée is what matters. The list says when you already have some in the cellar. With an LWIN, its market price comes
+with the cellar's (**Market prices** in Maintenance, nightly as well), or now with its own **Market price** link.
 
 ## Values and market prices
 

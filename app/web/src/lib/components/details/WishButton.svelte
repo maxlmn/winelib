@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Icon from '#lib/components/Icon.svelte';
-	import { addWish, type WishItem } from '#lib/api/wishlist.ts';
+	import { addWish, blankWish, type WishItem } from '#lib/api/wishlist.ts';
 	import { links } from '#lib/links.ts';
 
 	/** The wine page's Wishlist button: adds the wine; once on the list, a link to it */
@@ -15,7 +15,7 @@
 		busy = true;
 		failed = '';
 		try {
-			added = await addWish({ wine_id: wineId, any_vintage: false, bottle_size: null, target_price: null, currency: null, note: null, url: null });
+			added = await addWish(blankWish(wineId));
 		} catch (e) {
 			failed = e instanceof Error ? e.message : 'Couldn’t add it';
 		} finally {

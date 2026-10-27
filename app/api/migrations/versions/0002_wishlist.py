@@ -17,7 +17,6 @@ def upgrade():
     sa.Column('wine_id', sa.Integer(), nullable=False),
     sa.Column('any_vintage', sa.Boolean(), nullable=False),
     sa.Column('bottle_size', sa.String(), nullable=True),
-    sa.Column('target_price', sa.Float(), nullable=True),
     sa.Column('currency', sa.String(), nullable=True),
     sa.Column('note', sa.Text(), nullable=True),
     sa.Column('url', sa.String(), nullable=True),

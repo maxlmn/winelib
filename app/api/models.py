@@ -354,7 +354,7 @@ class ReferenceKey(Base):
 
 
 class WishlistItem(Base):
-    """A wine you'd like to have: what you'd pay, where to find it, a note. Its market price has a bottle's columns
+    """A wine you'd like to have: its size, where to find it, a note. Its market price has a bottle's columns
     (bottle_size, currency, last_price...), so tasks.update_market_prices prices it like one."""
     __tablename__ = 'wishlist'
     id = Column(Integer, primary_key=True)
@@ -362,8 +362,7 @@ class WishlistItem(Base):
     # Any vintage of the cuvée will do (the wine is the one priced and shown)
     any_vintage = Column(Boolean, nullable=False, default=False)
     bottle_size = Column(String, default="75cl")
-    target_price = Column(Float)  # what you'd pay for a bottle, in `currency`
-    currency = Column(String)  # none: the main currency (Settings)
+    currency = Column(String)  # its market price's: the main currency when it was added (Settings)
     note = Column(Text)
     url = Column(String)  # where to find it
     added = Column(Date)
@@ -374,5 +373,5 @@ class WishlistItem(Base):
 
     @property
     def price(self):
-        """What a price is checked against (a bottle's purchase price): the target."""
-        return self.target_price
+        """What a fetched price is checked against besides the last one (a bottle's purchase price): nothing."""
+        return None

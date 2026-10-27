@@ -19,14 +19,13 @@ export interface WishItem {
 	/** any vintage of the cuvée will do */
 	any_vintage: boolean;
 	bottle_size: string;
-	target_price: number | null;
+	/** its market price's */
 	currency: string;
 	note: string | null;
 	url: string | null;
 	added: string | null;
 	market: { price: number; date: string | null; source: string | null } | null;
 	market_base: number | null;
-	below_target: boolean;
 	/** bottles of it (or of the cuvée, any vintage) in the cellar */
 	owned: number;
 	/** why a price fetch found none */
@@ -37,16 +36,14 @@ export interface WishIn {
 	wine_id?: number;
 	any_vintage: boolean;
 	bottle_size: string | null;
-	target_price: number | null;
-	currency: string | null;
 	note: string | null;
 	url: string | null;
 }
 
-export const toWishIn = (i: WishItem): WishIn => ({
-	any_vintage: i.any_vintage, bottle_size: i.bottle_size, target_price: i.target_price, currency: i.currency,
-	note: i.note, url: i.url
-});
+export const toWishIn = (i: WishItem): WishIn => ({ any_vintage: i.any_vintage, bottle_size: i.bottle_size, note: i.note, url: i.url });
+
+/** A new entry for a wine: nothing set yet */
+export const blankWish = (wine_id?: number): WishIn => ({ wine_id, any_vintage: false, bottle_size: null, note: null, url: null });
 
 export async function loadWishlist(fetch: Fetch): Promise<WishItem[]> {
 	const r = await fetch('/api/wishlist');

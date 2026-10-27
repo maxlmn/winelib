@@ -1,11 +1,13 @@
 <script lang="ts">
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
 	import CriticPills from '#lib/components/CriticPills.svelte';
-	import { addWish, editWish, priceWish, removeWish, toWishIn, type WishIn, type WishItem } from '#lib/api/wishlist.ts';
+	import WinePicker from '#lib/components/forms/WinePicker.svelte';
+	import { check, FormError, save as saveForm, toWineIn, wineErrors } from '#lib/api/forms.ts';
+	import type { WineDraft, WineSummary } from '#lib/api/forms.ts';
+	import { addWish, blankWish, editWish, priceWish, removeWish, toWishIn, type WishIn, type WishItem } from '#lib/api/wishlist.ts';
 	import { symbol } from '#lib/format.ts';
 	import { links } from '#lib/links.ts';
 	import { regionColor, regionLabel } from '#lib/regions.svelte.ts';
-	import { appSettings } from '#lib/settings.svelte.ts';
 	import { formatName } from '#lib/wineList.ts';
 
 	let { data } = $props();
@@ -14,54 +16,56 @@
 	$effect.pre(() => {
 		items = data.items;
 	});
-	let only = $state<'all' | 'below' | 'owned'>('all');
-	const below = $derived(items.filter((i) => i.below_target));
+	let only = $state<'all' | 'owned'>('all');
 	const owned = $derived(items.filter((i) => i.owned));
-	const shown = $derived(only === 'below' ? below : only === 'owned' ? owned : items);
+	const shown = $derived(only === 'owned' ? owned : items);
 
 	const price = (n: number, currency: string) => `${symbol(currency)}${Math.round(n).toLocaleString()}`;
 	const when = (d: string | null) =>
 		d ? new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '';
 	const replace = (item: WishItem) => (items = items.map((i) => (i.id === item.id ? item : i)));
-	const blankWish = (wine_id?: number): WishIn => ({
-		wine_id, any_vintage: false, bottle_size: null, target_price: null, currency: null, note: null, url: null
-	});
 
-	// --- Adding: a wine found by search ---
-	let q = $state('');
-	let results = $state<{ id: number; title: string; sub: string; region?: string }[]>([]);
-	let searchTimer: ReturnType<typeof setTimeout>;
-	function search(text: string) {
-		q = text;
-		clearTimeout(searchTimer);
-		searchTimer = setTimeout(async () => {
-			if (text.trim().length < 2) return (results = []);
-			const r = await fetch(`/api/search?q=${encodeURIComponent(text)}&limit=8`).then((r) => r.json());
-			results = r.results.filter((x: { kind: string }) => x.kind === 'wine');
-		}, 150);
-	}
-	async function add(wineId: number) {
-		const item = await addWish(blankWish(wineId));
-		items = [item, ...items.filter((i) => i.id !== item.id)];
-		q = '';
-		results = [];
-		only = 'all';
-		edit(item);
+	// --- Adding: a wine picked, a new vintage of one, or a wine not in WineLib yet (created first) ---
+	let wine = $state<WineSummary | null>(null);
+	let draft = $state<WineDraft | null>(null);
+	let addErrors = $state<Record<string, string>>({});
+	let addError = $state('');
+	let adding = $state(false);
+	async function add() {
+		addErrors = {};
+		addError = '';
+		adding = true;
+		try {
+			let wineId = wine?.id;
+			if (!wineId && draft) {
+				check(wineErrors(draft));
+				wineId = (await saveForm('wines', null, toWineIn(draft))).id;
+			}
+			if (!wineId) return;
+			const item = await addWish(blankWish(wineId));
+			items = [item, ...items.filter((i) => i.id !== item.id)];
+			wine = draft = null;
+			only = 'all';
+		} catch (e) {
+			addError = e instanceof Error ? e.message : 'Couldn’t add it';
+			if (e instanceof FormError) addErrors = e.fields;
+		} finally {
+			adding = false;
+		}
 	}
 
 	// --- Editing one entry in place ---
 	let editing = $state<number | null>(null);
-	let draft = $state<WishIn>(blankWish());
+	let change = $state<WishIn>(blankWish());
 	let error = $state('');
 	function edit(item: WishItem) {
 		editing = item.id;
-		draft = toWishIn(item);
+		change = toWishIn(item);
 		error = '';
 	}
 	async function save(item: WishItem) {
-		const target = draft.target_price as number | string | null;
 		try {
-			replace(await editWish(item.id, { ...draft, target_price: target === null || target === '' ? null : Number(target) }));
+			replace(await editWish(item.id, change));
 			editing = null;
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Couldn’t save';
@@ -88,7 +92,6 @@
 			pricing = null;
 		}
 	}
-	const currencies = $derived([...new Set([appSettings.currency, ...data.options.currencies])]);
 </script>
 
 <svelte:head><title>Wishlist · WineLib</title></svelte:head>
@@ -98,28 +101,18 @@
 	{#if items.length}
 		<div class="views" role="group" aria-label="Show">
 			<button class:on={only === 'all'} onclick={() => (only = 'all')}>All <span class="num">{items.length}</span></button>
-			<button class:on={only === 'below'} onclick={() => (only = 'below')} disabled={!below.length}>Below your price <span class="num">{below.length}</span></button>
 			<button class:on={only === 'owned'} onclick={() => (only = 'owned')} disabled={!owned.length}>In your cellar <span class="num">{owned.length}</span></button>
 		</div>
 	{/if}
 </div>
 
 <div class="add card">
-	<input type="search" placeholder="Add a wine: producer, cuvée, vintage…" value={q} oninput={(e) => search(e.currentTarget.value)} />
-	{#if results.length}
-		<ul class="results">
-			{#each results as r (r.id)}
-				<li>
-					<button onclick={() => add(r.id)}>
-						<span class="dot" style:background={regionColor(r.region)}></span>
-						<span>{r.title}</span> <span class="muted">{r.sub}</span>
-						{#if items.some((i) => i.wine_id === r.id)}<span class="muted already">on the list</span>{/if}
-					</button>
-				</li>
-			{/each}
-		</ul>
-	{:else if q.trim().length >= 2}
-		<p class="muted hint">No wine by that name. <a href={links.newWine()}>Add it as a new wine</a>, then ☆ Wishlist on its page.</p>
+	<WinePicker bind:wine bind:draft options={data.options} prefix="wish" errors={addErrors} />
+	{#if wine || draft}
+		<div class="add-row">
+			{#if addError}<span class="error">{addError}</span>{/if}
+			<button class="btn primary" onclick={add} disabled={adding}>{draft ? 'Create the wine and add it' : 'Add to the wishlist'}</button>
+		</div>
 	{/if}
 </div>
 
@@ -127,9 +120,8 @@
 	<div class="empty card">
 		<p>Nothing on your wishlist yet.</p>
 		<p class="muted">
-			Search for a wine above, or use <b>☆ Wishlist</b> on any wine’s page. Give it the price you’d pay: with an LWIN,
-			its market price comes with the cellar’s (Settings › Maintenance › Market prices), and the list says when it’s
-			below yours.
+			Find a wine above (or <b>＋ New wine…</b> when it isn’t in WineLib yet), or use <b>☆ Wishlist</b> on any wine’s
+			page. With an LWIN, its market price comes with the cellar’s (Settings › Maintenance › Market prices).
 		</p>
 	</div>
 {:else}
@@ -154,11 +146,10 @@
 					{/if}
 				</div>
 				<div class="prices num">
-					<div title={item.market ? `${item.market.source} · ${when(item.market.date)}` : ''}>
-						<span class="label">Market</span>{item.market ? price(item.market.price, item.currency) : '–'}
-					</div>
-					<div><span class="label">Your price</span>{item.target_price ? price(item.target_price, item.currency) : '–'}</div>
-					{#if item.below_target}<div class="badge">↓ Below your price</div>{/if}
+					{#if item.market}
+						<div><span class="label">Market</span>{price(item.market.price, item.currency)}</div>
+						<div class="muted when">{item.market.source} · {when(item.market.date)}</div>
+					{/if}
 					{#if priceNote[item.id]}<div class="muted why">{priceNote[item.id]}</div>{/if}
 				</div>
 				<div class="actions">
@@ -170,21 +161,15 @@
 				</div>
 				{#if editing === item.id}
 					<form class="edit" onsubmit={(e) => { e.preventDefault(); save(item); }}>
-						<label><span class="label">Your price (a bottle)</span>
-							<input type="number" min="0" step="any" bind:value={draft.target_price} placeholder="What you’d pay" /></label>
-						<label><span class="label">Currency</span>
-							<select bind:value={draft.currency}>
-								{#each currencies as c (c)}<option value={c}>{c}</option>{/each}
-							</select></label>
 						<label><span class="label">Size</span>
-							<select bind:value={draft.bottle_size}>
+							<select bind:value={change.bottle_size}>
 								{#each data.options.bottle_sizes as s (s)}<option value={s}>{s}</option>{/each}
 							</select></label>
-						<label class="check"><input type="checkbox" bind:checked={draft.any_vintage} /> Any vintage</label>
+						<label class="check"><input type="checkbox" bind:checked={change.any_vintage} /> Any vintage</label>
 						<label class="wide"><span class="label">Note</span>
-							<input bind:value={draft.note} placeholder="For a 2030 birthday, a friend’s tip…" /></label>
+							<input bind:value={change.note} placeholder="For a 2030 birthday, a friend’s tip…" /></label>
 						<label class="wide"><span class="label">Where to find it</span>
-							<input type="url" bind:value={draft.url} placeholder="https://…" /></label>
+							<input type="url" bind:value={change.url} placeholder="https://…" /></label>
 						<div class="wide buttons">
 							{#if error}<span class="error">{error}</span>{/if}
 							<button type="button" class="btn" onclick={() => (editing = null)}>Cancel</button>
@@ -227,52 +212,12 @@
 		padding: 12px;
 		margin-bottom: 14px;
 	}
-	.add input {
-		width: 100%;
-		padding: 9px 12px;
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		background: var(--surface-2);
-		outline: none;
-	}
-	.add input:focus {
-		border-color: var(--accent);
-	}
-	.results {
-		list-style: none;
-		margin: 6px 0 0;
-		padding: 0;
-	}
-	.results button {
+	.add-row {
 		display: flex;
-		align-items: baseline;
-		gap: 6px;
-		width: 100%;
-		text-align: left;
-		border: none;
-		background: none;
-		padding: 7px 8px;
-		border-radius: 6px;
-		cursor: pointer;
-		color: var(--text);
-	}
-	.results button:hover {
-		background: var(--accent-soft);
-	}
-	.dot {
-		flex: none;
-		width: 8px;
-		height: 8px;
-		border-radius: 50%;
-		align-self: center;
-	}
-	.already {
-		margin-left: auto;
-		font-size: 12px;
-	}
-	.hint {
-		margin: 8px 2px 0;
-		font-size: 13px;
+		justify-content: flex-end;
+		align-items: center;
+		gap: 10px;
+		margin-top: 10px;
 	}
 	.empty {
 		padding: 20px;
@@ -348,15 +293,8 @@
 		color: var(--muted);
 		margin-right: 6px;
 	}
-	.badge {
-		display: inline-block;
-		margin-top: 4px;
-		padding: 1px 8px;
-		border-radius: 10px;
-		font-size: 12px;
-		font-weight: 600;
-		color: var(--up);
-		background: color-mix(in srgb, var(--up) 14%, transparent);
+	.when {
+		font-size: 11px;
 	}
 	.why {
 		max-width: 240px;

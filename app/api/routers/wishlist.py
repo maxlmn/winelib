@@ -1,9 +1,8 @@
-"""The wishlist: wines you'd like, with what you'd pay and their market price (priced like a bottle:
-tasks.update_market_prices)."""
+"""The wishlist: wines you'd like, with their market price (priced like a bottle: tasks.update_market_prices)."""
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
@@ -20,8 +19,6 @@ class WishIn(BaseModel):
     wine_id: int | None = None  # set when adding; ignored when editing
     any_vintage: bool = False
     bottle_size: str | None = None
-    target_price: float | None = Field(None, ge=0)
-    currency: str | None = None
     note: str | None = None
     url: str | None = None
 
@@ -41,7 +38,7 @@ def _owned(session, item):
 def item_json(session, item):
     w = item.wine
     currency = (item.currency or settings.current.currency).upper()
-    price, target = item.last_price, item.target_price
+    price = item.last_price
     return {
         "id": item.id, "wine_id": w.id, "producer": w.producer.name if w.producer else "", "producer_id": w.producer_id,
         "cuvee": w.cuvee or "", "vintage": vintage_label(w.vintage, w.disgorgement_date), "color": w.type,
@@ -49,11 +46,10 @@ def item_json(session, item):
         "appellation": w.appellation.name if w.appellation else None, "lwin": w.lwin,
         "scores": scores.label(w.scores),
         "any_vintage": item.any_vintage, "bottle_size": item.bottle_size or "75cl",
-        "target_price": target, "currency": currency, "note": item.note, "url": item.url, "added": iso(item.added),
+        "currency": currency, "note": item.note, "url": item.url, "added": iso(item.added),
         "market": {"price": price, "date": iso(item.last_price_date), "source": item.last_price_source} if price else None,
         # in the main currency, to sort and total
         "market_base": round(to_base(price, currency), 2) if price else None,
-        "below_target": bool(price and target and price <= target),
         "owned": _owned(session, item),
     }
 
@@ -69,8 +65,6 @@ def _item(session, item_id):
 def _fill(item, data: WishIn):
     item.any_vintage = data.any_vintage
     item.bottle_size = (data.bottle_size or "").strip() or "75cl"
-    item.target_price = data.target_price or None
-    item.currency = (data.currency or "").strip().upper() or None
     item.note = (data.note or "").strip() or None
     item.url = (data.url or "").strip() or None
 
@@ -88,7 +82,8 @@ def add(data: WishIn, session: Session = Depends(get_session)):
     wine = session.get(Wine, data.wine_id) if data.wine_id else None
     if wine is None:
         raise HTTPException(404, "Wine not found")
-    item = wine.wishlist or WishlistItem(wine=wine, added=date.today())
+    # priced in the main currency of the day it's added (a later change of main currency doesn't relabel its price)
+    item = wine.wishlist or WishlistItem(wine=wine, added=date.today(), currency=settings.current.currency)
     _fill(item, data)
     session.add(item)
     session.commit()
@@ -98,9 +93,9 @@ def add(data: WishIn, session: Session = Depends(get_session)):
 @router.put("/api/wishlist/{item_id}")
 def edit(item_id: int, data: WishIn, session: Session = Depends(get_session)):
     item = _item(session, item_id)
-    size, currency = item.bottle_size, item.currency
+    size = item.bottle_size
     _fill(item, data)
-    if (item.bottle_size, item.currency) != (size, currency):  # the market price was for another size or currency
+    if item.bottle_size != size:  # the market price was for another size
         item.last_price = item.last_price_date = item.last_price_source = None
     session.commit()
     return item_json(session, item)
