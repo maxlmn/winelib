@@ -103,3 +103,13 @@ def test_in_the_wine_form(client, monkeypatch):
     # now a vineyard: found as one, no longer offered as a lieu-dit
     again = client.get("/api/lookups/vineyards", params={"q": "bourg"}).json()
     assert not any(x.get("ref") == "lieu_dit:49373:le-bourg" for x in again)
+
+
+def test_plurals():
+    """A label's plural is the cadastre's singular, and back"""
+    from lieux_dits import _matches, span, words, core
+    name = words("Chétillon")
+    assert _matches(words("Les Chétillons"), name, core(name)) == 2
+    assert span("Cuvée Les Chétillons", "Chetillon") == "Chétillons"
+    name = words("Les Noues")
+    assert _matches(words("La Noue"), name, core(name)) == 1

@@ -39,6 +39,11 @@ def words(s):
     return re.findall(r"[a-z0-9]+", fold(s))
 
 
+def same(w):
+    """A word without its plural's s or x: the label's "Les Chétillons" is the cadastre's "Chétillon" """
+    return w[:-1] if len(w) > 3 and w[-1] in "sx" else w
+
+
 def core(tokens):
     """A name's words without its leading articles: "Les Poyeux" -> ["poyeux"]"""
     i = 0
@@ -67,7 +72,8 @@ def _index():
 
 def _at(hay, needle):
     """Where needle's words are in hay, or -1"""
-    return next((i for i in range(len(hay) - len(needle) + 1) if hay[i:i + len(needle)] == needle), -1)
+    needle = [same(w) for w in needle]
+    return next((i for i in range(len(hay) - len(needle) + 1) if [same(w) for w in hay[i:i + len(needle)]] == needle), -1)
 
 
 def _matches(cuvee_words, name_words, core_words):
@@ -82,7 +88,7 @@ def _matches(cuvee_words, name_words, core_words):
 
 def span(cuvee, name):
     """The lieu-dit's name as the label writes it ("Les Gravières" for the cadastre's "Les Gravieres"), else None"""
-    pattern = r"[\s'’-]+".join(re.escape(w) for w in words(name))
+    pattern = r"[\s'’-]+".join(re.escape(same(w)) + "[sx]?" for w in words(name))
     m = re.search(rf"(?<![a-z0-9]){pattern}(?![a-z0-9])", fold(cuvee))
     return cuvee[m.start():m.end()] if m else None
 
@@ -147,12 +153,12 @@ _folded = {}  # the store's names as words, worked out once per store read
 def search(q, limit=15):
     """[(store id, name, details)] whose name has every word of q, the most in vines first"""
     found = geo._lieux_dits()
-    want = words(q)
+    want = [same(w) for w in core(words(q))]  # "les chetillons" finds "Chétillon"
     if found is None or not want:
         return []
     ids, names, dets, _, _ = found
     if _folded.get("of") is not found:
-        _folded.update({"of": found, "words": [set(words(n)) for n in names]})
+        _folded.update({"of": found, "words": [{same(w) for w in words(n)} for n in names]})
     hits = [(ids[i], names[i], json.loads(dets[i]) if dets[i] else {})
             for i, ws in enumerate(_folded["words"]) if all(w in ws for w in want)]
     return sorted(hits, key=lambda h: -(h[2].get("vines") or 0))[:limit]
