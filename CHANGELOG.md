@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.3.1
 
 - A full-size map on a phone keeps the bar and its menu above it; no more placeholder where the map was.
 
