@@ -59,6 +59,17 @@ photos in France.
   <img alt="A wine with its appellation and vineyard on the map" src="screenshots/wine.png">
 </picture>
 
+**Down to the lieu-dit.** The names on the labels, Les Poyeux, Clos des Noëls, Les Gravières, are lieux-dits:
+the named places of France's land register. WineLib draws 82,000 of them across the vineyards of the Loire,
+Burgundy, Beaujolais, Jura, Alsace, Bordeaux and the Rhône, each with the appellations it can claim and how much of
+it is under AOC vines. Zoom in on any map to see them; click one to make it your wine's vineyard. Settings ›
+Maintenance finds your cuvées named after one and links them, after your tick.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/lieux-dits-dark.png">
+  <img alt="Clos Rougeard Les Poyeux on its lieu-dit, the neighbouring lieux-dits around it" src="screenshots/lieux-dits.png">
+</picture>
+
 **Draw what the map doesn't have.** A monopole, a parcel, an appellation without an official outline: draw it on
 the satellite view, start from the official outline and refine it, or import a GeoJSON or KML file.
 
