@@ -1,9 +1,10 @@
-"""Each test module gets its own fresh SQLite database and TestClient.
+"""Each test gets its own fresh SQLite database and TestClient: a module's rows are seeded once into a template, and
+every test starts from a copy of it, so no test sees what another wrote (whatever order they run in).
 
 A test module defines:
     def seed(session): ...         # required: add the rows it needs (models from `db`)
     def write_geo(geo_dir): ...    # optional: write parquet fixtures; GEO_DIR points there for the module
-and uses the module-scoped `client` fixture. Modules never see each other's rows.
+and uses the `client` fixture. Modules never see each other's rows, nor tests each other's writes.
 """
 import os
 import sys
@@ -46,16 +47,16 @@ def _forget_bi():
 
 
 @pytest.fixture(scope="module")
-def client(request, tmp_path_factory):
+def module_store(request, tmp_path_factory):
+    """The module's rows seeded once into template.db, its geo folder written: (template path, its folder)"""
     tmp = tmp_path_factory.mktemp(request.module.__name__)
-    engine = create_engine(f"sqlite:///{tmp / 'test.db'}", connect_args={"check_same_thread": False})
+    engine = create_engine(f"sqlite:///{tmp / 'template.db'}")
     db.Base.metadata.create_all(engine)
-    Session = sessionmaker(bind=engine)
-
-    with Session() as s:
+    with sessionmaker(bind=engine)() as s:
         request.module.seed(s)
         s.commit()
         settings.save(s, TEST_SETTINGS)  # as an existing installation: its settings saved (a test can delete them)
+    engine.dispose()
 
     geo_dir = tmp / "geo"
     geo_dir.mkdir()
@@ -63,6 +64,20 @@ def client(request, tmp_path_factory):
         request.module.write_geo(str(geo_dir))
     old_geo = geo.GEO_DIR, paths.CACHE_DIR, geo.SHAPES_DIR
     geo.GEO_DIR, paths.CACHE_DIR, geo.SHAPES_DIR = str(geo_dir), str(tmp / "geo_cache"), str(geo_dir / "shapes")
+    yield tmp / "template.db", tmp
+    geo.GEO_DIR, paths.CACHE_DIR, geo.SHAPES_DIR = old_geo
+    geo.reset()
+
+
+@pytest.fixture
+def client(module_store, tmp_path):
+    """A TestClient on a fresh copy of the module's seeded database"""
+    import shutil
+    import jobs
+    template, _ = module_store
+    shutil.copy(template, tmp_path / "test.db")
+    engine = create_engine(f"sqlite:///{tmp_path / 'test.db'}", connect_args={"check_same_thread": False})
+    Session = sessionmaker(bind=engine)
     geo.reset()
     wiki.reset()
     _forget_bi()
@@ -74,12 +89,12 @@ def client(request, tmp_path_factory):
         finally:
             session.close()
 
-    settings.apply(TEST_SETTINGS)  # a module that edits settings must not leak into the next
+    settings.apply(TEST_SETTINGS)  # a test that edits settings must not leak into the next
     app.dependency_overrides[db.get_session] = get_session
     yield TestClient(app)
+    jobs.settle(5)  # a job still running mustn't answer the next test with "busy"
     app.dependency_overrides.pop(db.get_session, None)
     settings.apply(TEST_SETTINGS)
-    geo.GEO_DIR, paths.CACHE_DIR, geo.SHAPES_DIR = old_geo
     geo.reset()
     wiki.reset()
     _forget_bi()

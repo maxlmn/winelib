@@ -35,8 +35,12 @@ def fetch(url, log=print):
         fd, path = tempfile.mkstemp(suffix=".zip")
         os.close(fd)
         log(f"Downloading {url}")
-        with urllib.request.urlopen(url, timeout=60) as r, open(path, "wb") as f:
-            shutil.copyfileobj(r, f, 1 << 20)
+        try:
+            with urllib.request.urlopen(url, timeout=60) as r, open(path, "wb") as f:
+                shutil.copyfileobj(r, f, 1 << 20)
+        except BaseException:
+            os.remove(path)  # a failed download leaves nothing behind
+            raise
         return path, True
     path = url[len("file://"):] if url.startswith("file://") else url
     if not os.path.isfile(path):
@@ -55,26 +59,39 @@ def install(zip_path, log=print):
             raise RuntimeError("Not a WineLib map pack (pack.json)")
         manifest = installed()
         new = json.loads(z.read("shapes/manifest.json"))
-        done = {}
-        for name, s in pack["sources"].items():
-            if os.path.basename(s["file"]) != f"{name}.parquet":  # only <source>.parquet, in the store
-                raise RuntimeError(f"Unexpected file in the pack: {s['file']}")
-            tmp = os.path.join(shapes, f"{name}.parquet.part")
-            h = hashlib.sha256()
-            with z.open(s["file"]) as src, open(tmp, "wb") as dst:
-                for chunk in iter(lambda: src.read(1 << 20), b""):
-                    h.update(chunk)
-                    dst.write(chunk)
-            if h.hexdigest() != s["sha256"]:
-                os.remove(tmp)
-                raise RuntimeError(f"{name}: the file doesn't match the pack's checksum (a damaged download?)")
+        # Every file unpacked and checked first, then all swapped in: a damaged one leaves the store as it was
+        parts = {}
+        try:
+            for name, s in pack["sources"].items():
+                if os.path.basename(s["file"]) != f"{name}.parquet":  # only <source>.parquet, in the store
+                    raise RuntimeError(f"Unexpected file in the pack: {s['file']}")
+                tmp = parts[name] = os.path.join(shapes, f"{name}.parquet.part")
+                h = hashlib.sha256()
+                with z.open(s["file"]) as src, open(tmp, "wb") as dst:
+                    for chunk in iter(lambda: src.read(1 << 20), b""):
+                        h.update(chunk)
+                        dst.write(chunk)
+                if h.hexdigest() != s["sha256"]:
+                    raise RuntimeError(f"{name}: the file doesn't match the pack's checksum (a damaged download?)")
+        except BaseException:
+            for tmp in parts.values():
+                if os.path.exists(tmp):
+                    os.remove(tmp)
+            raise
+    done = {}
+    try:
+        for name, tmp in parts.items():
+            s = pack["sources"][name]
             os.replace(tmp, os.path.join(shapes, f"{name}.parquet"))
             manifest[name] = new.get(name) or {"file": f"{name}.parquet", "rows": s["rows"]}
             done[name] = s["rows"]
             log(f"{name}: {s['rows']} outlines ({s['licence']})")
-    with open(os.path.join(shapes, "manifest.json"), "w") as f:
-        json.dump(manifest, f, indent=2, sort_keys=True)
-    geo.reset()  # the map reads the new files
+    finally:  # what was swapped in is listed and read, whatever happened after
+        tmp = os.path.join(shapes, "manifest.json.part")
+        with open(tmp, "w") as f:
+            json.dump(manifest, f, indent=2, sort_keys=True)
+        os.replace(tmp, os.path.join(shapes, "manifest.json"))
+        geo.reset()  # the map reads the new files
     return done
 
 

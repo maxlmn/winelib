@@ -50,7 +50,8 @@ def test_market_price_saved_and_scaled_to_the_format(client, fetch_price, winela
 
 
 def test_implausible_price_from_few_sales_isnt_saved(client, fetch_price, winelabs):
-    # Bottle 1 now holds 1000 EUR; one sale at 30x that is a mis-recorded sale
+    assert fetch_price(1)["last_price"] == 1000.0  # bottle 1 holds 1000 EUR (a magnum at 500)
+    # one sale at 30x that is a mis-recorded sale
     winelabs.answer.update(price=15000.0, sales=1)
     r = fetch_price(1)
     assert r["found"] is False and "from 1 sale" in r["message"] and "not saved" in r["message"]

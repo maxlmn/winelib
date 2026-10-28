@@ -48,8 +48,7 @@ def _row(session, kind, row_id):
 
 
 def _custom_id(row):
-    b = row.boundary or ""
-    return int(b.split(":", 1)[1]) if b.startswith("custom:") and b.split(":", 1)[1].isdigit() else None
+    return geo.custom_id(row.boundary)
 
 
 def to_shape(data):

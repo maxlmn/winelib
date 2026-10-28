@@ -97,12 +97,19 @@ def _ensure_table(session):
 
 
 def apply(new: Settings):
+    """In place, and only what changed: requests run side by side, so a rate is never missing while another
+    request values bottles (no clearing then refilling)"""
     import cellar
     for field in Settings.model_fields:
-        setattr(current, field, getattr(new, field))
-    cellar.EXCHANGE_RATES.clear()
-    cellar.EXCHANGE_RATES.update(new.exchange_rates)
-    cellar.NON_LOCAL_KEYWORDS[:] = new.non_local_keywords
+        if getattr(current, field) != getattr(new, field):
+            setattr(current, field, getattr(new, field))
+    rates = cellar.EXCHANGE_RATES
+    if rates != new.exchange_rates:
+        rates.update(new.exchange_rates)
+        for gone in [k for k in rates if k not in new.exchange_rates]:
+            rates.pop(gone, None)
+    if cellar.NON_LOCAL_KEYWORDS != new.non_local_keywords:
+        cellar.NON_LOCAL_KEYWORDS[:] = new.non_local_keywords
 
 
 def load(session) -> Settings:

@@ -5,6 +5,7 @@ Originals are full-size phone photos, so pages show resized copies (see thumbnai
 cached in THUMBS_DIR, keyed by the source's mtime and size so a replaced photo never shows a stale one. Photo URLs
 carry a version (?v=, the source's mtime) so browsers can cache them forever; add &size=thumb|large for a copy."""
 import os
+import threading
 import re
 from urllib.parse import quote
 
@@ -26,6 +27,8 @@ THUMB_QUALITY = 80
 def stem(place, day):
     """File name without extension; path separators can't appear in it."""
     name = (place or "").strip().replace("/", "-").replace("\\", "-").replace("\0", "")
+    if os.name == "nt":  # what Windows can't put in a file name ("Bar: Le Comptoir"; a ":" makes a hidden stream)
+        name = re.sub(r'[<>:"|?*\x00-\x1f]', "-", name).rstrip(". ")
     return f"{name}_{iso(day)}"
 
 
@@ -77,7 +80,7 @@ def thumbnail(name, size):
         img = img.convert("RGB")
         img.thumbnail((box, box), Image.LANCZOS)  # never enlarges
         os.makedirs(THUMBS_DIR, exist_ok=True)
-        tmp = f"{path}.{os.getpid()}.part"
+        tmp = f"{path}.{os.getpid()}.{threading.get_ident()}.part"  # two requests for one thumbnail: a file each
         img.save(tmp, "JPEG", quality=THUMB_QUALITY, optimize=True, progressive=True)
     os.replace(tmp, path)
     return path

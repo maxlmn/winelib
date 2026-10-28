@@ -20,10 +20,9 @@ from db import Appellation, Bottle, Region, TastingNote, Vineyard, Wine, get_ses
 router = APIRouter()
 
 
-def mappable_app(session=None):
-    """The SQL filter for appellations with something to draw: linked to a shape in the store (
-    shape_links.py sets boundary only when the store has it)."""
-    return Appellation.boundary.isnot(None)
+# The SQL filter for appellations with something to draw: linked to a shape in the store (shape_links.py sets
+# boundary only when the store has it)
+MAPPABLE_APP = Appellation.boundary.isnot(None)
 
 
 # Vineyards with something to draw, the same way
@@ -131,7 +130,7 @@ def lieu_shapes_response(session, app_ids, sid):
 def _mappable_regions(session):
     """[(region, mappable appellations, mappable vineyards)] for the regions with something to map, by name: an
     appellation or vineyard shape, or the region's own outline (Japan, China: no appellation shapes)."""
-    n_apps = dict(session.query(Appellation.region_id, func.count()).filter(mappable_app(session)).group_by(Appellation.region_id).all())
+    n_apps = dict(session.query(Appellation.region_id, func.count()).filter(MAPPABLE_APP).group_by(Appellation.region_id).all())
     n_vines = dict(session.query(Vineyard.region_id, func.count()).filter(MAPPABLE_VINE).group_by(Vineyard.region_id).all())
     regions = [r for r in session.query(Region).order_by(Region.name).all()
                if r.id in n_apps or r.id in n_vines or geo.region_outline(r.name)[0]]
@@ -180,7 +179,7 @@ def map_region(region_id: int, request: Request, session: Session = Depends(get_
     if region is None:
         raise HTTPException(404, "Region not found")
     apps = (session.query(Appellation).options(joinedload(Appellation.region_obj))
-            .filter(Appellation.region_id == region_id, mappable_app(session)).order_by(Appellation.name).all())
+            .filter(Appellation.region_id == region_id, MAPPABLE_APP).order_by(Appellation.name).all())
     vines = session.query(Vineyard).filter(Vineyard.region_id == region_id, MAPPABLE_VINE).all()
     app_stats, vine_stats = map_stats(session)
     outline, extent = geo.region_outline(region.name)

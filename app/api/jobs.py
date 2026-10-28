@@ -97,6 +97,15 @@ def _remember(job):
         log_.warning("Couldn't save the maintenance history: %s", e)
 
 
+def settle(timeout=5):
+    """The running job asked to stop and waited for (a test's end: the next one mustn't find the runner busy)"""
+    job = _current
+    if job is not None and job.status == "running":
+        job.stop.set()
+        if job.thread is not None:
+            job.thread.join(timeout)
+
+
 def start(task, title, fn, make_session, commit, params):
     """Runs fn(session, job) in a thread. None when another job is running."""
     global _current

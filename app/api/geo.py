@@ -73,6 +73,12 @@ def _custom(sid, session):
     return shapely.to_wkb(shapely.from_geojson(row.display)), tuple(float(b) for b in row.bbox.split(","))
 
 
+def custom_id(boundary):
+    """The custom_shapes id in a boundary "custom:<id>" (an outline drawn in the app), else None"""
+    b = boundary or ""
+    return int(b[7:]) if b.startswith("custom:") and b[7:].isdigit() else None
+
+
 def custom_changed(shape_id):
     """An outline drawn in the app was saved or deleted: its GeoJSON is read again next time."""
     with _lock:
@@ -110,6 +116,22 @@ def warm():
 
 # boundary -> (geometry as a GeoJSON string, [west, south, east, north]), or (None, None) when there's none
 _cache = {}
+
+
+_seen = {"stamp": None}
+
+
+def fresh():
+    """Called on each request: the store rebuilt or a map pack installed while the app runs (its manifest.json
+    rewritten) and everything read from it is forgotten, so no outline is read at a stale position."""
+    try:
+        stamp = os.stat(os.path.join(SHAPES_DIR, "manifest.json")).st_mtime_ns
+    except OSError:
+        stamp = None
+    if stamp != _seen["stamp"]:
+        if _seen["stamp"] is not None:
+            reset()
+        _seen["stamp"] = stamp
 
 
 def reset():

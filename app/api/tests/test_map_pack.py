@@ -76,3 +76,42 @@ def test_a_damaged_pack_is_refused(client, tmp_path, monkeypatch):
     client.post("/api/maintenance/map_pack", json={"commit": True})
     job = wait(client)
     assert job["status"] == "failed" and any("checksum" in line for line in job["log"])
+
+
+def test_a_damaged_pack_leaves_the_store_as_it_was(tmp_path, monkeypatch):
+    """One file damaged: nothing swapped in (the good ones neither), no part file left, the manifest unchanged."""
+    import geo
+    import map_pack
+    out = build_pack(tmp_path)
+    damaged = tmp_path / "damaged.zip"
+    with zipfile.ZipFile(out) as src, zipfile.ZipFile(damaged, "w") as dst:
+        names = [i.filename for i in src.infolist() if i.filename.endswith(".parquet")]
+        last = sorted(names)[-1]  # a later source damaged: the earlier ones were already checked
+        for item in src.infolist():
+            data = src.read(item)
+            dst.writestr(item, data[:-10] + b"0" * 10 if item.filename == last else data)
+    store = tmp_path / "shapes"
+    store.mkdir()
+    (store / "manifest.json").write_text('{"old": {"file": "old.parquet", "rows": 1}}')
+    monkeypatch.setattr(geo, "SHAPES_DIR", str(store))
+    import pytest
+    with pytest.raises(RuntimeError, match="checksum"):
+        map_pack.install(str(damaged), log=lambda *a: None)
+    assert sorted(p.name for p in store.iterdir()) == ["manifest.json"]
+    assert "old" in (store / "manifest.json").read_text()
+
+
+def test_a_rebuilt_store_is_read_again(tmp_path, monkeypatch):
+    """The manifest rewritten (a rebuild, a pack installed) while the app runs: geo.fresh forgets what it read."""
+    import geo
+    store = tmp_path / "shapes"
+    store.mkdir()
+    monkeypatch.setattr(geo, "SHAPES_DIR", str(store))
+    (store / "manifest.json").write_text("{}")
+    geo.fresh()
+    geo._cache["x"] = ("{}", [0, 0, 0, 0])
+    geo.fresh()  # nothing changed: kept
+    assert "x" in geo._cache
+    os.utime(store / "manifest.json", ns=(1, 1))
+    geo.fresh()  # rewritten: forgotten
+    assert "x" not in geo._cache

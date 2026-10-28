@@ -13,6 +13,7 @@ from pydantic import AfterValidator, BaseModel, BeforeValidator, Field, field_va
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
+import geo
 import maplinks
 import photos
 import settings
@@ -473,8 +474,7 @@ def update_vineyard(vineyard_id: int, data: VineyardIn, session: Session = Depen
     v = _get(session, Vineyard, vineyard_id, "Vineyard")
     v.name, v.sub_region, v.village = data.name, data.sub_region, data.village
     v.region_obj = _region(session, data.region)
-    b = v.boundary or ""
-    if b.startswith("custom:") and b[7:].isdigit() and (shape := session.get(CustomShape, int(b[7:]))):
+    if (sid := geo.custom_id(v.boundary)) and (shape := session.get(CustomShape, sid)):
         shape.name = v.name
     return {"id": _commit(session, v)}
 
@@ -487,11 +487,13 @@ def delete_vineyard(vineyard_id: int, session: Session = Depends(get_session)):
     n = session.query(Wine).filter_by(vineyard_id=v.id).count()
     _refuse_if(n, f"{v.name} still has {n} wine{'s' * (n != 1)}: give them another vineyard first")
     region = v.region_obj.name if v.region_obj else None
-    b = v.boundary or ""
-    if b.startswith("custom:") and b[7:].isdigit() and (shape := session.get(CustomShape, int(b[7:]))):
+    sid = geo.custom_id(v.boundary)
+    if sid and (shape := session.get(CustomShape, sid)):
         session.delete(shape)
     session.delete(v)
     session.commit()
+    if sid:
+        geo.custom_changed(sid)  # its outline drops out of the maps' cache too
     return {"deleted": vineyard_id, "region": region}
 
 
@@ -723,6 +725,12 @@ def update_tasting(tasting_id: int, data: TastingIn, session: Session = Depends(
     return {"id": _commit(session, tn), "bottle_id": tn.bottle_id, "wine_id": tn.bottle.wine_id}
 
 
+def _is_adhoc(b):
+    """A bottle recorded only for a tasting (a glass elsewhere, a friend's bottle): not one of the cellar's. The tasting
+    form shows it as "other", deleting its last tasting deletes it"""
+    return b.provenance == AD_HOC or b.location == CONSUMED
+
+
 @router.delete("/api/tastings/{tasting_id}")
 def delete_tasting(tasting_id: int, session: Session = Depends(get_session)):
     tn = _get(session, TastingNote, tasting_id, "Tasting note")
@@ -730,7 +738,7 @@ def delete_tasting(tasting_id: int, session: Session = Depends(get_session)):
     session.delete(tn)
     session.flush()
     # The ad-hoc bottle existed only for this note. A cellar bottle keeps its quantity: we can't tell if it was drunk.
-    adhoc = b is not None and b.location == CONSUMED and not b.qty and not session.query(TastingNote).filter_by(bottle_id=b.id).count()
+    adhoc = b is not None and _is_adhoc(b) and not b.qty and not session.query(TastingNote).filter_by(bottle_id=b.id).count()
     if adhoc:
         session.delete(b)
     session.commit()
@@ -904,7 +912,7 @@ def tasting_form(tasting_id: int, session: Session = Depends(get_session)):
     return {
         "id": tn.id, "date": tn.date, "rating": tn.rating, "glasses": tn.glasses, "sequence": tn.sequence,
         "tags": tn.tags, "notes": tn.notes, "place": _place_out(tn.place), "styles": [s.tag for s in tn.styles],
-        "source": "other" if b.provenance == AD_HOC or b.location == CONSUMED else "cellar",
+        "source": "other" if _is_adhoc(b) else "cellar",
         "bottle_id": b.id, "bottle": _bottle_details(b), "wine": wine_summary(b.wine),
     }
 
@@ -1048,7 +1056,8 @@ def lookup_bottles(q: str = "", wine_id: int | None = None, limit: int = Query(L
                    session: Session = Depends(get_session)):
     """Bottles in stock, to pick the one a tasting note is about."""
     query = session.query(Bottle).join(Wine).join(Producer).filter(Bottle.qty > 0) \
-        .options(joinedload(Bottle.wine).joinedload(Wine.producer), joinedload(Bottle.wine).joinedload(Wine.appellation))
+        .options(joinedload(Bottle.wine).joinedload(Wine.producer), joinedload(Bottle.wine).joinedload(Wine.appellation),
+                 joinedload(Bottle.wine).joinedload(Wine.varietal), joinedload(Bottle.wine).joinedload(Wine.region_obj))
     if wine_id:
         query = query.filter(Bottle.wine_id == wine_id)
     rows = query.order_by(Producer.name, Wine.cuvee, Wine.vintage).all()

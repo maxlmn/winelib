@@ -71,7 +71,7 @@ def producer_id(client, name):
     return found[name]
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def chandon(client):
     return client.get(f"/api/producers/{producer_id(client, 'Chandon de Briailles')}").json()
 

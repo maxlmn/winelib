@@ -79,6 +79,7 @@ def test_on_the_wine_and_producer_pages(client):
 
 def test_names_edits_and_removal(client):
     _, wine, _ = ids(client)
+    assert client.post("/api/lists", json={"name": "Rougeard"}).status_code == 200
     assert client.post("/api/lists", json={"name": "rougeard"}).status_code == 409  # same name, any case
     lst = client.post("/api/lists", json={"name": "To edit"}).json()["id"]
     item = client.post(f"/api/lists/{lst}/items", json={"kind": "wine", "wine_id": wine("poyeux")}).json()["id"]

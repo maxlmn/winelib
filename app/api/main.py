@@ -40,6 +40,13 @@ app = FastAPI(title="WineLib API", lifespan=lifespan)
 app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=5)
 
 
+@app.middleware("http")
+async def store_fresh(request, call_next):
+    """The shape store rebuilt while the app runs: what was read from it is forgotten (geo.fresh)"""
+    geo.fresh()
+    return await call_next(request)
+
+
 @app.get("/api/health")
 def health():
     return {"ok": True}

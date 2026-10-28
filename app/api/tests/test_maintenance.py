@@ -86,13 +86,13 @@ def test_backup_and_download(client, tmp_path, monkeypatch):
     (tmp_path / "winelib_2026-10-20_2047.sql").write_text("-- dump")
     client.post("/api/maintenance/backup", json={})
     job = wait(client)
-    assert job["status"] == "done" and any("wines: 3 rows" in line for line in job["log"])  # the duplicate merged away
+    assert job["status"] == "done" and any("wines: 4 rows" in line for line in job["log"])  # as seeded
     listed = client.get("/api/maintenance/backups").json()
     assert {b["kind"] for b in listed} == {"csv", "sql", "sqlite"}  # the test database is SQLite: copied too
     import sqlite3
     copy = next(b for b in listed if b["kind"] == "sqlite")
     with sqlite3.connect(tmp_path / copy["name"]) as c:
-        assert c.execute("SELECT COUNT(*) FROM wines").fetchone()[0] == 3
+        assert c.execute("SELECT COUNT(*) FROM wines").fetchone()[0] == 4
     assert client.get(f"/api/maintenance/backups/{copy['name']}").content[:15] == b"SQLite format 3"
     csv = next(b for b in listed if b["kind"] == "csv")
     z = client.get(f"/api/maintenance/backups/{csv['name']}")

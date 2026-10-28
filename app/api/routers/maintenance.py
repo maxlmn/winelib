@@ -634,7 +634,7 @@ class RunBody(BaseModel):
     keys: list[str] = []  # the suggestions ticked in a preview (scores_csv: line numbers)
     # suggestion -> the wine as edited in the preview (PickCard): {"cuvee", "vintage", "type", "appellation",
     # "varietal" (an id, or {"name"} to create), "wine" (a model's id, optional)}
-    targets: dict[str, dict] = {}
+    targets: dict[str, dict] = {}  # suggestions as edited in the preview (a plug-in's: robert_parker reads them)
     # The imports: the file's text, the critic (scores), and {field: header} when the columns were picked by hand
     text: str | None = Field(None, max_length=20_000_000)
     critic: str | None = None
