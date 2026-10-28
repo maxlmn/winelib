@@ -8,14 +8,28 @@
 
 	let { data } = $props();
 
-	// The wishlist first, then the closest to done, the most tasted, by name
+	// The lists' order (remembered on this device), the wishlist always first: the closest to done, by name, the most
+	// entries, the most bottles in the cellar; then the most tasted, by name
+	const LIST_ORDERS = [
+		['done', 'Completion'],
+		['name', 'Name'],
+		['entries', 'Entries'],
+		['owned', 'In the cellar']
+	] as const;
+	type ListOrder = (typeof LIST_ORDERS)[number][0];
+	let listOrder = $state<ListOrder>('done');
+	type L = (typeof data.lists)[number];
+	const rate = (l: L) => (l.entries ? l.tasted / l.entries : 0);
+	const by: Record<ListOrder, (a: L, b: L) => number> = {
+		done: (a, b) => rate(b) - rate(a),
+		name: (a, b) => a.name.localeCompare(b.name),
+		entries: (a, b) => b.entries - a.entries,
+		owned: (a, b) => b.owned - a.owned
+	};
 	const lists = $derived(
 		[...data.lists].sort(
 			(a, b) =>
-				Number(b.is_wishlist) - Number(a.is_wishlist) ||
-				(b.entries ? b.tasted / b.entries : 0) - (a.entries ? a.tasted / a.entries : 0) ||
-				b.tasted - a.tasted ||
-				a.name.localeCompare(b.name)
+				Number(b.is_wishlist) - Number(a.is_wishlist) || by[listOrder](a, b) || b.tasted - a.tasted || a.name.localeCompare(b.name)
 		)
 	);
 	// Every mosaic in one order: the lists' own, by note, tasted first... (remembered on this device)
@@ -24,10 +38,20 @@
 		try {
 			const saved = localStorage.getItem('winelib-dots-order');
 			if (DOT_ORDERS.some(([k]) => k === saved)) order = saved as DotOrder;
+			const savedLists = localStorage.getItem('winelib-lists-order');
+			if (LIST_ORDERS.some(([k]) => k === savedLists)) listOrder = savedLists as ListOrder;
 		} catch {
 			/* no storage: not remembered */
 		}
 	});
+	function setListOrder(o: ListOrder) {
+		listOrder = o;
+		try {
+			localStorage.setItem('winelib-lists-order', o);
+		} catch {
+			/* no storage */
+		}
+	}
 	function setOrder(o: DotOrder) {
 		order = o;
 		try {
@@ -44,6 +68,21 @@
 	const found = $derived(find.trim() ? lists.filter((l) => named(l) || hits(l)) : lists);
 	const dotsOf = (l: (typeof data.lists)[number]) =>
 		sortDots(find.trim() && !named(l) ? l.dots.map((d) => ({ ...d, faded: !matches(find, d.label, d.note) })) : l.dots, order);
+	// Columns that each stack their own cards (no gap under a short one beside a tall one): each card, in order, to
+	// the shortest column, so the order still reads across; the cards' heights measured once drawn
+	const GAP = 14;
+	let gridWidth = $state(0);
+	let heights = $state<Record<number, number>>({});
+	const cols = $derived(Math.max(1, Math.floor((gridWidth + GAP) / (360 + GAP))));
+	const columns = $derived.by(() => {
+		const out = Array.from({ length: cols }, () => ({ items: [] as L[], h: 0 }));
+		for (const l of found) {
+			const c = out.reduce((a, b) => (b.h < a.h ? b : a));
+			c.items.push(l);
+			c.h += (heights[l.id] ?? 220) + GAP;
+		}
+		return out.map((c) => c.items);
+	});
 	const pct = (l: { tasted: number; entries: number }) => (l.entries ? Math.round((100 * l.tasted) / l.entries) : 0);
 	const milestone = (l: { tasted: number; entries: number }) =>
 		!l.entries ? '' : l.tasted === l.entries ? 'Complete' : l.tasted * 2 >= l.entries ? 'Past halfway' : l.tasted ? '' : 'Not started';
@@ -77,6 +116,12 @@
 	<h1>Lists</h1>
 	{#if lists.length}
 		<input class="find" type="search" bind:value={find} placeholder="Find a list, a wine, a note…" aria-label="Find in the lists" />
+		<label class="order">
+			<span class="muted">Sort the lists</span>
+			<select value={listOrder} onchange={(e) => setListOrder(e.currentTarget.value as ListOrder)}>
+				{#each LIST_ORDERS as [k, label] (k)}<option value={k}>{label}</option>{/each}
+			</select>
+		</label>
 		<label class="order">
 			<span class="muted">Sort the mosaics</span>
 			<select value={order} onchange={(e) => setOrder(e.currentTarget.value as DotOrder)}>
@@ -117,9 +162,11 @@
 		</p>
 	</div>
 {:else}
-	<div class="grid">
-		{#each found as l (l.id)}
-			<a class="list card" href={links.list(l.id)}>
+	<div class="grid" bind:clientWidth={gridWidth} style:--cols={cols}>
+		{#each columns as col, i (i)}
+		<div class="col">
+		{#each col as l (l.id)}
+			<a class="list card" href={links.list(l.id)} bind:offsetHeight={heights[l.id]}>
 				<div class="head">
 					<h2>{#if l.is_wishlist}<span class="star" aria-hidden="true">★</span> {/if}{l.name}</h2>
 					{#if l.live}<span class="badge live" title="Live: {l.live}">Live</span>{/if}
@@ -138,6 +185,8 @@
 					<div class="muted">No entries yet</div>
 				{/if}
 			</a>
+		{/each}
+		</div>
 		{/each}
 	</div>
 	{#if !found.length}<p class="muted">No list, wine or note matches “{find.trim()}”.</p>{/if}
@@ -244,8 +293,15 @@
 	}
 	.grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr));
+		grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
 		gap: 14px;
+		align-items: start;
+	}
+	.col {
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+		min-width: 0;
 	}
 	.list {
 		display: flex;
