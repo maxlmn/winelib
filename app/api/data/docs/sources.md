@@ -23,6 +23,10 @@ INAO (Licence Ouverte 2.0); the EU PDO geopackage (Candiago et al. 2022, figshar
 (CC0 1.0); Wine Australia (CC BY 4.0); [Natural Earth](https://www.naturalearthdata.com) (public domain) for the
 regions' overview outlines and the appellations that are an administrative area.
 
+The lieux-dits are the cadastre's as published: its coverage is uneven (some villages named plot by plot, others
+in a few broad places with large unnamed areas), and its unnamed places are left out. See the Maps guide's *The
+lieux-dits, and their limits*.
+
 ## Looked up while you use the app
 
 - **Wikipedia**: a grape's summary and photo on its page (text under CC BY-SA 4.0; each links to its article).

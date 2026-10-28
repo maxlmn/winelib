@@ -25,6 +25,25 @@ from. **Plain** and **Satellite** change the background.
 - An **appellation** or a **vineyard** shows its own outline; **Full detail** draws it as the source does (INAO's
   vine parcels one by one) instead of simplified.
 
+## The lieux-dits, and their limits
+
+The lieux-dits are the land register's named places (the cadastre, as Etalab publishes it), kept where they touch an
+appellation's vines. They are what the register holds, not a wine map, so:
+
+- **Some villages are mapped finely, others coarsely.** Santenay or Bellevigne-les-Châteaux have their lieux-dits plot
+  by plot; Savennières has fifteen broad ones (Les Coteaux, Le Bourg…) and large areas without a name. A famous name
+  may be missing (Clos du Papillon is in no register), or filed under a neighbouring village (La Roche aux Moines).
+  Draw it yourself if you need it (*Drawing an outline*).
+- **Places without a name are left out**, and so are those barely touching the vines (less than 500 m² and 5% of
+  them).
+- **One name, several places**: a field name used across a village (Grande Pièce, a dozen in Rochefort-sur-Loire) is
+  as many lieux-dits, each its own.
+- **Spellings are the register's**: often without accents (Gravieres), sometimes singular where labels say plural
+  (Chétillon for Les Chétillons: found either way).
+- **Covered**: the Loire, Burgundy, Champagne, Beaujolais, Jura, Alsace, Bordeaux and the Rhône. Champagne has no
+  official vine plan: its lieux-dits are those where OpenStreetMap and the farmers' declarations show vines.
+- **Informational only**: only INAO's plans say what may carry an appellation.
+
 ## Where the outlines come from
 
 INAO for France (appellations, complementary geographic names, IGPs, premiers crus), the EU's PDO register, UC
