@@ -60,6 +60,9 @@
 
 	// Drawing an outline (draw): on this very map, full size (as it was when done), on the photos (put back after)
 	let mlmap = $state<MlMap | null>(null);
+	// the window's size, followed (a phone turned, a window resized): what the page's column or sheet covers
+	let winWidth = $state(1024);
+	let winHeight = $state(768);
 	let drawing = $state<DrawSpec | null>(null);
 	let before: { full: boolean; basemap: Basemap } | null = null;
 	$effect(() => {
@@ -178,7 +181,7 @@
 	const appColor = $derived(shapes?.appellations.features[0]?.properties.color ?? FALLBACK_REGION);
 </script>
 
-<svelte:window onkeydown={onkey} />
+<svelte:window onkeydown={onkey} bind:innerWidth={winWidth} bind:innerHeight={winHeight} />
 
 {#if failed || (shapes && !count && !outline && !drawing)}
 	<div class="empty muted" style:min-height="{Math.min(height, 120)}px">
@@ -211,8 +214,8 @@
 					regions={outline}
 					{lieuAction}
 					cardSide={big ? 'right' : 'left'}
-					padLeft={big && innerWidth > 760 ? 560 : 0}
-					padBottom={big && innerWidth <= 760 && !drawing ? Math.round(innerHeight * 0.45) : 0}
+					padLeft={big && winWidth > 760 ? 560 : 0}
+					padBottom={big && winWidth <= 760 && !drawing ? Math.round(winHeight * 0.45) : 0}
 					onmap={(m) => (mlmap = m)}
 					quiet={!!drawing}
 				/>
@@ -229,7 +232,7 @@
 				</div>
 				<div class="seg">
 					{#each [['plain', 'Plain'], ['satellite', 'Satellite']] as [id, label]}
-						<button class:on={basemap === id} onclick={() => (basemap = id as Basemap)}>{label}</button>
+						<button class:on={basemap === id} aria-pressed={basemap === id} onclick={() => (basemap = id as Basemap)}>{label}</button>
 					{/each}
 				</div>
 				{#if fullUrl}

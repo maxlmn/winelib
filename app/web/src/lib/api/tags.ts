@@ -18,7 +18,7 @@ export interface TagsInfo {
 let kept: Promise<TagsInfo> | null = null;
 
 /** The vocabulary and the tags in use (asked once a page load; `fresh` asks again, after a save) */
-export function loadTags(fresh = false): Promise<TagsInfo> {
+function loadTags(fresh = false): Promise<TagsInfo> {
 	if (!kept || fresh)
 		kept = fetch('/api/tags')
 			.then((r) => (r.ok ? r.json() : { vocabulary: [], used: [] }))

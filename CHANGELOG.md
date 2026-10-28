@@ -5,6 +5,14 @@
 - **Security**: the app's pages no longer serve files outside the web build (an address with an encoded "../"
   could read any file the app could, its settings and your plug-ins' logins among them). *Fill a wine from a link*
   no longer fetches local addresses (this machine, the local network), nor follows a redirect to one.
+- **Errors you can see**: a save or a load that fails now says why (Settings, a list's entries, a bottle taken out
+  or put back, market prices, Maintenance's jobs, the Map page) instead of failing silently or staying on
+  "Loading…"; Settings says "Saved" again after a save (it kept saying "Unsaved changes").
+- **Fixes**: maps left before they finished loading no longer stay in memory; a list's search no longer shows an
+  older, slower answer; photo previews are let go; the lieux-dits are asked again after a failure; a full-size
+  map follows a window resized or a phone turned; exchange rates can no longer read as missing while a request
+  values the cellar; the map store is read again after a rebuild or a map pack installed while the app runs, and
+  a damaged pack leaves the store as it was.
 
 ## v0.3.5
 

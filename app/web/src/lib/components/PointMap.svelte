@@ -49,8 +49,11 @@
 
 	onMount(() => {
 		let m: MlMap | undefined;
+		// left before the map was ready (a quick click on): the map made afterwards is removed at once, not leaked
+		let gone = false;
 		(async () => {
 			m = await createMap(container, basemap);
+			if (gone) return m.remove();
 			m.addSource('points', { type: 'geojson', data: { type: 'FeatureCollection', features: [] }, promoteId: 'id' });
 			m.addLayer({
 				id: 'points', type: 'circle', source: 'points',
@@ -77,7 +80,10 @@
 			});
 			map = m;
 		})();
-		return () => m?.remove();
+		return () => {
+			gone = true;
+			m?.remove();
+		};
 	});
 
 	$effect(() => {

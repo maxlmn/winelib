@@ -125,9 +125,12 @@
 
 	onMount(() => {
 		let m: MlMap | undefined;
+		// left before the map was ready (a quick click on): the map made afterwards is removed at once, not leaked
+		let gone = false;
 		(async () => {
 			const has = lat !== null && lng !== null;
 			m = await createMap(container, 'plain', { center: has ? [lng!, lat!] : [20, 25], zoom: has ? 14 : 1.4 });
+			if (gone) return m.remove();
 			m.addSource('pin', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
 			m.addLayer({
 				id: 'pin', type: 'circle', source: 'pin',
@@ -137,7 +140,10 @@
 			m.on('click', (e) => set(e.lngLat.lat, e.lngLat.lng));
 			map = m;
 		})();
-		return () => m?.remove();
+		return () => {
+			gone = true;
+			m?.remove();
+		};
 	});
 
 	$effect(() => {

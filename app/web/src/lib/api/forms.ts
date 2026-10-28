@@ -2,6 +2,7 @@
 import { error } from '@sveltejs/kit';
 import { appSettings } from '#lib/settings.svelte.ts';
 import { forgetJournal } from './tastings.ts';
+import { loadJson, request, RequestError } from './http.ts';
 
 /** A picked row (id) or, with id null, a name to create on save. */
 export interface Choice {
@@ -203,14 +204,7 @@ export interface VisitForm {
 
 type Fetch = typeof fetch;
 
-/** GET for a +page.ts load: a missing row (or a non-numeric id) becomes a 404 page. */
-export async function getJson<T>(fetch: Fetch, url: string): Promise<T> {
-	const r = await fetch(url);
-	if (!r.ok) error(r.status === 422 ? 404 : r.status, await errorMessage(r));
-	return r.json();
-}
-
-export const loadOptions = (fetch: Fetch) => getJson<Options>(fetch, '/api/lookups/options');
+export const loadOptions = (fetch: Fetch) => loadJson<Options>(fetch, '/api/lookups/options');
 
 /** An edit page's row (GET /api/forms/<kind>/<id>), or the 404 page. */
 export async function loadForm<T>(fetch: Fetch, kind: string, id: string | null): Promise<T> {
@@ -236,50 +230,13 @@ export async function lookup<T>(kind: string, params: Record<string, string | nu
 }
 
 /** A rejected save: one message for the banner, and per-field messages where the API says which field. */
-export class FormError extends Error {
-	constructor(
-		message: string,
-		public fields: Record<string, string> = {}
-	) {
-		super(message);
-	}
-}
+export { RequestError as FormError } from './http.ts';
 
-type PydanticError = { loc: (string | number)[]; msg: string };
-
-// loc looks like ["body", "wine", "WineIn", "producer", "NewProducer", "name"]: keep the snake_case field names
-const fieldOf = (loc: (string | number)[]) =>
-	loc.filter((x): x is string => typeof x === 'string' && /^[a-z][a-z_]*$/.test(x) && x !== 'body' && x !== 'int').join('.');
-
-const pretty = (field: string) => (field.split('.').pop() ?? '').replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
-
-async function errorMessage(r: Response, fields: Record<string, string> = {}) {
-	const body = await r.json().catch(() => null);
-	const detail = body?.detail;
-	if (typeof detail === 'string') return detail;
-	if (Array.isArray(detail)) {
-		// A union (id or new name) reports a failure per branch: drop the "not an integer" noise
-		const errs = (detail as PydanticError[]).filter((e) => !/valid integer/.test(e.msg) || detail.length === 1);
-		for (const e of errs) fields[fieldOf(e.loc)] ??= e.msg.replace(/^Value error, /, '');
-		return Object.entries(fields)
-			.map(([f, m]) => (f ? `${pretty(f)}: ${m}` : m))
-			.join(' · ');
-	}
-	return `Request failed (${r.status})`;
-}
-
+/** A form's request: its JSON, or a FormError with the server's message (per field when it named them) */
 export async function send<T = { id: number }>(method: 'POST' | 'PUT' | 'DELETE', url: string, body?: unknown): Promise<T> {
-	const r = await fetch(url, {
-		method,
-		headers: body === undefined ? {} : { 'content-type': 'application/json' },
-		body: body === undefined ? undefined : JSON.stringify(body)
-	});
-	if (!r.ok) {
-		const fields: Record<string, string> = {};
-		throw new FormError(await errorMessage(r, fields), fields);
-	}
-	forgetJournal();
-	return r.json();
+	const out = await request<T>(url, { method, body });
+	forgetJournal(); // the tasting journal, kept between pages, is read again
+	return out;
 }
 
 /** Create (POST /api/<kind>) or update (PUT /api/<kind>/<id>). */
@@ -380,7 +337,7 @@ export const scoped = (errors: Record<string, string>, part: string) =>
 
 /** Throws the client-side problems found before sending, like a rejected save would. */
 export function check(problems: Record<string, string>) {
-	if (Object.keys(problems).length) throw new FormError(Object.values(problems).join(' · '), problems);
+	if (Object.keys(problems).length) throw new RequestError(Object.values(problems).join(' · '), problems);
 }
 
 /** The bottle-details fields as edited. */

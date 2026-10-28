@@ -1,6 +1,7 @@
 <script lang="ts">
 	/** Maintenance scripts (app/api/tasks/) run on the server as background jobs: see app/api/routers/maintenance.py */
 	import { onMount } from 'svelte';
+	import { messageOf, request } from '#lib/api/http.ts';
 	import PickList from './PickList.svelte';
 	import LieuPeek from './LieuPeek.svelte';
 	import PickCard, { editBody } from './PickCard.svelte';
@@ -116,10 +117,16 @@
 	const uploadBody = (task: string, mapping: Record<string, string> | null) => ({ text: uploads[task]?.text ?? '', critic, mapping });
 
 	async function load() {
-		const [m, b] = await Promise.all([
-			fetch('/api/maintenance').then((r) => r.json()),
-			fetch('/api/maintenance/backups').then((r) => r.json())
-		]);
+		let m, b;
+		try {
+			[m, b] = await Promise.all([
+				request<{ tasks: Task[]; groups: typeof groups; task_groups: typeof taskGroups; job: typeof job }>('/api/maintenance'),
+				request<typeof backups>('/api/maintenance/backups')
+			]);
+		} catch (e) {
+			error = `Maintenance couldn’t load: ${messageOf(e)}`;
+			return;
+		}
 		tasks = m.tasks;
 		if (tasks.some((t) => t.critic) && !critics.length)
 			critics = await fetch('/api/lookups/critics').then((r) => (r.ok ? r.json() : [])).catch(() => []);
@@ -130,14 +137,27 @@
 		for (const t of tasks) if (t.limit && !(t.id in limits)) limits[t.id] = t.limit;
 	}
 
-	// While a job runs, follow its log
+	// While a job runs, follow its log: asked again a second after each answer (never two at once on a slow server);
+	// a failed ask is retried, said once
 	$effect(() => {
 		if (!running) return;
-		const timer = setInterval(async () => {
-			job = await fetch('/api/maintenance/job').then((r) => r.json());
-			if (job?.status !== 'running') load();
-		}, 1000);
-		return () => clearInterval(timer);
+		let timer: ReturnType<typeof setTimeout>;
+		let stopped = false;
+		const poll = async () => {
+			try {
+				job = await request<typeof job>('/api/maintenance/job');
+				error = '';
+				if (job?.status !== 'running') return load();
+			} catch (e) {
+				error = `Lost track of the job (retrying): ${messageOf(e)}`;
+			}
+			if (!stopped) timer = setTimeout(poll, 1000);
+		};
+		timer = setTimeout(poll, 1000);
+		return () => {
+			stopped = true;
+			clearTimeout(timer);
+		};
 	});
 	$effect(() => {
 		void job?.log?.length;
@@ -161,13 +181,10 @@
 		if (a.confirm && !confirm(a.confirm)) return;
 		acted[i] = { busy: true, text: a.busy ?? '…', done: false };
 		try {
-			const res = await fetch(a.endpoint, { method: 'POST' });
-			const body = await res.json().catch(() => ({}));
-			acted[i] = res.ok
-				? { busy: false, text: body.message ?? 'Done', done: body.ok !== false }
-				: { busy: false, text: body.detail ?? `Error ${res.status}`, done: false };
-		} catch {
-			acted[i] = { busy: false, text: 'The app couldn’t be reached', done: false };
+			const body = await request<{ message?: string; ok?: boolean }>(a.endpoint, { method: 'POST' });
+			acted[i] = { busy: false, text: body?.message ?? 'Done', done: body?.ok !== false };
+		} catch (e) {
+			acted[i] = { busy: false, text: messageOf(e), done: false };
 		}
 	}
 
@@ -190,17 +207,14 @@
 
 	async function post(task: string, body: object) {
 		error = '';
-		const res = await fetch(`/api/maintenance/${task}`, {
-			method: 'POST',
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify(body)
-		});
-		const reply = await res.json().catch(() => ({}));
-		if (!res.ok) error = reply.detail ?? `Error ${res.status}`;
-		else job = reply;
+		try {
+			job = await request<typeof job>(`/api/maintenance/${task}`, { method: 'POST', body });
+		} catch (e) {
+			error = messageOf(e);
+		}
 	}
 
-	const stop = () => fetch('/api/maintenance/job/stop', { method: 'POST' });
+	const stop = () => request('/api/maintenance/job/stop', { method: 'POST' }).catch((e) => (error = messageOf(e)));
 
 	const when = (s: number) =>
 		new Date(s * 1000).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });

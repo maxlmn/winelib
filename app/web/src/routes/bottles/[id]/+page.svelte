@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { appSettings, integrations } from '#lib/settings.svelte.ts';
+	import { messageOf, request } from '#lib/api/http.ts';
 	import { invalidateAll } from '$app/navigation';
 	import Facts from '#lib/components/details/Facts.svelte';
 	import WineContent from '#lib/components/details/WineContent.svelte';
@@ -46,15 +47,11 @@
 		priceMessage = '';
 		proposals = null;
 		try {
-			const res = await fetch(`/api/bottles/${b.id}/market-price`, { method: 'POST' });
-			const body = await res.json().catch(() => ({}));
-			if (!res.ok) priceMessage = body.detail ?? `Error ${res.status}`;
-			else {
-				if (body.message) priceMessage = body.message;
-				if (body.found) proposals = body.prices;
-			}
-		} catch {
-			priceMessage = 'The app couldn’t be reached';
+			const body = await request<{ message?: string; found?: boolean; prices: Proposal[] }>(`/api/bottles/${b.id}/market-price`, { method: 'POST' });
+			if (body.message) priceMessage = body.message;
+			if (body.found) proposals = body.prices;
+		} catch (e) {
+			priceMessage = messageOf(e);
 		} finally {
 			fetching = false;
 		}
@@ -77,21 +74,22 @@
 	async function saveOut() {
 		if (!out) return;
 		outError = '';
-		const res = await fetch(`/api/bottles/${b.id}/out`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ ...out, price: out.kind === 'sold' ? out.price : null })
-		});
-		if (!res.ok) {
-			outError = (await res.json().catch(() => ({}))).detail ?? `Error ${res.status}`;
-			return;
+		try {
+			await request(`/api/bottles/${b.id}/out`, { method: 'POST', body: { ...out, price: out.kind === 'sold' ? out.price : null } });
+			out = null;
+			await invalidateAll();
+		} catch (e) {
+			outError = messageOf(e);
 		}
-		out = null;
-		await invalidateAll();
 	}
 	async function undoOut(id: number) {
-		const res = await fetch(`/api/bottles/${b.id}/out/${id}`, { method: 'DELETE' });
-		if (res.ok) await invalidateAll();
+		outError = '';
+		try {
+			await request(`/api/bottles/${b.id}/out/${id}`, { method: 'DELETE' });
+			await invalidateAll();
+		} catch (e) {
+			outError = messageOf(e);
+		}
 	}
 	// The bottles' story, newest first: drunk (its tastings) and the rest
 	const story = $derived(
@@ -106,19 +104,12 @@
 		saving = true;
 		try {
 			const prices = toSave.map((p) => ({ bottle_id: p.bottle_id, price: p.new, source: p.source }));
-			const res = await fetch(`/api/bottles/${b.id}/market-price/save`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ prices })
-			});
-			if (!res.ok) priceMessage = `Error ${res.status}`;
-			else {
-				proposals = null;
-				priceMessage = '';
-				await invalidateAll();
-			}
-		} catch {
-			priceMessage = 'The app couldn’t be reached';
+			await request(`/api/bottles/${b.id}/market-price/save`, { method: 'POST', body: { prices } });
+			proposals = null;
+			priceMessage = '';
+			await invalidateAll();
+		} catch (e) {
+			priceMessage = messageOf(e);
 		} finally {
 			saving = false;
 		}
@@ -163,6 +154,8 @@
 				{#if outError}<span class="msg">{outError}</span>{/if}
 			</div>
 		</form>
+	{:else if outError}
+		<p class="msg" role="alert">{outError}</p><!-- an undo that failed -->
 	{/if}
 	<div class="grid">
 		<div class="price">

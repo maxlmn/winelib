@@ -1,5 +1,5 @@
 /** Lists (see app/api/routers/lists.py). */
-import { error } from '@sveltejs/kit';
+import { loadJson } from './http.ts';
 import { send } from './forms.ts';
 
 type Fetch = typeof fetch;
@@ -99,17 +99,11 @@ export interface ListIn {
 	live?: boolean;
 }
 
-async function getJson<T>(fetch: Fetch, url: string, what: string): Promise<T> {
-	const r = await fetch(url);
-	if (r.status === 404 || r.status === 422) error(404, `${what} not found`);
-	if (!r.ok) error(r.status, `Couldn’t load the ${what.toLowerCase()}`);
-	return r.json();
-}
 
-export const loadLists = (fetch: Fetch) => getJson<ListCard[]>(fetch, '/api/lists', 'Lists');
-export const loadList = (fetch: Fetch, id: string | number) => getJson<ListDetail>(fetch, `/api/lists/${id}`, 'List');
+export const loadLists = (fetch: Fetch) => loadJson<ListCard[]>(fetch, '/api/lists', 'Lists');
+export const loadList = (fetch: Fetch, id: string | number) => loadJson<ListDetail>(fetch, `/api/lists/${id}`, 'List');
 export const listsOf = (fetch: Fetch, of: { wine_id: number } | { producer_id: number }) =>
-	getJson<Membership[]>(fetch, `/api/lists-of?${new URLSearchParams(Object.entries(of).map(([k, v]) => [k, String(v)]))}`, 'Lists');
+	loadJson<Membership[]>(fetch, `/api/lists-of?${new URLSearchParams(Object.entries(of).map(([k, v]) => [k, String(v)]))}`, 'Lists');
 
 export const createList = (body: ListIn) => send<{ id: number; added: number }>('POST', '/api/lists', body);
 export const previewCriteria = (c: Criteria) => send<CriteriaPreview>('POST', '/api/lists/preview', c);

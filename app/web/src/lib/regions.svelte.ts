@@ -6,7 +6,7 @@ import { FALLBACK_REGION } from './colors.ts';
 type Fetch = typeof fetch;
 
 // region name -> its country, for the regions whose name isn't the country's
-export const regionCountries = $state<Record<string, string>>({});
+const regionCountries = $state<Record<string, string>>({});
 // region name -> its colour
 export const regionColorsByName = $state<Record<string, string>>({});
 

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { setParams } from '#lib/url.ts';
+	import { messageOf, request } from '#lib/api/http.ts';
 	import RegionName from '#lib/components/RegionName.svelte';
 	import { regionLabel } from '#lib/regions.svelte.ts';
 	import { onMount, tick, untrack } from 'svelte';
@@ -84,8 +85,14 @@
 		setPickedApps(next);
 	}
 
+	// what couldn't load, said in the map's status box (not a "Loading…" left up)
+	let loadError = $state('');
 	onMount(async () => {
-		overview = await fetch('/api/map/overview').then((r) => r.json());
+		try {
+			overview = await request<typeof overview>('/api/map/overview');
+		} catch (e) {
+			loadError = `The map couldn’t load: ${messageOf(e)}`;
+		}
 		if (!regionName) loading = false;
 	});
 
@@ -94,18 +101,20 @@
 		const r = region;
 		if (!r) {
 			idx = null;
+			// no such region (an old link), or back to the overview: nothing more to wait for once it's there
+			if (overview || loadError) loading = false;
 			return;
 		}
 		let cancelled = false;
 		loading = true;
-		fetch(`/api/map/regions/${r.id}`)
-			.then((res) => res.json())
-			.then((data: RegionIndex) => {
+		request<RegionIndex>(`/api/map/regions/${r.id}`)
+			.then((data) => {
 				if (cancelled) return;
 				useVersion(data.version);
 				idx = data;
-				loading = false;
-			});
+			})
+			.catch((e) => !cancelled && (loadError = `${r.name} couldn’t load: ${messageOf(e)}`))
+			.finally(() => !cancelled && (loading = false));
 		return () => (cancelled = true);
 	});
 
@@ -165,9 +174,9 @@
 		detail = null;
 		if (!sel) return;
 		let cancelled = false;
-		fetch(`/api/${sel.kind === 'appellation' ? 'appellations' : 'vineyards'}/${sel.id}`)
-			.then((r) => (r.ok ? r.json() : null))
-			.then((d) => !cancelled && (detail = d));
+		request<typeof detail>(`/api/${sel.kind === 'appellation' ? 'appellations' : 'vineyards'}/${sel.id}`)
+			.then((d) => !cancelled && (detail = d))
+			.catch(() => !cancelled && (detail = null)); // the card on the map still says what it is
 		return () => (cancelled = true);
 	});
 
@@ -233,7 +242,7 @@
 	</h1>
 	<div class="seg small">
 		{#each [['plain', 'Plain'], ['satellite', 'Satellite']] as [id, label]}
-			<button class:on={basemap === id} onclick={() => (basemap = id as Basemap)}>{label}</button>
+			<button class:on={basemap === id} aria-pressed={basemap === id} onclick={() => (basemap = id as Basemap)}>{label}</button>
 		{/each}
 	</div>
 </div>
@@ -259,7 +268,8 @@
 				<a href={`${links.settings()}#maintenance`}>Settings › Maintenance › Map outlines</a> downloads them.
 			</div>
 		{/if}
-		{#if loading || pending}<div class="loading card">{loading ? 'Loading…' : `Drawing… ${drawn} of ${drawAppIds.length + drawIds.length}`}</div>{/if}
+		{#if loadError}<div class="loading card failed" role="alert">{loadError}</div>
+		{:else if loading || pending}<div class="loading card">{loading ? 'Loading…' : `Drawing… ${drawn} of ${drawAppIds.length + drawIds.length}`}</div>{/if}
 		{#if region && !loading && !drawAppIds.length && !drawIds.length}
 			<div class="tip card muted">
 				{idx && !idx.appellations.length && !idx.vineyards.length
@@ -272,7 +282,7 @@
 	<aside class="card">
 		<div class="seg filter">
 			{#each [['all', 'All'], ['cellar', 'My cellar'], ['tastings', 'My tastings']] as [id, label]}
-				<button class:on={only === id} onclick={() => setParams({ only: id === 'all' ? null : id })}>{label}</button>
+				<button class:on={only === id} aria-pressed={only === id} onclick={() => setParams({ only: id === 'all' ? null : id })}>{label}</button>
 			{/each}
 		</div>
 
@@ -347,9 +357,9 @@
 			{/if}
 
 			<div class="tabs">
-				<button class:on={tab === 'appellations'} onclick={() => (tab = 'appellations')}>Appellations <span class="num">{appList.length}</span></button>
+				<button class:on={tab === 'appellations'} aria-pressed={tab === 'appellations'} onclick={() => (tab = 'appellations')}>Appellations <span class="num">{appList.length}</span></button>
 				{#if vineyardIndex.length}
-					<button class:on={tab === 'vineyards'} onclick={() => (tab = 'vineyards')}>Vineyards <span class="num">{treeRows.length}</span></button>
+					<button class:on={tab === 'vineyards'} aria-pressed={tab === 'vineyards'} onclick={() => (tab = 'vineyards')}>Vineyards <span class="num">{treeRows.length}</span></button>
 				{/if}
 				{#if tab === 'vineyards' && picked.size}
 					<button class="link clear" onclick={() => setParams({ vy: null })}>Clear {picked.size}</button>
@@ -382,7 +392,7 @@
 				<div hidden={tab === 'vineyards' && vineyardIndex.length > 0}>
 					{#each appList.slice(0, LIST_LIMIT) as p (p.id)}
 						<div class="row" class:sel={selected?.kind === 'appellation' && selected?.id === p.id}>
-							<input type="checkbox" checked={pickedApps.has(p.id)} onchange={() => togglePickedApp(p.id)} />
+							<input type="checkbox" checked={pickedApps.has(p.id)} onchange={() => togglePickedApp(p.id)} aria-label={`Draw ${p.name}`} />
 							<button class="pick" onclick={() => focusAppellation(p)}>
 								<span class="sw" style:background={p.color}></span>
 								<span class="name">{p.name}</span>
@@ -441,6 +451,9 @@
 	.map {
 		position: relative;
 		overflow: hidden;
+	}
+	.loading.failed {
+		color: var(--down);
 	}
 	.loading,
 	.no-outlines {

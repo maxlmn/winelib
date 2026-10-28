@@ -37,10 +37,4 @@ export function darken(hex: string, notches: number): string {
 	return toHex([hsl[0], hsl[1], Math.max(0, hsl[2] - NOTCH * notches)]);
 }
 
-/** The same color at this lightness (0-1): a palette whose shades differ by hue only, so darkness means cru alone. */
-export function atLightness(hex: string, lightness: number): string {
-	const hsl = toHsl(hex);
-	return hsl ? toHex([hsl[0], hsl[1], lightness]) : hex;
-}
-
 export const cruShade = (hex: string, cru: number | undefined | null) => darken(hex, cru ?? 0);

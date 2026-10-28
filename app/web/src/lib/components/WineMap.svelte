@@ -164,9 +164,12 @@
 
 	onMount(() => {
 		let m: MlMap | undefined;
+		// left before the map was ready (a quick click on): the map made afterwards is removed at once, not leaked
+		let gone = false;
 		(async () => {
 			// Opened where it will be fitted, when that's already known (the home page's map)
 			m = await createMap(container, basemap, extent ? { bounds: extent, fitBoundsOptions: { padding: framing() } } : undefined);
+			if (gone) return m.remove();
 			if (!worldCopies) m.setRenderWorldCopies(false);
 			{
 				const mm = m;
@@ -283,7 +286,9 @@
 						if (bbox === lieuxAsked) return;
 						lieuxAsked = bbox;
 						const r = await fetch(`/api/map/lieux-dits?bbox=${bbox}`).then((x) => (x.ok ? x.json() : null)).catch(() => null);
-						if (r && bbox === lieuxAsked) source.setData(r);
+						// {more: true}: the view holds too many to draw (kept as it was)
+						if (r?.type === 'FeatureCollection' && bbox === lieuxAsked) source.setData(r);
+						else if (!r && bbox === lieuxAsked) lieuxAsked = ''; // failed: asked again at the next move or redraw
 					}, 250);
 				};
 				mm.on('moveend', loadLieux);
@@ -303,7 +308,10 @@
 				onmap?.(mm);
 			}
 		})();
-		return () => m?.remove();
+		return () => {
+			gone = true;
+			m?.remove();
+		};
 	});
 
 	// Region outlines: the overview's are filled and clickable; inside a region, an outline for context
@@ -317,11 +325,20 @@
 		map.setPaintProperty('regions-line', 'line-dasharray', regionsAnswer ? [1, 0] : [3, 2]);
 	});
 
-	// Data and layer visibility
+	// The shapes, coloured once per change of the data (not again when only the framing changes: a legend click)
+	const shadedApps = $derived(appellations ? shadeAppellations(appellations) : EMPTY);
+	const shadedVines = $derived(vineyards ? shadeVineyards(vineyards) : EMPTY);
 	$effect(() => {
 		if (!ready || !map) return;
-		(map.getSource('apps') as GeoJSONSource).setData(appellations ? shadeAppellations(appellations) : EMPTY);
-		(map.getSource('vines') as GeoJSONSource).setData(vineyards ? shadeVineyards(vineyards) : EMPTY);
+		(map.getSource('apps') as GeoJSONSource).setData(shadedApps);
+	});
+	$effect(() => {
+		if (!ready || !map) return;
+		(map.getSource('vines') as GeoJSONSource).setData(shadedVines);
+	});
+	// Framed when fitKey changes (a new page, a legend's shape), on the extent or else the shapes
+	$effect(() => {
+		if (!ready || !map) return;
 		if (fitKey !== fitted && (extent || appellations || vineyards)) {
 			const b = extent ?? bbox([...(appellations?.features ?? []), ...(vineyards?.features ?? [])].map((f) => f.geometry));
 			if (b) {

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { beforeNavigate } from '$app/navigation';
+	import { messageOf, request } from '#lib/api/http.ts';
 	import Maintenance from '#lib/components/settings/Maintenance.svelte';
 	import { appSettings, configured, integrations, setSettings } from '#lib/settings.svelte.ts';
 	import type { AppSettings, StorageGroup } from '#lib/settings.svelte.ts';
@@ -45,7 +46,12 @@
 		...draft,
 		exchange_rates: { [draft.currency]: 1, ...Object.fromEntries(rates.filter((r) => r.code.trim()).map((r) => [r.code.trim().toUpperCase(), r.rate])) }
 	});
-	const dirty = $derived(JSON.stringify(payload) !== JSON.stringify({ ...appSettings, exchange_rates: { [appSettings.currency]: 1, ...appSettings.exchange_rates } }));
+	// compared whatever the keys' order (the saved settings come back in the server's order: not a change)
+	const canon = (v: unknown): unknown =>
+		Array.isArray(v) ? v.map(canon) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => a.localeCompare(b)).map(([k, x]) => [k, canon(x)])) : v;
+	const dirty = $derived(
+		JSON.stringify(canon(payload)) !== JSON.stringify(canon({ ...appSettings, exchange_rates: { [appSettings.currency]: 1, ...appSettings.exchange_rates } }))
+	);
 
 	beforeNavigate((nav) => {
 		if (dirty && !saving && !confirm('Discard unsaved settings?')) nav.cancel();
@@ -88,29 +94,25 @@
 	}
 
 	async function loadDefaults() {
-		reset(await fetch('/api/settings/defaults').then((r) => r.json()));
+		try {
+			reset(await request<AppSettings>('/api/settings/defaults'));
+		} catch (e) {
+			error = messageOf(e);
+		}
 	}
 
 	async function save() {
 		saving = true;
 		error = '';
 		try {
-			const res = await fetch('/api/settings', {
-				method: 'PUT',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify(payload)
-			});
-			const body = await res.json();
-			if (!res.ok) {
-				error = Array.isArray(body.detail)
-					? body.detail.map((d: { loc: string[]; msg: string }) => `${d.loc.slice(1).join(' › ')}: ${d.msg}`).join('; ')
-					: String(body.detail ?? 'Could not save');
-				return;
-			}
+			// the server's message per field ("Exchange rates: ..."), or "couldn't reach" when the app is down
+			const body = await request<AppSettings>('/api/settings', { method: 'PUT', body: payload });
 			setSettings(body);
 			reset(body);
 			saved = true;
 			setTimeout(() => (saved = false), 2500);
+		} catch (e) {
+			error = messageOf(e);
 		} finally {
 			saving = false;
 		}

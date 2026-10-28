@@ -1,6 +1,6 @@
 import type { Family } from './grapes.ts';
+import { loadJson } from './http.ts';
 import { regionColorsByName } from '#lib/regions.svelte.ts';
-import { error } from '@sveltejs/kit';
 import type { Bottle, MapCollection, RegionCollection, RegionColors } from '#lib/types.ts';
 
 type Fetch = typeof fetch;
@@ -338,17 +338,10 @@ export type ShapesOf = 'regions' | 'producers' | 'wines' | 'appellations' | 'vin
 
 export const shapesUrl = (kind: ShapesOf, id: number | string) => `/api/${kind}/${encodeURIComponent(String(id))}/shapes`;
 
-async function getJson<T>(fetch: Fetch, url: string, what: string): Promise<T> {
-	const r = await fetch(url);
-	// a non-numeric id is a 422
-	if (r.status === 404 || r.status === 422) error(404, `${what} not found`);
-	if (!r.ok) error(r.status, `Couldn’t load the ${what.toLowerCase()}`);
-	return r.json();
-}
 
 /** One detail record plus the region palette the cellar cards and history need (loaded once by the layout). */
 async function withColors<T>(fetch: Fetch, url: string, what: string) {
-	return { detail: await getJson<T>(fetch, url, what), regionColors: regionColorsByName as RegionColors };
+	return { detail: await loadJson<T>(fetch, url, what), regionColors: regionColorsByName as RegionColors };
 }
 
 export const loadProducer = (fetch: Fetch, id: string) => withColors<ProducerDetail>(fetch, `/api/producers/${id}`, 'Producer');
@@ -364,5 +357,5 @@ export const loadGrape = (fetch: Fetch, key: string) =>
 	withColors<GrapeDetail>(fetch, `/api/grapes/${encodeURIComponent(key)}`, 'Grape');
 export const loadVintage = (fetch: Fetch, year: string) =>
 	withColors<VintageDetail>(fetch, `/api/vintages/${encodeURIComponent(year)}`, 'Vintage');
-export const loadVintages = (fetch: Fetch) => getJson<VintageRow[]>(fetch, '/api/vintages', 'Vintages');
-export const loadBottle = (fetch: Fetch, id: string) => getJson<BottleDetail>(fetch, `/api/bottles/${id}`, 'Bottle');
+export const loadVintages = (fetch: Fetch) => loadJson<VintageRow[]>(fetch, '/api/vintages', 'Vintages');
+export const loadBottle = (fetch: Fetch, id: string) => loadJson<BottleDetail>(fetch, `/api/bottles/${id}`, 'Bottle');

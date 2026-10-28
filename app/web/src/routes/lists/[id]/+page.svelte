@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
+	import { aborted, messageOf, request } from '#lib/api/http.ts';
 	import { onMount } from 'svelte';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
 	import ListDots from '#lib/components/ListDots.svelte';
@@ -74,22 +75,45 @@
 	let results = $state<{ kind: string; id: number; title: string; sub: string; region?: string }[]>([]);
 	let timer: ReturnType<typeof setTimeout>;
 	let note = $state('');
+	// a search answered late (a slower, older one) mustn't replace a newer one's results: the older is aborted
+	let searching: AbortController | null = null;
 	function search(text: string) {
 		q = text;
 		clearTimeout(timer);
 		timer = setTimeout(async () => {
+			searching?.abort();
 			if (text.trim().length < 2) return (results = []);
-			const r = await fetch(`/api/search?q=${encodeURIComponent(text)}&limit=6`).then((r) => r.json());
-			results = r.results.filter((x: { kind: string }) => x.kind === 'wine' || x.kind === 'producer');
+			const mine = (searching = new AbortController());
+			try {
+				const r = await request<{ results: typeof results }>(`/api/search?q=${encodeURIComponent(text)}&limit=6`, { signal: mine.signal });
+				results = r.results.filter((x) => x.kind === 'wine' || x.kind === 'producer');
+				entryError = '';
+			} catch (e) {
+				if (!aborted(e)) entryError = messageOf(e);
+			}
 		}, 150);
 	}
+	// what an add, a note or a removal couldn't do, said by the entries
+	let entryError = $state('');
+	async function tryEntry(work: () => Promise<unknown>) {
+		entryError = '';
+		try {
+			await work();
+			await invalidateAll();
+			return true;
+		} catch (e) {
+			entryError = messageOf(e);
+			return false;
+		}
+	}
 	async function add(kind: EntryKind, id: number) {
-		const r = await addEntry(list.id, kind === 'producer' ? { kind, producer_id: id, note } : { kind, wine_id: id, note });
-		addNote = r.existing ? 'Already on the list' : '';
-		q = '';
-		results = [];
-		note = '';
-		await invalidateAll();
+		await tryEntry(async () => {
+			const r = await addEntry(list.id, kind === 'producer' ? { kind, producer_id: id, note } : { kind, wine_id: id, note });
+			addNote = r.existing ? 'Already on the list' : '';
+			q = '';
+			results = [];
+			note = '';
+		});
 	}
 	let addNote = $state('');
 
@@ -97,13 +121,10 @@
 	let editing = $state<number | null>(null);
 	let draftNote = $state('');
 	async function saveNote(i: ListEntry) {
-		await editEntry(list.id, i.id, { note: draftNote });
-		editing = null;
-		await invalidateAll();
+		if (await tryEntry(() => editEntry(list.id, i.id, { note: draftNote }))) editing = null;
 	}
 	async function remove(i: ListEntry) {
-		await removeEntry(list.id, i.id);
-		await invalidateAll();
+		await tryEntry(() => removeEntry(list.id, i.id));
 	}
 
 	// --- The list itself ---
@@ -147,8 +168,12 @@
 	}
 	async function drop() {
 		if (!confirm(`Delete the list “${list.name}”? Its wines stay in WineLib.`)) return;
-		await deleteList(list.id);
-		goto(links.lists());
+		try {
+			await deleteList(list.id);
+			goto(links.lists());
+		} catch (e) {
+			listError = messageOf(e);
+		}
 	}
 </script>
 
@@ -214,6 +239,7 @@
 {#if !list.live}
 <section class="add card">
 	<input type="search" placeholder="Add a wine or a producer: search by name…" value={q} oninput={(e) => search(e.currentTarget.value)} />
+	{#if entryError}<p class="error" role="alert">{entryError}</p>{/if}
 	{#if results.length}
 		<input class="note-in" bind:value={note} placeholder="A note for it (optional): “the 2018”, “magnum”…" />
 		<ul>

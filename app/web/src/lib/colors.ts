@@ -19,7 +19,7 @@ export function rgb(hex: string): [number, number, number] {
 	return Number.isNaN(n) ? [154, 152, 147] : [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
-export const isLight = ([r, g, b]: number[]) => 0.299 * r + 0.587 * g + 0.114 * b > 150;
+const isLight = ([r, g, b]: number[]) => 0.299 * r + 0.587 * g + 0.114 * b > 150;
 
 const toHex = (c: number[]) => '#' + c.map((x) => Math.round(x).toString(16).padStart(2, '0')).join('');
 

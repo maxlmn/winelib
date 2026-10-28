@@ -5,7 +5,8 @@
 	import WineFields from './WineFields.svelte';
 	import RegionName from '#lib/components/RegionName.svelte';
 	import { TYPE_COLORS } from '#lib/colors.ts';
-	import { emptyWine, getJson, lookup, newVintageDraft, vintageLabel } from '#lib/api/forms.ts';
+	import { emptyWine, lookup, newVintageDraft, vintageLabel } from '#lib/api/forms.ts';
+	import { request } from '#lib/api/http.ts';
 	import type { Options, WineDraft, WineForm, WineSummary } from '#lib/api/forms.ts';
 
 	interface Props {
@@ -42,7 +43,7 @@
 	}
 
 	async function newVintage(w: WineSummary) {
-		draft = newVintageDraft(await getJson<WineForm>(fetch, `/api/forms/wines/${w.id}`));
+		draft = newVintageDraft(await request<WineForm>(`/api/forms/wines/${w.id}`));
 		wine = null;
 	}
 

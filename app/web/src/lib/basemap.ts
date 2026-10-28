@@ -7,7 +7,7 @@ export type Basemap = 'plain' | 'satellite';
 
 /** The raster basemaps' tiles. Plain is drawn from vector tiles (vectorBase.ts); OpenStreetMap France's raster tiles
  * are its fallback when OpenFreeMap can't be reached. */
-export function basemapTiles(kind: Basemap): { tiles: string[]; attribution: string } {
+function basemapTiles(kind: Basemap): { tiles: string[]; attribution: string } {
 	if (kind === 'satellite')
 		return { tiles: ['sat://{z}/{x}/{y}'], attribution: '© IGN — BD ORTHO (France) · © Esri, Maxar, Earthstar Geographics' };
 	return {
@@ -20,7 +20,7 @@ type RasterPaint = NonNullable<RasterLayerSpecification['paint']>;
 
 /** The raster fallback for Plain is a muted OpenStreetMap: mostly grey in light mode, inverted (min > max) and
  * hue-turned back in dark mode. */
-export function basemapPaint(kind: Basemap, dark: boolean): RasterPaint {
+function basemapPaint(kind: Basemap, dark: boolean): RasterPaint {
 	if (kind !== 'plain') return { 'raster-saturation': 0, 'raster-brightness-min': 0, 'raster-brightness-max': 1, 'raster-hue-rotate': 0, 'raster-contrast': 0 };
 	return dark
 		? { 'raster-saturation': -0.75, 'raster-brightness-min': 0.85, 'raster-brightness-max': 0.08, 'raster-hue-rotate': 180, 'raster-contrast': 0.1 }
@@ -108,7 +108,7 @@ export function setBasemap(map: MlMap, kind: Basemap, dark: boolean) {
 }
 
 /** The resolved app theme (see theme.svelte.ts), not just the OS preference. */
-export const isDark = () => document.documentElement.dataset.theme === 'dark';
+const isDark = () => document.documentElement.dataset.theme === 'dark';
 
 /** A map on a basemap, opened at a view: a centre and zoom, or `bounds` to fit (opening there at once, rather than
  * loading one place's tiles to move elsewhere). Resolves once its style is there (sources and layers can be added),

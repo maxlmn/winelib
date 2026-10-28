@@ -30,8 +30,12 @@
 	});
 
 	const preview = $derived(file ? URL.createObjectURL(file) : null);
-	$effect(() => () => {
-		if (preview) URL.revokeObjectURL(preview);
+	// each preview let go when the next replaces it (or the form closes): picking several doesn't keep them all
+	$effect(() => {
+		const url = preview;
+		return () => {
+			if (url) URL.revokeObjectURL(url);
+		};
 	});
 
 	// The current photo as its small copy: the original can be several MB
