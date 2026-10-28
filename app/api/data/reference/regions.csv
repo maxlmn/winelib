@@ -3,7 +3,7 @@ id,name,country,color,iso_code
 2,Argentina,Argentina,#b7b7b7,
 3,Australia,Australia,#f1c232,
 4,Austria,Austria,#d0e0e3,AT
-5,Beaujolais,France,#d97693,FR
+5,Beaujolais,France,#9a7bc9,FR
 6,Belgium,Belgium,,BE
 7,Bordeaux,France,#d96663,FR
 8,Bourgogne,France,#d97693,FR
@@ -33,7 +33,6 @@ id,name,country,color,iso_code
 33,Loire,France,#abc96c,
 34,Lorraine,France,,
 35,Luxembourg,Luxembourg,,LU
-36,Lyonnais,France,,
 37,Malta,Malta,,MT
 38,Mendoza,Argentina,,
 39,Netherlands,Netherlands,,NL
