@@ -345,7 +345,7 @@
 <div class="wrap">
 	<div class="canvas" bind:this={container}></div>
 	{#if hoveredRegion}
-		<div class="hover card" class:right={cardSide === 'right'}>
+		<div class="hover card" class:right={cardSide === 'right'} class:low={padBottom > 0} style:bottom={padBottom > 0 ? `${padBottom + 36}px` : null}>
 			<div class="kind">region{hoveredRegion.country && hoveredRegion.country !== hoveredRegion.name ? ` · ${hoveredRegion.country}` : ''}</div>
 			<b>{hoveredRegion.name}</b>
 			<div class="muted num">
@@ -356,7 +356,7 @@
 			<div class="muted hint">Click to explore</div>
 		</div>
 	{:else if lieu}
-		<div class="hover card" class:right={cardSide === 'right'} class:pinned={lieuPinned}>
+		<div class="hover card" class:right={cardSide === 'right'} class:low={padBottom > 0} style:bottom={padBottom > 0 ? `${padBottom + 36}px` : null} class:pinned={lieuPinned}>
 			{#if lieuPinned}<button class="close" onclick={() => (pinnedLieu = null)} aria-label="Close">✕</button>{/if}
 			<div class="kind">lieu-dit · cadastre</div>
 			<b>{lieu.name}</b>
@@ -374,7 +374,7 @@
 			{/if}
 		</div>
 	{:else if card}
-		<div class="hover card" class:right={cardSide === 'right'} class:pinned={isPinned}>
+		<div class="hover card" class:right={cardSide === 'right'} class:low={padBottom > 0} style:bottom={padBottom > 0 ? `${padBottom + 36}px` : null} class:pinned={isPinned}>
 			{#if isPinned}<button class="close" onclick={() => onselect(null)} aria-label="Close">✕</button>{/if}
 			<div class="kind">{card.kind}</div>
 			<b>{card.name}</b>
@@ -415,6 +415,13 @@
 	.hover.right {
 		left: auto;
 		right: 56px;
+	}
+	/* the map's bottom covered (a phone's page sheet), its top the controls: the card just above what covers it */
+	.hover.low {
+		top: auto;
+		left: 12px;
+		right: 12px;
+		max-width: none;
 	}
 	.hover.pinned {
 		pointer-events: auto;
