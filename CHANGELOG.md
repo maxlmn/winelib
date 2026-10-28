@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.2
+
+- On a phone's full-size map, a lieu-dit's card sits above the page, no longer under the map's controls.
+- The cadastre's unnamed places (what's left between the lieux-dits, some large) are no longer shown as lieux-dits.
+
 ## v0.3.1
 
 - A full-size map on a phone keeps the bar and its menu above it; no more placeholder where the map was.
