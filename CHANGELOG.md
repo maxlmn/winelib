@@ -1,7 +1,11 @@
 # Changelog
 
-## Unreleased
+## v0.3.4
 
+- **See a suggested lieu-dit before linking it**: in Maintenance's preview, *map* opens it among its neighbours and
+  villages, the wine's appellation outlined.
+- On Satellite, the appellations and vineyards are drawn light enough to see the vines under them. The Terrain
+  background is gone (Plain and Satellite remain; a default of Terrain becomes Plain).
 - **Champagne's lieux-dits**: 9,000 more, in the Marne, the Aube and the Aisne (Les Chétillons, La Côte Faron, Les
   Crayères…). INAO publishes no parcel plan for Champagne: its vines are its appellations' areas where OpenStreetMap
   (and the farmers' RPG declarations) have vineyards.
