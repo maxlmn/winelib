@@ -1,9 +1,15 @@
 # Changelog
 
-## Unreleased
+## v0.3.6
 
-- **A bottle's page** shows its bottles as bottle ends (those gone faded) and where it sits: a mini shelf map of its
-  storage group, each bin filled as far as it holds, its own highlighted (a bin opens the cellar's shelf map).
+- **A bottle's page** says what it is in words ("3 bottles", "2 magnums", "1 bottle, finished") with its bottles
+  beside the title as bottle ends in the region's colour (those gone faded), and where it sits: "In R19 · Wine room"
+  and a mini shelf map of its storage group, each bin filled as far as it holds, its own highlighted (a bin opens
+  the cellar's shelf map).
+- **France's regions**: the Lyonnais is part of the Rhône (Coteaux du Lyonnais moves there, with its wines,
+  producers and the live lists on it; migration 0008); the Rhône's outline reaches up to Lyon (Côte-Rôtie,
+  Condrieu, Château-Grillet were outside it) and over the Gard's bank (Tavel, Lirac, Costières de Nîmes); the
+  Beaujolais in its own violet, no longer Bourgogne's pink (unless you had changed it), its outline north of Lyon.
 - **Security**: the app's pages no longer serve files outside the web build (an address with an encoded "../"
   could read any file the app could, its settings and your plug-ins' logins among them). *Fill a wine from a link*
   no longer fetches local addresses (this machine, the local network), nor follows a redirect to one.
