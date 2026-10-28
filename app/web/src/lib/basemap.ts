@@ -9,10 +9,7 @@ export type Basemap = 'plain' | 'satellite';
  * are its fallback when OpenFreeMap can't be reached. */
 export function basemapTiles(kind: Basemap): { tiles: string[]; attribution: string } {
 	if (kind === 'satellite')
-		return {
-			tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
-			attribution: '© Esri, Maxar, Earthstar Geographics'
-		};
+		return { tiles: ['sat://{z}/{x}/{y}'], attribution: '© IGN — BD ORTHO (France) · © Esri, Maxar, Earthstar Geographics' };
 	return {
 		tiles: ['a', 'b', 'c'].map((s) => `https://${s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png`),
 		attribution: '© OpenStreetMap France · © OpenStreetMap contributors'
@@ -30,19 +27,37 @@ export function basemapPaint(kind: Basemap, dark: boolean): RasterPaint {
 		: { 'raster-saturation': -0.8, 'raster-brightness-min': 0.12, 'raster-brightness-max': 1, 'raster-hue-rotate': 0, 'raster-contrast': -0.1 };
 }
 
-// Satellite in France: IGN's aerial photos (BD ORTHO, sharper and newer than Esri's), over Esri's for the rest of the
-// world. Outside France IGN's tiles are blank white: the `ign://` protocol makes that white see-through, so Esri's
-// shows at the borders (Geneva, Alsace, Roussillon).
+// Satellite: IGN's aerial photos in France (BD ORTHO, sharper and newer than Esri's), Esri's elsewhere, through one
+// `sat://` source that asks for one tile per place: IGN's where it covers (as it comes: most tiles), Esri's outside
+// its box, and at a border (IGN's tile partly blank white) Esri's under IGN's, the white made see-through.
 const IGN_BOUNDS: [number, number, number, number] = [-5.3, 41.3, 9.7, 51.2];
 const IGN_URL = (z: string, x: string, y: string) =>
 	'https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal' +
 	`&TILEMATRIXSET=PM&FORMAT=image/jpeg&TILEMATRIX=${z}&TILECOL=${x}&TILEROW=${y}`;
+const ESRI_URL = (z: string, x: string, y: string) =>
+	`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`;
 
-async function ignTile(params: { url: string }, abort: AbortController) {
-	const [z, x, y] = params.url.replace('ign://', '').split('/');
+/** A tile's box (west, south, east, north) */
+function tileBox(z: number, x: number, y: number): [number, number, number, number] {
+	const n = 2 ** z;
+	const lat = (t: number) => (Math.atan(Math.sinh(Math.PI * (1 - (2 * t) / n))) * 180) / Math.PI;
+	return [(x / n) * 360 - 180, lat(y + 1), ((x + 1) / n) * 360 - 180, lat(y)];
+}
+
+async function bytesOf(url: string, abort: AbortController) {
+	const res = await fetch(url, { signal: abort.signal });
+	if (!res.ok) throw new Error(`tile ${res.status}`);
+	return res.arrayBuffer();
+}
+
+async function satTile(params: { url: string }, abort: AbortController) {
+	const [z, x, y] = params.url.replace('sat://', '').split('/');
+	const [w, s, e, n] = tileBox(+z, +x, +y);
+	const [bw, bs, be, bn] = IGN_BOUNDS;
+	const esri = () => bytesOf(ESRI_URL(z, x, y), abort);
+	if (e < bw || w > be || n < bs || s > bn) return { data: await esri() };
 	const res = await fetch(IGN_URL(z, x, y), { signal: abort.signal });
-	// none there (well outside France): an empty tile, Esri's shows
-	if (res.status === 404) return { data: await emptyTile() };
+	if (res.status === 404) return { data: await esri() }; // none there (beyond IGN's photos)
 	if (!res.ok) throw new Error(`IGN tile ${res.status}`);
 	const bytes = await res.arrayBuffer();
 	const bitmap = await createImageBitmap(new Blob([bytes]));
@@ -58,14 +73,20 @@ async function ignTile(params: { url: string }, abort: AbortController) {
 			white++;
 		}
 	}
-	// a photo throughout (most tiles): as it came
+	// a photo throughout (most tiles in France): as it came, nothing else asked for
 	if (white < 64) return { data: bytes };
-	ctx.putImageData(img, 0, 0);
-	return { data: await (await canvas.convertToBlob({ type: 'image/png' })).arrayBuffer() };
+	const below = await esri();
+	// blank throughout (just outside France): Esri's alone
+	if (white >= px.length / 4 - 64) return { data: below };
+	const under = await createImageBitmap(new Blob([below]));
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	ctx.drawImage(under, 0, 0, canvas.width, canvas.height);
+	const top = new OffscreenCanvas(canvas.width, canvas.height);
+	top.getContext('2d')!.putImageData(img, 0, 0);
+	ctx.drawImage(top, 0, 0);
+	return { data: await (await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.9 })).arrayBuffer() };
 }
-let empty: Promise<ArrayBuffer> | null = null;
-const emptyTile = () => (empty ??= new OffscreenCanvas(1, 1).convertToBlob({ type: 'image/png' }).then((b) => b.arrayBuffer()));
-let ignRegistered = false;
+let satRegistered = false;
 
 // Per map: the basemap shown, and whether OpenFreeMap failed (Plain then falls back to raster tiles)
 const state = new WeakMap<MlMap, { kind: Basemap; dark: boolean; vectorDown: boolean }>();
@@ -84,7 +105,6 @@ export function setBasemap(map: MlMap, kind: Basemap, dark: boolean) {
 		(map.getSource('base') as RasterTileSource).setTiles(basemapTiles(kind).tiles);
 		for (const [k, v] of Object.entries(basemapPaint(kind, dark))) map.setPaintProperty('base', k as keyof RasterPaint, v);
 	}
-	map.setLayoutProperty('ign', 'visibility', kind === 'satellite' ? 'visible' : 'none');
 }
 
 /** The resolved app theme (see theme.svelte.ts), not just the OS preference. */
@@ -103,9 +123,9 @@ export async function createMap(
 ) {
 	const maplibre = await import('maplibre-gl');
 	maplibre.setWorkerUrl(workerUrl);
-	if (!ignRegistered) {
-		maplibre.addProtocol('ign', ignTile);
-		ignRegistered = true;
+	if (!satRegistered) {
+		maplibre.addProtocol('sat', satTile);
+		satRegistered = true;
 	}
 	const dark = isDark();
 	const vector = basemap === 'plain';
@@ -117,13 +137,11 @@ export async function createMap(
 			glyphs: GLYPHS,
 			sources: {
 				ofm: { type: 'vector', url: VECTOR_SOURCE },
-				base: { type: 'raster', tileSize: 256, maxzoom: 19, ...basemapTiles(basemap) },
-				ign: { type: 'raster', tileSize: 256, maxzoom: 19, bounds: IGN_BOUNDS, tiles: ['ign://{z}/{x}/{y}'], attribution: '© IGN — BD ORTHO' }
+				base: { type: 'raster', tileSize: 256, maxzoom: 19, ...basemapTiles(basemap) }
 			},
 			layers: [
 				...vectorLayers(dark).map((l) => ({ ...l, layout: { ...l.layout, ...shown(vector) } }) as LayerSpecification),
-				{ id: 'base', type: 'raster', source: 'base', paint: basemapPaint(basemap, dark), layout: shown(!vector) },
-				{ id: 'ign', type: 'raster', source: 'ign', layout: shown(basemap === 'satellite') }
+				{ id: 'base', type: 'raster', source: 'base', paint: basemapPaint(basemap, dark), layout: shown(!vector) }
 			]
 		},
 		...view,
