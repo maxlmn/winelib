@@ -137,8 +137,8 @@
 			<!-- one bottle end per bottle, beside the title: those in the cellar, then those gone (drunk, gifted...) faded -->
 			{#if b.qty || gone}
 				<div class="ends" aria-label="{b.qty} in the cellar{gone ? `, ${gone} gone` : ''}">
-					{#each { length: b.qty } as _, i (i)}<BottleEnd region={wine.region} color={wine.color} format={b.bottle_size} size={16} title="In the cellar" />{/each}
-					{#each { length: gone } as _, i (`g${i}`)}<span class="gone"><BottleEnd region={wine.region} color={wine.color} format={b.bottle_size} size={16} title="Gone" /></span>{/each}
+					{#each { length: b.qty } as _, i (i)}<BottleEnd region={wine.region_color} color={wine.color} format={b.bottle_size} size={16} title="In the cellar" />{/each}
+					{#each { length: gone } as _, i (`g${i}`)}<span class="gone"><BottleEnd region={wine.region_color} color={wine.color} format={b.bottle_size} size={16} title="Gone" /></span>{/each}
 				</div>
 			{/if}
 			</div>
