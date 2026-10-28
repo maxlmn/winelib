@@ -1,7 +1,19 @@
 # Changelog
 
-## Unreleased
+## v0.3.0
 
+- **Lieux-dits**: the cadastre's named places among the vines (Loire, Burgundy, Beaujolais, Jura, Alsace, Bordeaux,
+  Rhône), with their eligible appellations, on the map from close zoom. Hover one for its name and village, click it
+  to make it the wine's vineyard; Settings › Maintenance › *Lieux-dits for your wines* finds the cuvées named after
+  one ("Les Poyeux") and links them after your tick; the wine form's vineyard picker offers them too. A lieu-dit's
+  page says how much of it is in AOC vines. Needs the map pack's new `lieu_dit` store.
+- **Full-size maps**: ⤢ on a page's map fills the window, the page a column of cards over it (a sheet you scroll on
+  a phone); Esc or *Back to the page* returns. Settings › Appearance › Maps can make it the default. The map credits
+  now fold into an ⓘ.
+- **Faster, cleaner maps**: the Plain map is drawn from OpenFreeMap's vector tiles in WineLib's own muted style (a
+  light and a dark one, vineyards faintly tinted), drawn in about a second where it took two to three;
+  OpenStreetMap France's tiles stay as the fallback. Satellite shows IGN's aerial photos in France (sharper and
+  newer), Esri's elsewhere.
 - **Lists from criteria**: a new list filled from your wines matching tags, colours, regions, grapes, vintages, in
   the cellar or tasted, your rating or words in the name, with how many match as you pick. Made once (they become
   its entries) or **live** (it keeps the criteria and shows whatever matches today: a wine tagged tomorrow joins it).

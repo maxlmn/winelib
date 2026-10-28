@@ -6,7 +6,7 @@ vineyard. It runs on your own computer: your data stays yours.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="screenshots/demo-dark.gif">
-  <img alt="A walk through WineLib: the cellar's racks, a search, a wine's vineyard on the map, the world map" src="screenshots/demo.gif">
+  <img alt="A walk through WineLib: the lists, a search, a wine's vineyard on the map, full size, the cellar's racks" src="screenshots/demo.gif">
 </picture>
 
 ## What it does
@@ -36,9 +36,13 @@ checklist.
   <img alt="A list: what you've tasted and what's left, with your bottles" src="screenshots/list.png">
 </picture>
 
-**The maps.** Every appellation of France (INAO), the EU, the US and Australia outlined, and Burgundy's premiers
-crus; regions in their colours, your cellar and your tastings on them. A wine page shows its appellation and
-vineyard; a region's page, where what you drink comes from.
+**The maps.** Every appellation of France (INAO), the EU, the US and Australia outlined, Burgundy's premiers
+crus, and the cadastre's lieux-dits across France's vineyards (Loire, Burgundy, Beaujolais, Jura, Alsace, Bordeaux,
+Rhône) with the appellations each can claim; regions in their colours, your cellar and your tastings on them. A wine
+page shows its appellation and vineyard; a region's page, where what you drink comes from. Click a lieu-dit to make
+it a wine's vineyard, or let Maintenance find the cuvées named after one. Any map opens full size, the page's cards
+beside it (a sheet you scroll on a phone). A muted map of its own in light and dark, terrain, and IGN's aerial
+photos in France.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="screenshots/worldmap-dark.png">
@@ -55,7 +59,7 @@ vineyard; a region's page, where what you drink comes from.
   <img alt="A wine with its appellation and vineyard on the map" src="screenshots/wine.png">
 </picture>
 
-**Draw what the map doesn't have.** A lieu-dit, a monopole, an appellation without an official outline: draw it on
+**Draw what the map doesn't have.** A monopole, a parcel, an appellation without an official outline: draw it on
 the satellite view, start from the official outline and refine it, or import a GeoJSON or KML file.
 
 <picture>
@@ -128,8 +132,9 @@ Catalogue): a network of every known parent → offspring link, your wines on it
 </picture>
 
 **Ask your AI assistant.** An MCP server lets Claude (or any assistant that speaks MCP) read your cellar, journal
-and lists: *what should I open from home tonight?*, *which 2019 Burgundies do I have?* Read-only:
-[app/mcp_server](app/mcp_server/README.md).
+and lists: *what should I open from home tonight?*, *which 2019 Burgundies do I have?* It can log for you too, after
+your yes: a wine, a tasting or a bottle from a label's photo, or a list from criteria (*a live list of my fresh Loire
+whites*): [app/mcp_server](app/mcp_server/README.md).
 
 **Light or dark**, following your system, in nine colour palettes.
 
@@ -147,6 +152,9 @@ And more:
 
 - **A complete reference**: 129 wine regions, 2,900 appellations (every INAO name, AVA, EU PDO and PGI, and eight
   other countries' official registers), 635 grapes with their synonyms, ready on the first start.
+- **Style tags** on wines and tastings (fresh, mineral, for ageing… or your own), to filter the cellar and pick
+  tonight's bottle; **lists from criteria**, made once or kept live.
+- **What happened to a bottle**: drunk, gifted, sold or broken, each undoable.
 - **A wine's grapes and blend**: a list of grapes with their share, a blend style (Bordeaux, Rhône, Champagne, field
   blend), filters that find a grape in any blend.
 - **Vintages**, **producers** and **places** pages.
@@ -179,7 +187,7 @@ so a newer version finds it.
 Either way, the first start opens on a short setup page (your currency, where you keep bottles, your preferred
 critic). Then, in Settings › Maintenance:
 
-- **Map outlines** downloads the appellations' outlines (the map pack);
+- **Map outlines** downloads the appellations', vineyards' and lieux-dits' outlines (the map pack);
 - **Import a cellar** brings your CellarTracker or Vivino export, or your spreadsheet.
 
 WineLib is reachable from your computer only. To reach it from your phone or another machine, put your own sign-in in
