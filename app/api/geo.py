@@ -132,8 +132,11 @@ def _lieux_dits():
     import pyarrow.parquet as pq
     import shapely
     t = pq.read_table(path, columns=["source_id", "name", "details", "display", "bbox_w", "bbox_s", "bbox_e", "bbox_n"]).to_pydict()
+    # The cadastre's unnamed places (what's left between the named ones, a few large) aren't lieux-dits: left out
+    keep = [i for i, n in enumerate(t["name"]) if n and n.strip()]
+    t = {k: [v[i] for i in keep] for k, v in t.items()}
     geoms = shapely.to_geojson(shapely.from_wkb(np.array(t["display"], dtype=object)))
-    boxes = np.array([t["bbox_w"], t["bbox_s"], t["bbox_e"], t["bbox_n"]], dtype=float).T
+    boxes = np.array([t["bbox_w"], t["bbox_s"], t["bbox_e"], t["bbox_n"]], dtype=float).T.reshape(-1, 4)
     return t["source_id"], t["name"], t["details"], list(geoms), boxes
 
 
