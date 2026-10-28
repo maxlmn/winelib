@@ -1,7 +1,13 @@
 # Changelog
 
-## Unreleased
+## v0.3.5
 
+- **The lists page**: the cards stack in columns, a short one no longer leaving a blank beside a tall one; the lists
+  sorted by completion, name, number of entries or bottles in the cellar (remembered).
+- A wine with a vineyard outline opens its map on the vineyard (with its neighbours around it), not the whole
+  appellation; a small vineyard is never framed too close.
+- Satellite asks for one photo per place: IGN's in France, Esri's elsewhere, both only at a border (it used to load
+  Esri's under every one of IGN's).
 - **Draw on the map you're looking at**: Draw outline (an appellation's, a vineyard's) and Draw vineyard (from a
   wine) work on the page's own map, made full size where you were, on the photos, the tools over it; the
   lieux-dits' outlines and names to draw along. The separate drawing dialog and new-vineyard page are gone.
