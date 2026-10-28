@@ -9,12 +9,20 @@
 	import Change from '#lib/components/Change.svelte';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
 	import BottleShelf from '#lib/components/details/BottleShelf.svelte';
+	import { formatName } from '#lib/wineList.ts';
 	import { amount, pct, money, today } from '#lib/format.ts';
 	import type { OutKind } from '#lib/api/details.ts';
 
 	let { data } = $props();
 	const b = $derived(data.bottle);
 	const wine = $derived(data.detail);
+	// The title in words: "1 bottle", "3 half bottles", "2 magnums", "4 50 cl bottles"; "2 bottles, finished" once none are left
+	const what = $derived.by(() => {
+		const name = formatName(b.bottle_size).toLowerCase();
+		const noun = !name ? 'bottle' : name.endsWith(' cl') ? `${name} bottle` : name;
+		const n = b.qty || gone || 1; // finished: how many there were
+		return `${n} ${noun}${n === 1 ? '' : 's'}${b.qty ? '' : ', finished'}`;
+	});
 
 	const purchase = $derived(
 		b.price ? `${amount(b.price, b.currency)}${b.currency !== appSettings.currency && b.price_base ? ` · ${money(b.price_base)}` : ''}` : 'N/A'
@@ -123,17 +131,23 @@
 <section class="card bottle">
 	<div class="top">
 		<div>
-			<div class="kind">Bottle{b.qty ? '' : ' · finished'}</div>
-			<h2 class="num">{b.qty}× {b.bottle_size ?? '75cl'} <span class="muted">@</span> {b.location ?? 'Unknown'}</h2>
-			<!-- one bottle end per bottle: those in the cellar, then those gone (drunk, gifted...) faded -->
+			<div class="kind">Bottle</div>
+			<div class="title-row">
+			<h2>{what}</h2>
+			<!-- one bottle end per bottle, beside the title: those in the cellar, then those gone (drunk, gifted...) faded -->
 			{#if b.qty || gone}
 				<div class="ends" aria-label="{b.qty} in the cellar{gone ? `, ${gone} gone` : ''}">
 					{#each { length: b.qty } as _, i (i)}<BottleEnd region={wine.region} color={wine.color} format={b.bottle_size} size={16} title="In the cellar" />{/each}
 					{#each { length: gone } as _, i (`g${i}`)}<span class="gone"><BottleEnd region={wine.region} color={wine.color} format={b.bottle_size} size={16} title="Gone" /></span>{/each}
 				</div>
 			{/if}
-			<a class="where muted" href={links.cellar({ loc: b.location, view: 'shelves' })}>{b.location_group} · see on the shelf map →</a>
-			{#if b.shelf && b.qty}<BottleShelf shelf={b.shelf} />{/if}
+			</div>
+			{#if b.location && b.location !== 'Consumed'}<!-- Consumed: a bottle recorded only for a tasting, no place -->
+				<a class="where muted" href={links.cellar({ loc: b.location, view: 'shelves' })}>
+					{b.qty ? 'In' : 'Was in'} <b>{b.location}</b>{b.location_group !== b.location ? ` · ${b.location_group}` : ''} · see on the shelf map →
+				</a>
+			{/if}
+			{#if b.shelf && b.qty && b.shelf.bins.length > 1}<BottleShelf shelf={b.shelf} />{/if}<!-- a place on its own (Away): no shelf to show -->
 		</div>
 		<div class="actions">
 			<a class="btn" href={links.editBottle(b.id)}>Edit bottle</a>
@@ -267,11 +281,20 @@
 {/key}
 
 <style>
+	.title-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px 12px;
+		margin-bottom: 4px;
+	}
+	.title-row h2 {
+		margin: 0;
+	}
 	.ends {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 4px;
-		margin: 6px 0 4px;
 	}
 	.ends .gone {
 		display: inline-flex;
