@@ -15,7 +15,11 @@
     "outline (Gevrey-Chambertin premier cru) takes it before the INAO id, which the village and its premier crus share.",
     "link can be a list of rules. A row is linked to the first rule, in this order, that finds its shape.",
     "vineyard: INAO's premiers crus. An installation's own sources go in data/geo/sources.local.json (same format): one",
-    "named like a source here replaces it, others are added."
+    "named like a source here replaces it, others are added.",
+    "lieu_dit: the cadastre's lieux-dits touching AOC vines (geo_scripts/etl_lieux_dits.py, a file per departement), ids",
+    "'<commune>:<slug>'; detail_columns: kept as JSON in the store's details column (the village, the appellations its",
+    "land is eligible for, most specific first, its share of vines). No link rule: a vineyard is linked to one when",
+    "a wine is (Settings › Maintenance › Lieux-dits for your wines)."
   ],
   "sources": [
     {
@@ -172,6 +176,14 @@
       "kind": "vineyard",
       "link": {"table": "vineyards", "by": "vineyard_id", "region": true,
                "region_aliases": {"bourgogne": ["inao-pc"], "burgundy": ["inao-pc"], "loire": ["inao-pc"]}}
+    },
+    {
+      "name": "lieu_dit",
+      "files": ["lieux_dits/*.parquet"],
+      "id": ["id"],
+      "name_columns": ["name"],
+      "detail_columns": ["commune", "commune_name", "aocs", "vines"],
+      "kind": "vineyard"
     }
   ]
 }

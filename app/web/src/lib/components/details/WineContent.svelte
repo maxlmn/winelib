@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
 	import { grapesText } from '#lib/grapes.ts';
 	import { regionColor, regionLabel } from '#lib/regions.svelte.ts';
 	import type { WineDetail } from '#lib/api/details.ts';
@@ -54,6 +55,20 @@
 		{ label: 'LWIN', value: wine.lwin, href: wine.lwin && links.winelabs(wine.lwin, wine.vintage) }
 	]);
 	const hasMap = $derived(!!(wine.appellation || wine.vineyard));
+
+	// A lieu-dit clicked on the map: this wine's vineyard (and its cuvée's other vintages')
+	const lieuAction = $derived({
+		label: wine.vineyard ? 'Make it this wine’s vineyard instead' : 'Make it this wine’s vineyard',
+		run: async (id: string) => {
+			const r = await fetch(`/api/wines/${wine.id}/lieu-dit`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ lieu_dit: id })
+			});
+			if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail ?? `Error ${r.status}`);
+			await invalidateAll();
+		}
+	});
 </script>
 
 {#snippet title()}
@@ -73,7 +88,8 @@
 {/snippet}
 
 {#snippet map()}
-	<DetailMap src={shapesUrl('wines', wine.id)} height={300} focusable empty="No boundary data for this appellation." />
+	<!-- its vineyard in the address: a new one (linked from the map) is drawn at once -->
+	<DetailMap src={`${shapesUrl('wines', wine.id)}?vineyard=${wine.vineyard?.id ?? ''}`} height={300} focusable empty="No boundary data for this appellation." {lieuAction} />
 {/snippet}
 
 <DetailHeader

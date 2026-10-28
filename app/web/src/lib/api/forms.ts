@@ -7,6 +7,8 @@ import { forgetJournal } from './tastings.ts';
 export interface Choice {
 	id: number | null;
 	name: string;
+	/** something to make on save instead of an id: a lieu-dit of the map store ("lieu_dit:49060:les-poyeux") */
+	ref?: string;
 	hint?: string | null;
 	/** a colour dot before the hint (a region's) */
 	dot?: string | null;
@@ -364,7 +366,7 @@ export function toWineIn(d: WineDraft) {
 		disgorgement_date: d.type?.startsWith('Bubbles') ? d.disgorgement_date : null,
 		region: toRef(d.region), appellation: toRef(d.appellation),
 		grapes: d.grapes.filter((g) => g.varietal).map((g) => ({ varietal: toRef(g.varietal), share: num(g.share) })),
-		vineyard: d.vineyard?.id ?? null, blend: d.blend || null, lwin: d.lwin, drink_window_start: d.drink_window_start, drink_window_end: d.drink_window_end
+		vineyard: d.vineyard?.ref ?? d.vineyard?.id ?? null, blend: d.blend || null, lwin: d.lwin, drink_window_start: d.drink_window_start, drink_window_end: d.drink_window_end
 	};
 }
 

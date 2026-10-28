@@ -91,7 +91,7 @@ class WineIn(BaseModel):
     appellation: int | NewName | None = None
     varietal: int | NewName | None = None  # the main grape alone (older clients); `grapes` wins when given
     grapes: list[GrapeIn] | None = None  # its grapes in order, the first the main one
-    vineyard: int | None = None
+    vineyard: int | str | None = None  # a vineyard, or a lieu-dit of the map store: "lieu_dit:49060:les-poyeux"
     blend: Text = None  # its style: one of BLEND_STYLES (an older text is read: "Bordeaux Blend")
     lwin: Text = None
     drink_window_start: int | None = Field(None, ge=1900, le=2200)
@@ -252,13 +252,24 @@ def _place(session, ref):
     return _get_or_create(session, Place, ref.name, city=ref.city, country=ref.country, type=ref.type)
 
 
+def _vineyard(session, ref, region):
+    """A vineyard by id, or a lieu-dit picked in the form (made a vineyard, once)"""
+    if isinstance(ref, str):
+        import lieux_dits
+        found = lieux_dits.find(ref.removeprefix("lieu_dit:"))
+        if found is None:
+            raise HTTPException(422, "No such lieu-dit in the map store")
+        return lieux_dits.vineyard(session, ref.removeprefix("lieu_dit:"), *found, region.id if region else None)
+    return _get(session, Vineyard, ref, "Vineyard")
+
+
 def _fill_wine(session, w, data: WineIn):
     # Resolve (and create) everything first: w may be a new, not yet added Wine
     producer, region = _producer(session, data.producer), _region(session, data.region)
     appellation = _appellation(session, data.appellation, region)
     grapes = [(_varietal(session, g.varietal), g.share) for g in data.grapes] if data.grapes is not None else None
     varietal = _varietal(session, data.varietal) if grapes is None else None
-    vineyard = _get(session, Vineyard, data.vineyard, "Vineyard") if data.vineyard else None
+    vineyard = _vineyard(session, data.vineyard, region) if data.vineyard else None
     w.producer, w.region_obj, w.appellation, w.vineyard = producer, region, appellation, vineyard
     if grapes is not None:
         w.set_grapes(grapes)
@@ -578,6 +589,32 @@ def delete_bottle(bottle_id: int, session: Session = Depends(get_session)):
     session.delete(b)
     session.commit()
     return {"deleted": bottle_id, "wine_id": wine_id}
+
+
+# --- A lieu-dit as a wine's vineyard (from its map) ----------------------------------------------
+
+class LieuDitIn(BaseModel):
+    lieu_dit: str  # the store's id: "49060:les-poyeux" (or "lieu_dit:49060:les-poyeux")
+
+
+@router.post("/api/wines/{wine_id}/lieu-dit")
+def set_lieu_dit(wine_id: int, data: LieuDitIn, session: Session = Depends(get_session)):
+    """The cadastre's lieu-dit as this wine's vineyard, and its cuvée's other vintages' with no vineyard (or the
+    same one as this wine)."""
+    import lieux_dits
+    w = _get(session, Wine, wine_id, "Wine")
+    sid = data.lieu_dit.removeprefix("lieu_dit:")
+    found = lieux_dits.find(sid)
+    if found is None:
+        raise HTTPException(404, "No such lieu-dit in the map store")
+    name, details = found
+    before = w.vineyard_id
+    vintages = (session.query(Wine).filter(Wine.producer_id == w.producer_id, same_cuvee(w.cuvee),
+                                           Wine.appellation_id == w.appellation_id).all())
+    wines = [x for x in vintages if x.id == w.id or x.vineyard_id is None or (before and x.vineyard_id == before)]
+    v = lieux_dits.link(session, wines, sid, name, details)
+    session.commit()
+    return {"vineyard_id": v.id, "name": v.name, "wines": len(wines)}
 
 
 # --- Style tags -------------------------------------------------------------------------------
@@ -951,8 +988,13 @@ def lookup_vineyards(q: str = "", region_id: int | None = None, limit: int = Que
     if region_id:
         query = query.filter(Vineyard.region_id == region_id)
     rows = query.order_by(Vineyard.sub_region, Vineyard.village, Vineyard.name).all()
-    return [{"id": v.id, "name": vineyard_label(v)}
-            for v in search(rows, q, lambda v: (v.name, v.village, v.sub_region), limit)]
+    out = [{"id": v.id, "name": vineyard_label(v)} for v in search(rows, q, lambda v: (v.name, v.village, v.sub_region), limit)]
+    # the cadastre's lieux-dits too (the map store), those not already a vineyard: made one when the wine is saved
+    import lieux_dits
+    taken = {b for b, in session.query(Vineyard.boundary).filter(Vineyard.boundary.like("lieu_dit:%"))}
+    hits = [h for h in lieux_dits.search(q) if f"lieu_dit:{h[0]}" not in taken] if len(q.strip()) >= 3 else []
+    return out + [{"id": -(i + 1), "name": f"{name} · {d.get('commune_name') or '?'} (lieu-dit)", "ref": f"lieu_dit:{sid}"}
+                  for i, (sid, name, d) in enumerate(hits)]
 
 
 @router.get("/api/lookups/places")

@@ -1,6 +1,9 @@
 <script lang="ts" module>
 	export type { Basemap } from '#lib/basemap.ts';
 	export type Selection = { kind: 'appellation' | 'vineyard'; id: number } | null;
+	/** What a lieu-dit's card offers (a wine page: "Make it this wine's vineyard"): its label, and what it does with
+	 * the lieu-dit's store id ("lieu_dit:49060:les-poyeux") */
+	export type LieuAction = { label: string; run: (id: string) => Promise<unknown> };
 </script>
 
 <script lang="ts">
@@ -37,6 +40,14 @@
 		regions?: FeatureCollection<Geometry | null, RegionProps> | null;
 		/** clicking a region outline (the overview); without it, outlines are context only */
 		onregion?: ((r: RegionProps) => void) | null;
+		/** what a lieu-dit's card offers when clicked */
+		lieuAction?: LieuAction | null;
+		/** where the hover card sits: the right when something covers the map's left (a full map's page column) */
+		cardSide?: 'left' | 'right';
+		/** pixels on the left covered by something (a full map's page column): framed in the rest */
+		padLeft?: number;
+		/** pixels at the bottom covered by something (a phone's page sheet over a full map) */
+		padBottom?: number;
 		/** the world repeated side by side when zoomed out (off: a wide box shows one world) */
 		worldCopies?: boolean;
 	}
@@ -44,7 +55,7 @@
 	let {
 		appellations, vineyards, showAppellations = true, showVineyards = true,
 		selected, basemap, fitKey, extent = null, onselect, pinCard = true,
-		regions = null, onregion = null, worldCopies = true
+		regions = null, onregion = null, worldCopies = true, lieuAction = null, cardSide = 'left', padLeft = 0, padBottom = 0
 	}: Props = $props();
 
 	// Vineyards are shaded by village from a family of vine-leaf greens, olives and teals: neighbouring
@@ -92,6 +103,30 @@
 	let map = $state<MlMap>();
 	let ready = $state(false);
 	let hovered = $state<MapProps | null>(null);
+	// The cadastre's lieux-dits in view (zoomed in, with the vineyards shown): read from the store as the map moves
+	type LieuProps = { id: string; name: string; village: string | null; aocs: string | null; vines: number | null; vineyard_id?: number | null };
+	let lieuBusy = $state(false);
+	let lieuError = $state('');
+	async function runLieu(l: LieuProps) {
+		if (!lieuAction) return;
+		lieuBusy = true;
+		lieuError = '';
+		try {
+			await lieuAction.run(l.id);
+			pinnedLieu = null;
+		} catch (e) {
+			lieuError = e instanceof Error ? e.message : 'Couldn’t do it';
+		} finally {
+			lieuBusy = false;
+		}
+	}
+	let hoveredLieu = $state<LieuProps | null>(null);
+	let pinnedLieu = $state<LieuProps | null>(null);
+	const lieu = $derived(hoveredLieu ?? pinnedLieu);
+	const framing = () => ({ top: 40, right: 40, bottom: 40 + padBottom, left: 40 + padLeft });
+	// the clicked one (its card keeps its buttons while the pointer is still over it)
+	const lieuPinned = $derived(!!lieu && !!pinnedLieu && lieu.id === pinnedLieu.id);
+	const LIEUX_ZOOM = 12;
 	let hoveredRegion = $state<RegionProps | null>(null);
 	let fitted = '';
 
@@ -117,7 +152,7 @@
 		let m: MlMap | undefined;
 		(async () => {
 			// Opened where it will be fitted, when that's already known (the home page's map)
-			m = await createMap(container, basemap, extent ? { bounds: extent, fitBoundsOptions: { padding: 40 } } : undefined);
+			m = await createMap(container, basemap, extent ? { bounds: extent, fitBoundsOptions: { padding: framing() } } : undefined);
 			if (!worldCopies) m.setRenderWorldCopies(false);
 			{
 				const mm = m;
@@ -154,6 +189,16 @@
 						'line-width': ['case', sel, 3, 1.2]
 					}
 				});
+				// Lieux-dits: a fine dashed line, filled only under the pointer (under the vineyards, over the appellations)
+				mm.addSource('lieux', { type: 'geojson', data: EMPTY, generateId: true });
+				mm.addLayer({
+					id: 'lieux-fill', type: 'fill', source: 'lieux', minzoom: LIEUX_ZOOM,
+					paint: { 'fill-color': '#f2e6c9', 'fill-opacity': ['case', hover, 0.25, 0.01] }
+				});
+				mm.addLayer({
+					id: 'lieux-line', type: 'line', source: 'lieux', minzoom: LIEUX_ZOOM,
+					paint: { 'line-color': '#f2e6c9', 'line-opacity': 0.75, 'line-width': ['case', hover, 1.6, 0.7], 'line-dasharray': [3, 2] }
+				});
 				mm.addLayer({
 					id: 'vines-fill', type: 'fill', source: 'vines',
 					paint: {
@@ -178,7 +223,7 @@
 				// Regions answer the pointer only on the overview, and only where no shape is drawn over them
 				const topFeature = (point: { x: number; y: number }) =>
 					mm.queryRenderedFeatures([point.x, point.y], {
-						layers: onregion ? ['vines-fill', 'apps-fill', 'regions-fill'] : ['vines-fill', 'apps-fill']
+						layers: onregion ? ['vines-fill', 'lieux-fill', 'apps-fill', 'regions-fill'] : ['vines-fill', 'lieux-fill', 'apps-fill']
 					})[0];
 				// Rendered features carry flattened properties: take the region's own
 				const regionOf = (id: unknown) => regions?.features.find((r) => r.properties.id === id)?.properties ?? null;
@@ -187,7 +232,9 @@
 					const f = topFeature(e.point);
 					setHover(f ? { source: f.source, id: f.id as number } : null);
 					const isRegion = f?.source === 'regions';
-					hovered = f && !isRegion ? (f.properties as MapProps) : null;
+					const isLieu = f?.source === 'lieux';
+					hoveredLieu = isLieu ? (f.properties as LieuProps) : null;
+					hovered = f && !isRegion && !isLieu ? (f.properties as MapProps) : null;
 					hoveredRegion = isRegion ? regionOf(f.id) : null;
 					mm.getCanvas().style.cursor = f ? 'pointer' : '';
 				});
@@ -195,14 +242,38 @@
 					setHover(null);
 					hovered = null;
 					hoveredRegion = null;
+					hoveredLieu = null;
 				});
 				mm.on('click', (e) => {
 					const f = topFeature(e.point);
+					pinnedLieu = f?.source === 'lieux' ? (f.properties as LieuProps) : null;
+					if (f?.source === 'lieux') return;
 					if (f?.source === 'regions') {
 						const r = regionOf(f.id);
 						if (r && onregion) onregion(r);
 					} else onselect(f ? (f.properties as MapProps) : null);
 				});
+				// The lieux-dits in view, asked again a moment after the map stops moving
+				let lieuxTimer: ReturnType<typeof setTimeout>;
+				let lieuxAsked = '';
+				const loadLieux = () => {
+					clearTimeout(lieuxTimer);
+					lieuxTimer = setTimeout(async () => {
+						const source = mm.getSource('lieux') as GeoJSONSource | undefined;
+						if (!source || mm.getZoom() < LIEUX_ZOOM || !showVineyards) return;
+						const b = mm.getBounds();
+						const bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].map((x) => x.toFixed(3)).join(',');
+						if (bbox === lieuxAsked) return;
+						lieuxAsked = bbox;
+						const r = await fetch(`/api/map/lieux-dits?bbox=${bbox}`).then((x) => (x.ok ? x.json() : null)).catch(() => null);
+						if (r && bbox === lieuxAsked) source.setData(r);
+					}, 250);
+				};
+				mm.on('moveend', loadLieux);
+				const sized = new ResizeObserver(() => mm.resize());
+				sized.observe(container);
+				mm.once('remove', () => sized.disconnect());
+				loadLieux();
 				map = mm;
 				ready = true;
 			}
@@ -230,7 +301,7 @@
 			const b = extent ?? bbox([...(appellations?.features ?? []), ...(vineyards?.features ?? [])].map((f) => f.geometry));
 			if (b) {
 				fitted = fitKey;
-				map.fitBounds(b, { padding: 40, duration: 0 });
+				map.fitBounds(b, { padding: framing(), duration: 0 });
 			}
 		}
 	});
@@ -238,7 +309,7 @@
 	$effect(() => {
 		if (!ready || !map) return;
 		for (const id of ['apps-fill', 'apps-line']) map.setLayoutProperty(id, 'visibility', showAppellations ? 'visible' : 'none');
-		for (const id of ['vines-fill', 'vines-line']) map.setLayoutProperty(id, 'visibility', showVineyards ? 'visible' : 'none');
+		for (const id of ['vines-fill', 'vines-line', 'lieux-fill', 'lieux-line']) map.setLayoutProperty(id, 'visibility', showVineyards ? 'visible' : 'none');
 	});
 
 	// Selection outline follows the theme's accent
@@ -262,13 +333,19 @@
 	$effect(() => {
 		if (!ready || !map) return;
 		setBasemap(map, basemap, theme.dark);
+		// the lieux-dits' dashes: cream over a dark or photo basemap, a warm grey over the light Plain one
+		const lieu = basemap === 'plain' && !theme.dark ? '#8f8389' : '#f2e6c9';
+		if (map.getLayer('lieux-line')) {
+			map.setPaintProperty('lieux-line', 'line-color', lieu);
+			map.setPaintProperty('lieux-fill', 'fill-color', lieu);
+		}
 	});
 </script>
 
 <div class="wrap">
 	<div class="canvas" bind:this={container}></div>
 	{#if hoveredRegion}
-		<div class="hover card">
+		<div class="hover card" class:right={cardSide === 'right'}>
 			<div class="kind">region{hoveredRegion.country && hoveredRegion.country !== hoveredRegion.name ? ` · ${hoveredRegion.country}` : ''}</div>
 			<b>{hoveredRegion.name}</b>
 			<div class="muted num">
@@ -278,8 +355,26 @@
 			{#if hoveredRegion.tastings}<div class="num tasted">✎ {plural(hoveredRegion.tastings, 'tasting')}</div>{/if}
 			<div class="muted hint">Click to explore</div>
 		</div>
+	{:else if lieu}
+		<div class="hover card" class:right={cardSide === 'right'} class:pinned={lieuPinned}>
+			{#if lieuPinned}<button class="close" onclick={() => (pinnedLieu = null)} aria-label="Close">✕</button>{/if}
+			<div class="kind">lieu-dit · cadastre</div>
+			<b>{lieu.name}</b>
+			{#if lieu.village}<div class="muted">{lieu.village}</div>{/if}
+			{#if lieu.aocs}<div class="aocs">{lieu.aocs.split('; ').slice(0, 3).join(' · ')}{lieu.aocs.split('; ').length > 3 ? ' …' : ''}</div>{/if}
+			{#if lieu.vines}<div class="muted num">{Math.round(lieu.vines * 100)}% in AOC vines</div>{/if}
+			{#if lieuPinned}
+				{#if lieu.vineyard_id}<a class="go" href={links.vineyard(lieu.vineyard_id)}>Its page →</a>{/if}
+				{#if lieuAction}
+					<button class="lieu-action" disabled={lieuBusy} onclick={() => runLieu(lieu!)}>{lieuBusy ? 'Saving…' : lieuAction.label}</button>
+					{#if lieuError}<div class="lieu-error">{lieuError}</div>{/if}
+				{/if}
+			{:else if lieuAction || lieu.vineyard_id}
+				<div class="muted hint">Click for more</div>
+			{/if}
+		</div>
 	{:else if card}
-		<div class="hover card" class:pinned={isPinned}>
+		<div class="hover card" class:right={cardSide === 'right'} class:pinned={isPinned}>
 			{#if isPinned}<button class="close" onclick={() => onselect(null)} aria-label="Close">✕</button>{/if}
 			<div class="kind">{card.kind}</div>
 			<b>{card.name}</b>
@@ -317,6 +412,10 @@
 		font-size: 13px;
 		max-width: 300px;
 	}
+	.hover.right {
+		left: auto;
+		right: 56px;
+	}
 	.hover.pinned {
 		pointer-events: auto;
 		padding-right: 30px;
@@ -334,6 +433,26 @@
 	.tasted {
 		color: var(--accent);
 		font-weight: 600;
+	}
+	.lieu-action {
+		margin-top: 8px;
+		padding: 5px 10px;
+		border: none;
+		border-radius: 7px;
+		background: var(--accent);
+		color: #fff;
+		font: inherit;
+		font-size: 12px;
+		cursor: pointer;
+	}
+	.lieu-error {
+		color: var(--down);
+		font-size: 12px;
+		margin-top: 4px;
+	}
+	.aocs {
+		font-size: 12px;
+		margin-top: 2px;
 	}
 	.go {
 		display: inline-block;

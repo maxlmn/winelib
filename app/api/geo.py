@@ -116,9 +116,39 @@ def reset():
     """Forgets everything read (GEO_DIR or the store changed: tests)."""
     with _lock:
         _cache.clear()
-    for fn in (_source, _full_index, detail, _manifest_stamp, _region_outlines):
+    for fn in (_source, _full_index, detail, _manifest_stamp, _region_outlines, _lieux_dits):
         fn.cache_clear()
     crus.reset()
+
+
+@lru_cache(maxsize=1)
+def _lieux_dits():
+    """The store's lieux-dits (the lieu_dit source): ids, names, details, boxes and display outlines as GeoJSON
+    text, read once. Empty without the source."""
+    path = os.path.join(SHAPES_DIR, "lieu_dit.parquet")
+    if not os.path.exists(path):
+        return None
+    import numpy as np
+    import pyarrow.parquet as pq
+    import shapely
+    t = pq.read_table(path, columns=["source_id", "name", "details", "display", "bbox_w", "bbox_s", "bbox_e", "bbox_n"]).to_pydict()
+    geoms = shapely.to_geojson(shapely.from_wkb(np.array(t["display"], dtype=object)))
+    boxes = np.array([t["bbox_w"], t["bbox_s"], t["bbox_e"], t["bbox_n"]], dtype=float).T
+    return t["source_id"], t["name"], t["details"], list(geoms), boxes
+
+
+def lieux_dits(w, s, e, n, limit=2500):
+    """The lieux-dits whose box meets this one: [(id, name, details JSON, GeoJSON text)], at most `limit` (None
+    when there are more: the view is too wide to draw them)."""
+    found = _lieux_dits()
+    if found is None:
+        return []
+    ids, names, details, geoms, boxes = found
+    import numpy as np
+    hit = np.nonzero((boxes[:, 0] <= e) & (boxes[:, 2] >= w) & (boxes[:, 1] <= n) & (boxes[:, 3] >= s))[0]
+    if len(hit) > limit:
+        return None
+    return [(ids[i], names[i], details[i], geoms[i]) for i in hit]
 
 
 def shapes(kind, objs):
