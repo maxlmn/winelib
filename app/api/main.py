@@ -56,6 +56,20 @@ app.include_router(plugins.router)
 plugins.load(app)
 
 
+def build_file(build, path):
+    """The web build's file at this address, or None: never a file outside the build (an address with "..",
+    an encoded slash or an absolute path is refused, the app's page served instead)"""
+    if not path:
+        return None
+    root = os.path.realpath(build)
+    file = os.path.realpath(os.path.join(root, path))
+    try:
+        inside = os.path.commonpath([file, root]) == root
+    except ValueError:  # another drive (Windows)
+        return None
+    return file if inside and os.path.isfile(file) else None
+
+
 # Serve the built SvelteKit app (app/web/build) with SPA fallback, so one container serves everything
 WEB_BUILD = os.getenv("WEB_BUILD", os.path.join(os.path.dirname(__file__), "..", "web", "build"))
 if os.path.isdir(WEB_BUILD):
@@ -65,7 +79,5 @@ if os.path.isdir(WEB_BUILD):
     def spa(path: str):
         if path.startswith("api/"):
             raise HTTPException(404, "Not found")
-        file = os.path.join(WEB_BUILD, path)
-        if path and os.path.isfile(file):
-            return FileResponse(file)
-        return FileResponse(os.path.join(WEB_BUILD, "index.html"))
+        file = build_file(WEB_BUILD, path)
+        return FileResponse(file or os.path.join(WEB_BUILD, "index.html"))

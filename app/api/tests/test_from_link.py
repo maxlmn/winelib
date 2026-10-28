@@ -76,3 +76,23 @@ def test_a_cuvee_you_have_fills_the_rest(client, monkeypatch):
     # the same vintage as yours: that wine
     w = fill(client, monkeypatch, page.replace("2016", "2015"))
     assert w["wine_id"]
+
+
+def test_local_addresses_refused(monkeypatch):
+    """A link to this machine or the local network (the NAS's admin page) is never fetched, nor a redirect to one."""
+    import socket
+    import pytest
+    from tasks import from_link
+    answers = {"nas.local": "192.168.1.2", "shop.example": "93.184.216.34", "meta": "169.254.169.254", "me": "127.0.0.1"}
+    monkeypatch.setattr(socket, "getaddrinfo", lambda host, *a, **k: [(0, 0, 0, "", (answers[host], 0))])
+    assert from_link.public("https://shop.example/wine")
+    for url in ("http://nas.local:5000/", "http://meta/latest", "http://me:8000/api/settings", "http://[::1]/"):
+        if "[::1]" in url:
+            monkeypatch.setattr(socket, "getaddrinfo", lambda host, *a, **k: [(0, 0, 0, "", ("::1", 0, 0, 0))])
+        assert not from_link.public(url), url
+        with pytest.raises(from_link.LinkError):
+            from_link.fetch(url)
+    # a public page redirecting to the local network: refused at the redirect
+    monkeypatch.setattr(socket, "getaddrinfo", lambda host, *a, **k: [(0, 0, 0, "", (answers.get(host, "93.184.216.34"), 0))])
+    with pytest.raises(from_link.LinkError):
+        from_link._PublicOnly().redirect_request(None, None, 302, "Found", {}, "http://nas.local/admin")

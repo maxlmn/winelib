@@ -60,14 +60,45 @@ class _Page(HTMLParser):
             self._in = None
 
 
+def public(url):
+    """Whether the address is on the internet: not this machine, the local network or a link-local / reserved range
+    (the NAS's own admin page, a router), as its host resolves now"""
+    import ipaddress
+    import socket
+    from urllib.parse import urlsplit
+    host = urlsplit(url).hostname
+    if not host:
+        return False
+    try:
+        addrs = {info[4][0] for info in socket.getaddrinfo(host, None)}
+    except (socket.gaierror, UnicodeError):
+        return True  # unknown here: the request fails as unreachable, as it would anyway
+    for a in addrs:
+        ip = ipaddress.ip_address(a.split("%")[0])
+        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast or ip.is_unspecified:
+            return False
+    return True
+
+
+class _PublicOnly(urllib.request.HTTPRedirectHandler):
+    """Each redirect checked too: a public page mustn't send the request on to the local network"""
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if not public(newurl):
+            raise LinkError("That link leads to a local address")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 def fetch(url):
-    """The page's HTML (a browser-like request; a few MB at most)."""
+    """The page's HTML (a browser-like request; a few MB at most). Only on the internet: never this machine or the
+    local network (a link, or a redirect, to the NAS's admin page)."""
     if not re.match(r"^https?://", url or "", re.I):
         raise LinkError("Paste a web address (https://…)")
+    if not public(url):
+        raise LinkError("That's a local address: only shops' pages on the internet can be read")
     req = urllib.request.Request(url, headers={"User-Agent": f"Mozilla/5.0 (compatible; {USER_AGENT})",
                                                "Accept": "text/html,application/xhtml+xml", "Accept-Language": "en,fr"})
     try:
-        with urllib.request.urlopen(req, timeout=15) as r:
+        with urllib.request.build_opener(_PublicOnly).open(req, timeout=15) as r:
             if "html" not in (r.headers.get("Content-Type") or "html"):
                 raise LinkError("That address isn't a web page")
             raw = r.read(MAX_BYTES)
