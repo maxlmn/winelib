@@ -23,6 +23,8 @@
 		src: string;
 		/** the page's own appellation / vineyard: the map frames it (no outline, so it reads like its neighbours) */
 		current?: Selection;
+		/** what the map opens on when it isn't the page's own shape (a wine's vineyard, among its appellation) */
+		frame?: Selection;
 		height?: number;
 		/** shown when there is nothing to draw */
 		empty?: string;
@@ -36,7 +38,7 @@
 		ondrawn?: (saved: boolean, created?: number) => void;
 	}
 
-	let { src, current = null, height = 320, empty = 'No boundary data for this one.', fullUrl = null, lieuAction = null, draw = null, ondrawn }: Props = $props();
+	let { src, current = null, frame = null, height = 320, empty = 'No boundary data for this one.', fullUrl = null, lieuAction = null, draw = null, ondrawn }: Props = $props();
 
 	// Full size (Settings › Appearance, or ⤢ here): the map fills the window behind the page, which becomes a column
 	// of cards over its left side (html.map-full in app.css); Esc goes back
@@ -156,11 +158,17 @@
 	// Frame the page's own shape (or the focused one); its neighbours show around it
 	const extent = $derived.by(() => {
 		if (outline && !focus) return outline.features[0].properties.bbox; // a region page frames the whole region
-		const target = focus ?? current;
+		const target = focus ?? current ?? frame;
 		if (!shapes || !target) return null;
 		const fc = target.kind === 'appellation' ? shapes.appellations : shapes.vineyards;
 		const f = fc.features.find((f) => f.properties.id === target.id);
-		return f ? bbox([f.geometry]) : null;
+		const b = f ? bbox([f.geometry]) : null;
+		if (!b || target.kind !== 'vineyard') return b;
+		// a vineyard at the vineyards' scale, not filling the map: at least ~1.5 km across, its neighbours around it
+		const [w, s, e, n] = b;
+		const dx = Math.max(e - w, 0.02) * 0.75, dy = Math.max(n - s, 0.012) * 0.75;
+		const x = (w + e) / 2, y = (s + n) / 2;
+		return [x - dx, y - dy, x + dx, y + dy] as typeof b;
 	});
 	const fitKey = $derived(focus ? `${src}#${focus.kind}:${focus.id}` : src);
 	const focused = (k: MapProps) => focus?.kind === k.kind && focus.id === k.id;

@@ -91,7 +91,8 @@
 
 {#snippet map()}
 	<!-- its vineyard in the address: a new one (linked from the map) is drawn at once -->
-	<DetailMap src={`${shapesUrl('wines', wine.id)}?vineyard=${wine.vineyard?.id ?? ''}`} height={300} empty="No boundary data for this appellation." {lieuAction}
+	<DetailMap src={`${shapesUrl('wines', wine.id)}?vineyard=${wine.vineyard?.id ?? ''}`} height={300}
+		frame={wine.vineyard ? { kind: 'vineyard', id: wine.vineyard.id } : null} empty="No boundary data for this appellation." {lieuAction}
 		draw={drawingVineyard ? { kind: 'vineyards', name: '', wine: wine.id } : null}
 		ondrawn={(saved) => {
 			drawingVineyard = false;
