@@ -145,6 +145,10 @@ def test_bottle_prices_and_provenance(client, chandon):
     assert b["change_pct"] == 20.0
     assert (b["vendor"], b["provenance"], b["purchase_date"]) == ("Caves", "Importer", "2023-05-01")
     assert b["last_price_source"] == "wine-searcher" and b["last_price_date"] == "2025-01-02"
+    # its mini shelf: the Home group's bins H1 to H3 (H1 and H2 empty: the gaps filled in), H3 here with its 2
+    assert b["shelf"] == {"group": "Home", "bins": [
+        {"name": "H1", "qty": 0, "capacity": 10, "here": False}, {"name": "H2", "qty": 0, "capacity": 10, "here": False},
+        {"name": "H3", "qty": 2, "capacity": 10, "here": True}]}
 
 
 def test_place_stats_merge_visit_days(client, chandon):

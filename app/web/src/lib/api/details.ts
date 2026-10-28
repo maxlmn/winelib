@@ -194,6 +194,14 @@ export interface BottleDetail {
 	events: BottleEvent[];
 	/** the tastings of these bottles: the ones drunk */
 	drunk: { id: number; date: string | null; place: string | null }[];
+	/** its storage group as a mini shelf map (none for a bottle recorded only for a tasting) */
+	shelf: BottleShelf | null;
+}
+
+export interface BottleShelf {
+	group: string;
+	/** in shelf order, numbered bins' gaps filled in; `here`: the bottle's */
+	bins: { name: string; qty: number; capacity: number | null; here: boolean }[];
 }
 
 export type OutKind = 'gifted' | 'sold' | 'broken' | 'other';

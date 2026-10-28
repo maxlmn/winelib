@@ -213,6 +213,37 @@ def wine_detail(wine_id: int, session: Session = Depends(get_session)):
     }
 
 
+SHELF_MAX = 48  # bins on a bottle's mini shelf map: a larger group shows the bins around the bottle's
+
+
+def _shelf(session, loc):
+    """The bottle's storage group as a mini shelf: {group, bins: [{name, qty, capacity, here}]} in shelf order, its
+    bin `here`; numbered bins (R1, R2...) with the gaps filled in, as the shelf stands. None for no place (a bottle
+    recorded only for a tasting)."""
+    import re
+    from cellar import location_capacity, location_sort_key
+    from routers.forms import CONSUMED
+    if not loc or loc == CONSUMED:
+        return None
+    group = location_group(loc)
+    held = {l: int(q) for l, q in session.query(Bottle.location, func.sum(Bottle.qty))
+            .filter(Bottle.qty > 0, Bottle.location.isnot(None)).group_by(Bottle.location)
+            if location_group(l) == group}
+    names = set(held) | {loc}
+    top = {}
+    for n in names:
+        if m := re.fullmatch(r"([A-Za-z]+?)(\d+)", n):
+            top[m.group(1)] = max(top.get(m.group(1), 0), int(m.group(2)))
+    names |= {f"{prefix}{i}" for prefix, last in top.items() if last <= SHELF_MAX for i in range(1, last + 1)}
+    ordered = sorted(names, key=location_sort_key)
+    if len(ordered) > SHELF_MAX:  # a big group: the bins around this one
+        i = ordered.index(loc)
+        start = max(0, min(i - SHELF_MAX // 2, len(ordered) - SHELF_MAX))
+        ordered = ordered[start:start + SHELF_MAX]
+    return {"group": group, "bins": [{"name": n, "qty": held.get(n, 0), "capacity": location_capacity(n), "here": n == loc}
+                                     for n in ordered]}
+
+
 @router.get("/api/bottles/{bottle_id}")
 def bottle_detail(bottle_id: int, session: Session = Depends(get_session)):
     b = _get(session, Bottle, bottle_id, "Bottle")
@@ -229,6 +260,7 @@ def bottle_detail(bottle_id: int, session: Session = Depends(get_session)):
                     "currency": e.currency} for e in b.events],
         "drunk": [{"id": t.id, "date": iso(t.date), "place": t.place.name if t.place else t.location}
                   for t in sorted(b.tastings, key=lambda t: t.date or date.min, reverse=True)],
+        "shelf": _shelf(session, b.location),
     }
 
 

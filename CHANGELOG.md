@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **A bottle's page** shows its bottles as bottle ends (those gone faded) and where it sits: a mini shelf map of its
+  storage group, each bin filled as far as it holds, its own highlighted (a bin opens the cellar's shelf map).
 - **Security**: the app's pages no longer serve files outside the web build (an address with an encoded "../"
   could read any file the app could, its settings and your plug-ins' logins among them). *Fill a wine from a link*
   no longer fetches local addresses (this machine, the local network), nor follows a redirect to one.
