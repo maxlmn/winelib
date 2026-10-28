@@ -76,7 +76,14 @@
 					{:else}
 						<span class="where">{d.location || 'Unknown place'}</span>
 					{/if}
-					<span class="date num">{fmtDate(d.date)}</span>
+					{#if d.date && d.wines.length}
+						<!-- the occasion in the journal: every wine of that day there -->
+						<a class="date num" href={links.occasion(d.date, d.place?.name ?? d.location)} title="Open the occasion in the journal">
+							{fmtDate(d.date)} ›
+						</a>
+					{:else}
+						<span class="date num">{fmtDate(d.date)}</span>
+					{/if}
 				</header>
 				<div class="content">
 					{#if photo}<img class="photo" src={photoSrc(photo, 'thumb')} alt="{d.place?.name ?? d.location ?? 'Occasion'}, {fmtDate(d.date)}" loading="lazy" decoding="async" />{/if}
@@ -184,6 +191,9 @@
 		color: var(--muted);
 		font-size: 12px;
 		flex: none;
+	}
+	a.date:hover {
+		color: var(--accent);
 	}
 	.content {
 		padding: 10px 14px 6px;

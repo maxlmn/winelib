@@ -18,6 +18,10 @@ export const links = {
 	lists: () => '/lists',
 	list: (id: Id) => `/lists/${id}`,
 	tastings: (query?: Query) => withQuery('/tastings', query),
+	/** an occasion: the journal on that day at that place (a place's name or the free-text location; "Unknown" when
+	 * neither), every wine poured */
+	occasion: (date: string, where: string | null) =>
+		withQuery('/tastings', { period: 'custom', from: date, to: date, loc: where || 'Unknown' }),
 	summary: () => '/summary',
 	producers: (query?: Query) => withQuery('/producers', query),
 	grapes: () => '/grapes',

@@ -84,11 +84,13 @@
 									{#if w.appellation}<span class="muted">({w.appellation})</span>{/if}
 									<span class="vintage num">[{w.vintage}]</span><CriticPills scores={w.scores} />{#if w.rating}<span class="mine num" title="Your score">{w.rating}</span>{/if}
 								</span>
-								{#if w.notes}
-									<a class="note-link" href={links.tasting(w.id)} title="Open the tasting note">Note ›</a>
-								{:else}
+								{#if !w.notes}
 									<a class="note-link add" href={links.editTasting(w.id)} title="Add a note">+ Note</a>
 								{/if}
+								<!-- the tasting's page, with or without a note -->
+								<a class="note-link" href={links.tasting(w.id)} title={w.notes ? 'Open the tasting note' : 'Open the tasting'}>
+									{w.notes ? 'Note' : 'Tasting'} ›
+								</a>
 							</div>
 							{#if inline && w.notes}
 								<a class="note" href={links.tasting(w.id)}>{w.notes}</a>
