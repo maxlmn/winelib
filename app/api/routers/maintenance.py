@@ -432,6 +432,48 @@ def _shape_links(session, job):
             "items": items[:MAX_ITEMS]}
 
 
+def _lieux_dits(session, job):
+    """The cuvées whose name holds a lieu-dit eligible for their appellation (lieux_dits.py): a preview to tick (a
+    single possible lieu-dit ticked, several to choose from), then the ticked ones linked (params "keys":
+    "<wine id>=<lieu-dit id>")."""
+    import lieux_dits as ld
+    found = ld.candidates(session)
+    if found is None:
+        raise RuntimeError("No lieux-dits in the map store yet: Map outlines downloads them (or "
+                           "geo_scripts/etl_lieux_dits.py builds them)")
+    items = []
+    for wines, options in found:
+        w = wines[0]
+        wine = f"{w.producer.name} {w.cuvee} ({w.appellation.name}), {_n(len(wines), 'vintage')}"
+        for sid, name, d in options:
+            share = f" · {round(d['vines'] * 100)}% in vines" if d.get("vines") is not None else ""
+            items.append(_item(f"{name} · {d.get('commune_name') or '?'}", f"{wine}{share}", f"/wines/{w.id}",
+                               pick={"key": f"{w.id}={sid}", "group": w.producer.name, "on": ld.sure(options)}))
+    if not job.commit:
+        sure = sum(1 for _, options in found if ld.sure(options))
+        return {"summary": f"{_n(len(found), 'cuvée')} name a lieu-dit of their appellation: {sure} sure (ticked), "
+                           f"{len(found) - sure} to check (a name found in several villages, or a lieu-dit mostly "
+                           f"not in vines).",
+                "items": items[:MAX_ITEMS]}
+    keys, linked, cuvees = set(job.params.get("keys") or []), 0, 0
+    for wines, options in found:
+        for sid, name, d in options:
+            if f"{wines[0].id}={sid}" in keys:
+                v = ld.link(session, wines, sid, name, d)
+                job.log(f"{wines[0].producer.name} {wines[0].cuvee}: {v.name} ({v.village})")
+                linked, cuvees = linked + len(wines), cuvees + 1
+                break
+    session.commit()
+    return {"summary": f"{_n(cuvees, 'cuvée')} linked to their lieu-dit ({_n(linked, 'wine')}, every vintage).",
+            "items": [it for it in items if it["pick"]["key"] in keys][:MAX_ITEMS]}
+
+
+def _keys_params(body, commit):
+    if commit and not body.keys:
+        raise HTTPException(422, "Tick at least one suggestion")
+    return {"keys": body.keys if commit else []}
+
+
 def _backup(session, job):
     """Every main table to CSV; with SQLite, a copy of the database too (SQLite's own backup: consistent while the
     app runs). A Postgres database is dumped with Postgres's own tools (pg_dump), into the backups folder."""
@@ -537,6 +579,11 @@ TASKS = {
                  "description": "Download the map's outlines (appellations of France, the EU, the US and Australia, "
                                 "Burgundy's premiers crus) into the shape store, then link them. Their credits are "
                                 "listed in Settings."},
+    "lieux_dits": {"group": "Maps and places", "title": "Lieux-dits for your wines", "fn": _lieux_dits, "preview": True,
+                   "writes": True, "params": _keys_params,
+                   "description": "French cuvées named after a lieu-dit of their appellation (Le Bourg, Les Poyeux): "
+                                  "linked to it as their vineyard, its outline from the cadastre. A preview to tick "
+                                  "first; a name found in several villages is yours to choose."},
     "shape_links": {"group": "Maps and places", "title": "Shape links", "fn": _shape_links, "preview": True, "writes": True,
                     "description": "Link appellations and vineyards to their outline in the shape store (after "
                                    "adding some, or a rebuilt store): what changes, and what has no outline."},

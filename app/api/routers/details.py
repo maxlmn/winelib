@@ -16,6 +16,7 @@ from photos import photo_index, photo_url
 import geo
 import grapes
 import plugins
+import lieux_dits
 import scores
 import style_tags
 import wiki
@@ -306,6 +307,8 @@ def vineyard_detail(vineyard_id: int, session: Session = Depends(get_session)):
         # Detail page
         "region_color": v.region_obj.color if v.region_obj else None,
         "vineyard_id": v.vineyard_id, "full_outline": geo.has_detail(v.boundary),
+        # a lieu-dit from the cadastre: its name there, village, the appellations its land is eligible for, its vines
+        "lieu_dit": lieux_dits.details(v.boundary),
         "appellations": [{"id": i, "name": n} for i, n in sorted(apps.items(), key=lambda x: x[1])],
         "stats": {**_cellar_totals(lines), "tastings": len(history)},
         "wines": wine_catalog(session, wines),

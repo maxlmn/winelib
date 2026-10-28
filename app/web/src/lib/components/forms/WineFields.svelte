@@ -25,7 +25,7 @@
 	// A new vintage carries the blend, LWIN and drinking window over: show them
 	const hasMore = untrack(() => !!(value.blend || value.lwin || value.drink_window_start || value.drink_window_end));
 
-	type Row = { id: number; name: string; region?: string | null; region_id?: number | null; alias?: string | null };
+	type Row = { id: number; name: string; region?: string | null; region_id?: number | null; alias?: string | null; ref?: string };
 
 	// The wine's region follows the producer's, then the appellation's, until it's picked by hand
 	let regionTouched = $state(!!value.region);
@@ -192,8 +192,8 @@
 			id="{prefix}-vineyard"
 			value={value.vineyard}
 			search={(q) => lookup<Row>('vineyards', { q, region_id: regionId })}
-			placeholder="Sub-region, village or vineyard…"
-			onchange={(c) => (value.vineyard = c)}
+			placeholder="Sub-region, village, vineyard or lieu-dit…"
+			onchange={(c, item) => (value.vineyard = c && item?.ref ? { ...c, ref: item.ref } : c)}
 		/>
 	</Field>
 </div>

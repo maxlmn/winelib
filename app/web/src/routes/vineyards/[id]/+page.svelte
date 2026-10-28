@@ -53,8 +53,18 @@
 {/snippet}
 
 {#key v.id}
-	<DetailHeader kind="Vineyard" title={v.name} trail={[v.region, v.subregion, v.village]} regionColor={v.region_color} regionHref={v.region ? links.region(v.region) : null} {actions} aside={map}>
+	<DetailHeader kind={v.lieu_dit ? 'Vineyard · lieu-dit' : 'Vineyard'} title={v.name} trail={[v.region, v.subregion, v.village]} regionColor={v.region_color} regionHref={v.region ? links.region(v.region) : null} {actions} aside={map}>
 		<Facts items={[{ label: 'Location', value: location, icon: 'globe' }, { label: 'External ID', value: v.vineyard_id }]} />
+		{#if v.lieu_dit}
+			<div class="lieu">
+				<div>
+					<span class="muted">Lieu-dit</span> {v.lieu_dit.name}{v.lieu_dit.village ? `, ${v.lieu_dit.village}` : ''}
+					{#if v.lieu_dit.vines}<span class="muted"> · {Math.round(v.lieu_dit.vines * 100)}% in AOC vines</span>{/if}
+				</div>
+				{#if v.lieu_dit.aocs.length}<div><span class="muted">Its land is eligible for</span> {v.lieu_dit.aocs.join(' · ')}</div>{/if}
+				<div class="muted note">Outline from the cadastre (Etalab, DGFiP), the appellations from INAO's delimitation: informational, not legally binding.</div>
+			</div>
+		{/if}
 		{#if v.appellations.length}
 			<div class="apps">
 				<span class="muted"><Icon name="map" size={13} /> Appellations</span>
@@ -117,5 +127,15 @@
 	}
 	.stats {
 		margin-top: 16px;
+	}
+	.lieu {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		margin-top: 10px;
+		font-size: 13px;
+	}
+	.lieu .note {
+		font-size: 11px;
 	}
 </style>

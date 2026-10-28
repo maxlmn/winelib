@@ -14,6 +14,7 @@ The regions, appellations, grapes and vineyards every installation starts with.
 | Grapes' berry colour, origin, parents, synonyms | [VIVC](https://www.vivc.de), the Vitis International Variety Catalogue (Julius Kühn-Institut) | facts, cited |
 | Grape tasting profiles (climate, acidity, tannin, aromas, classic regions) | WineLib's own notes; the classic regions follow the WSET Level 2 syllabus | |
 | French premier crus (vineyards) | INAO's parcel delimitation (above) | Licence Ouverte 2.0 |
+| French lieux-dits (the named places among the vines) | Etalab's cadastre (DGFiP), the *lieux-dits* layer on [cadastre.data.gouv.fr](https://cadastre.data.gouv.fr); their appellations from INAO's parcel delimitation | Licence Ouverte 2.0 |
 | German vineyards (Einzellagen) | [Weinlagen-info](https://www.weinlagen-info.de) | not shipped: built on your own computer only |
 
 ## Map outlines
@@ -27,7 +28,12 @@ regions' overview outlines and the appellations that are an administrative area.
 - **Wikipedia**: a grape's summary and photo on its page (text under CC BY-SA 4.0; each links to its article).
 - **OpenStreetMap Nominatim**: a place's coordinates from its address or a Google Maps link (© OpenStreetMap
   contributors, ODbL).
-- **Esri World Imagery**: the satellite base map (© Esri and its data providers).
+- **OpenFreeMap**: the Plain base map's vector tiles (© OpenMapTiles, data © OpenStreetMap contributors, ODbL);
+  OpenStreetMap France's tiles when it can't be reached.
+- **OpenTopoMap**: the Terrain base map (© OpenStreetMap contributors, © OpenTopoMap, CC BY-SA).
+- **IGN's aerial photos** (BD ORTHO, through the Géoplateforme, Licence Ouverte 2.0): the satellite base map in
+  France.
+- **Esri World Imagery**: the satellite base map elsewhere (© Esri and its data providers).
 - **WineLabs** and **Bordeaux Index** (with your keys): market prices. Critics' scores are the ones you add or
   import yourself.
 - **CellarTracker** and **Vivino**: only your own exports, when you import them.

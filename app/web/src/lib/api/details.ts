@@ -259,6 +259,9 @@ export interface VineyardDetail extends RegionInfo {
 	vineyard_id: number | null;
 	/** the shape store has its outline at full detail (DetailMap's toggle) */
 	full_outline: boolean;
+	/** a lieu-dit from the cadastre: its name there, village, the appellations its land is eligible for (most
+	 * specific first), the share of it in AOC vines */
+	lieu_dit?: { name: string; village: string | null; aocs: string[]; vines: number | null } | null;
 	appellations: Ref[];
 	stats: CellarTotals & { tastings: number };
 	wines: CatalogEntry[];

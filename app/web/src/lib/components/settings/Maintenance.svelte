@@ -241,7 +241,7 @@
 		{/if}
 		{#if job.result?.items?.length && job.result.items[0].pick}
 			{#if job.result.unknown}<UnknownProducers unknown={job.result.unknown} />{/if}
-			<PickList bind:ticked row={job.result.items[0].pick.wine ? cardRow : undefined} items={job.result.items as PickItem[]} verb="Import"
+			<PickList bind:ticked row={job.result.items[0].pick.wine ? cardRow : undefined} items={job.result.items as PickItem[]} verb={job.task === 'lieux_dits' ? 'Link' : 'Import'}
 				disabled={running} flag={job.result.flag}
 				onrun={(keys) => tasks.find((t) => t.id === job!.task)?.upload
 					? post(job!.task, { commit: true, keys, ...uploadBody(job!.task, columns) })

@@ -183,6 +183,29 @@ class ShapeIds(BaseModel):
     vineyards: list[int] = []
 
 
+@router.get("/api/map/lieux-dits")
+def lieux_dits(bbox: str, session: Session = Depends(get_session)):
+    """The cadastre's lieux-dits in view (bbox "w,s,e,n"), as GeoJSON features with their village and the
+    appellations their land is eligible for; {"more": true} and none when the view is too wide."""
+    try:
+        w, s, e, n = (float(x) for x in bbox.split(","))
+    except ValueError:
+        raise HTTPException(422, "bbox: w,s,e,n")
+    found = geo.lieux_dits(w, s, e, n)
+    if found is None:
+        return json_response('{"type":"FeatureCollection","features":[],"more":true}')
+    features = []
+    # those already your vineyards (linked to a wine): their page
+    mine = dict(session.query(Vineyard.boundary, Vineyard.id)
+                .filter(Vineyard.boundary.in_([f"lieu_dit:{sid}" for sid, *_ in found])).all()) if found else {}
+    for sid, name, details, geometry in found:
+        d = json.loads(details) if details else {}
+        props = {"id": f"lieu_dit:{sid}", "kind": "lieu-dit", "name": name, "village": d.get("commune_name"),
+                 "aocs": d.get("aocs"), "vines": d.get("vines"), "vineyard_id": mine.get(f"lieu_dit:{sid}")}
+        features.append(f'{{"type":"Feature","properties":{json.dumps(props, ensure_ascii=False)},"geometry":{geometry}}}')
+    return json_response('{"type":"FeatureCollection","features":[' + ",".join(features) + '],"more":false}')
+
+
 @router.post("/api/map/shapes")
 def map_shapes(body: ShapeIds, session: Session = Depends(get_session)):
     """Geometries only, by id: {"version", "appellations": {id: geometry | null}, "vineyards": {...}}.
