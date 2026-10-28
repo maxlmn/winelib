@@ -143,7 +143,6 @@
 {:else}
 	{#if big}
 		<div class="fullmap" use:portal role="region" aria-label="The map, full size">{@render figure()}</div>
-		<button class="placeholder" onclick={() => (mapView.full = false)}>The map is full size, behind the page · ✕ Back to the page</button>
 	{:else}
 		{@render figure()}
 	{/if}
@@ -236,19 +235,8 @@
 	}
 	@media (max-width: 760px) {
 		.fullmap {
-			inset: 0;
+			inset: var(--nav-h, 52px) 0 0 0;
 		}
-	}
-	.placeholder {
-		width: 100%;
-		padding: 10px;
-		border: 1px dashed var(--border);
-		border-radius: 8px;
-		background: none;
-		color: var(--muted);
-		font: inherit;
-		font-size: 12px;
-		cursor: pointer;
 	}
 	figure.big {
 		position: absolute;

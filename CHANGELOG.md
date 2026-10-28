@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- A full-size map on a phone keeps the bar and its menu above it; no more placeholder where the map was.
+
 ## v0.3.0
 
 - **Lieux-dits**: the cadastre's named places among the vines (Loire, Burgundy, Beaujolais, Jura, Alsace, Bordeaux,

@@ -14,6 +14,11 @@
 	let searchOpen = $state(false);
 	// On a phone the links fold behind a menu button; going to a page folds them again
 	let menuOpen = $state(false);
+	// The phone's bar height (its menu closed), for what sits under it: a full-size map (DetailMap)
+	let navHeight = $state(0);
+	$effect(() => {
+		if (!menuOpen && navHeight) document.documentElement.style.setProperty('--nav-h', `${navHeight}px`);
+	});
 	$effect(() => {
 		void page.url.pathname;
 		menuOpen = false;
@@ -51,7 +56,7 @@
 </script>
 
 <div class="shell">
-	<nav>
+	<nav bind:offsetHeight={navHeight}>
 		<a class="brand" href={links.home()}>🍷 <span>WineLib</span></a>
 		<button class="search-btn" onclick={() => (searchOpen = true)}>
 			<span>⌕ Search…</span><kbd>{isMac ? '⌘' : 'Ctrl'} K</kbd>
@@ -189,6 +194,10 @@
 			grid-template-columns: 1fr;
 			/* the bar its own height, the page the rest (a short page, an error, mustn't stretch the bar) */
 			grid-template-rows: auto 1fr;
+		}
+		/* above a page's full-size map (DetailMap), which starts under it */
+		:global(html.map-full) nav {
+			z-index: 45;
 		}
 		/* A slim bar: the brand, search, theme and the menu button; the links open under it */
 		nav {
