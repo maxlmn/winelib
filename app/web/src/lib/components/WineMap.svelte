@@ -122,7 +122,8 @@
 	}
 	let hoveredLieu = $state<LieuProps | null>(null);
 	let pinnedLieu = $state<LieuProps | null>(null);
-	const lieu = $derived(hoveredLieu ?? pinnedLieu);
+	// a clicked lieu-dit's card stays (its buttons within reach) while the pointer crosses others on the way to it
+	const lieu = $derived(pinnedLieu ?? hoveredLieu);
 	const framing = () => ({ top: 40, right: 40, bottom: 40 + padBottom, left: 40 + padLeft });
 	// the clicked one (its card keeps its buttons while the pointer is still over it)
 	const lieuPinned = $derived(!!lieu && !!pinnedLieu && lieu.id === pinnedLieu.id);
