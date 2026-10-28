@@ -37,7 +37,7 @@ checklist.
 </picture>
 
 **The maps.** Every appellation of France (INAO), the EU, the US and Australia outlined, Burgundy's premiers
-crus, and the cadastre's lieux-dits across France's vineyards (Loire, Burgundy, Beaujolais, Jura, Alsace, Bordeaux,
+crus, and the cadastre's lieux-dits across France's vineyards (Loire, Burgundy, Champagne, Beaujolais, Jura, Alsace, Bordeaux,
 Rhône) with the appellations each can claim; regions in their colours, your cellar and your tastings on them. A wine
 page shows its appellation and vineyard; a region's page, where what you drink comes from. Click a lieu-dit to make
 it a wine's vineyard, or let Maintenance find the cuvées named after one. Any map opens full size, the page's cards
@@ -60,8 +60,8 @@ photos in France.
 </picture>
 
 **Down to the lieu-dit.** The names on the labels, Les Poyeux, Clos des Noëls, Les Gravières, are lieux-dits:
-the named places of France's land register. WineLib draws 82,000 of them across the vineyards of the Loire,
-Burgundy, Beaujolais, Jura, Alsace, Bordeaux and the Rhône, each with the appellations it can claim and how much of
+the named places of France's land register. WineLib draws 91,000 of them across the vineyards of the Loire,
+Burgundy, Champagne, Beaujolais, Jura, Alsace, Bordeaux and the Rhône, each with the appellations it can claim and how much of
 it is under AOC vines. Zoom in on any map to see them; click one to make it your wine's vineyard. Settings ›
 Maintenance finds your cuvées named after one and links them, after your tick.
 

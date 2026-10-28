@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- **Champagne's lieux-dits**: 9,000 more, in the Marne, the Aube and the Aisne (Les Chétillons, La Côte Faron, Les
+  Crayères…). INAO publishes no parcel plan for Champagne: its vines are its appellations' areas where OpenStreetMap
+  (and the farmers' RPG declarations) have vineyards.
+- A lieu-dit found whatever the plural: a cuvée "Les Chétillons" is the cadastre's "Chétillon"; a search without
+  its article ("les chetillons").
+
 ## v0.3.3
 
 - A clicked lieu-dit's card stays open while the pointer crosses others on the way to its button.
