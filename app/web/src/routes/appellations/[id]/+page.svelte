@@ -4,7 +4,6 @@
 	import CellarSection from '#lib/components/details/CellarSection.svelte';
 	import DetailHeader from '#lib/components/details/DetailHeader.svelte';
 	import DetailMap from '#lib/components/details/DetailMap.svelte';
-	import OutlineEditor from '#lib/components/details/OutlineEditor.svelte';
 	import Facts from '#lib/components/details/Facts.svelte';
 	import Stats from '#lib/components/details/Stats.svelte';
 	import Tabs from '#lib/components/details/Tabs.svelte';
@@ -20,7 +19,7 @@
 	const yields = $derived([a.max_yield_hl && `${a.max_yield_hl} hl/ha`, a.max_yield_kg && `${a.max_yield_kg} kg/ha`].filter(Boolean).join(', '));
 	const colors = $derived([...new Set(splitList(a.colors))].join(', '));
 
-	// Its own outline, drawn or imported (OutlineEditor): the map reloads once one is saved or removed
+	// Its own outline, drawn or imported on its map (DetailMap, OutlineTools): the map reloads once one is saved or removed
 	let drawing = $state(false);
 	let mapRev = $state(0);
 	function outlineClosed(saved: boolean) {
@@ -42,7 +41,8 @@
 
 {#snippet map()}
 	{#key mapRev}
-		<DetailMap src={shapesUrl('appellations', a.id)} fullUrl={a.full_outline ? `/api/appellations/${a.id}/outline/full` : null} current={{ kind: 'appellation', id: a.id }} height={320} focusable />
+		<DetailMap draw={drawing ? { kind: 'appellations', id: a.id, name: a.name } : null} ondrawn={outlineClosed}
+			src={shapesUrl('appellations', a.id)} fullUrl={a.full_outline ? `/api/appellations/${a.id}/outline/full` : null} current={{ kind: 'appellation', id: a.id }} height={320} />
 	{/key}
 {/snippet}
 
@@ -134,7 +134,6 @@
 	</Tabs>
 {/key}
 
-{#if drawing}<OutlineEditor kind="appellations" id={a.id} name={a.name} onclose={outlineClosed} />{/if}
 
 <style>
 	.fold {

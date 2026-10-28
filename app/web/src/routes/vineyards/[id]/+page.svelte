@@ -5,7 +5,6 @@
 	import CellarSection from '#lib/components/details/CellarSection.svelte';
 	import DetailHeader from '#lib/components/details/DetailHeader.svelte';
 	import DetailMap from '#lib/components/details/DetailMap.svelte';
-	import OutlineEditor from '#lib/components/details/OutlineEditor.svelte';
 	import Facts from '#lib/components/details/Facts.svelte';
 	import Stats from '#lib/components/details/Stats.svelte';
 	import Tabs from '#lib/components/details/Tabs.svelte';
@@ -20,7 +19,7 @@
 	const nWines = $derived(v.wines.reduce((n, w) => n + w.vintages.length, 0));
 	const location = $derived([regionLabel(v.region), v.subregion, v.village].filter(Boolean).join(' › '));
 
-	// Its own outline, drawn or imported (OutlineEditor): the map reloads once one is saved or removed
+	// Its own outline, drawn or imported on its map (DetailMap, OutlineTools): the map reloads once one is saved or removed
 	let drawing = $state(false);
 	let mapRev = $state(0);
 	function outlineClosed(saved: boolean) {
@@ -42,10 +41,10 @@
 
 {#snippet map()}
 	{#key mapRev}
-		<DetailMap
+		<DetailMap draw={drawing ? { kind: 'vineyards', id: v.id, name: v.name } : null} ondrawn={outlineClosed}
 			src={shapesUrl('vineyards', v.id)} fullUrl={v.full_outline ? `/api/vineyards/${v.id}/outline/full` : null}
 			current={{ kind: 'vineyard', id: v.id }}
-			focusable
+
 			height={320}
 			empty="No geographical data available for this vineyard."
 		/>
@@ -102,7 +101,6 @@
 	</Tabs>
 {/key}
 
-{#if drawing}<OutlineEditor kind="vineyards" id={v.id} name={v.name} onclose={outlineClosed} />{/if}
 
 <style>
 	.apps {

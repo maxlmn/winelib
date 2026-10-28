@@ -28,6 +28,8 @@
 	let { wine, regionColors }: Props = $props();
 
 	let allVintages = $state(false);
+	// Draw vineyard: drawn on the wine's map (DetailMap), created with its outline and linked to the wine
+	let drawingVineyard = $state(false);
 
 	const sum = (xs: { qty: number }[]) => xs.reduce((n, b) => n + b.qty, 0);
 	const cellarHere = $derived(wine.cellar.filter((b) => b.wine_id === wine.id));
@@ -81,7 +83,7 @@
 
 {#snippet actions()}
 	<a class="btn" href={links.editWine(wine.id)}>Edit wine</a>
-	{#if !wine.vineyard}<a class="btn" href={links.newVineyard(wine.id)}>Draw vineyard</a>{/if}
+	{#if !wine.vineyard}<button class="btn" onclick={() => (drawingVineyard = true)}>Draw vineyard</button>{/if}
 	<WishButton wineId={wine.id} />
 	<a class="btn" href={links.newBottle({ wine_id: wine.id })}>＋ Bottle</a>
 	<a class="btn primary" href={links.newTasting({ wine_id: wine.id })}>＋ Tasting</a>
@@ -89,7 +91,12 @@
 
 {#snippet map()}
 	<!-- its vineyard in the address: a new one (linked from the map) is drawn at once -->
-	<DetailMap src={`${shapesUrl('wines', wine.id)}?vineyard=${wine.vineyard?.id ?? ''}`} height={300} focusable empty="No boundary data for this appellation." {lieuAction} />
+	<DetailMap src={`${shapesUrl('wines', wine.id)}?vineyard=${wine.vineyard?.id ?? ''}`} height={300} empty="No boundary data for this appellation." {lieuAction}
+		draw={drawingVineyard ? { kind: 'vineyards', name: '', wine: wine.id } : null}
+		ondrawn={(saved) => {
+			drawingVineyard = false;
+			if (saved) invalidateAll();
+		}} />
 {/snippet}
 
 <DetailHeader

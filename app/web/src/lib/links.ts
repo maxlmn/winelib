@@ -54,7 +54,6 @@ export const links = {
 	editAppellation: (id: Id) => `/appellations/${id}/edit`,
 	editVineyard: (id: Id) => `/vineyards/${id}/edit`,
 	/** a vineyard drawn for a wine, then linked to it */
-	newVineyard: (wineId: Id) => `/vineyards/new?wine=${wineId}`,
 	newWine: (query?: { producer_id?: Id }) => withQuery('/wines/new', query),
 	editWine: (id: Id) => `/wines/${id}/edit`,
 	newBottle: (query?: { wine_id?: Id }) => withQuery('/bottles/new', query),

@@ -3,15 +3,16 @@
  * (⤢ Full map, Back to the page). */
 const KEY = 'winelib-full-map';
 
+// Full size unless chosen otherwise (Settings › Appearance › Maps: In the page)
 function load() {
 	try {
-		return localStorage.getItem(KEY) === '1';
+		return localStorage.getItem(KEY) !== '0';
 	} catch {
-		return false;
+		return true;
 	}
 }
 
-let always = $state(typeof localStorage !== 'undefined' ? load() : false);
+let always = $state(typeof localStorage !== 'undefined' ? load() : true);
 let full = $state(always);
 
 export const mapView = {

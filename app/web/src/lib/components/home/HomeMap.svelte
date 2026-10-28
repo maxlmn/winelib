@@ -1,7 +1,6 @@
 <script lang="ts">
-	/** The home page's map: the regions you drink from or keep bottles of, in their colours; a click opens the region.
+	/** The home page's map: the regions you drink from or keep bottles of, in their colours; a click opens its card (and a link to its page).
 	 * Opened on `focus` (the latest tasting's region) when there's one, else on where most of your wine comes from. */
-	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import WineMap from '#lib/components/WineMap.svelte';
 	import { links } from '#lib/links.ts';
@@ -44,7 +43,7 @@
 	{#if regions}
 		<WineMap
 			{regions}
-			onregion={(r: RegionProps) => goto(links.region(r.name))}
+			regionHref={(r: RegionProps) => links.region(r.name)}
 			appellations={null}
 			vineyards={null}
 			selected={null}

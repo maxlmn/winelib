@@ -8,10 +8,18 @@ It opens on one outline per wine region, in the region's colour. Click a region 
 appellations and vineyards; tick the ones to draw. **My cellar** and **My tastings** keep only where your wines come
 from. **Plain** and **Satellite** change the background.
 
+## On every map
+
+- **Click a shape** (an appellation, a vineyard, a lieu-dit, a region): its card opens on the map, with its name,
+  your bottles and tastings, and a link to its page. Nothing opens another page by itself; the card's ✕ closes it.
+- **Click a name in the legend**: the map zooms to it and opens its card (a second click shows everything again).
+- **Appellations**, **Vineyards** and **Lieux-dits**: each click goes from filled to outline only to hidden. Vineyards
+  are drawn in their region's colours, a shade darker than the appellations; the lieux-dits (the cadastre's named
+  places) appear from close zoom, as dashed outlines.
+
 ## On the pages
 
-- A **wine** shows its appellation and its vineyard. Click a name in the legend to zoom to its outline; untick
-  *Appellations* or *Vineyards* to hide them.
+- A **wine** shows its appellation and its vineyard.
 - A **producer** shows every appellation and vineyard of its wines.
 - A **region** shows where what you drink comes from, its top appellations and producers.
 - An **appellation** or a **vineyard** shows its own outline; **Full detail** draws it as the source does (INAO's

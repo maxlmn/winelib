@@ -278,6 +278,8 @@ def vineyard_props(v, stats):
     s = stats.get(v.id, {})
     return {
         "id": v.id, "kind": "vineyard", "name": v.name, "village": v.village, "subregion": v.sub_region,
+        "region": v.region_obj.name if v.region_obj else None,
+        "color": (v.region_obj.color if v.region_obj else None) or "#9a9893",  # drawn in its region's tones
         "cru": crus.vineyard_level(v), **_stats_props(s),
     }
 

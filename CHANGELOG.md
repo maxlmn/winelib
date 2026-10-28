@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+- **Draw on the map you're looking at**: Draw outline (an appellation's, a vineyard's) and Draw vineyard (from a
+  wine) work on the page's own map, made full size where you were, on the photos, the tools over it; the
+  lieux-dits' outlines and names to draw along. The separate drawing dialog and new-vineyard page are gone.
+- A map opened full size (⤢) keeps its view: the same map, not drawn again.
+- Pages open their map full size by default (Settings › Appearance › Maps: *In the page* to keep it in the page).
+- **Maps that stay put**: clicking a shape opens its card on the map (name, details, a link to its page), on a
+  phone too, instead of going to its page; clicking a legend entry zooms to it and opens its card. The home map's
+  regions open their card the same way.
+- **Appellations, Vineyards and Lieux-dits** on every map and on the Map page: each filled, outline only or hidden.
+- Vineyards in their region's colours, a shade darker than the appellations, with a darker outline (no longer a
+  green per village).
+- **Lieux-dits** have their own switch, next to Appellations and Vineyards: hiding the vineyards no longer hides them.
+- Zoomed in to the lieux-dits, the appellations' and vineyards' fills fade so the lieux-dits read through them (a
+  selected Savennières hid its own).
+
 ## v0.3.4
 
 - **See a suggested lieu-dit before linking it**: in Maintenance's preview, *map* opens it among its neighbours and

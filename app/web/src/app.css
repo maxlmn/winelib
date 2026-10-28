@@ -299,3 +299,10 @@ html.map-full main .card {
 		background: var(--border);
 	}
 }
+
+/* Drawing an outline on a phone (DetailMap, OutlineTools): the whole map, the page's sheet set aside */
+@media (max-width: 760px) {
+	html.map-drawing main {
+		display: none;
+	}
+}

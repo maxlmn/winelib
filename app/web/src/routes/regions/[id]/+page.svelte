@@ -98,7 +98,7 @@
 			<DetailMap
 				src={`${shapesUrl('regions', r.id)}?top=${topBy}`}
 				height={380}
-				focusable
+
 				empty="No outline for this region yet."
 			/>
 		</div>

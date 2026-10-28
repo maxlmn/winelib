@@ -6,7 +6,10 @@
 	import { page } from '$app/state';
 	import VineyardTree from '#lib/components/VineyardTree.svelte';
 	import WineMap from '#lib/components/WineMap.svelte';
-	import type { Basemap, Selection } from '#lib/components/WineMap.svelte';
+	import type { Basemap, Layers, Selection } from '#lib/components/WineMap.svelte';
+	import { DEFAULT_LAYERS } from '#lib/components/WineMap.svelte';
+	import LayerToggle from '#lib/components/LayerToggle.svelte';
+	import { darken } from '#lib/cru.ts';
 	import { links } from '#lib/links.ts';
 	import { appSettings } from '#lib/settings.svelte.ts';
 	import { plural } from '#lib/format.ts';
@@ -47,8 +50,8 @@
 	let shapesVersion = $state(0); // bumped when shapes arrive
 	let detail = $state<Detail | null>(null);
 	let basemap = $state<Basemap>(appSettings.map_default_basemap);
-	let showApps = $state(true);
-	let showVines = $state(true);
+	// each kind filled, outlined or hidden (LayerToggle)
+	let layers = $state<Layers>({ ...DEFAULT_LAYERS });
 	let query = $state('');
 	let tab = $state<'appellations' | 'vineyards'>('appellations');
 	let mapView = $state<WineMap>();
@@ -243,8 +246,7 @@
 			onregion={region ? null : (r: RegionProps) => openRegion(r.name)}
 			appellations={shownApps}
 			{vineyards}
-			showAppellations={showApps}
-			showVineyards={showVines}
+			{layers}
 			{selected}
 			{basemap}
 			{fitKey}
@@ -299,16 +301,10 @@
 			</div>
 
 			<div class="toggles">
-				<label>
-					<input type="checkbox" bind:checked={showApps} />
-					<span class="sw" style:background={region.color}></span>
-					Appellations <span class="muted num">{drawAppIds.length} of {idx?.appellations.length ?? 0} drawn</span>
-				</label>
-				<label>
-					<input type="checkbox" bind:checked={showVines} />
-					<span class="sw vine"></span>
-					Vineyards <span class="muted num">{drawIds.length} of {vineyardIndex.length} drawn</span>
-				</label>
+				<LayerToggle label="Appellations" bind:mode={layers.appellation} swatch={region.color ?? undefined}
+					note="{drawAppIds.length} of {idx?.appellations.length ?? 0} drawn" />
+				<LayerToggle label="Vineyards" bind:mode={layers.vineyard} swatch={darken(region.color ?? '#9a9893', 1)} note="{drawIds.length} of {vineyardIndex.length} drawn" />
+				<LayerToggle label="Lieux-dits" bind:mode={layers.lieu} dashed note="from close zoom" />
 			</div>
 
 			<input class="search" type="search" placeholder="Search name, village or sub-region…" bind:value={query} />
@@ -500,14 +496,9 @@
 	.toggles {
 		display: flex;
 		flex-direction: column;
+		align-items: flex-start;
 		gap: 4px;
 		font-size: 13px;
-	}
-	.toggles label {
-		display: flex;
-		align-items: center;
-		gap: 7px;
-		cursor: pointer;
 	}
 	.sw {
 		width: 10px;
@@ -515,9 +506,6 @@
 		border-radius: 3px;
 		flex: none;
 		background: #9a9893;
-	}
-	.sw.vine {
-		background: linear-gradient(135deg, #3fa66b 0 33%, #2a9d8f 33% 66%, #a7c957 66%);
 	}
 	.detail {
 		position: relative;

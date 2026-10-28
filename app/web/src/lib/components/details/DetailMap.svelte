@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import WineMap from '#lib/components/WineMap.svelte';
 	import type { Basemap, Selection } from '#lib/components/WineMap.svelte';
 	import type { Shapes } from '#lib/api/details.ts';
@@ -7,12 +6,17 @@
 	import { links } from '#lib/links.ts';
 	import type { MapCollection, MapProps } from '#lib/types.ts';
 	import { appSettings } from '#lib/settings.svelte.ts';
-	import { cruShade } from '#lib/cru.ts';
+	import { cruShade, darken } from '#lib/cru.ts';
 	import { FALLBACK_REGION } from '#lib/colors.ts';
 	import { untrack } from 'svelte';
 	import { portal } from '#lib/portal.ts';
 	import { mapView } from '#lib/mapView.svelte.ts';
-	import type { LieuAction } from '#lib/components/WineMap.svelte';
+	import type { LieuAction, Layers } from '#lib/components/WineMap.svelte';
+	import { DEFAULT_LAYERS } from '#lib/components/WineMap.svelte';
+	import LayerToggle from '#lib/components/LayerToggle.svelte';
+	import type { Map as MlMap } from 'maplibre-gl';
+	import OutlineTools from './OutlineTools.svelte';
+	import type { DrawSpec } from './OutlineTools.svelte';
 
 	interface Props {
 		/** a shapes endpoint (see shapesUrl) */
@@ -22,15 +26,17 @@
 		height?: number;
 		/** shown when there is nothing to draw */
 		empty?: string;
-		/** with several shapes (a wine's appellation and vineyard), a legend click zooms to that shape instead of opening its page */
-		focusable?: boolean;
 		/** the page's own shape at full detail (/outline/full), when the shape store has it: a "Full detail" toggle */
 		fullUrl?: string | null;
 		/** what a lieu-dit's card offers (a wine page: make it the wine's vineyard) */
 		lieuAction?: LieuAction | null;
+		/** an outline to draw on this map (Draw outline, Draw vineyard): it goes full size, its view kept */
+		draw?: DrawSpec | null;
+		/** the drawing closed: saved (or the new vineyard's id) */
+		ondrawn?: (saved: boolean, created?: number) => void;
 	}
 
-	let { src, current = null, height = 320, empty = 'No boundary data for this one.', focusable = false, fullUrl = null, lieuAction = null }: Props = $props();
+	let { src, current = null, height = 320, empty = 'No boundary data for this one.', fullUrl = null, lieuAction = null, draw = null, ondrawn }: Props = $props();
 
 	// Full size (Settings › Appearance, or ⤢ here): the map fills the window behind the page, which becomes a column
 	// of cards over its left side (html.map-full in app.css); Esc goes back
@@ -47,7 +53,31 @@
 		mapView.full = untrack(() => mapView.always);
 	});
 	function onkey(e: KeyboardEvent) {
-		if (big && e.key === 'Escape') mapView.full = false;
+		if (big && !drawing && e.key === 'Escape') mapView.full = false;
+	}
+
+	// Drawing an outline (draw): on this very map, full size (as it was when done), on the photos (put back after)
+	let mlmap = $state<MlMap | null>(null);
+	let drawing = $state<DrawSpec | null>(null);
+	let before: { full: boolean; basemap: Basemap } | null = null;
+	$effect(() => {
+		if (!draw || drawing) return;
+		untrack(() => {
+			before = { full: mapView.full, basemap };
+			mapView.full = true;
+			basemap = 'satellite';
+			drawing = draw;
+		});
+	});
+	$effect(() => {
+		document.documentElement.classList.toggle('map-drawing', !!drawing);
+		return () => document.documentElement.classList.remove('map-drawing');
+	});
+	function drawn(saved: boolean, created?: number) {
+		drawing = null;
+		if (before) ({ full: mapView.full, basemap } = before);
+		before = null;
+		ondrawn?.(saved, created);
 	}
 
 	let shapes = $state<Shapes | null>(null);
@@ -101,13 +131,27 @@
 	const keys = $derived(shapes ? [...shapes.appellations.features, ...shapes.vineyards.features].map((f) => f.properties) : []);
 	const missing = $derived(shapes ? [...shapes.appellations.missing, ...shapes.vineyards.missing] : []);
 
-	// The legend's zoomed-to shape (focusable maps); a second click on it frames everything again
+	// The legend's zoomed-to shape (a second click on it frames everything again), and the shape clicked on the map:
+	// either shows its card (name, details, a link to its page); nothing here leaves the page
 	let focus = $state<Selection>(null);
-	const canFocus = $derived(focusable && keys.length > 1);
+	let picked = $state<Selection>(null);
+	let focusCard = $state(false);
+	const selected = $derived(picked ?? (focusCard ? focus : null));
 	$effect(() => {
 		src;
 		focus = null;
+		picked = null;
 	});
+	function pick(p: MapProps | null) {
+		picked = p ? { kind: p.kind, id: p.id } : null;
+		if (!p) focusCard = false;
+	}
+	function zoomTo(k: MapProps) {
+		if (layers[k.kind] === 'off') layers[k.kind] = 'fill';
+		picked = null;
+		focus = focused(k) ? null : { kind: k.kind, id: k.id };
+		focusCard = !!focus;
+	}
 
 	// Frame the page's own shape (or the focused one); its neighbours show around it
 	const extent = $derived.by(() => {
@@ -121,31 +165,25 @@
 	const fitKey = $derived(focus ? `${src}#${focus.kind}:${focus.id}` : src);
 	const focused = (k: MapProps) => focus?.kind === k.kind && focus.id === k.id;
 
-	// Focusable maps with both kinds: appellations and vineyards shown or hidden
-	let show = $state({ appellation: true, vineyard: true });
-	const bothKinds = $derived(!!(shapes?.appellations.features.length && shapes?.vineyards.features.length));
-
-	// Clicking another shape opens its page
-	function open(p: MapProps | null) {
-		if (!p || (current && current.kind === p.kind && current.id === p.id)) return;
-		goto(p.kind === 'appellation' ? links.appellation(p.id) : links.vineyard(p.id));
-	}
+	// Each kind filled, outlined or hidden (LayerToggle)
+	let layers = $state<Layers>({ ...DEFAULT_LAYERS });
+	const appColor = $derived(shapes?.appellations.features[0]?.properties.color ?? FALLBACK_REGION);
 </script>
 
 <svelte:window onkeydown={onkey} />
 
-{#if failed || (shapes && !count && !outline)}
+{#if failed || (shapes && !count && !outline && !drawing)}
 	<div class="empty muted" style:min-height="{Math.min(height, 120)}px">
 		{#if failed}The map couldn’t load.
 		{:else if shapes?.outlines === false}No map outlines installed yet: <a href={`${links.settings()}#maintenance`}>Settings › Maintenance › Map outlines</a> downloads them.
 		{:else}{empty}{/if}
 	</div>
 {:else}
-	{#if big}
-		<div class="fullmap" use:portal role="region" aria-label="The map, full size">{@render figure()}</div>
-	{:else}
+	<!-- the same element in the page or full size (moved, not redrawn): the map keeps its view -->
+	<div class="fullmap" class:on={big} use:portal={big} role="region" aria-label={big ? 'The map, full size' : 'The map'}>
 		{@render figure()}
-	{/if}
+		{#if drawing && mlmap && big}<OutlineTools map={mlmap} spec={drawing} bind:basemap frame={!count} onclose={drawn} />{/if}
+	</div>
 {/if}
 
 {#snippet figure()}
@@ -155,25 +193,26 @@
 				<WineMap
 					appellations={drawnApps}
 					vineyards={drawnVines}
-					selected={focus}
-					showAppellations={show.appellation}
-					showVineyards={show.vineyard}
+					{selected}
+					{layers}
+					here={current}
 					{basemap}
 					{fitKey}
 					{extent}
-					onselect={open}
-					pinCard={false}
+					onselect={pick}
 					regions={outline}
 					{lieuAction}
 					cardSide={big ? 'right' : 'left'}
 					padLeft={big && innerWidth > 760 ? 560 : 0}
-					padBottom={big && innerWidth <= 760 ? Math.round(innerHeight * 0.45) : 0}
+					padBottom={big && innerWidth <= 760 && !drawing ? Math.round(innerHeight * 0.45) : 0}
+					onmap={(m) => (mlmap = m)}
+					quiet={!!drawing}
 				/>
 			{:else}
 				<div class="loading muted">Loading map…</div>
 			{/if}
 		</div>
-		{#if shapes}
+		{#if shapes && !drawing}
 			<figcaption>
 				<div class="seg size">
 					<button onclick={() => (mapView.full = !big)} title={big ? 'Back to the page (Esc)' : 'The map full size, the page’s details over it'}>
@@ -193,26 +232,18 @@
 						</button>
 					</div>
 				{/if}
-				{#if focusable && bothKinds}
-					<div class="seg kinds">
-						{#each [['appellation', 'Appellations'], ['vineyard', 'Vineyards']] as [kind, label]}
-							<button class:on={show[kind as 'appellation' | 'vineyard']} aria-pressed={show[kind as 'appellation' | 'vineyard']}
-								onclick={() => (show[kind as 'appellation' | 'vineyard'] = !show[kind as 'appellation' | 'vineyard'])}>{label}</button>
-						{/each}
-					</div>
-				{/if}
+				<div class="kinds">
+					<LayerToggle label="Appellations" bind:mode={layers.appellation} swatch={appColor} />
+					<LayerToggle label="Vineyards" bind:mode={layers.vineyard} swatch={darken(appColor, 1)} />
+					<LayerToggle label="Lieux-dits" bind:mode={layers.lieu} dashed />
+				</div>
 				<div class="keys">
 				{#each keys as k (k.kind + k.id)}
-					{#if canFocus}
-						<button class="key" class:on={focused(k)} class:off={!show[k.kind]} title={focused(k) ? 'Show all' : `Zoom to ${k.name}`}
-							onclick={() => { show[k.kind] = true; focus = focused(k) ? null : { kind: k.kind, id: k.id }; }}>
-							<span class="sw" class:vine={k.kind === 'vineyard'} style:background={k.kind === 'appellation' ? cruShade(k.color ?? FALLBACK_REGION, k.cru) : k.cru ? cruShade('#3fa66b', k.cru) : undefined}></span>{k.name}
-						</button>
-					{:else}
-						<a class="key" href={k.kind === 'appellation' ? links.appellation(k.id) : links.vineyard(k.id)}>
-							<span class="sw" class:vine={k.kind === 'vineyard'} style:background={k.kind === 'appellation' ? cruShade(k.color ?? FALLBACK_REGION, k.cru) : k.cru ? cruShade('#3fa66b', k.cru) : undefined}></span>{k.name}
-						</a>
-					{/if}
+					<!-- a legend entry shows its shape (zoomed to, its card open), never another page -->
+					<button class="key" class:on={focused(k)} class:off={layers[k.kind] === 'off'} title={focused(k) ? 'Show all' : `Show ${k.name}`}
+						onclick={() => zoomTo(k)}>
+						<span class="sw" class:vine={k.kind === 'vineyard'} style:background={k.kind === 'appellation' ? cruShade(k.color ?? FALLBACK_REGION, k.cru) : darken(k.color ?? FALLBACK_REGION, (k.cru ?? 0) + 1)}></span>{k.name}
+					</button>
 				{/each}
 				</div>
 				{#if missing.length}<span class="missing" title={missing.join(' · ')}>{missing.length} without boundaries</span>{/if}
@@ -227,14 +258,14 @@
 	}
 	/* Full size: behind the page's column (app.css: html.map-full main), beside the sidebar; the whole window on a
 	   phone, where the page's column is set aside */
-	.fullmap {
+	.fullmap.on {
 		position: fixed;
 		inset: 0 0 0 200px;
 		z-index: 40;
 		background: var(--bg);
 	}
 	@media (max-width: 760px) {
-		.fullmap {
+		.fullmap.on {
 			inset: var(--nav-h, 52px) 0 0 0;
 		}
 	}
@@ -368,9 +399,10 @@
 	.seg button:disabled {
 		cursor: progress;
 	}
-	.seg.kinds {
-		order: 0;
-		margin-left: 0;
+	.kinds {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
 	}
 	.sw {
 		width: 10px;
@@ -378,8 +410,9 @@
 		border-radius: 3px;
 		flex: none;
 	}
+	/* a vineyard: its darker outline, as on the map */
 	.sw.vine {
-		background: #3fa66b;
+		box-shadow: inset 0 0 0 1.5px rgb(0 0 0 / 30%);
 	}
 	.empty {
 		display: grid;

@@ -89,7 +89,7 @@
 		<section class="card map-card">
 			<div class="map-col">
 				<h2>Where the wines come from</h2>
-				<DetailMap src={shapesUrl('producers', p.id)} height={340} focusable empty="No boundary data for these appellations." />
+				<DetailMap src={shapesUrl('producers', p.id)} height={340} empty="No boundary data for these appellations." />
 			</div>
 			<aside class="side">
 				{#if p.appellations.length}

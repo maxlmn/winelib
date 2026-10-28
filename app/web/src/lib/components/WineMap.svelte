@@ -4,6 +4,15 @@
 	/** What a lieu-dit's card offers (a wine page: "Make it this wine's vineyard"): its label, and what it does with
 	 * the lieu-dit's store id ("lieu_dit:49060:les-poyeux") */
 	export type LieuAction = { label: string; run: (id: string) => Promise<unknown> };
+	/** How a kind of shape is drawn (LayerToggle cycles them): filled, its outline only, or not at all */
+	export type LayerMode = 'fill' | 'outline' | 'off';
+	export interface Layers {
+		appellation: LayerMode;
+		vineyard: LayerMode;
+		/** the cadastre's lieux-dits, from close zoom */
+		lieu: LayerMode;
+	}
+	export const DEFAULT_LAYERS: Layers = { appellation: 'fill', vineyard: 'fill', lieu: 'outline' };
 </script>
 
 <script lang="ts">
@@ -18,15 +27,17 @@
 	import { FALLBACK_REGION } from '#lib/colors.ts';
 	import type { Extent } from '#lib/geo.ts';
 	import { createMap, setBasemap } from '#lib/basemap.ts';
-	import { atLightness, cruShade } from '#lib/cru.ts';
+	import { cruShade, darken } from '#lib/cru.ts';
 	import { accentColor, theme } from '#lib/theme.svelte.ts';
 	import type { Basemap } from '#lib/basemap.ts';
 
 	interface Props {
 		appellations: MapCollection | null;
 		vineyards: MapCollection | null;
-		showAppellations?: boolean;
-		showVineyards?: boolean;
+		/** how each kind is drawn (filled, outlined, hidden) */
+		layers?: Layers;
+		/** the page's own shape: its card has no link to its page */
+		here?: Selection;
 		selected: Selection;
 		basemap: Basemap;
 		/** fit the view whenever this changes (e.g. a new region)... */
@@ -40,6 +51,8 @@
 		regions?: FeatureCollection<Geometry | null, RegionProps> | null;
 		/** clicking a region outline (the overview); without it, outlines are context only */
 		onregion?: ((r: RegionProps) => void) | null;
+		/** clicking a region opens its card with a link to this page (the home map), instead of onregion */
+		regionHref?: ((r: RegionProps) => string) | null;
 		/** what a lieu-dit's card offers when clicked */
 		lieuAction?: LieuAction | null;
 		/** where the hover card sits: the right when something covers the map's left (a full map's page column) */
@@ -48,37 +61,30 @@
 		padLeft?: number;
 		/** pixels at the bottom covered by something (a phone's page sheet over a full map) */
 		padBottom?: number;
+		/** the map once ready (a drawing toolbar works on it) */
+		onmap?: (m: MlMap) => void;
+		/** no cards nor clicks of its own (while an outline is drawn on it) */
+		quiet?: boolean;
 		/** the world repeated side by side when zoomed out (off: a wide box shows one world) */
 		worldCopies?: boolean;
 	}
 
 	let {
-		appellations, vineyards, showAppellations = true, showVineyards = true,
+		appellations, vineyards, layers = DEFAULT_LAYERS, here = null,
 		selected, basemap, fitKey, extent = null, onselect, pinCard = true,
-		regions = null, onregion = null, worldCopies = true, lieuAction = null, cardSide = 'left', padLeft = 0, padBottom = 0
+		regions = null, onregion = null, regionHref = null, worldCopies = true, lieuAction = null, cardSide = 'left', padLeft = 0, padBottom = 0,
+		onmap, quiet = false
 	}: Props = $props();
 
-	// Vineyards are shaded by village from a family of vine-leaf greens, olives and teals: neighbouring
-	// villages read apart while the whole stays one calm layer. All at one lightness (only the hue tells villages
-	// apart), so a darker vineyard is always a premier or grand cru. [fill, edge] pairs.
-	const VINE_LIGHTNESS = 0.48;
-	const VINE_HUES = ['#3fa66b', '#2a9d8f', '#8cb369', '#5b8e3e', '#43aa8b', '#a7c957', '#279989', '#6fa35a', '#4f9d5d', '#9bbf5a'];
-	const VINE_PALETTE: [string, string][] = VINE_HUES.map((c) => [atLightness(c, VINE_LIGHTNESS), atLightness(c, VINE_LIGHTNESS - 0.17)]);
-
-	function hashIndex(text: string, n: number) {
-		let h = 5381;
-		for (let i = 0; i < text.length; i++) h = (h * 33) ^ text.charCodeAt(i);
-		return Math.abs(h) % n;
-	}
-
-	// Premier crus one notch darker, grand crus two (vineyards and appellations alike)
+	/** Vineyards in their region's tones, as the appellations: a notch darker (a cru darker still), their outline
+	 * darker again, so they read as the finer grain inside an appellation */
 	function shadeVineyards(fc: MapCollection): MapCollection {
 		return {
 			...fc,
 			features: fc.features.map((f) => {
-				const [fill, edge] = VINE_PALETTE[hashIndex(f.properties.village ?? f.properties.name, VINE_PALETTE.length)];
-				const cru = f.properties.cru;
-				return { ...f, properties: { ...f.properties, fill: cruShade(fill, cru), edge: cruShade(edge, cru) } };
+				const color = f.properties.color ?? FALLBACK_REGION;
+				const cru = f.properties.cru ?? 0;
+				return { ...f, properties: { ...f.properties, fill: darken(color, cru + 1), edge: darken(color, cru + 2) } };
 			})
 		};
 	}
@@ -128,7 +134,14 @@
 	// the clicked one (its card keeps its buttons while the pointer is still over it)
 	const lieuPinned = $derived(!!lieu && !!pinnedLieu && lieu.id === pinnedLieu.id);
 	const LIEUX_ZOOM = 12;
+	// asks for the lieux-dits in view again (set once the map is ready)
+	let reloadLieux: (() => void) | null = null;
 	let hoveredRegion = $state<RegionProps | null>(null);
+	// a region clicked (regionHref): its card stays, with its link
+	let pinnedRegion = $state<RegionProps | null>(null);
+	const regionCard = $derived(hoveredRegion ?? pinnedRegion);
+	const regionPinned = $derived(!!pinnedRegion && regionCard === pinnedRegion);
+	const regionsAnswer = $derived(!!(onregion || regionHref));
 	let fitted = '';
 
 	// The card shows what's under the pointer, else the selected feature (clickable, with its links)
@@ -224,12 +237,13 @@
 				// Regions answer the pointer only on the overview, and only where no shape is drawn over them
 				const topFeature = (point: { x: number; y: number }) =>
 					mm.queryRenderedFeatures([point.x, point.y], {
-						layers: onregion ? ['vines-fill', 'lieux-fill', 'apps-fill', 'regions-fill'] : ['vines-fill', 'lieux-fill', 'apps-fill']
+						layers: regionsAnswer ? ['vines-fill', 'lieux-fill', 'apps-fill', 'regions-fill'] : ['vines-fill', 'lieux-fill', 'apps-fill']
 					})[0];
 				// Rendered features carry flattened properties: take the region's own
 				const regionOf = (id: unknown) => regions?.features.find((r) => r.properties.id === id)?.properties ?? null;
 
 				mm.on('mousemove', (e) => {
+					if (quiet) return;
 					const f = topFeature(e.point);
 					setHover(f ? { source: f.source, id: f.id as number } : null);
 					const isRegion = f?.source === 'regions';
@@ -246,12 +260,14 @@
 					hoveredLieu = null;
 				});
 				mm.on('click', (e) => {
+					if (quiet) return;
 					const f = topFeature(e.point);
 					pinnedLieu = f?.source === 'lieux' ? (f.properties as LieuProps) : null;
+					pinnedRegion = f?.source === 'regions' && regionHref ? regionOf(f.id) : null;
 					if (f?.source === 'lieux') return;
 					if (f?.source === 'regions') {
 						const r = regionOf(f.id);
-						if (r && onregion) onregion(r);
+						if (r && onregion && !regionHref) onregion(r);
 					} else onselect(f ? (f.properties as MapProps) : null);
 				});
 				// The lieux-dits in view, asked again a moment after the map stops moving
@@ -261,7 +277,7 @@
 					clearTimeout(lieuxTimer);
 					lieuxTimer = setTimeout(async () => {
 						const source = mm.getSource('lieux') as GeoJSONSource | undefined;
-						if (!source || mm.getZoom() < LIEUX_ZOOM || !showVineyards) return;
+						if (!source || mm.getZoom() < LIEUX_ZOOM || (layers.lieu === 'off' && !quiet)) return;
 						const b = mm.getBounds();
 						const bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].map((x) => x.toFixed(3)).join(',');
 						if (bbox === lieuxAsked) return;
@@ -276,7 +292,15 @@
 				mm.once('remove', () => sized.disconnect());
 				loadLieux();
 				map = mm;
+				// Their names, while an outline is drawn (quiet: no cards to tell them), over everything
+				mm.addLayer({
+					id: 'lieux-label', type: 'symbol', source: 'lieux', minzoom: 13,
+					layout: { 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Regular'], 'text-size': 11, 'text-max-width': 8, visibility: 'none' },
+					paint: { 'text-color': '#ffffff', 'text-halo-color': '#1c1a1f', 'text-halo-width': 1.4 }
+				});
+				reloadLieux = loadLieux;
 				ready = true;
+				onmap?.(mm);
 			}
 		})();
 		return () => m?.remove();
@@ -288,9 +312,9 @@
 		const drawable = (regions?.features ?? []).filter((f) => f.geometry);
 		(map.getSource('regions') as GeoJSONSource).setData({ type: 'FeatureCollection', features: drawable } as FeatureCollection);
 		const hover: ExpressionSpecification = ['boolean', ['feature-state', 'hover'], false];
-		map.setPaintProperty('regions-fill', 'fill-opacity', onregion ? ['case', hover, 0.45, 0.22] : 0.05);
-		map.setPaintProperty('regions-line', 'line-width', onregion ? ['case', hover, 2.5, 1.5] : 2);
-		map.setPaintProperty('regions-line', 'line-dasharray', onregion ? [1, 0] : [3, 2]);
+		map.setPaintProperty('regions-fill', 'fill-opacity', regionsAnswer ? ['case', hover, 0.45, 0.22] : 0.05);
+		map.setPaintProperty('regions-line', 'line-width', regionsAnswer ? ['case', hover, 2.5, 1.5] : 2);
+		map.setPaintProperty('regions-line', 'line-dasharray', regionsAnswer ? [1, 0] : [3, 2]);
 	});
 
 	// Data and layer visibility
@@ -309,8 +333,13 @@
 
 	$effect(() => {
 		if (!ready || !map) return;
-		for (const id of ['apps-fill', 'apps-line']) map.setLayoutProperty(id, 'visibility', showAppellations ? 'visible' : 'none');
-		for (const id of ['vines-fill', 'vines-line', 'lieux-fill', 'lieux-line']) map.setLayoutProperty(id, 'visibility', showVineyards ? 'visible' : 'none');
+		const on = (m: LayerMode) => (m === 'off' ? 'none' : 'visible');
+		for (const id of ['apps-fill', 'apps-line']) map.setLayoutProperty(id, 'visibility', on(layers.appellation));
+		for (const id of ['vines-fill', 'vines-line']) map.setLayoutProperty(id, 'visibility', on(layers.vineyard));
+		// the lieux-dits always while drawing (their outlines and names to draw along)
+		for (const id of ['lieux-fill', 'lieux-line']) map.setLayoutProperty(id, 'visibility', layers.lieu !== 'off' || quiet ? 'visible' : 'none');
+		map.setLayoutProperty('lieux-label', 'visibility', quiet ? 'visible' : 'none');
+		if (layers.lieu !== 'off' || quiet) reloadLieux?.();
 	});
 
 	// Selection outline follows the theme's accent
@@ -326,9 +355,21 @@
 	$effect(() => {
 		if (!ready || !map) return;
 		void appellations, vineyards; // re-apply after setData clears feature state
+		if (selected) {
+			pinnedLieu = null;
+			pinnedRegion = null;
+		}
 		if (selRef) map.setFeatureState(selRef, { selected: false });
 		selRef = selected ? { source: selected.kind === 'appellation' ? 'apps' : 'vines', id: selected.id } : null;
 		if (selRef) map.setFeatureState(selRef, { selected: true });
+	});
+
+	$effect(() => {
+		if (!quiet) return;
+		hovered = null;
+		hoveredRegion = null;
+		hoveredLieu = null;
+		pinnedLieu = null;
 	});
 
 	$effect(() => {
@@ -338,30 +379,44 @@
 		const photo = basemap === 'satellite';
 		const hover: ExpressionSpecification = ['boolean', ['feature-state', 'hover'], false];
 		const sel: ExpressionSpecification = ['boolean', ['feature-state', 'selected'], false];
-		map.setPaintProperty('vines-fill', 'fill-opacity', ['case', sel, photo ? 0.4 : 0.95, hover, photo ? 0.35 : 0.92, photo ? 0.22 : 0.8]);
-		map.setPaintProperty('apps-fill', 'fill-opacity',
-			['case', sel, photo ? 0.18 : 0.4, hover, photo ? 0.14 : 0.3, ['boolean', ['get', 'umbrella'], false], 0, photo ? 0.06 : 0.16]);
+		// zoomed in to the lieux-dits (LIEUX_ZOOM on), the fills fade so their outlines read through: an appellation
+		// almost to its outline, a vineyard to a tint
+		// an outline only: no fill but a touch under the pointer or selected (what's there, what's picked)
+		const vines = (k: number): ExpressionSpecification => layers.vineyard === 'outline'
+			? ['case', sel, 0.18, hover, 0.12, 0]
+			: ['case', sel, (photo ? 0.4 : 0.95) * k, hover, (photo ? 0.35 : 0.92) * k, (photo ? 0.22 : 0.8) * k];
+		const apps = (k: number): ExpressionSpecification => layers.appellation === 'outline'
+			? ['case', sel, 0.12, hover, 0.08, 0]
+			: ['case', sel, (photo ? 0.18 : 0.4) * k, hover, (photo ? 0.14 : 0.3) * k, ['boolean', ['get', 'umbrella'], false], 0, (photo ? 0.06 : 0.16) * k];
+		map.setPaintProperty('vines-fill', 'fill-opacity', ['interpolate', ['linear'], ['zoom'], LIEUX_ZOOM - 1, vines(1), LIEUX_ZOOM + 1, vines(0.55)]);
+		map.setPaintProperty('apps-fill', 'fill-opacity', ['interpolate', ['linear'], ['zoom'], LIEUX_ZOOM - 1, apps(1), LIEUX_ZOOM + 1, apps(0.25)]);
 		// the lieux-dits' dashes: cream over a dark or photo basemap, a warm grey over the light Plain one
 		const lieu = basemap === 'plain' && !theme.dark ? '#8f8389' : '#f2e6c9';
 		if (map.getLayer('lieux-line')) {
 			map.setPaintProperty('lieux-line', 'line-color', lieu);
 			map.setPaintProperty('lieux-fill', 'fill-color', lieu);
+			map.setPaintProperty('lieux-fill', 'fill-opacity', layers.lieu === 'fill' ? ['case', hover, 0.4, 0.2] : ['case', hover, 0.25, 0.01]);
+			const light = basemap === 'plain' && !theme.dark;
+			map.setPaintProperty('lieux-label', 'text-color', light ? '#4a4448' : '#ffffff');
+			map.setPaintProperty('lieux-label', 'text-halo-color', light ? '#f3f0eb' : '#1c1a1f');
 		}
 	});
 </script>
 
 <div class="wrap">
 	<div class="canvas" bind:this={container}></div>
-	{#if hoveredRegion}
-		<div class="hover card" class:right={cardSide === 'right'} class:low={padBottom > 0} style:bottom={padBottom > 0 ? `${padBottom + 36}px` : null}>
-			<div class="kind">region{hoveredRegion.country && hoveredRegion.country !== hoveredRegion.name ? ` · ${hoveredRegion.country}` : ''}</div>
-			<b>{hoveredRegion.name}</b>
+	{#if regionCard}
+		<div class="hover card" class:right={cardSide === 'right'} class:low={padBottom > 0} style:bottom={padBottom > 0 ? `${padBottom + 36}px` : null} class:pinned={regionPinned}>
+			{#if regionPinned}<button class="close" onclick={() => (pinnedRegion = null)} aria-label="Close">✕</button>{/if}
+			<div class="kind">region{regionCard.country && regionCard.country !== regionCard.name ? ` · ${regionCard.country}` : ''}</div>
+			<b>{regionCard.name}</b>
 			<div class="muted num">
-				{[hoveredRegion.appellations && plural(hoveredRegion.appellations, 'appellation'), hoveredRegion.vineyards && plural(hoveredRegion.vineyards, 'vineyard')].filter(Boolean).join(' · ')}
+				{[regionCard.appellations && plural(regionCard.appellations, 'appellation'), regionCard.vineyards && plural(regionCard.vineyards, 'vineyard')].filter(Boolean).join(' · ')}
 			</div>
-			{#if hoveredRegion.bottles}<div class="num owned">{hoveredRegion.bottles} btl in cellar · {money(hoveredRegion.value)}</div>{/if}
-			{#if hoveredRegion.tastings}<div class="num tasted">✎ {plural(hoveredRegion.tastings, 'tasting')}</div>{/if}
-			<div class="muted hint">Click to explore</div>
+			{#if regionCard.bottles}<div class="num owned">{regionCard.bottles} btl in cellar · {money(regionCard.value)}</div>{/if}
+			{#if regionCard.tastings}<div class="num tasted">✎ {plural(regionCard.tastings, 'tasting')}</div>{/if}
+			{#if regionPinned && regionHref}<a class="go" href={regionHref(regionCard)}>Open region →</a>
+			{:else}<div class="muted hint">{regionHref ? 'Click for more' : 'Click to explore'}</div>{/if}
 		</div>
 	{:else if lieu}
 		<div class="hover card" class:right={cardSide === 'right'} class:low={padBottom > 0} style:bottom={padBottom > 0 ? `${padBottom + 36}px` : null} class:pinned={lieuPinned}>
@@ -393,7 +448,7 @@
 			{#if card.tastings}
 				<div class="num tasted">✎ {plural(card.tastings, 'tasting')}</div>
 			{/if}
-			{#if isPinned}
+			{#if isPinned && !(here && here.kind === card.kind && here.id === card.id)}
 				<a class="go" href={detailsUrl(card)}>Details →</a>
 			{:else if pinCard}
 				<div class="muted hint">Click for details</div>
