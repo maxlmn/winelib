@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.3
+
+- A clicked lieu-dit's card stays open while the pointer crosses others on the way to its button.
+- Lieux-dits: a name the cadastre uses for several places apart in one village (a field name, "Grande Pièce") is as
+  many lieux-dits, no longer one scattered over the village (the map pack's lieux-dits rebuilt).
+
 ## v0.3.2
 
 - On a phone's full-size map, a lieu-dit's card sits above the page, no longer under the map's controls.
