@@ -306,7 +306,6 @@
 			<span>Background</span>
 			<select bind:value={draft.map_default_basemap}>
 				<option value="plain">Plain</option>
-				<option value="topo">Terrain</option>
 				<option value="satellite">Satellite</option>
 			</select>
 		</label>

@@ -30,7 +30,6 @@ regions' overview outlines and the appellations that are an administrative area.
   contributors, ODbL).
 - **OpenFreeMap**: the Plain base map's vector tiles (© OpenMapTiles, data © OpenStreetMap contributors, ODbL);
   OpenStreetMap France's tiles when it can't be reached.
-- **OpenTopoMap**: the Terrain base map (© OpenStreetMap contributors, © OpenTopoMap, CC BY-SA).
 - **IGN's aerial photos** (BD ORTHO, through the Géoplateforme, Licence Ouverte 2.0): the satellite base map in
   France.
 - **Esri World Imagery**: the satellite base map elsewhere (© Esri and its data providers).

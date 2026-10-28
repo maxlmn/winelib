@@ -334,6 +334,13 @@
 	$effect(() => {
 		if (!ready || !map) return;
 		setBasemap(map, basemap, theme.dark);
+		// on the photos, the fills light enough to see the vines under them (the outlines carry the shapes)
+		const photo = basemap === 'satellite';
+		const hover: ExpressionSpecification = ['boolean', ['feature-state', 'hover'], false];
+		const sel: ExpressionSpecification = ['boolean', ['feature-state', 'selected'], false];
+		map.setPaintProperty('vines-fill', 'fill-opacity', ['case', sel, photo ? 0.4 : 0.95, hover, photo ? 0.35 : 0.92, photo ? 0.22 : 0.8]);
+		map.setPaintProperty('apps-fill', 'fill-opacity',
+			['case', sel, photo ? 0.18 : 0.4, hover, photo ? 0.14 : 0.3, ['boolean', ['get', 'umbrella'], false], 0, photo ? 0.06 : 0.16]);
 		// the lieux-dits' dashes: cream over a dark or photo basemap, a warm grey over the light Plain one
 		const lieu = basemap === 'plain' && !theme.dark ? '#8f8389' : '#f2e6c9';
 		if (map.getLayer('lieux-line')) {

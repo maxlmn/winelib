@@ -199,7 +199,6 @@
 			<select bind:value={basemap} aria-label="Background">
 				<option value="satellite">Satellite</option>
 				<option value="plain">Plain</option>
-				<option value="topo">Terrain</option>
 			</select>
 		</div>
 		<p class="muted small hint">

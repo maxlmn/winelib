@@ -41,7 +41,7 @@ crus, and the cadastre's lieux-dits across France's vineyards (Loire, Burgundy, 
 Rhône) with the appellations each can claim; regions in their colours, your cellar and your tastings on them. A wine
 page shows its appellation and vineyard; a region's page, where what you drink comes from. Click a lieu-dit to make
 it a wine's vineyard, or let Maintenance find the cuvées named after one. Any map opens full size, the page's cards
-beside it (a sheet you scroll on a phone). A muted map of its own in light and dark, terrain, and IGN's aerial
+beside it (a sheet you scroll on a phone). A muted map of its own in light and dark, and IGN's aerial
 photos in France.
 
 <picture>

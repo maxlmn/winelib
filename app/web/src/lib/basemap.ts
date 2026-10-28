@@ -3,7 +3,7 @@ import { GLYPHS, VECTOR_IDS, VECTOR_SOURCE, vectorLayers, vectorPaint } from '#l
 // MapLibre resolves its worker next to its own module, which bundling breaks: point it at Vite's copy
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 
-export type Basemap = 'plain' | 'topo' | 'satellite';
+export type Basemap = 'plain' | 'satellite';
 
 /** The raster basemaps' tiles. Plain is drawn from vector tiles (vectorBase.ts); OpenStreetMap France's raster tiles
  * are its fallback when OpenFreeMap can't be reached. */
@@ -12,11 +12,6 @@ export function basemapTiles(kind: Basemap): { tiles: string[]; attribution: str
 		return {
 			tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
 			attribution: '© Esri, Maxar, Earthstar Geographics'
-		};
-	if (kind === 'topo')
-		return {
-			tiles: ['a', 'b', 'c'].map((s) => `https://${s}.tile.opentopomap.org/{z}/{x}/{y}.png`),
-			attribution: '© OpenStreetMap · © OpenTopoMap (CC-BY-SA)'
 		};
 	return {
 		tiles: ['a', 'b', 'c'].map((s) => `https://${s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png`),

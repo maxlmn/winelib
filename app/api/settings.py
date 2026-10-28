@@ -40,7 +40,7 @@ class Settings(BaseModel):
     bi_location: str = ""
     storage_groups: list[StorageGroup] = []
     other_group: str = Field(default="Cellar", min_length=1)
-    map_default_basemap: Literal["plain", "topo", "satellite"] = "plain"
+    map_default_basemap: Literal["plain", "satellite"] = "plain"
     # The critic whose score sorts the lists and ranks a vintage's best rated (every critic's is shown); none until
     # chosen, or the first critic scores are added for
     preferred_critic: str = ""
@@ -52,6 +52,11 @@ class Settings(BaseModel):
         if any(v <= 0 for v in rates.values()):
             raise ValueError("exchange rates must be positive")
         return rates
+
+    @field_validator("map_default_basemap", mode="before")
+    @classmethod
+    def _basemap(cls, v):
+        return "plain" if v == "topo" else v  # Terrain, chosen before it went (October 2026)
 
     @field_validator("currency")
     @classmethod

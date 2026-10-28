@@ -181,7 +181,7 @@
 					</button>
 				</div>
 				<div class="seg">
-					{#each [['plain', 'Plain'], ['topo', 'Terrain'], ['satellite', 'Satellite']] as [id, label]}
+					{#each [['plain', 'Plain'], ['satellite', 'Satellite']] as [id, label]}
 						<button class:on={basemap === id} onclick={() => (basemap = id as Basemap)}>{label}</button>
 					{/each}
 				</div>
