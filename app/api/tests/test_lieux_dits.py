@@ -113,3 +113,14 @@ def test_plurals():
     assert span("Cuvée Les Chétillons", "Chetillon") == "Chétillons"
     name = words("Les Noues")
     assert _matches(words("La Noue"), name, core(name)) == 1
+
+
+def test_suggestion_on_its_map(client, monkeypatch):
+    """A suggestion's map before it's linked: the wine's appellation, the lieu-dit as its vineyard."""
+    monkeypatch.setattr(geo, "_lieux_dits", fake_store)
+    wine = next(r["id"] for r in client.get("/api/search", params={"q": "bonnes blanches 2020"}).json()["results"] if r["kind"] == "wine")
+    r = client.get(f"/api/wines/{wine}/shapes", params={"lieu_dit": "49002:les-blanches"})
+    assert r.status_code == 200, r.text
+    vines = r.json()["vineyards"]["features"]
+    assert [f["properties"]["name"] for f in vines] == ["Les Blanches"] and vines[0]["properties"]["village"] == "Allonnes"
+    assert client.get(f"/api/wines/{wine}/shapes", params={"lieu_dit": "nowhere"}).status_code == 404

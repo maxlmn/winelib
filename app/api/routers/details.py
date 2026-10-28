@@ -9,7 +9,7 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import Session, joinedload
 
 from routers.lists import family as list_family, marks as list_marks
-from routers.map import MAPPABLE_VINE, map_stats, shapes_response
+from routers.map import MAPPABLE_VINE, lieu_shapes_response, map_stats, shapes_response
 from cellar import load_cellar, location_group, maturity, to_base
 from display import iso, vineyard_label, vintage_label
 from photos import photo_index, photo_url
@@ -555,9 +555,17 @@ def producer_shapes(producer_id: int, session: Session = Depends(get_session)):
 
 
 @router.get("/api/wines/{wine_id}/shapes")
-def wine_shapes(wine_id: int, session: Session = Depends(get_session)):
+def wine_shapes(wine_id: int, lieu_dit: str = "", session: Session = Depends(get_session)):
+    """The wine's appellation and vineyard; with lieu_dit (a store id), that lieu-dit as its vineyard instead (a
+    suggestion seen before it's linked: Maintenance's Lieux-dits for your wines)."""
     w = _get(session, Wine, wine_id, "Wine")
-    return shapes(session, [w.appellation_id] if w.appellation_id else [], [w.vineyard_id] if w.vineyard_id else [])
+    apps = [w.appellation_id] if w.appellation_id else []
+    if lieu_dit:
+        found = lieu_shapes_response(session, apps, lieu_dit)
+        if found is None:
+            raise HTTPException(404, "No such lieu-dit in the map store")
+        return found
+    return shapes(session, apps, [w.vineyard_id] if w.vineyard_id else [])
 
 
 @router.get("/api/appellations/{appellation_id}/shapes")

@@ -177,6 +177,19 @@ def find(sid):
     return names[i], (json.loads(dets[i]) if dets[i] else {})
 
 
+def outline(sid):
+    """(name, details, GeoJSON geometry text) of one lieu-dit in the store, or None"""
+    found = geo._lieux_dits()
+    if found is None:
+        return None
+    ids, names, dets, geoms, _ = found
+    try:
+        i = ids.index(sid)
+    except ValueError:
+        return None
+    return names[i], (json.loads(dets[i]) if dets[i] else {}), geoms[i]
+
+
 def details(boundary):
     """A lieu-dit vineyard's details from the store: {"name" (the cadastre's), "village", "aocs" [...], "vines"}; None
     for another boundary or one the store doesn't have"""

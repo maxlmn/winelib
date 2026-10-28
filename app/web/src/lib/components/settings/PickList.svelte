@@ -23,11 +23,14 @@
 		flag?: string;
 		/** draws a suggestion (instead of its label and detail) */
 		row?: Snippet<[PickItem]>;
+		/** drawn under a suggestion when its "map" is opened (its `pick.map`: e.g. a lieu-dit's map) */
+		peek?: Snippet<[PickItem]>;
 		/** key -> ticked (bindable: a row can tick itself, e.g. once edited) */
 		ticked?: Record<string, boolean>;
 		onrun: (keys: string[]) => void;
 	}
-	let { items, verb, disabled = false, flag, row, ticked = $bindable({}), onrun }: Props = $props();
+	let { items, verb, disabled = false, flag, row, peek, ticked = $bindable({}), onrun }: Props = $props();
+	let peeked = $state<Record<string, boolean>>({});
 
 	let open = $state<Record<string, boolean>>({});
 	let filter = $state('');
@@ -121,7 +124,13 @@
 									{#if flag && it.pick.flag}<span class="tag">{flag.split(' ')[0]}</span>{/if}
 									{#if it.detail}<span class="muted"> · {it.detail}</span>{/if}
 								</label>
+								{#if peek && it.pick.map}
+									<button class="small peek-btn" onclick={() => (peeked[it.pick.key] = !peeked[it.pick.key])} aria-expanded={!!peeked[it.pick.key]}>
+										{peeked[it.pick.key] ? 'hide map' : 'map'}
+									</button>
+								{/if}
 								{#if it.href}<a class="small" href={it.href} target="_blank" rel="noreferrer">review ↗</a>{/if}
+								{#if peek && peeked[it.pick.key]}<div class="peek-row">{@render peek(it)}</div>{/if}
 							</li>
 						{/if}
 					{/each}
@@ -234,6 +243,20 @@
 		color: var(--muted);
 	}
 	/* Rows drawn by the page (a wine card): the checkbox, then the card */
+	.rows li {
+		flex-wrap: wrap;
+	}
+	.peek-btn {
+		border: none;
+		background: none;
+		padding: 0;
+		color: var(--accent);
+		font: inherit;
+		cursor: pointer;
+	}
+	.peek-row {
+		flex-basis: 100%;
+	}
 	.rows li.carded {
 		align-items: center;
 		padding: 4px 0;

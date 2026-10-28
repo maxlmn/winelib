@@ -112,6 +112,22 @@ def shapes_response(session, app_ids, vine_ids, region=None):
     return json_response(f'{{"appellations":{a},"vineyards":{v}{extra},"outlines":{outlines}}}')
 
 
+def lieu_shapes_response(session, app_ids, sid):
+    """shapes_response's collections with one lieu-dit of the store as the vineyard (a suggestion, not yet one):
+    None when the store hasn't it"""
+    import lieux_dits
+    found = lieux_dits.outline(sid)
+    if found is None:
+        return None
+    name, d, geom = found
+    app_stats, _ = map_stats(session)
+    a = geo.collection_json("appellation", _apps(session, app_ids), app_stats)
+    props = json.dumps({"id": 0, "kind": "vineyard", "name": name, "village": d.get("commune_name"),
+                        "bottles": 0, "value": 0, "tastings": 0}, ensure_ascii=False)
+    v = f'{{"type":"FeatureCollection","features":[{{"type":"Feature","id":0,"geometry":{geom},"properties":{props}}}]}}'
+    return json_response(f'{{"appellations":{a},"vineyards":{v},"outlines":{json.dumps(geo.outlines_installed())}}}')
+
+
 def _mappable_regions(session):
     """[(region, mappable appellations, mappable vineyards)] for the regions with something to map, by name: an
     appellation or vineyard shape, or the region's own outline (Japan, China: no appellation shapes)."""

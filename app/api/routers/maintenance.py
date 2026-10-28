@@ -448,7 +448,8 @@ def _lieux_dits(session, job):
         for sid, name, d in options:
             share = f" · {round(d['vines'] * 100)}% in vines" if d.get("vines") is not None else ""
             items.append(_item(f"{name} · {d.get('commune_name') or '?'}", f"{wine}{share}", f"/wines/{w.id}",
-                               pick={"key": f"{w.id}={sid}", "group": w.producer.name, "on": ld.sure(options)}))
+                               pick={"key": f"{w.id}={sid}", "group": w.producer.name, "on": ld.sure(options),
+                                     "map": f"/api/wines/{w.id}/shapes?lieu_dit={sid}"}))
     if not job.commit:
         sure = sum(1 for _, options in found if ld.sure(options))
         return {"summary": f"{_n(len(found), 'cuvée')} name a lieu-dit of their appellation: {sure} sure (ticked), "

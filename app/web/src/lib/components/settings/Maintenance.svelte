@@ -2,6 +2,7 @@
 	/** Maintenance scripts (app/api/tasks/) run on the server as background jobs: see app/api/routers/maintenance.py */
 	import { onMount } from 'svelte';
 	import PickList from './PickList.svelte';
+	import LieuPeek from './LieuPeek.svelte';
 	import PickCard, { editBody } from './PickCard.svelte';
 	import UnknownProducers from './UnknownProducers.svelte';
 	import type { Unknown } from './UnknownProducers.svelte';
@@ -209,6 +210,10 @@
 	onMount(load);
 </script>
 
+{#snippet lieuPeek(it: PickItem)}
+	<LieuPeek src={String(it.pick.map)} />
+{/snippet}
+
 {#snippet cardRow(it: PickItem)}
 	<PickCard pick={it.pick as unknown as WinePick} bind:edit={edits[it.pick.key]} onedit={() => (ticked[it.pick.key] = true)} />
 {/snippet}
@@ -241,7 +246,7 @@
 		{/if}
 		{#if job.result?.items?.length && job.result.items[0].pick}
 			{#if job.result.unknown}<UnknownProducers unknown={job.result.unknown} />{/if}
-			<PickList bind:ticked row={job.result.items[0].pick.wine ? cardRow : undefined} items={job.result.items as PickItem[]} verb={job.task === 'lieux_dits' ? 'Link' : 'Import'}
+			<PickList bind:ticked row={job.result.items[0].pick.wine ? cardRow : undefined} peek={job.task === 'lieux_dits' ? lieuPeek : undefined} items={job.result.items as PickItem[]} verb={job.task === 'lieux_dits' ? 'Link' : 'Import'}
 				disabled={running} flag={job.result.flag}
 				onrun={(keys) => tasks.find((t) => t.id === job!.task)?.upload
 					? post(job!.task, { commit: true, keys, ...uploadBody(job!.task, columns) })
