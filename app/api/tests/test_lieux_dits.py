@@ -49,12 +49,9 @@ def test_preview_pick_and_link(client, monkeypatch):
     monkeypatch.setattr(geo, "_lieux_dits", fake_store)
 
     def run(**body):
+        from conftest import wait_job
         client.post("/api/maintenance/lieux_dits", json=body)
-        for _ in range(100):
-            job = client.get("/api/maintenance/job").json()
-            if job["status"] != "running":
-                return job
-            time.sleep(0.05)
+        return wait_job(client)
 
     job = run(commit=False)
     picks = {it["pick"]["key"].split("=")[1]: it["pick"]["on"] for it in job["result"]["items"]}

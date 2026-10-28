@@ -60,6 +60,12 @@ def _lookup(boundary, session=None):
     source, sid = boundary.split(":", 1)
     if source == "custom":
         return _custom(sid, session)
+    if source == "lieu_dit":  # read once as GeoJSON for the map (_lieux_dits): not a second copy as WKB
+        found, i = _lieux_dits(), _lieu_pos().get(sid)
+        if found is None or i is None:
+            return None
+        import shapely
+        return shapely.to_wkb(shapely.from_geojson(found[3][i])), tuple(float(b) for b in found[4][i])
     return _source(source).get(sid)
 
 
@@ -105,9 +111,14 @@ def warm():
         return
     for name in names:
         try:
-            _source(name)
+            _lieux_dits() if name == "lieu_dit" else _source(name)  # the lieux-dits read their own way
         except Exception:  # a bad file: the request that needs it reports it
             log.exception("Couldn't read the %s shapes", name)
+    try:
+        import lieux_dits
+        lieux_dits.warm()  # the lieux-dits' word index: the wine form's vineyard search answers at once
+    except Exception:
+        log.exception("Couldn't index the lieux-dits")
     try:
         crus.warm()
     except Exception:
@@ -138,7 +149,7 @@ def reset():
     """Forgets everything read (GEO_DIR or the store changed: tests)."""
     with _lock:
         _cache.clear()
-    for fn in (_source, _full_index, detail, _manifest_stamp, _region_outlines, _lieux_dits):
+    for fn in (_source, _full_index, detail, _manifest_stamp, _region_outlines, _lieux_dits, _lieu_pos):
         fn.cache_clear()
     crus.reset()
 
@@ -160,6 +171,13 @@ def _lieux_dits():
     geoms = shapely.to_geojson(shapely.from_wkb(np.array(t["display"], dtype=object)))
     boxes = np.array([t["bbox_w"], t["bbox_s"], t["bbox_e"], t["bbox_n"]], dtype=float).T.reshape(-1, 4)
     return t["source_id"], t["name"], t["details"], list(geoms), boxes
+
+
+@lru_cache(maxsize=1)
+def _lieu_pos():
+    """{store id: its position in _lieux_dits()}: one lookup, not a scan of 90,000 ids"""
+    found = _lieux_dits()
+    return {sid: i for i, sid in enumerate(found[0])} if found is not None else {}
 
 
 def lieux_dits(w, s, e, n, limit=2500):
@@ -219,8 +237,16 @@ def _full_index(name):
     f = pq.ParquetFile(path)
     if "geometry" not in f.schema_arrow.names:
         return {}
-    return {sid: (g, i) for g in range(f.num_row_groups)
-            for i, sid in enumerate(f.read_row_group(g, columns=["source_id"]).column(0).to_pylist())}
+    # the ids read in one go (not a read per row group: thousands of small ones), each placed in its group by the
+    # groups' sizes
+    ids = f.read(columns=["source_id"]).column(0).to_pylist()
+    out, start = {}, 0
+    for g in range(f.num_row_groups):
+        n = f.metadata.row_group(g).num_rows
+        for i, sid in enumerate(ids[start:start + n]):
+            out[sid] = (g, i)
+        start += n
+    return out
 
 
 def _split(boundary):

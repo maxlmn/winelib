@@ -148,6 +148,44 @@ def _merge_producers(session, job):
                        f"({_n(totals['lines_moved'], 'cellar line')} {verb}moved), no orphans.", "items": items}
 
 
+def _csv(job, module):
+    """An uploaded CSV's (headers, rows, mapping, columns): the columns as picked on the card, else as recognised by
+    their header (`module`: import_scores or import_cellar, their read / columns / FIELDS / REQUIRED)"""
+    headers, rows = module.read(job.params.get("_text") or "")
+    if not rows:
+        raise RuntimeError("No rows in this file (a CSV with a header line)")
+    mapping = {f: h for f, h in (job.params.get("mapping") or module.columns(headers)).items() if h in headers}
+    return headers, rows, mapping, {"headers": headers, "mapping": mapping, "fields": module.FIELDS, "required": module.REQUIRED}
+
+
+def _outcomes(job, rows, mapping, results):
+    """What became of each row, counted and logged"""
+    from collections import Counter
+    job.log(f"{_n(len(rows), 'row')}, columns: " + ", ".join(f"{f} = {h}" for f, h in mapping.items()))
+    outcomes = Counter(it["outcome"] for it in results)
+    for outcome, n in outcomes.most_common():
+        job.log(f"{outcome}: {n}")
+    return outcomes
+
+
+def _unknown_producers(session, results, outcomes, label):
+    """The producers not recognised (their rows' `outcome` in outcomes), by name: how many rows, a few examples, and
+    which of yours could be meant (an alias then says which)"""
+    from db import Producer
+    ids = dict(session.query(Producer.name, Producer.id).all())
+    unknown = {}
+    for it in results:
+        if it["outcome"] not in outcomes:
+            continue
+        name = it["row"]["producer"]
+        g = unknown.setdefault(name.lower(), {"alias": name, "reviews": 0, "examples": [], "fits": []})
+        g["reviews"] += 1
+        if len(g["examples"]) < 3:
+            g["examples"].append(label(it))
+        g["fits"] = g["fits"] or [{"id": ids[n], "name": n} for n in it.get("fits", []) if n in ids]
+    return list(unknown.values())
+
+
 def _scores_csv(session, job):
     """Critics' scores from an uploaded CSV (app/api/tasks/import_scores.py), for the critic named on the card: a
     preview lists the rows by producer to tick (new wines, scores for wines you have), a run saves the ticked ones
@@ -155,22 +193,14 @@ def _scores_csv(session, job):
     from collections import Counter
     from tasks import import_scores as sc
     critic = " ".join((job.params.get("critic") or "").split())
-    headers, rows = sc.read(job.params.get("_text") or "")
-    if not rows:
-        raise RuntimeError("No rows in this file (a CSV with a header line)")
-    # The columns as picked on the card, else as recognised by their header
-    mapping = {f: h for f, h in (job.params.get("mapping") or sc.columns(headers)).items() if h in headers}
-    columns = {"headers": headers, "mapping": mapping, "fields": sc.FIELDS, "required": sc.REQUIRED}
+    headers, rows, mapping, columns = _csv(job, sc)
     missing = [f for f in sc.REQUIRED if f not in mapping]
     if missing or not ({"score", "note"} & set(mapping)):
         need = missing + ([] if {"score", "note"} & set(mapping) else ["score or note"])
         return {"summary": f"{_n(len(rows), 'row')}: pick the column for {', '.join(need)} below, then Preview again.",
                 "items": [], "columns": columns}
-    job.log(f"{_n(len(rows), 'row')}, columns: " + ", ".join(f"{f} = {h}" for f, h in mapping.items()))
     results = sc.plan(session, critic, rows, mapping)
-    outcomes = Counter(it["outcome"] for it in results)
-    for outcome, n in outcomes.most_common():
-        job.log(f"{outcome}: {n}")
+    outcomes = _outcomes(job, rows, mapping, results)
     saving = (sc.ADD, sc.FILL, sc.REPLACE)
     if job.commit:
         keys = set(job.params.get("keys") or [])
@@ -195,19 +225,8 @@ def _scores_csv(session, job):
                            pick={"key": str(it["line"]), "group": p.name, "on": it["outcome"] != sc.REPLACE and not doubt,
                                  "flag": it["outcome"] == sc.FILL}))
     # Producers not recognised: the name to give one of yours as an alias
-    from db import Producer
-    ids = dict(session.query(Producer.name, Producer.id).all())
-    unknown = {}
-    for it in results:
-        if it["outcome"] not in ("producer not in the database", "producer ambiguous"):
-            continue
-        name = it["row"]["producer"]
-        g = unknown.setdefault(name.lower(), {"alias": name, "reviews": 0, "examples": [], "fits": []})
-        g["reviews"] += 1
-        if len(g["examples"]) < 3:
-            g["examples"].append(sc.label(it))
-        g["fits"] = g["fits"] or [{"id": ids[n], "name": n} for n in it.get("fits", []) if n in ids]
-    unknown = sorted(unknown.values(), key=lambda g: (-bool(g["fits"]), -g["reviews"], g["alias"].lower()))[:MAX_ITEMS]
+    unknown = _unknown_producers(session, results, ("producer not in the database", "producer ambiguous"), sc.label)
+    unknown = sorted(unknown, key=lambda g: (-bool(g["fits"]), -g["reviews"], g["alias"].lower()))[:MAX_ITEMS]
     # Why the others are left out, the names not recognised first ("appellation not in the database: Ermitage")
     skipped = Counter(o.split(":")[0] for o in outcomes.elements() if o not in saving)
     names = Counter(o.split(": ", 1)[1] for o in outcomes.elements()
@@ -227,19 +246,12 @@ def _cellar_csv(session, job):
     from collections import Counter
     from tasks import import_cellar as ic
     from routers.forms import AD_HOC, CONSUMED
-    headers, rows = ic.read(job.params.get("_text") or "")
-    if not rows:
-        raise RuntimeError("No rows in this file (a CSV with a header line)")
-    mapping = {f: h for f, h in (job.params.get("mapping") or ic.columns(headers)).items() if h in headers}
-    columns = {"headers": headers, "mapping": mapping, "fields": ic.FIELDS, "required": ic.REQUIRED}
+    headers, rows, mapping, columns = _csv(job, ic)
     if "producer" not in mapping:
         return {"summary": f"{_n(len(rows), 'row')}: pick the column for producer below, then Preview again.",
                 "items": [], "columns": columns}
-    job.log(f"{_n(len(rows), 'row')}, columns: " + ", ".join(f"{f} = {h}" for f, h in mapping.items()))
     results = ic.plan(session, rows, mapping)
-    outcomes = Counter(it["outcome"] for it in results)
-    for outcome, n in outcomes.most_common():
-        job.log(f"{outcome}: {n}")
+    outcomes = _outcomes(job, rows, mapping, results)
     if job.commit:
         keys = set(job.params.get("keys") or [])
         counts = ic.apply(session, [it for it in results if it["outcome"] == "add" and str(it["line"]) in keys],
@@ -260,17 +272,7 @@ def _cellar_csv(session, job):
                            pick={"key": str(it["line"]), "group": it["producer_name"], "on": not it["doubts"],
                                  "flag": it["wine"] is not None}))
     # Producers several of yours fit: an alias says which (the others are created when they don't exist)
-    from db import Producer
-    ids = dict(session.query(Producer.name, Producer.id).all())
-    unknown = {}
-    for it in results:
-        if it["outcome"] == "producer ambiguous":
-            name = it["row"]["producer"]
-            g = unknown.setdefault(name.lower(), {"alias": name, "reviews": 0, "examples": [], "fits": []})
-            g["reviews"] += 1
-            if len(g["examples"]) < 3:
-                g["examples"].append(ic.label(it))
-            g["fits"] = g["fits"] or [{"id": ids[x], "name": x} for x in it.get("fits", []) if x in ids]
+    unknown = _unknown_producers(session, results, ("producer ambiguous",), ic.label)
     adds = [it for it in results if it["outcome"] == "add"]
     new_producers = {it["producer_name"].lower() for it in adds if it["producer"] is None}
     new_wines = {it["wine_key"] for it in adds if it["wine"] is None}
@@ -283,7 +285,7 @@ def _cellar_csv(session, job):
                        + (f" Left out: {', '.join(f'{o}: {n}' for o, n in skipped.most_common())}." if skipped else "")
                        + (f" Appellations not recognised (left empty): "
                           f"{', '.join(f'{a} ({n})' for a, n in unknown_apps.most_common(12))}." if unknown_apps else ""),
-            "items": items, "flag": "your wines", "unknown": sorted(unknown.values(), key=lambda g: -g["reviews"]),
+            "items": items, "flag": "your wines", "unknown": sorted(unknown, key=lambda g: -g["reviews"]),
             "columns": columns}
 
 

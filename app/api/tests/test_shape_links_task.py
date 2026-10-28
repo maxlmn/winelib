@@ -22,13 +22,7 @@ def write_geo(geo_dir):
     write_store(geo_dir, "vineyard", {"bourgogne:7": box(4, 47, 4.01, 47.01)}, "vineyard")
 
 
-def wait(client):
-    for _ in range(300):
-        job = client.get("/api/maintenance/job").json()
-        if job and job["status"] != "running":
-            return job
-        time.sleep(0.02)
-    raise AssertionError("job didn't finish")
+from conftest import wait_job as wait  # noqa: E402
 
 
 def test_preview_then_save(client):

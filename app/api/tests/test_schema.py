@@ -55,3 +55,15 @@ def test_a_database_at_the_last_revision_before_the_release(tmp_path):
         c.execute(text("UPDATE alembic_version SET version_num = '0011'"))
     migrate.upgrade(engine)
     assert revision(engine) == head()
+
+
+def test_every_migration_goes_down_and_up(tmp_path):
+    """Each migration's downgrade works (a release can be rolled back): all the way down, and up again."""
+    from alembic import command
+    engine = create_engine(f"sqlite:///{tmp_path / 'round.db'}")
+    migrate.upgrade(engine)
+    with engine.begin() as c:
+        command.downgrade(migrate.config(c), "base")
+    assert set(inspect(engine).get_table_names()) <= {"alembic_version"}
+    migrate.upgrade(engine)
+    assert revision(engine) == head()

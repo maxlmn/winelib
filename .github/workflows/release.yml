@@ -1,6 +1,7 @@
-# A release: push a tag (git tag v0.1.0 && git push origin v0.1.0). The tests run, the web app is built, a zip (the
-# code with the built web app, so no Node.js is needed to run it) is attached to the tag's GitHub release, and the
-# Docker image is published as ghcr.io/maxlmn/winelib:<version> and :latest (amd64 and arm64).
+# A release: push a tag (git tag v0.1.0 && git push origin v0.1.0). The tests and checks run, the Docker image is
+# published as ghcr.io/maxlmn/winelib:<version> (and :latest for a final version, not a pre-release like v0.4.0-rc1)
+# for amd64 and arm64, then the GitHub release is made with a zip (the code with the built web app, so no Node.js is
+# needed to run it). The release comes last: a failed image build leaves no release without its image.
 # To run the zip: unzip, pip install -r app/api/requirements.txt, python run.py. The image: docker-compose.yml.
 name: Release
 
@@ -13,7 +14,7 @@ permissions:
   packages: write
 
 jobs:
-  release:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,16 +22,61 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-          cache-dependency-path: app/api/requirements*.txt
+          cache-dependency-path: |
+            app/api/requirements*.txt
+            app/mcp_server/requirements.txt
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
           cache-dependency-path: app/web/package-lock.json
+      # the MCP server's SDK too: its tests are skipped without it (tests/test_mcp_server.py)
       - name: Tests
         run: |
-          pip install -r app/api/requirements.txt -r app/api/requirements-dev.txt
+          pip install -r app/api/requirements.txt -r app/api/requirements-dev.txt -r app/mcp_server/requirements.txt
           cd app/api && python -m pytest -q tests
+      - name: Check and build the web app
+        working-directory: app/web
+        run: npm ci && npm run check && npm run build
+
+  image:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          # :latest only for a final version (a tag without "-": not v0.4.0-rc1)
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest,enable=${{ !contains(github.ref_name, '-') }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  release:
+    needs: image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app/web/package-lock.json
       - name: Build the web app
         working-directory: app/web
         run: npm ci && npm run build
@@ -48,31 +94,5 @@ jobs:
         run: |
           awk -v tag="## $GITHUB_REF_NAME" '$0 == tag {on=1; next} /^## / {on=0} on' CHANGELOG.md > notes.md
           if [ -s notes.md ]; then notes=(--notes-file notes.md); else notes=(--generate-notes); fi
-          gh release create "$GITHUB_REF_NAME" "$ZIP" --title "WineLib $GITHUB_REF_NAME" "${notes[@]}"
-
-  image:
-    needs: release
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ github.token }}
-      - id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=raw,value=latest
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          prerelease=(); [[ "$GITHUB_REF_NAME" == *-* ]] && prerelease=(--prerelease)
+          gh release create "$GITHUB_REF_NAME" "$ZIP" --title "WineLib $GITHUB_REF_NAME" "${notes[@]}" "${prerelease[@]}"

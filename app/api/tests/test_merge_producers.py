@@ -25,13 +25,7 @@ def seed(s):
     s.add(TastingNote(bottle=line, rating=95, notes="Taut"))
 
 
-def wait(client):
-    for _ in range(200):
-        job = client.get("/api/maintenance/job").json()
-        if job and job["status"] != "running":
-            return job
-        time.sleep(0.02)
-    raise AssertionError("job didn't finish")
+from conftest import wait_job as wait  # noqa: E402
 
 
 @pytest.fixture(autouse=True)

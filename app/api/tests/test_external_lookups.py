@@ -97,13 +97,7 @@ def test_geocode_lookup(client, osm):
     assert "nominatim.openstreetmap.org" in osm[0]
 
 
-def wait(client):
-    for _ in range(200):
-        job = client.get("/api/maintenance/job").json()
-        if job and job["status"] != "running":
-            return job
-        time.sleep(0.02)
-    raise AssertionError("job didn't finish")
+from conftest import wait_job as wait  # noqa: E402
 
 
 def test_places_task_preview_then_save(client, osm):

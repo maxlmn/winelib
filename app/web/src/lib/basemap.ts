@@ -50,38 +50,60 @@ async function bytesOf(url: string, abort: AbortController) {
 	return res.arrayBuffer();
 }
 
+const isWhite = (px: Uint8ClampedArray, i: number) => px[i] > 249 && px[i + 1] > 249 && px[i + 2] > 249;
+
+/** Whether the tile's edges have blank white (IGN's nothing outside France always reaches a tile's edge): only
+ * then is the whole tile looked at */
+function edgeWhite(ctx: OffscreenCanvasRenderingContext2D, size: number) {
+	for (const [x, y, w, h] of [[0, 0, size, 1], [0, size - 1, size, 1], [0, 0, 1, size], [size - 1, 0, 1, size]]) {
+		const px = ctx.getImageData(x, y, w, h).data;
+		for (let i = 0; i < px.length; i += 4) if (isWhite(px, i)) return true;
+	}
+	return false;
+}
+
 async function satTile(params: { url: string }, abort: AbortController) {
 	const [z, x, y] = params.url.replace('sat://', '').split('/');
 	const [w, s, e, n] = tileBox(+z, +x, +y);
 	const [bw, bs, be, bn] = IGN_BOUNDS;
 	const esri = () => bytesOf(ESRI_URL(z, x, y), abort);
 	if (e < bw || w > be || n < bs || s > bn) return { data: await esri() };
-	const res = await fetch(IGN_URL(z, x, y), { signal: abort.signal });
-	if (res.status === 404) return { data: await esri() }; // none there (beyond IGN's photos)
-	if (!res.ok) throw new Error(`IGN tile ${res.status}`);
+	let res: Response;
+	try {
+		res = await fetch(IGN_URL(z, x, y), { signal: abort.signal });
+	} catch (err) {
+		if (abort.signal.aborted) throw err;
+		return { data: await esri() }; // IGN unreachable: Esri's photo rather than a hole
+	}
+	if (!res.ok) return { data: await esri() }; // none there (404, beyond IGN's photos), or IGN failing
 	const bytes = await res.arrayBuffer();
 	const bitmap = await createImageBitmap(new Blob([bytes]));
-	const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-	const ctx = canvas.getContext('2d')!;
+	const size = bitmap.width;
+	const canvas = new OffscreenCanvas(size, bitmap.height);
+	const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
 	ctx.drawImage(bitmap, 0, 0);
-	const img = ctx.getImageData(0, 0, bitmap.width, bitmap.height);
+	bitmap.close();
+	// a photo to its edges (most tiles in France): as it came, nothing else asked for, no pixel scanned but the edges
+	if (!edgeWhite(ctx, size)) return { data: bytes };
+	const img = ctx.getImageData(0, 0, size, canvas.height);
 	const px = img.data;
 	let white = 0;
 	for (let i = 0; i < px.length; i += 4) {
-		if (px[i] > 249 && px[i + 1] > 249 && px[i + 2] > 249) {
+		if (isWhite(px, i)) {
 			px[i + 3] = 0;
 			white++;
 		}
 	}
-	// a photo throughout (most tiles in France): as it came, nothing else asked for
 	if (white < 64) return { data: bytes };
 	const below = await esri();
 	// blank throughout (just outside France): Esri's alone
 	if (white >= px.length / 4 - 64) return { data: below };
+	// at a border: Esri's under IGN's, IGN's white made see-through
 	const under = await createImageBitmap(new Blob([below]));
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	ctx.drawImage(under, 0, 0, canvas.width, canvas.height);
-	const top = new OffscreenCanvas(canvas.width, canvas.height);
+	ctx.clearRect(0, 0, size, canvas.height);
+	ctx.drawImage(under, 0, 0, size, canvas.height);
+	under.close();
+	const top = new OffscreenCanvas(size, canvas.height);
 	top.getContext('2d')!.putImageData(img, 0, 0);
 	ctx.drawImage(top, 0, 0);
 	return { data: await (await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.9 })).arrayBuffer() };

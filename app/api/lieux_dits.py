@@ -150,6 +150,19 @@ def link(session, wines, sid, name, details):
 _folded = {}  # the store's names as words, worked out once per store read
 
 
+def _fold(found):
+    """The names' words, worked out once per store read (a second or two for 90,000): search's index"""
+    if _folded.get("of") is not found:
+        _folded.update({"of": found, "words": [{same(w) for w in words(n)} for n in found[1]]})
+
+
+def warm():
+    """search's index made ahead of the first search (geo.warm, in the background at startup)"""
+    found = geo._lieux_dits()
+    if found is not None:
+        _fold(found)
+
+
 def search(q, limit=15):
     """[(store id, name, details)] whose name has every word of q, the most in vines first"""
     found = geo._lieux_dits()
@@ -157,8 +170,7 @@ def search(q, limit=15):
     if found is None or not want:
         return []
     ids, names, dets, _, _ = found
-    if _folded.get("of") is not found:
-        _folded.update({"of": found, "words": [{same(w) for w in words(n)} for n in names]})
+    _fold(found)
     hits = [(ids[i], names[i], json.loads(dets[i]) if dets[i] else {})
             for i, ws in enumerate(_folded["words"]) if all(w in ws for w in want)]
     return sorted(hits, key=lambda h: -(h[2].get("vines") or 0))[:limit]
@@ -170,9 +182,8 @@ def find(sid):
     if found is None:
         return None
     ids, names, dets, _, _ = found
-    try:
-        i = ids.index(sid)
-    except ValueError:
+    i = geo._lieu_pos().get(sid)
+    if i is None:
         return None
     return names[i], (json.loads(dets[i]) if dets[i] else {})
 
@@ -183,9 +194,8 @@ def outline(sid):
     if found is None:
         return None
     ids, names, dets, geoms, _ = found
-    try:
-        i = ids.index(sid)
-    except ValueError:
+    i = geo._lieu_pos().get(sid)
+    if i is None:
         return None
     return names[i], (json.loads(dets[i]) if dets[i] else {}), geoms[i]
 
@@ -200,9 +210,8 @@ def details(boundary):
         return None
     ids, names, dets, _, _ = found
     sid = boundary.split(":", 1)[1]
-    try:
-        i = ids.index(sid)
-    except ValueError:
+    i = geo._lieu_pos().get(sid)
+    if i is None:
         return None
     d = json.loads(dets[i]) if dets[i] else {}
     return {"name": names[i], "village": d.get("commune_name"), "aocs": [a for a in (d.get("aocs") or "").split("; ") if a],

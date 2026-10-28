@@ -13,6 +13,13 @@
   map follows a window resized or a phone turned; exchange rates can no longer read as missing while a request
   values the cellar; the map store is read again after a rebuild or a map pack installed while the app runs, and
   a damaged pack leaves the store as it was.
+- **Faster**: the lieux-dits looked up by an index and held once in memory (not twice), their search ready at
+  startup; a shape's full detail found at once on a large store; Satellite looks only at a tile's edges for IGN's
+  blank (most tiles), and falls back to Esri's photo when IGN fails.
+- **Releases**: the image is built before the GitHub release is made (a failed image no longer leaves a release
+  without it), :latest only for final versions, the MCP server's tests and the web check run first; the
+  dependencies kept within their major versions; the schema checked on Postgres in CI, and every migration's
+  downgrade tested (the one from the wishlist's move to a list didn't work).
 
 ## v0.3.5
 

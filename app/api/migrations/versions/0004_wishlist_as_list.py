@@ -47,5 +47,23 @@ def upgrade():
 
 
 def downgrade():
+    """The wishlist's table back as 0002 made it, empty (its entries stay in the list that was the wishlist): 0002's
+    downgrade then has it to drop"""
     with op.batch_alter_table('lists') as batch:
         batch.drop_column('is_wishlist')
+    op.create_table('wishlist',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('wine_id', sa.Integer(), nullable=False),
+    sa.Column('any_vintage', sa.Boolean(), nullable=False),
+    sa.Column('bottle_size', sa.String(), nullable=True),
+    sa.Column('currency', sa.String(), nullable=True),
+    sa.Column('note', sa.Text(), nullable=True),
+    sa.Column('url', sa.String(), nullable=True),
+    sa.Column('added', sa.Date(), nullable=True),
+    sa.Column('last_price', sa.Float(), nullable=True),
+    sa.Column('last_price_date', sa.Date(), nullable=True),
+    sa.Column('last_price_source', sa.String(), nullable=True),
+    sa.ForeignKeyConstraint(['wine_id'], ['wines.id'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('wine_id')
+    )

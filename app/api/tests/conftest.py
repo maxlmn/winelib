@@ -117,6 +117,17 @@ def fetch_price(client):
     return run
 
 
+def wait_job(client, tries=300):
+    """The maintenance job started last, once it has finished (6 s at most); fails the test when it hasn't"""
+    import time
+    for _ in range(tries):
+        job = client.get("/api/maintenance/job").json()
+        if job and job["status"] != "running":
+            return job
+        time.sleep(0.02)
+    raise AssertionError("the job didn't finish")
+
+
 def local_sources(geo_dir):
     """Puts an installation's own sources.local.json in geo_dir (tests/data/: a vineyard source with region files
     next to INAO's premiers crus, like Weinlagen-info's): the shipped shape_sources.json only has the premiers crus."""
