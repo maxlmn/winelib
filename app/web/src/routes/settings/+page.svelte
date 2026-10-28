@@ -4,6 +4,7 @@
 	import { appSettings, configured, integrations, setSettings } from '#lib/settings.svelte.ts';
 	import type { AppSettings, StorageGroup } from '#lib/settings.svelte.ts';
 	import { PALETTES, setTheme, theme } from '#lib/theme.svelte.ts';
+	import { mapView } from '#lib/mapView.svelte.ts';
 	import type { Font, Mode, Palette } from '#lib/theme.svelte.ts';
 	import { links } from '#lib/links.ts';
 
@@ -155,6 +156,14 @@
 						</button>
 					{/each}
 				</div>
+			</div>
+			<div class="field">
+				<span>Maps</span>
+				<div class="seg" style:align-self="flex-start">
+					<button class:on={!mapView.always} onclick={() => (mapView.always = false)}>In the page</button>
+					<button class:on={mapView.always} onclick={() => (mapView.always = true)}>Always full size</button>
+				</div>
+				<small class="muted">Full size: a page's map fills the window, its details over it (⤢ on any map does it once)</small>
 			</div>
 			<div class="field">
 				<span>Headings</span>

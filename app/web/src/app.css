@@ -255,3 +255,47 @@ button.sort {
 		padding: 0 !important;
 	}
 }
+
+/* A page's map full size (DetailMap): the map fixed behind, the page a column of cards over its left side, the
+   rest of the window the map's. Side-by-side layouts stack in the narrow column. On a phone the page is set aside
+   (the map's bar has Back to the page). */
+html.map-full main {
+	position: relative;
+	z-index: 41;
+	width: min(540px, 100%);
+	padding: 14px 0 90px 14px;
+}
+html.map-full main :is(.body.split, .about.has-image, .top, .map-card) {
+	grid-template-columns: minmax(0, 1fr) !important;
+}
+html.map-full main .card {
+	box-shadow: var(--shadow);
+}
+/* On a phone the page is a sheet over the map's lower part, scrolled on its own */
+@media (max-width: 760px) {
+	html.map-full main {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 45dvh;
+		width: auto;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		padding: 18px 10px 40px;
+		background: var(--bg);
+		border-top: 1px solid var(--border);
+		border-radius: 16px 16px 0 0;
+		box-shadow: 0 -6px 24px rgb(0 0 0 / 0.35);
+	}
+	html.map-full main::before {
+		content: '';
+		position: absolute;
+		top: 7px;
+		left: calc(50% - 20px);
+		width: 40px;
+		height: 4px;
+		border-radius: 2px;
+		background: var(--border);
+	}
+}
