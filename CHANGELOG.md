@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **The Lyonnais in France**: Coteaux du Lyonnais (its wines, their vineyards, the Lyonnais' producers) is filed under
+  France, in neither the Rhône (where v0.3.6 had put it) nor the Beaujolais (migration 0009); the Rhône's outline
+  stops above Côte-Rôtie, the Beaujolais' starts at its AOC's southern edge: they no longer overlap.
+- Tastings: a wine's note (or *No note*) always shown, opening the tasting, the *Notes inline* switches gone; a
+  tasting card's date opens the occasion in the journal. The cellar's wine label and bottle ends open the bottle.
+- A vineyard's map: a lieu-dit clicked can be made the vineyard's outline.
+
 ## v0.3.6
 
 - **A bottle's page** says what it is in words ("3 bottles", "2 magnums", "1 bottle, finished") with its bottles

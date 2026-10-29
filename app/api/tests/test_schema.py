@@ -85,10 +85,32 @@ def test_the_lyonnais_moves_into_the_rhone(tmp_path):
         c.execute(text("INSERT INTO wines (id, region_id, appellation_id) VALUES (1, 36, 1)"))
         c.execute(text("INSERT INTO lists (id, name, criteria) VALUES (1, 'Lyon', :c)"),
                   {"c": json.dumps({"regions": ["Lyonnais", "Rhone"]})})
-    migrate.upgrade(engine)
+    with engine.begin() as c:
+        command.upgrade(migrate.config(c), "0008")
     with engine.connect() as c:
         assert c.execute(text("SELECT name, color FROM regions ORDER BY id")).all() == [("Beaujolais", "#9a7bc9"),
                                                                                      ("Rhone", None)]
         assert c.execute(text("SELECT region_id, subregion FROM appellations")).one() == (45, "The Lyonnais")
         assert c.execute(text("SELECT region_id FROM wines")).scalar() == 45
         assert json.loads(c.execute(text("SELECT criteria FROM lists")).scalar()) == {"regions": ["Rhone"]}
+
+
+def test_the_lyonnais_in_france(tmp_path):
+    """0009: Coteaux du Lyonnais, its wines and their vineyards, and the Lyonnais' producers from the Rhône to France;
+    the rest of the Rhône stays."""
+    from alembic import command
+    engine = create_engine(f"sqlite:///{tmp_path / 'lyonnais.db'}")
+    with engine.begin() as c:
+        command.upgrade(migrate.config(c), "0008")
+    with engine.begin() as c:
+        c.execute(text("INSERT INTO regions (id, name, country) VALUES (45, 'Rhone', 'France'), (130, 'France', 'France')"))
+        c.execute(text("INSERT INTO appellations (id, name, region_id, subregion) VALUES "
+                       "(1, 'Coteaux-Du-Lyonnais', 45, 'The Lyonnais'), (2, 'Côte-Rôtie', 45, NULL)"))
+        c.execute(text("INSERT INTO vineyards (id, name, region_id) VALUES (1, 'Le Clos', 45), (2, 'La Landonne', 45)"))
+        c.execute(text("INSERT INTO wines (id, region_id, appellation_id, vineyard_id) VALUES (1, 45, 1, 1), (2, 45, 2, 2)"))
+        c.execute(text("INSERT INTO producers (id, name, region_id, subregion) VALUES "
+                       "(1, 'Baptiste Nayrand', 45, 'The Lyonnais'), (2, 'Jamet', 45, 'Northern Rhône')"))
+    migrate.upgrade(engine)
+    with engine.connect() as c:
+        region = lambda table: dict(c.execute(text(f"SELECT id, region_id FROM {table} ORDER BY id")).all())  # noqa: E731
+        assert region("appellations") == region("wines") == region("vineyards") == region("producers") == {1: 130, 2: 45}
