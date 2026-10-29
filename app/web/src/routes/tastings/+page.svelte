@@ -34,7 +34,6 @@
 	const params = $derived(page.url.searchParams);
 	const filters = $derived(fromParams(params));
 	const view = $derived(VIEWS.find((v) => v.id === params.get('view'))?.id ?? 'cards');
-	const inline = $derived(params.get('notes') === 'inline');
 	const selectedPlace = $derived(Number(params.get('place')) || null);
 
 	const tastings = $derived(filterTastings(journal.tastings, filters));
@@ -155,12 +154,6 @@
 		<span class="count muted num">
 			{plural(tastings.length, 'wine')} · {plural(cards.length, 'occasion')}
 		</span>
-		{#if view === 'cards'}
-			<label class="inline muted">
-				<input type="checkbox" checked={inline} onchange={(e) => setParams({ notes: e.currentTarget.checked ? 'inline' : null })} />
-				Notes inline
-			</label>
-		{/if}
 	</div>
 	<div class="body">
 		{#if !cards.length}
@@ -169,7 +162,7 @@
 				{#if filters.period !== 'all'}<button class="btn" onclick={() => setPeriod('all')}>Show all time</button>{/if}
 			</div>
 		{:else if view === 'cards'}
-			<JournalCards occasions={cards} regionColors={data.regionColors} {inline} />
+			<JournalCards occasions={cards} regionColors={data.regionColors} />
 		{:else if view === 'list'}
 			{#if tastings.length}
 				<TastingTable {tastings} places={journal.places} regionColors={data.regionColors} />
@@ -326,14 +319,6 @@
 		margin-left: auto;
 		font-size: 12px;
 		padding: 0 8px;
-	}
-	.inline {
-		display: inline-flex;
-		align-items: center;
-		gap: 5px;
-		font-size: 12px;
-		padding-right: 4px;
-		cursor: pointer;
 	}
 	.body {
 		padding: 16px;

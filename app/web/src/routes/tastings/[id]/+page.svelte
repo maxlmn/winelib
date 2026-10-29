@@ -3,6 +3,7 @@
 	import PlaceName from '#lib/components/PlaceName.svelte';
 	import { grapesText } from '#lib/grapes.ts';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
+	import Icon from '#lib/components/Icon.svelte';
 	import { regionColor, regionLabel } from '#lib/regions.svelte.ts';
 	import { appSettings } from '#lib/settings.svelte.ts';
 	import { FALLBACK_REGION } from '#lib/colors.ts';
@@ -43,6 +44,7 @@
 
 <div class="head">
 	<div>
+		<div class="kind"><Icon name="glass" size={12} />Tasting</div>
 		<div class="kicker">
 			{#if w.region}<span class="swatch" style:background={w.region_color ?? FALLBACK_REGION}></span><a class="kicker-link" href={links.region(w.region)}>{regionLabel(w.region)}</a>{/if}
 			{#if w.appellation} · <a class="kicker-link" href={links.appellation(w.appellation.id)}>{w.appellation.name}</a>{/if}
@@ -171,6 +173,17 @@
 		flex-wrap: wrap;
 		gap: 14px;
 		margin: 10px 0 18px;
+	}
+	/* what this page is, as on the other detail pages */
+	.kind {
+		display: flex;
+		align-items: center;
+		gap: 5px;
+		font-size: 11px;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--muted);
+		margin-bottom: 2px;
 	}
 	.kicker {
 		display: flex;

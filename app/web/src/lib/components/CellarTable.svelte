@@ -71,17 +71,17 @@
 				<tr>
 					<td class="num"><a href={links.bottle(b.bottle_id)} title="Open this bottle">{b.qty}</a></td>
 					<td class="end">
-						<BottleEnd
+						<a href={links.bottle(b.bottle_id)} title="Open this bottle"><BottleEnd
 							region={regionColors[b.region] ?? FALLBACK_REGION}
 							color={b.color}
 							format={b.format}
 							size={12}
 							title="{regionLabel(b.region)} · {b.color ?? ''}{b.format ? ` · ${b.format}` : ''}"
-						/>
+						/></a>
 					</td>
 					<td><a class="region quiet" href={links.region(b.region)}>{regionLabel(b.region)}</a></td>
 					<td class="strong"><a href={links.producer(b.producer_id)}>{b.producer}</a></td>
-					<td><a href={links.wine(b.wine_id)}>{b.cuvee || '—'}</a></td>
+					<td><a href={links.bottle(b.bottle_id)} title="Open this bottle">{b.cuvee || '—'}</a></td>
 					<td class="muted">
 						{#if b.appellation_id}<a class="quiet" href={links.appellation(b.appellation_id)}>{b.appellation}</a>{:else}{b.appellation ?? ''}{/if}
 					</td>

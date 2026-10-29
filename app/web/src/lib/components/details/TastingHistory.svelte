@@ -5,6 +5,7 @@
 	import type { RegionColors } from '#lib/types.ts';
 	import { FALLBACK_REGION } from '#lib/colors.ts';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
+	import Icon from '#lib/components/Icon.svelte';
 	import { regionLabel } from '#lib/regions.svelte.ts';
 	import { links } from '#lib/links.ts';
 	import { photoSrc } from '#lib/api/photos.ts';
@@ -23,7 +24,6 @@
 	let { tastings, regionColors, place = null, visits = [], empty = 'No tastings recorded yet.' }: Props = $props();
 
 	const PAGE = 40;
-	let inline = $state(false);
 	let limit = $state(PAGE);
 
 	interface Day {
@@ -54,16 +54,12 @@
 		return [...byKey.values()].sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
 	});
 
-	const anyNotes = $derived(tastings.some((t) => t.notes));
 	const regionColor = (r: string | null) => (r && regionColors[r]) || FALLBACK_REGION;
 </script>
 
 {#if !days.length}
 	<p class="muted">{empty}</p>
 {:else}
-	{#if anyNotes}
-		<label class="toggle"><input type="checkbox" bind:checked={inline} /> Show notes inline</label>
-	{/if}
 	<div class="days">
 		{#each days.slice(0, limit) as d (d.key)}
 			{@const photo = d.wines.find((w) => w.photo)?.photo ?? d.visit?.photo}
@@ -114,17 +110,15 @@
 										/>
 									</span>
 									<div class="line">
-										<a href={links.wine(t.wine_id)} title={!inline && t.notes ? t.notes : undefined}>
+										<a href={links.wine(t.wine_id)}>
 											<b>{t.producer}</b>{t.cuvee ? ` – ${t.cuvee}` : ''}
 										</a>
 										{#if t.appellation}<span class="muted">({t.appellation})</span>{/if}
 										<span class="vintage num">[{t.vintage}]</span><CriticPills scores={t.scores} />{#if t.rating}<span class="mine num" title="Your score">{t.rating}</span>{/if}
-										<a class="note-link" href={links.tasting(t.id)} title={t.notes ? 'Open the tasting note' : 'No note yet: open the tasting'}>
-											{t.notes ? '✎' : '＋'}
+										<!-- the note (or its absence) opens the tasting -->
+										<a class="note" class:empty={!t.notes} href={links.tasting(t.id)} title="Open the tasting">
+											{#if t.notes}{t.notes}{:else}<Icon name="glass" size={11} />No note{/if}
 										</a>
-										{#if inline && t.notes}
-											<a class="note" href={links.tasting(t.id)}>{t.notes}</a>
-										{/if}
 									</div>
 								</li>
 							{/each}
@@ -140,19 +134,6 @@
 {/if}
 
 <style>
-	.toggle {
-		display: inline-flex;
-		align-items: center;
-		gap: 6px;
-		font-size: 13px;
-		color: var(--muted);
-		margin-bottom: 12px;
-		cursor: pointer;
-	}
-	.toggle input {
-		accent-color: var(--accent);
-		margin: 0;
-	}
 	.days {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
@@ -254,25 +235,34 @@
 		color: var(--muted);
 		font-size: 12px;
 	}
-	.note-link {
-		margin-left: 4px;
-		font-size: 12px;
-		color: var(--muted);
-		opacity: 0.8;
-	}
-	.note-link:hover {
-		color: var(--accent);
-		opacity: 1;
-	}
+	/* the note opens the tasting: three lines at most here, the whole on its page */
 	.note {
-		display: block;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		overflow: hidden;
 		margin: 3px 0 2px;
+		font-size: 12.5px;
 		padding-left: 10px;
 		border-left: 2px solid var(--border);
 		color: var(--muted);
 		font-style: italic;
-		font-size: 12.5px;
 		white-space: pre-line;
+		text-decoration: none;
+	}
+	.note.empty {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		font-style: normal;
+		font-size: 11px;
+		opacity: 0.7;
+	}
+	.note:hover {
+		color: var(--accent);
+		border-left-color: var(--accent);
+		opacity: 1;
 	}
 	.more {
 		margin-top: 12px;

@@ -2,6 +2,7 @@
 	import CriticPills from '#lib/components/CriticPills.svelte';
 	import PlaceName from '#lib/components/PlaceName.svelte';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
+	import Icon from '#lib/components/Icon.svelte';
 	import { placeMeta } from '#lib/places.ts';
 	import { regionLabel } from '#lib/regions.svelte.ts';
 	import type { RegionColors } from '#lib/types.ts';
@@ -11,7 +12,7 @@
 	import { fmtDay, stars } from './journal.ts';
 	import type { Occasion } from './journal.ts';
 
-	let { occasion: o, regionColors, inline = false }: { occasion: Occasion; regionColors: RegionColors; inline?: boolean } = $props();
+	let { occasion: o, regionColors }: { occasion: Occasion; regionColors: RegionColors } = $props();
 
 	const meta = $derived(o.place ? placeMeta(o.place) : '');
 </script>
@@ -78,23 +79,17 @@
 									/>
 								</span>
 								<span class="label">
-									<a href={links.wine(w.wine_id)} title={inline ? undefined : w.notes || undefined}>
+									<a href={links.wine(w.wine_id)}>
 										<b>{w.producer}</b>{w.cuvee ? ` – ${w.cuvee}` : ''}
 									</a>
 									{#if w.appellation}<span class="muted">({w.appellation})</span>{/if}
 									<span class="vintage num">[{w.vintage}]</span><CriticPills scores={w.scores} />{#if w.rating}<span class="mine num" title="Your score">{w.rating}</span>{/if}
 								</span>
-								{#if !w.notes}
-									<a class="note-link add" href={links.editTasting(w.id)} title="Add a note">+ Note</a>
-								{/if}
-								<!-- the tasting's page, with or without a note -->
-								<a class="note-link" href={links.tasting(w.id)} title={w.notes ? 'Open the tasting note' : 'Open the tasting'}>
-									{w.notes ? 'Note' : 'Tasting'} ›
-								</a>
 							</div>
-							{#if inline && w.notes}
-								<a class="note" href={links.tasting(w.id)}>{w.notes}</a>
-							{/if}
+							<!-- the note (or its absence) opens the tasting -->
+							<a class="note" class:empty={!w.notes} href={links.tasting(w.id)} title="Open the tasting">
+								{#if w.notes}{w.notes}{:else}<Icon name="glass" size={11} />No note{/if}
+							</a>
 						</li>
 					{/each}
 				</ul>
@@ -222,26 +217,33 @@
 		color: var(--muted);
 		font-size: 12px;
 	}
-	.note-link {
-		flex: none;
-		font-size: 11px;
-		color: var(--muted);
-	}
-	.note-link.add {
-		opacity: 0.55;
-	}
-	.note-link:hover {
-		color: var(--accent);
-		opacity: 1;
-	}
+	/* the note opens the tasting: three lines at most here, the whole on its page */
 	.note {
-		display: block;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		overflow: hidden;
 		margin: 2px 0 4px 18px;
 		padding-left: 10px;
 		border-left: 2px solid var(--border);
 		color: var(--muted);
 		font-style: italic;
 		white-space: pre-line;
+		text-decoration: none;
+	}
+	.note.empty {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		font-style: normal;
+		font-size: 11px;
+		opacity: 0.7;
+	}
+	.note:hover {
+		color: var(--accent);
+		border-left-color: var(--accent);
+		opacity: 1;
 	}
 	/* Restaurant visits: a tinted one-line card, so they read apart from tastings */
 	.visit {

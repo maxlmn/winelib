@@ -6,11 +6,11 @@
 	import { fmtMonth } from './journal.ts';
 	import type { Occasion } from './journal.ts';
 
-	let { occasions, regionColors, inline }: { occasions: Occasion[]; regionColors: RegionColors; inline: boolean } = $props();
+	let { occasions, regionColors }: { occasions: Occasion[]; regionColors: RegionColors } = $props();
 
 	const STEP = 40;
 	let limit = $state(STEP);
-	// Back to the first step when the filters change the list, not on every URL change (e.g. toggling notes)
+	// Back to the first step when the filters change the list, not on every URL change (e.g. the view's)
 	const listKey = $derived(`${occasions.length}|${occasions[0]?.key}|${occasions.at(-1)?.key}`);
 	$effect(() => {
 		void listKey;
@@ -44,7 +44,7 @@
 		<h3>{fmtMonth(s.month)} <span class="muted num">{plural(s.wines, 'wine')} · {plural(s.occasions, 'occasion')}</span></h3>
 		<div class="cards">
 			{#each s.days.flat() as o (o.key)}
-				<OccasionCard occasion={o} {regionColors} {inline} />
+				<OccasionCard occasion={o} {regionColors} />
 			{/each}
 		</div>
 	</section>

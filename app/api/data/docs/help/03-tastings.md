@@ -26,7 +26,7 @@ Maintenance › **Place coordinates** finds the missing ones.
 
 ## The views
 
-- **Cards**: the journal, occasion by occasion (*Notes inline* shows the notes in the cards).
+- **Cards**: the journal, occasion by occasion, each wine with its note (or *No note*): click it to open the tasting; the wine's name opens the wine, a date in a page's tastings the occasion.
 - **List**: every tasting, sortable.
 - **Map**: where you drank, place by place.
 - **Trends**: what you drink, year by year.
