@@ -432,8 +432,9 @@
 			</div>
 			{#if regionCard.bottles}<div class="num owned">{regionCard.bottles} btl in cellar · {money(regionCard.value)}</div>{/if}
 			{#if regionCard.tastings}<div class="num tasted">✎ {plural(regionCard.tastings, 'tasting')}</div>{/if}
-			{#if regionPinned && regionHref}<a class="go" href={regionHref(regionCard)}>Open region →</a>
-			{:else}<div class="muted hint">{regionHref ? 'Click for more' : 'Click to explore'}</div>{/if}
+			<!-- the card's link shown from the first hover: a click keeps the card (it follows the pointer till then) -->
+			{#if regionHref}<a class="go" href={regionHref(regionCard)} tabindex={regionPinned ? 0 : -1}>Open region →</a>
+			{:else}<div class="muted hint">Click to explore</div>{/if}
 		</div>
 	{:else if lieu}
 		<div class="hover card" class:right={cardSide === 'right'} class:low={padBottom > 0} style:bottom={padBottom > 0 ? `${padBottom + 36}px` : null} class:pinned={lieuPinned}>
@@ -443,14 +444,10 @@
 			{#if lieu.village}<div class="muted">{lieu.village}</div>{/if}
 			{#if lieu.aocs}<div class="aocs">{lieu.aocs.split('; ').slice(0, 3).join(' · ')}{lieu.aocs.split('; ').length > 3 ? ' …' : ''}</div>{/if}
 			{#if lieu.vines}<div class="muted num">{Math.round(lieu.vines * 100)}% in AOC vines</div>{/if}
-			{#if lieuPinned}
-				{#if lieu.vineyard_id}<a class="go" href={links.vineyard(lieu.vineyard_id)}>Its page →</a>{/if}
-				{#if lieuAction}
-					<button class="lieu-action" disabled={lieuBusy} onclick={() => runLieu(lieu!)}>{lieuBusy ? 'Saving…' : lieuAction.label}</button>
-					{#if lieuError}<div class="lieu-error">{lieuError}</div>{/if}
-				{/if}
-			{:else if lieuAction || lieu.vineyard_id}
-				<div class="muted hint">Click for more</div>
+			{#if lieu.vineyard_id}<a class="go" href={links.vineyard(lieu.vineyard_id)} tabindex={lieuPinned ? 0 : -1}>Its page →</a>{/if}
+			{#if lieuAction}
+				<button class="lieu-action" disabled={lieuBusy} tabindex={lieuPinned ? 0 : -1} onclick={() => runLieu(lieu!)}>{lieuBusy ? 'Saving…' : lieuAction.label}</button>
+				{#if lieuPinned && lieuError}<div class="lieu-error">{lieuError}</div>{/if}
 			{/if}
 		</div>
 	{:else if card}
@@ -465,10 +462,9 @@
 			{#if card.tastings}
 				<div class="num tasted">✎ {plural(card.tastings, 'tasting')}</div>
 			{/if}
-			{#if isPinned && !(here && here.kind === card.kind && here.id === card.id)}
-				<a class="go" href={detailsUrl(card)}>Details →</a>
-			{:else if pinCard}
-				<div class="muted hint">Click for details</div>
+			<!-- its page's link (none for the page's own shape), shown from the first hover: a click keeps the card -->
+			{#if pinCard && !(here && here.kind === card.kind && here.id === card.id)}
+				<a class="go" href={detailsUrl(card)} tabindex={isPinned ? 0 : -1}>Details →</a>
 			{/if}
 		</div>
 	{/if}
