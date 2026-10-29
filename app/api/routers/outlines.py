@@ -18,8 +18,8 @@ router = APIRouter()
 
 KINDS = {"appellations": (Appellation, "appellation"), "vineyards": (Vineyard, "vineyard")}
 # Like the shape store's display outlines: tolerance in degrees, coordinate decimals
-DETAIL = {"appellation": (0.0005, 4), "vineyard": (0.00005, 5)}
-RELATIVE_TOLERANCE = 1 / 2500
+DETAIL = {"appellation": (0.00025, 5), "vineyard": (0.00005, 5)}
+RELATIVE_TOLERANCE = 1 / 5000
 
 
 class Outline(BaseModel):

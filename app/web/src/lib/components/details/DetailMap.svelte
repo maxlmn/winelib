@@ -41,8 +41,9 @@
 	let { src, current = null, frame = null, height = 320, empty = 'No boundary data for this one.', fullUrl = null, lieuAction = null, draw = null, ondrawn }: Props = $props();
 
 	// Full size (Settings › Appearance, or ⤢ here): the map fills the window behind the page, which becomes a column
-	// of cards over its left side (html.map-full in app.css); Esc goes back
-	const big = $derived(mapView.full);
+	// of cards over its left side (html.map-full in app.css); Esc goes back. Not for a map with nothing to show (no
+	// boundary data): the page stays as it is, its "no data" line in place of the map
+	const big = $derived.by(() => mapView.full && !blank);
 	$effect(() => {
 		document.documentElement.classList.toggle('map-full', big);
 		return () => document.documentElement.classList.remove('map-full');
@@ -87,6 +88,8 @@
 
 	let shapes = $state<Shapes | null>(null);
 	let failed = $state(false);
+	// nothing to draw: the map failed, or came back empty (and isn't being drawn on)
+	const blank = $derived.by(() => failed || (!!shapes && !count && !outline && !drawing));
 	let basemap = $state<Basemap>(appSettings.map_default_basemap);
 
 	$effect(() => {
@@ -183,7 +186,7 @@
 
 <svelte:window onkeydown={onkey} bind:innerWidth={winWidth} bind:innerHeight={winHeight} />
 
-{#if failed || (shapes && !count && !outline && !drawing)}
+{#if blank}
 	<div class="empty muted" style:min-height="{Math.min(height, 120)}px">
 		{#if failed}The map couldn’t load.
 		{:else if shapes?.outlines === false}No map outlines installed yet: <a href={`${links.settings()}#maintenance`}>Settings › Maintenance › Map outlines</a> downloads them.
