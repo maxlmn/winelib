@@ -85,6 +85,23 @@ def test_from_the_map(client, monkeypatch):
     assert client.post(f"/api/wines/{wine('bonnes blanches 2020')}/lieu-dit", json={"lieu_dit": "nowhere"}).status_code == 404
 
 
+def test_on_a_vineyards_map(client, monkeypatch):
+    """A lieu-dit clicked on a vineyard's map: its outline (its wines keep it); not one another vineyard is already."""
+    monkeypatch.setattr(geo, "_lieux_dits", fake_store)
+    wine = lambda q: next(r["id"] for r in client.get("/api/search", params={"q": q}).json()["results"] if r["kind"] == "wine")  # noqa: E731
+    v = client.post(f"/api/wines/{wine('bonnes blanches 2020')}/lieu-dit", json={"lieu_dit": "49002:les-blanches"}).json()["vineyard_id"]
+    r = client.post(f"/api/vineyards/{v}/lieu-dit", json={"lieu_dit": "lieu_dit:49060:les-poyeux"})
+    assert r.status_code == 200, r.text
+    after = client.get(f"/api/vineyards/{v}").json()
+    assert after["lieu_dit"]["name"] == "Les Poyeux" and not after["drawn"]
+    assert after["name"] == "Les Blanches" and after["village"] == "Allonnes"  # its own name and village stay
+    assert len(after["wines"]) == 1
+    client.post(f"/api/wines/{wine('le bourg 2016')}/lieu-dit", json={"lieu_dit": "49060:le-bourg"})
+    taken = client.post(f"/api/vineyards/{v}/lieu-dit", json={"lieu_dit": "49060:le-bourg"})
+    assert taken.status_code == 409 and "Le Bourg" in taken.json()["detail"]
+    assert client.post(f"/api/vineyards/{v}/lieu-dit", json={"lieu_dit": "nowhere"}).status_code == 404
+
+
 def test_in_the_wine_form(client, monkeypatch):
     """The vineyard field finds the store's lieux-dits too; one picked becomes a vineyard when the wine is saved."""
     monkeypatch.setattr(geo, "_lieux_dits", fake_store)

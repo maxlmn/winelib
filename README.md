@@ -62,7 +62,7 @@ photos in France.
 **Down to the lieu-dit.** The names on the labels, Les Poyeux, Clos des Noëls, Les Gravières, are lieux-dits:
 the named places of France's land register. WineLib draws 91,000 of them across the vineyards of the Loire,
 Burgundy, Champagne, Beaujolais, Jura, Alsace, Bordeaux and the Rhône, each with the appellations it can claim and how much of
-it is under AOC vines. Zoom in on any map to see them; click one to make it your wine's vineyard. Settings ›
+it is under AOC vines. Zoom in on any map to see them; click one to make it your wine's vineyard, or a vineyard's outline. Settings ›
 Maintenance finds your cuvées named after one and links them, after your tick.
 
 <picture>

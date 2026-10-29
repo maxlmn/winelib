@@ -13,6 +13,7 @@
 	import { links } from '#lib/links.ts';
 	import { money } from '#lib/format.ts';
 	import { invalidateAll } from '$app/navigation';
+	import { request } from '#lib/api/http.ts';
 
 	let { data } = $props();
 	const v = $derived(data.detail);
@@ -29,6 +30,17 @@
 			invalidateAll();
 		}
 	}
+
+	// A lieu-dit clicked on the map: this vineyard's outline (its wines keep it), as a wine's map makes one its vineyard
+	const lieuAction = $derived({
+		label: v.lieu_dit || v.drawn ? 'Make it this vineyard’s outline instead' : 'Make it this vineyard’s outline',
+		run: async (id: string) => {
+			if (v.drawn && !confirm(`Replace the outline drawn for ${v.name} with this lieu-dit's?`)) return;
+			await request(`/api/vineyards/${v.id}/lieu-dit`, { method: 'POST', body: { lieu_dit: id } });
+			mapRev++;
+			await invalidateAll();
+		}
+	});
 </script>
 
 <svelte:head><title>{v.name} · WineLib</title></svelte:head>
@@ -44,7 +56,7 @@
 		<DetailMap draw={drawing ? { kind: 'vineyards', id: v.id, name: v.name } : null} ondrawn={outlineClosed}
 			src={shapesUrl('vineyards', v.id)} fullUrl={v.full_outline ? `/api/vineyards/${v.id}/outline/full` : null}
 			current={{ kind: 'vineyard', id: v.id }}
-
+			{lieuAction}
 			height={320}
 			empty="No geographical data available for this vineyard."
 		/>

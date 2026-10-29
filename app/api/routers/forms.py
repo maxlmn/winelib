@@ -619,6 +619,31 @@ def set_lieu_dit(wine_id: int, data: LieuDitIn, session: Session = Depends(get_s
     return {"vineyard_id": v.id, "name": v.name, "wines": len(wines)}
 
 
+@router.post("/api/vineyards/{vineyard_id}/lieu-dit")
+def set_vineyard_lieu_dit(vineyard_id: int, data: LieuDitIn, session: Session = Depends(get_session)):
+    """The cadastre's lieu-dit as this vineyard's outline (its wines keep it as their vineyard); an outline drawn
+    for it goes. Refused when another vineyard is that lieu-dit already."""
+    import lieux_dits
+    from db import CustomShape
+    v = _get(session, Vineyard, vineyard_id, "Vineyard")
+    sid = data.lieu_dit.removeprefix("lieu_dit:")
+    found = lieux_dits.find(sid)
+    if found is None:
+        raise HTTPException(404, "No such lieu-dit in the map store")
+    boundary = f"lieu_dit:{sid}"
+    other = session.query(Vineyard).filter(Vineyard.boundary == boundary, Vineyard.id != v.id).first()
+    _refuse_if(other, f"{other.name if other else ''} is already this lieu-dit's vineyard: give its wines that one instead")
+    drawn = geo.custom_id(v.boundary)
+    if drawn and (shape := session.get(CustomShape, drawn)):
+        session.delete(shape)
+    v.boundary = boundary
+    v.village = v.village or found[1].get("commune_name")
+    session.commit()
+    if drawn:
+        geo.custom_changed(drawn)
+    return {"vineyard_id": v.id, "lieu_dit": sid}
+
+
 # --- Style tags -------------------------------------------------------------------------------
 
 class TagsIn(BaseModel):

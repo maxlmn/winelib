@@ -16,6 +16,8 @@ from. **Plain** and **Satellite** change the background.
 - **Appellations**, **Vineyards** and **Lieux-dits**: each click goes from filled to outline only to hidden. Vineyards
   are drawn in their region's colours, a shade darker than the appellations; the lieux-dits (the cadastre's named
   places) appear from close zoom, as dashed outlines.
+- **A lieu-dit's card** on a wine's map offers *Make it this wine's vineyard* (its other vintages too); on a vineyard's
+  map, *Make it this vineyard's outline* (its wines keep it; an outline you drew for it is replaced, after asking).
 
 ## On the pages
 
