@@ -111,7 +111,6 @@ export const createList = (body: ListIn) => send<{ id: number; added: number }>(
 export const previewCriteria = (c: Criteria) => send<CriteriaPreview>('POST', '/api/lists/preview', c);
 export const editList = (id: number, body: ListIn) => send<{ id: number }>('PUT', `/api/lists/${id}`, body);
 /** The wishlist's id, made on first use */
-export const wishlistId = () => send<{ id: number }>('POST', '/api/lists/wishlist').then((r) => r.id);
 export const deleteList = (id: number) => send<{ deleted: number }>('DELETE', `/api/lists/${id}`);
 export const addEntry = (id: number, body: { kind: EntryKind; wine_id?: number; producer_id?: number; note?: string | null }) =>
 	send<{ id: number; existing: boolean }>('POST', `/api/lists/${id}/items`, body);

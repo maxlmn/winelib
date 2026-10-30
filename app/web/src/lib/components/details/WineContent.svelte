@@ -14,7 +14,6 @@
 	import CriticScores from './CriticScores.svelte';
 	import Tabs from './Tabs.svelte';
 	import TastingHistory from './TastingHistory.svelte';
-	import WishButton from './WishButton.svelte';
 	import WineActions from './WineActions.svelte';
 	import ActionMenu from '#lib/components/ActionMenu.svelte';
 	import ListsPanel from './ListsPanel.svelte';
@@ -114,7 +113,6 @@
 		<button class="menu-item" role="menuitem" onclick={() => (addingToList = true)}><Icon name="list" size={15} />Add to a list</button>
 		<button class="menu-item" role="menuitem" onclick={() => (editingStyle = true)}><Icon name="tag" size={15} />{wine.tags?.some((t) => t.set) ? 'Edit its style' : 'Add its style'}</button>
 		<button class="menu-item" role="menuitem" onclick={openDrink}><Icon name="calendar" size={15} />{drink ? 'Edit its drinking window' : 'Add a drinking window'}</button>
-		<WishButton wineId={wine.id} />
 		<hr />
 		<a class="menu-item" role="menuitem" href={links.editWine(wine.id)}><Icon name="edit" size={15} />Edit wine</a>
 		{#if !wine.vineyard}<button class="menu-item" role="menuitem" onclick={() => (drawingVineyard = true)}><Icon name="draw" size={15} />Draw its vineyard</button>{/if}
