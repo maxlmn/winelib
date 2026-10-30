@@ -23,12 +23,16 @@
 - A page whose map has nothing to show (an appellation without an outline) no longer opens it full size.
 - **Fill from text**: a new bottle from a pasted order or auction email, invoice or producer's sheet: the wine (yours,
   or a new vintage of a cuvée you have), the quantity, the price a bottle (a lot's divided), the date and the vendor.
+- **Needs attention** on the home page: what the quick checks find (wines entered twice, records pointing at nothing,
+  a vintage under two appellations, market prices not refreshed, vintages missing their cuvée's vineyard, cellar wines
+  without an LWIN, restaurants without coordinates), each opening its Maintenance task with the preview run.
 - **Keeping vintages together** (Settings › Maintenance): *Vineyards across vintages* fills in the vineyard the other
   vintages share; *Cuvées under several appellations* finds a vintage entered twice or left under an old name.
 - Fixes: *Duplicate wines* missed duplicates whose disgorgement date was empty on one and unset on the other; names
   match "Premier" and "1er" ("Premier Grand Cru Classé" is an auction's "1er Grand Cru Classé"); the map outlines
   that crossed themselves (rounding) are repaired: their fill no longer draws inside out.
 - Browser smoke tests (app/web/e2e, `npm run e2e`) in CI: the pages load, and the clicks go where they should.
+- The server no longer logs "No response returned" for a page left while it loaded.
 
 ## v0.3.6
 

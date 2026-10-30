@@ -1,6 +1,7 @@
 <script lang="ts">
 	/** Maintenance scripts (app/api/tasks/) run on the server as background jobs: see app/api/routers/maintenance.py */
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
+	import { page } from '$app/state';
 	import { messageOf, request } from '#lib/api/http.ts';
 	import PickList from './PickList.svelte';
 	import LieuPeek from './LieuPeek.svelte';
@@ -135,6 +136,20 @@
 		job = m.job;
 		backups = b;
 		for (const t of tasks) if (t.limit && !(t.id in limits)) limits[t.id] = t.limit;
+		await opened();
+	}
+
+	// Opened on one task (links.maintenance, from the home page's Needs attention): its preview started, or a report
+	// run, unless a job is already running; its card brought into view
+	async function opened() {
+		const t = tasks.find((x) => x.id === page.url.searchParams.get('task'));
+		if (!t) return;
+		if (!job || job.status !== 'running') {
+			if (t.preview) await start(t, false);
+			else if (!t.writes) await start(t, true);
+		}
+		await tick();
+		document.getElementById(`task-${t.id}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
 	}
 
 	// While a job runs, follow its log: asked again a second after each answer (never two at once on a slow server);
@@ -327,7 +342,7 @@
 			<h3 class="group">{g}</h3>
 			<div class="cards">
 				{#each list as t (t.id)}
-					<div class="task" class:current={job?.task === t.id}>
+					<div class="task" id="task-{t.id}" class:current={job?.task === t.id}>
 						<b>{t.title}</b>
 						<p class="muted desc">{t.description}</p>
 						{#if t.last}
