@@ -1,6 +1,5 @@
 """Fill from text (tasks/from_text.py): a purchase read from a pasted email or invoice against the database. Run from
 app/api:  pytest"""
-import settings
 from db import Appellation, Bottle, Producer, Region, Vineyard, Wine
 
 IDEALWINE = """Bonjour M. Lemeunier, Félicitations ! Vous venez de remporter l'enchère du lot N°2823982 de la vente N°12751 du
@@ -48,10 +47,9 @@ def test_a_shop_order(client):
     assert d["purchase_date"] == "2026-10-12"
 
 
-def test_a_premium_vendor_is_found_and_nothing_is_refused(client, monkeypatch):
-    monkeypatch.setattr(settings.current, "vendor_premiums", {"Hart Davis Hart": 25})
-    d = client.post("/api/lookups/from-text", json={"text": "Won at HART DAVIS HART: 1 bottle Clos Rougeard Le Bourg 2019"}).json()
-    assert d["vendor"] == "Hart Davis Hart" and d["qty"] == 1
+def test_a_quantity_mid_sentence_magnums_and_nothing_found(client):
+    d = client.post("/api/lookups/from-text", json={"text": "Won at the sale: 1 bottle Clos Rougeard Le Bourg 2019"}).json()
+    assert d["qty"] == 1 and d["vendor"] is None
     magnums = client.post("/api/lookups/from-text", json={"text": "3 magnums Clos Rougeard Le Bourg 2019"}).json()
     assert (magnums["qty"], magnums["size"]) == (3, "150cl")
     assert client.post("/api/lookups/from-text", json={"text": "Thanks for shopping with us"}).status_code == 422

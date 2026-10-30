@@ -73,9 +73,7 @@ test("the cellar's wine label opens the bottle", async ({ page }) => {
 	await expect(page.locator('.kind').first()).toHaveText(/Bottle/i);
 });
 
-test('Fill from text fills the new-bottle form, the buyer’s premium offered', async ({ page, request }) => {
-	const s = await (await request.get('/api/settings')).json();
-	await request.put('/api/settings', { data: { ...s, vendor_premiums: { Idealwine: 22 } } });
+test('Fill from text fills the new-bottle form', async ({ page }) => {
 	await page.goto('/bottles/new');
 	await page.getByRole('button', { name: /Fill from text/ }).click();
 	await page.locator('#b-text').fill(
@@ -86,8 +84,7 @@ test('Fill from text fills the new-bottle form, the buyer’s premium offered', 
 	await expect(page.locator('#b-qty')).toHaveValue('2');
 	await expect(page.locator('#b-vendor')).toHaveValue('Idealwine');
 	await expect(page.locator('#b-date')).toHaveValue('2026-10-29');
-	await page.locator('button.premium').click(); // 340 + 22%
-	await expect(page.locator('button.premium')).toHaveCount(0);
+	await expect(page.locator('#b-price')).toHaveValue('340'); // the lot's 680 for 2 bottles
 });
 
 test('a phone: no page wider than the screen', async ({ page }) => {
