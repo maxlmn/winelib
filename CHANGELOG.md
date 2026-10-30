@@ -26,7 +26,8 @@
 - **A wine's page, said once**: the facts list is gone (the header already names the producer, colour, region and
   appellation, the map its vineyard); the grapes, blend, disgorgement, drinking window and LWIN on one line under the
   title. Its buttons are icons, named on hover, a plug-in's (Fetch from Robert Parker) among them; no Critics card
-  without a score (the header's ＋ medal adds one).
+  without a score, no Lists card when it's on none (the header's icons add them); the Vintages card just its pills.
+  A producer's page adds to a list the same way.
 - **Settings in three tabs**: Settings, Maintenance, and **Needs attention**: what the quick checks find (wines entered twice, records pointing at nothing,
   a vintage under two appellations, market prices no longer refreshed, cellar wines
   without an LWIN, restaurants without coordinates), its count on the tab, each opening its Maintenance task with

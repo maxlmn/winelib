@@ -10,9 +10,12 @@
 	import TastingHistory from '#lib/components/details/TastingHistory.svelte';
 	import WineCatalog from '#lib/components/details/WineCatalog.svelte';
 	import { links } from '#lib/links.ts';
+	import Icon from '#lib/components/Icon.svelte';
 	import { money } from '#lib/format.ts';
 
 	let { data } = $props();
+	// Add to a list (the header's icon): the lists card's form, shown even when it's on none yet
+	let addingToList = $state(false);
 	const p = $derived(data.detail);
 
 	// Next to the map: top appellations by tastings, bottles in the cellar or number of wines, and the vineyards
@@ -34,6 +37,7 @@
 {#snippet actions()}
 	<a class="btn" href={links.editProducer(p.id)}>Edit producer</a>
 	<a class="btn" href={links.newWine({ producer_id: p.id })}>＋ Wine</a>
+	<button class="btn icon" onclick={() => (addingToList = true)} title="Add to a list" aria-label="Add to a list"><span class="plus">+</span><Icon name="list" size={15} /></button>
 {/snippet}
 
 {#snippet stats()}
@@ -133,7 +137,7 @@
 		</section>
 	{/if}
 
-	<ListsPanel producerId={p.id} />
+	<ListsPanel producerId={p.id} bind:adding={addingToList} />
 
 	<Tabs
 		tabs={[
