@@ -19,7 +19,11 @@
     "lieu_dit: the cadastre's lieux-dits touching AOC vines (geo_scripts/etl_lieux_dits.py, a file per departement), ids",
     "'<commune>:<slug>'; detail_columns: kept as JSON in the store's details column (the village, the appellations its",
     "land is eligible for, most specific first, its share of vines). No link rule: a vineyard is linked to one when",
-    "a wine is (Settings › Maintenance › Lieux-dits for your wines)."
+    "a wine is (Settings › Maintenance › Lieux-dits for your wines).",
+    "champagne_cru: Champagne's grand and premier cru villages, their Champagne vines (geo_scripts/etl_champagne_crus.py), ids",
+    "the village's INSEE code, level 'grand cru' / 'premier cru' (crus.py shades by it). No link rule: a vineyard is",
+    "made for each village and linked to it. champagne_mention: 'Champagne Grand Cru' and 'Champagne Premier Cru', their",
+    "villages' vines together, linked to the appellations of those names."
   ],
   "sources": [
     {
@@ -184,6 +188,23 @@
       "name_columns": ["name"],
       "detail_columns": ["commune", "commune_name", "aocs", "vines"],
       "kind": "vineyard"
+    },
+    {
+      "name": "champagne_cru",
+      "files": ["champagne/crus.parquet"],
+      "id": ["id"],
+      "name_columns": ["name"],
+      "level_columns": ["level"],
+      "detail_columns": ["commune", "note"],
+      "kind": "vineyard"
+    },
+    {
+      "name": "champagne_mention",
+      "files": ["champagne/mentions.parquet"],
+      "id": ["id"],
+      "name_columns": ["name"],
+      "kind": "appellation",
+      "link": {"table": "appellations", "by": "store_name", "country": "France"}
     }
   ]
 }
