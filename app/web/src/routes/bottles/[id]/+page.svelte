@@ -151,12 +151,12 @@
 			{#if b.shelf && b.qty && b.shelf.bins.length > 1}<BottleShelf shelf={b.shelf} />{/if}<!-- a place on its own (Away): no shelf to show -->
 		</div>
 		<!-- as on the wine page: the one to hand (Drink, while there's one left), the rest in the ⋯ menu -->
-		<div class="actions">
-			{#if b.qty}<a class="btn primary" href={links.newTasting({ bottle_id: b.id })}>Drink</a>{/if}
+		<div class="page-actions">
 			<ActionMenu>
 				{#if b.qty}<button class="menu-item" role="menuitem" onclick={startOut} disabled={!!out}><Icon name="bottle" size={15} />Take some out (gifted, sold…)</button>{/if}
 				<a class="menu-item" role="menuitem" href={links.editBottle(b.id)}><Icon name="edit" size={15} />Edit bottle</a>
 			</ActionMenu>
+			{#if b.qty}<a class="btn icon primary" href={links.newTasting({ bottle_id: b.id })} title="Drink it: a tasting" aria-label="Drink it"><Icon name="glass" size={15} /></a>{/if}
 		</div>
 	</div>
 	{#if out}
@@ -333,12 +333,7 @@
 	.where:hover {
 		color: var(--accent);
 	}
-	.actions {
-		flex: none;
-		display: flex;
-		align-items: center;
-		gap: 8px;
-	}
+
 	.out {
 		margin-top: 14px;
 		padding: 12px 14px;

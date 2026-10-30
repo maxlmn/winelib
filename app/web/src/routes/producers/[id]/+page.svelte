@@ -36,12 +36,12 @@
 <svelte:head><title>{p.name} · WineLib</title></svelte:head>
 
 {#snippet actions()}
-	<a class="btn primary" href={links.newWine({ producer_id: p.id })}>＋ Wine</a>
 	<ActionMenu>
 		<button class="menu-item" role="menuitem" onclick={() => (addingToList = true)}><Icon name="list" size={15} />Add to a list</button>
 		<hr />
 		<a class="menu-item" role="menuitem" href={links.editProducer(p.id)}><Icon name="edit" size={15} />Edit producer</a>
 	</ActionMenu>
+	<a class="btn icon primary" href={links.newWine({ producer_id: p.id })} title="Add a wine" aria-label="Add a wine"><span class="plus">+</span><Icon name="bottle" size={15} /></a>
 {/snippet}
 
 {#snippet stats()}

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import ActionMenu from '#lib/components/ActionMenu.svelte';
+	import Icon from '#lib/components/Icon.svelte';
 	import { shapesUrl } from '#lib/api/details.ts';
 	import CellarSection from '#lib/components/details/CellarSection.svelte';
 	import DetailHeader from '#lib/components/details/DetailHeader.svelte';
@@ -47,8 +49,12 @@
 <svelte:head><title>{r.name} · WineLib</title></svelte:head>
 
 {#snippet actions()}
-	<a class="btn" href={links.map({ region: r.name })}>Open on the map</a>
-	{#if r.stats.bottles}<a class="btn" href={links.cellar({ region: r.name })}>In the cellar</a>{/if}
+	{#if r.stats.bottles}
+		<ActionMenu>
+			<a class="menu-item" role="menuitem" href={links.cellar({ region: r.name })}><Icon name="bottle" size={15} />Its bottles in the cellar</a>
+		</ActionMenu>
+	{/if}
+	<a class="btn icon" href={links.map({ region: r.name })} title="Open on the map" aria-label="Open on the map"><Icon name="map" size={15} /></a>
 {/snippet}
 
 {#snippet stats()}

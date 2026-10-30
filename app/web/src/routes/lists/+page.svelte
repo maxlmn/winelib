@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import ListDots from '#lib/components/ListDots.svelte';
@@ -129,7 +130,7 @@
 			</select>
 		</label>
 	{/if}
-	<button class="btn primary" onclick={() => (adding = !adding)}>{adding ? 'Cancel' : '＋ New list'}</button>
+	<button class="btn icon primary" onclick={() => (adding = !adding)} title={adding ? 'Cancel' : 'New list'} aria-label={adding ? 'Cancel' : 'New list'}>{#if adding}✕{:else}<span class="plus">+</span><Icon name="list" size={15} />{/if}</button>
 </div>
 
 {#if adding}

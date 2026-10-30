@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import { setParams } from '#lib/url.ts';
 	import { page } from '$app/state';
 	import type { PlaceRow } from '#lib/api/directory.ts';
@@ -48,8 +49,8 @@
 <div class="page-head">
 	<h1>Places</h1>
 	<div class="actions">
-		<a class="btn" href={links.newPlace()}>+ Add place</a>
-		<a class="btn primary" href={links.newVisit()}>+ Add visit</a>
+		<a class="btn icon primary" href={links.newVisit()} title="Add a visit" aria-label="Add a visit"><span class="plus">+</span><Icon name="pin" size={15} /></a>
+		<a class="btn icon" href={links.newPlace()} title="Add a place" aria-label="Add a place"><span class="plus">+</span><Icon name="home" size={15} /></a>
 	</div>
 </div>
 
