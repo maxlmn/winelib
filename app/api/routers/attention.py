@@ -48,18 +48,19 @@ def _twice_under_two_appellations(session):
 
 
 def _stale_prices(session):
-    """Bottles in the cellar whose market price is older than twice the refresh age (the nightly refresh failing)."""
+    """Bottles in the cellar whose market price is older than twice the refresh age: the nightly refresh failing. (A
+    wine no source has a price for never had one: not counted, nothing to do.)"""
     from routers.maintenance import _no_price_source
     from tasks.update_market_prices import PRICE_MAX_AGE_DAYS
     if _no_price_source():
         return None
     since = date.today() - timedelta(days=2 * PRICE_MAX_AGE_DAYS)
     n = session.execute(text("""SELECT count(*) FROM cellar b JOIN wines w ON w.id = b.wine_id
-        WHERE b.qty > 0 AND coalesce(w.lwin, '') <> '' AND (b.last_price_date IS NULL OR b.last_price_date < :since)"""),
+        WHERE b.qty > 0 AND coalesce(w.lwin, '') <> '' AND b.last_price IS NOT NULL AND b.last_price_date < :since"""),
         {"since": since}).scalar()
     if n:
-        return WARN, f"{_n(n, 'bottle')} without a recent market price", \
-            f"none in {2 * PRICE_MAX_AGE_DAYS} days: is the nightly refresh running?", n, "prices"
+        return WARN, f"{_n(n, 'market price')} not refreshed", \
+            f"older than {2 * PRICE_MAX_AGE_DAYS} days: is the nightly refresh running?", n, "prices"
 
 
 def _no_lwin(session):
