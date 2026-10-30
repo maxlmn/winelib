@@ -35,9 +35,9 @@
 </script>
 
 {#if listId}
-	<a class="btn wished" href={links.list(listId)} title="On your wishlist: see it"><Icon name="star" size={13} /> On your wishlist</a>
+	<a class="btn icon wished" href={links.list(listId)} title="On your wishlist: see it" aria-label="On your wishlist"><Icon name="star" size={15} /></a>
 {:else}
-	<button class="btn" onclick={add} disabled={busy} title={failed || 'Add this wine to your wishlist'}><Icon name="star" size={13} /> Wishlist</button>
+	<button class="btn icon" onclick={add} disabled={busy} title={failed || 'Add this wine to your wishlist'} aria-label="Add to your wishlist"><Icon name="star" size={15} /></button>
 {/if}
 
 <style>

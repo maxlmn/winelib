@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	export const ICONS = ['person', 'globe', 'map', 'grape', 'home', 'home-solid', 'grid', 'bottle', 'glass', 'chart', 'calendar', 'pin', 'help', 'sliders', 'star', 'list', 'bookmark'] as const;
+	export const ICONS = ['person', 'globe', 'map', 'grape', 'home', 'home-solid', 'grid', 'bottle', 'glass', 'chart', 'calendar', 'pin', 'help', 'sliders', 'star', 'list', 'bookmark', 'edit', 'draw', 'search', 'medal'] as const;
 	export type IconName = (typeof ICONS)[number];
 	/** for fields holding either a text glyph ('✦') or one of these icons */
 	export const isIcon = (s: string): s is IconName => (ICONS as readonly string[]).includes(s);
@@ -68,6 +68,21 @@
 		<path d="M4 7h9M17 7h3M4 17h3M11 17h9" />
 		<circle cx="15" cy="7" r="2" />
 		<circle cx="9" cy="17" r="2" />
+	{:else if name === 'edit'}
+		<path d="M4 20h4L19 9a2.1 2.1 0 0 0-4-4L4 16v4z" />
+		<path d="m13.5 6.5 4 4" />
+	{:else if name === 'draw'}
+		<path d="M5 7.5 11 4l7 4.5-1.5 9L8 20l-4-6z" />
+		<circle cx="5" cy="7.5" r="1.4" fill="currentColor" />
+		<circle cx="11" cy="4" r="1.4" fill="currentColor" />
+		<circle cx="18" cy="8.5" r="1.4" fill="currentColor" />
+	{:else if name === 'search'}
+		<circle cx="10.5" cy="10.5" r="6" />
+		<path d="m15 15 5 5" />
+	{:else if name === 'medal'}
+		<circle cx="12" cy="14.5" r="5.5" />
+		<path d="M8.5 10 6 3h4l2 4 2-4h4l-2.5 7" />
+		<path d="M12 12.3v4.4M10.6 13l1.4-.7" />
 	{:else if name === 'home-solid'}
 		<path d="M12 3.2 2.4 10.7a1 1 0 0 0 1.2 1.6l.9-.7V20a1 1 0 0 0 1 1H10v-5.5h4V21h4.5a1 1 0 0 0 1-1v-8.4l.9.7a1 1 0 0 0 1.2-1.6L12 3.2z"
 			fill="currentColor" stroke="none" />

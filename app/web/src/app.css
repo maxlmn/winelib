@@ -202,6 +202,17 @@ h3 {
 	color: white;
 }
 
+/* An icon-only button: what it does in its title (on hover) and aria-label; a "+" beside the icon adds one */
+.btn.icon {
+	gap: 1px;
+	padding: 6px 8px;
+	line-height: 1;
+}
+.btn.icon .plus {
+	font-size: 13px;
+	font-weight: 600;
+}
+
 /* Segmented buttons: a few choices side by side, the chosen one filled (.on) */
 .seg {
 	display: inline-flex;

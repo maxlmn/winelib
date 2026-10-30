@@ -1,47 +1,21 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
-	import type { CriticScore, WineAction } from '#lib/api/details.ts';
+	import type { CriticScore } from '#lib/api/details.ts';
 	import { fmtDate } from './wine.ts';
 
-	/** Every critic's score, one line each, and "Add a score". A plug-in's actions (fetching a critic's score...) are
-	 * drawn on their critic's line, which shows even without a score; the others next to Add a score. */
+	/** Every critic's score, one line each, and "Add a score". Without a score there's no card, unless `adding` (the
+	 * header's Add a critic's score icon): then just its form. (A plug-in's actions, fetching a critic's score, are
+	 * among the header's icons too: WineActions.) */
 	interface Props {
 		wineId: number;
 		scores: CriticScore[];
-		actions: WineAction[];
+		/** the form open, to add a score (bound: false again once saved or cancelled) */
+		adding?: boolean;
 	}
-	let { wineId, scores, actions }: Props = $props();
+	let { wineId, scores, adding = $bindable(false) }: Props = $props();
 
 	const real = (s: string | null) => !!s && !['-', '0'].includes(s.trim()); // "-": searched, nothing found
-	// The critics an action is for, without a score here yet: an empty line first, with its button
-	const lines = $derived([
-		...[...new Set(actions.map((a) => a.critic).filter((c): c is string => !!c))]
-			.filter((c) => !scores.some((s) => s.critic === c))
-			.map((critic): CriticScore & { empty?: boolean } => ({ critic, score: null, note: null, url: null, date: null, empty: true })),
-		...scores
-	]);
-	const loose = $derived(actions.filter((a) => !a.critic));
-
-	// An action's state: running (its busy text), then its answer's message
-	let acted = $state<Record<string, { busy: boolean; text: string; error?: boolean }>>({});
-	$effect(() => {
-		void wineId; // another vintage: back to the buttons
-		acted = {};
-	});
-	async function act(a: WineAction) {
-		if (a.confirm && !confirm(a.confirm)) return;
-		acted[a.id] = { busy: true, text: a.busy ?? '…' };
-		try {
-			const res = await fetch(a.endpoint, { method: 'POST' });
-			const body = await res.json().catch(() => ({}));
-			if (!res.ok) return void (acted[a.id] = { busy: false, text: body.detail ?? `Error ${res.status}`, error: true });
-			acted[a.id] = { busy: false, text: body.message ?? '' };
-			if (body.reload) await invalidateAll();
-		} catch {
-			acted[a.id] = { busy: false, text: 'The app couldn’t be reached', error: true };
-		}
-	}
-	const busy = $derived(Object.values(acted).some((x) => x.busy));
+	const lines = $derived(scores.filter((s) => real(s.score) || s.note || s.url));
 
 	const blank = () => ({ critic: '', score: '', note: '', url: '', date: '' });
 	let form = $state<ReturnType<typeof blank> | null>(null);
@@ -49,6 +23,10 @@
 	let critics = $state<string[]>([]);
 	let saving = $state(false);
 	let error = $state('');
+
+	$effect(() => {
+		if (adding && !form) open();
+	});
 
 	async function open(s?: CriticScore) {
 		error = '';
@@ -69,6 +47,7 @@
 		saving = false;
 		if (!res.ok) return (error = (await res.json().catch(() => ({}))).detail ?? `Error ${res.status}`);
 		form = null;
+		adding = false;
 		await invalidateAll();
 	}
 
@@ -79,23 +58,11 @@
 	}
 </script>
 
-{#snippet buttons(list: WineAction[])}
-	{#each list as a (a.id)}
-		{@const r = acted[a.id]}
-		{#if r?.busy}
-			<span>{r.text}</span>
-		{:else}
-			<button class="btn small-btn" disabled={busy} onclick={() => act(a)}>{a.label}</button>
-			{#if r?.text}<span class:error={r.error}>{r.text}</span>{/if}
-		{/if}
-	{/each}
-{/snippet}
-
+{#if lines.length || form}
 <section class="card critics">
 	<div class="head">
 		<h2>Critics</h2>
 		<div class="meta muted small">
-			{@render buttons(loose)}
 			{#if !form}<button class="btn small-btn" onclick={() => open()}>＋ Add a score</button>{/if}
 		</div>
 	</div>
@@ -110,11 +77,8 @@
 				<div class="meta muted small">
 					{#if s.date}{fmtDate(s.date)}{/if}
 					{#if s.url}<a class="link" href={s.url} target="_blank" rel="noreferrer">Review ↗</a>{/if}
-					{@render buttons(actions.filter((a) => a.critic === s.critic))}
-					{#if !('empty' in s)}
-						<button class="link" onclick={() => open(s)}>Edit</button>
-						<button class="link" onclick={() => remove(s.critic)}>Remove</button>
-					{/if}
+					<button class="link" onclick={() => open(s)}>Edit</button>
+					<button class="link" onclick={() => remove(s.critic)}>Remove</button>
 				</div>
 			</div>
 		</div>
@@ -132,17 +96,19 @@
 			<label class="wide">Note <textarea rows="3" bind:value={form.note}></textarea></label>
 			<div class="actions">
 				{#if error}<span class="error small">{error}</span>{/if}
-				<button class="btn" onclick={() => (form = null)}>Cancel</button>
+				<button class="btn" onclick={() => ((form = null), (adding = false))}>Cancel</button>
 				<button class="btn primary" disabled={saving} onclick={save}>{saving ? 'Saving…' : editing ? 'Save' : 'Add score'}</button>
 			</div>
 		</div>
 	{/if}
 </section>
+{/if}
 
 <style>
 	.critics {
 		padding: 14px 16px;
 	}
+
 	.head {
 		display: flex;
 		align-items: center;
