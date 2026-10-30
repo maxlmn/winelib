@@ -243,10 +243,12 @@
 		</div>
 		{#if shapes && !drawing}
 			<figcaption>
-				<div class="seg size">
-					<button onclick={() => (mapView.full = !big)} title={big ? 'Back to the page (Esc)' : 'The map full size, the page’s details over it'}>
-						{big ? '✕ Back to the page' : '⤢ Full map'}
-					</button>
+				<!-- one row: the layers at the left, the map's buttons at the right -->
+				<div class="bar">
+				<div class="kinds">
+					<LayerToggle label="Appellations" bind:mode={layers.appellation} swatch={appColor} />
+					<LayerToggle label="Vineyards" bind:mode={layers.vineyard} swatch={darken(appColor, 1)} />
+					<LayerToggle label="Lieux-dits" bind:mode={layers.lieu} dashed />
 				</div>
 				<div class="seg">
 					{#each [['plain', 'Plain'], ['satellite', 'Satellite']] as [id, label]}
@@ -261,11 +263,12 @@
 						</button>
 					</div>
 				{/if}
-				<div class="kinds">
-					<LayerToggle label="Appellations" bind:mode={layers.appellation} swatch={appColor} />
-					<LayerToggle label="Vineyards" bind:mode={layers.vineyard} swatch={darken(appColor, 1)} />
-					<LayerToggle label="Lieux-dits" bind:mode={layers.lieu} dashed />
+				<div class="seg size">
+					<button onclick={() => (mapView.full = !big)} title={big ? 'Back to the page (Esc)' : 'The map full size, the page’s details over it'}
+						aria-label={big ? 'Back to the page' : 'Full map'}>{big ? '✕' : '⤢'}</button>
 				</div>
+				</div>
+				<!-- every shape, in columns -->
 				<div class="keys">
 				{#each keys as k (k.kind + k.id)}
 					{@const off = hidden.has(keyOf(k))}
@@ -319,7 +322,8 @@
 		position: absolute;
 		right: 14px;
 		bottom: 40px;
-		max-width: min(560px, calc(100% - 600px));
+		width: min(520px, calc(100% - 600px));
+		box-sizing: border-box;
 		margin: 0;
 		padding: 10px 12px;
 		background: var(--surface);
@@ -339,7 +343,7 @@
 			left: 10px;
 			right: 54px;
 			bottom: auto;
-			max-width: none;
+			width: auto;
 			padding: 8px 10px;
 		}
 		figure.big :global(:is(.maplibregl-ctrl-bottom-left, .maplibregl-ctrl-bottom-right)) {
@@ -367,9 +371,16 @@
 		place-items: center;
 		font-size: 13px;
 	}
+	.bar {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+	.bar .kinds {
+		margin-right: auto;
+	}
 	.seg {
-		order: 1;
-		margin-left: auto;
 		display: inline-flex;
 		border: 1px solid var(--border);
 		border-radius: 8px;
@@ -380,34 +391,42 @@
 	.seg button {
 		padding: 4px 9px;
 	}
-	/* Every shape listed; past a few lines the list scrolls */
+	/* Every shape listed, in columns (a name too long cut, whole on hover); past a few rows the list scrolls */
 	.keys {
-		flex: 1 1 100%;
-		order: 2;
-		display: flex;
-		flex-wrap: wrap;
-		gap: 4px 14px;
-		max-height: 4.6em;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+		gap: 3px 14px;
+		max-height: calc(5 * 1.6em);
 		overflow-y: auto;
 		overscroll-behavior: contain;
 	}
-	.missing {
-		order: 3;
+	figure.big .keys {
+		max-height: calc(9 * 1.6em);
+	}
+	@media (max-width: 760px) {
+		/* a phone, over the map: a few rows, the rest scrolls */
+		figure.big .keys {
+			max-height: calc(4 * 1.6em);
+		}
+	}
+	.keys:empty {
+		display: none;
 	}
 	figcaption {
 		display: flex;
-		align-items: center;
-		flex-wrap: wrap;
-		gap: 4px 14px;
+		flex-direction: column;
+		gap: 8px;
 		margin-top: 8px;
 		font-size: 12px;
 		color: var(--muted);
 	}
 	.key {
 		color: inherit;
-		display: inline-flex;
+		display: flex;
 		align-items: center;
 		gap: 6px;
+		min-width: 0;
+		line-height: 1.6;
 	}
 	.key button {
 		border: none;
@@ -416,6 +435,13 @@
 		font: inherit;
 		color: inherit;
 		cursor: pointer;
+	}
+	.key .name {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		text-align: left;
 	}
 	.key .name:hover,
 	.key.on .name {
@@ -448,9 +474,6 @@
 	}
 	.key .sw:hover {
 		outline: 2px solid color-mix(in srgb, var(--sw) 40%, transparent);
-	}
-	.seg.detail {
-		margin-left: 0;
 	}
 	.seg button:disabled {
 		cursor: progress;
