@@ -44,6 +44,8 @@ class Settings(BaseModel):
     # The critic whose score sorts the lists and ranks a vintage's best rated (every critic's is shown); none until
     # chosen, or the first critic scores are added for
     preferred_critic: str = ""
+    # A vendor's buyer's premium in percent (an auction house's: iDealwine 22): the bottle form offers to add it
+    vendor_premiums: dict[str, float] = {}
 
     @field_validator("exchange_rates")
     @classmethod
@@ -52,6 +54,14 @@ class Settings(BaseModel):
         if any(v <= 0 for v in rates.values()):
             raise ValueError("exchange rates must be positive")
         return rates
+
+    @field_validator("vendor_premiums")
+    @classmethod
+    def _premiums(cls, premiums):
+        premiums = {k.strip(): v for k, v in premiums.items() if k.strip()}
+        if any(not 0 <= v <= 100 for v in premiums.values()):
+            raise ValueError("a buyer's premium is a percentage between 0 and 100")
+        return premiums
 
     @field_validator("map_default_basemap", mode="before")
     @classmethod

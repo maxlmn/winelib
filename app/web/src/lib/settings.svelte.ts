@@ -21,6 +21,8 @@ export interface AppSettings {
 	map_default_basemap: Basemap;
 	/** lists sort and rank wines by this critic's score */
 	preferred_critic: string;
+	/** a vendor's buyer's premium in percent (iDealwine 22): the bottle form offers to add it to the price */
+	vendor_premiums: Record<string, number>;
 }
 
 // Mirrors the API defaults, so pages render sensibly even before (or without) the settings request
@@ -33,7 +35,8 @@ export const appSettings = $state<AppSettings>({
 	other_group: 'Cellar',
 	bi_location: '',
 	map_default_basemap: 'plain',
-	preferred_critic: ''
+	preferred_critic: '',
+	vendor_premiums: {}
 });
 
 export function setSettings(next: AppSettings) {

@@ -20,3 +20,8 @@ app/web/build/
 dist/
 
 .DS_Store
+
+# The browser smoke tests: their data folder and reports
+app/web/e2e/.data/
+app/web/test-results/
+app/web/playwright-report/

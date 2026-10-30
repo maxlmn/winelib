@@ -16,9 +16,10 @@ GENERIC = {"domaine", "dom", "chateau", "maison", "et", "and", "the", "de", "du"
 
 
 def norm(text):
-    """Accents, case and punctuation aside; "premier cru" written "1er cru" as Robert Parker does."""
+    """Accents, case and punctuation aside; "premier" written "1er" as Robert Parker and the auction houses do
+    ("premier cru", "Premier Grand Cru Classé")."""
     t = re.sub(r"[^a-z0-9]+", " ", unidecode(str(text or "")).lower()).strip()
-    return re.sub(r"\bpremier cru\b", "1er cru", t)
+    return re.sub(r"\bpremiers?\b", "1er", t)
 
 
 # Words of producer names that don't say which producer it is ("Abreu Vineyard" is Abreu, "E. Guigal" Guigal)
