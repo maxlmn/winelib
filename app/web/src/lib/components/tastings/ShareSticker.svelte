@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import { sessionSticker, tastingSticker, toBlob, type Style, type StickerWine } from '#lib/shareCard.ts';
 
 	/** Share a tasting as a sticker for a story (Instagram...): this wine, or the whole evening; a transparent PNG with
@@ -36,7 +37,7 @@
 	}
 </script>
 
-<button class="btn" onclick={() => (open = true)}>Share</button>
+<button class="btn icon" onclick={() => (open = true)} title="Share as a sticker" aria-label="Share as a sticker"><Icon name="share" size={15} /></button>
 
 {#if open}
 	<div class="backdrop" role="presentation" onclick={(e) => e.target === e.currentTarget && (open = false)}>

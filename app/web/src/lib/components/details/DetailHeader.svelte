@@ -46,7 +46,7 @@
 				</div>
 			{/if}
 		</div>
-		{#if actions}<div class="actions">{@render actions()}</div>{/if}
+		{#if actions}<div class="page-actions">{@render actions()}</div>{/if}
 	</div>
 	{#if children || aside}
 		<div class="body" class:split={aside && children}>
@@ -101,12 +101,6 @@
 	}
 	.sep {
 		opacity: 0.6;
-	}
-	.actions {
-		flex: none;
-		display: flex;
-		align-items: center;
-		gap: 8px;
 	}
 	.body {
 		margin-top: 16px;

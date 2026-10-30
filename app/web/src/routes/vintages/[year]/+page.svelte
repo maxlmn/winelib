@@ -38,9 +38,12 @@
 <svelte:head><title>{v.vintage} · WineLib</title></svelte:head>
 
 {#snippet actions()}
-	{#if v.prev}<a class="btn" href={links.vintage(v.prev)}>← {v.prev}</a>{/if}
-	<a class="btn" href={links.vintages()}>All vintages</a>
-	{#if v.next}<a class="btn" href={links.vintage(v.next)}>{v.next} →</a>{/if}
+	<!-- the vintages before and after: a row -->
+	<div class="vnav">
+		{#if v.prev}<a class="btn small-btn" href={links.vintage(v.prev)}>← {v.prev}</a>{/if}
+		<a class="btn small-btn" href={links.vintages()}>All</a>
+		{#if v.next}<a class="btn small-btn" href={links.vintage(v.next)}>{v.next} →</a>{/if}
+	</div>
 {/snippet}
 
 {#snippet regions()}
@@ -111,6 +114,10 @@
 {/key}
 
 <style>
+	.vnav {
+		display: flex;
+		gap: 6px;
+	}
 	.aside-h {
 		font-size: 13px;
 		font-weight: 600;

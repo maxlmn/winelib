@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ActionMenu from '#lib/components/ActionMenu.svelte';
 	import CriticPills from '#lib/components/CriticPills.svelte';
 	import PlaceName from '#lib/components/PlaceName.svelte';
 	import { grapesText } from '#lib/grapes.ts';
@@ -47,7 +48,7 @@
 		<div class="kind"><Icon name="glass" size={12} />Tasting</div>
 		<div class="kicker">
 			{#if w.region}<span class="swatch" style:background={w.region_color ?? FALLBACK_REGION}></span><a class="kicker-link" href={links.region(w.region)}>{regionLabel(w.region)}</a>{/if}
-			{#if w.appellation} · <a class="kicker-link" href={links.appellation(w.appellation.id)}>{w.appellation.name}</a>{/if}
+			{#if w.appellation}{#if w.region} · {/if}<a class="kicker-link" href={links.appellation(w.appellation.id)}>{w.appellation.name}</a>{/if}
 		</div>
 		<h1>
 			<span class="bottle"><BottleEnd region={w.region_color ?? FALLBACK_REGION} color={w.color} format={b.format} size={20} title="{regionLabel(w.region)} · {w.color ?? ''}" /></span>
@@ -63,9 +64,11 @@
 			{/if}
 		</div>
 	</div>
-	<div class="actions">
-		<a class="btn primary" href={links.editTasting(t.id)}>✎ Edit tasting</a>
-		<a class="btn" href={links.editBottle(b.id)}>Edit bottle</a>
+	<div class="page-actions">
+		<ActionMenu>
+			<a class="menu-item" role="menuitem" href={links.editBottle(b.id)}><Icon name="bottle" size={15} />Edit the bottle</a>
+		</ActionMenu>
+		<a class="btn icon primary" href={links.editTasting(t.id)} title="Edit tasting" aria-label="Edit tasting"><Icon name="edit" size={15} /></a>
 		<ShareSticker {...sticker} />
 	</div>
 </div>
@@ -218,10 +221,6 @@
 		color: var(--gold);
 		letter-spacing: 1px;
 		font-size: 12px;
-	}
-	.actions {
-		display: flex;
-		gap: 8px;
 	}
 	.btn.primary:hover {
 		color: white;

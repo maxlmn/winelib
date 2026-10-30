@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import { fmtDate } from '#lib/components/details/wine.ts';
 	import { links } from '#lib/links.ts';
 	import Change from '#lib/components/Change.svelte';
@@ -56,9 +57,9 @@
 		<p class="muted date">{fmtDate(d.today)}</p>
 	</div>
 	<div class="actions">
-		<a class="btn primary" href={links.newTasting()}>+ Add tasting</a>
-		<a class="btn primary" href={links.newBottle()}>+ Add purchase</a>
-		<a class="btn" href={links.newVisit()}>+ Restaurant visit</a>
+		<a class="btn icon primary" href={links.newTasting()} title="Add a tasting" aria-label="Add a tasting"><span class="plus">+</span><Icon name="glass" size={15} /></a>
+		<a class="btn icon primary" href={links.newBottle()} title="Add a purchase" aria-label="Add a purchase"><span class="plus">+</span><Icon name="bottle" size={15} /></a>
+		<a class="btn icon" href={links.newVisit()} title="Add a restaurant visit" aria-label="Add a restaurant visit"><span class="plus">+</span><Icon name="pin" size={15} /></a>
 	</div>
 </div>
 

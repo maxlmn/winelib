@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import type { PlaceRow } from '#lib/api/directory.ts';
 	import PointMap from '#lib/components/PointMap.svelte';
 	import type { MapPoint } from '#lib/components/PointMap.svelte';
@@ -45,7 +46,7 @@
 			</div>
 			<div class="actions">
 				<a class="btn" href={links.place(selected.id)}>Open</a>
-				<a class="btn" href={links.newVisit({ place_id: selected.id })}>+ Visit</a>
+				<a class="btn icon" href={links.newVisit({ place_id: selected.id })} title="Add a visit here" aria-label="Add a visit here"><span class="plus">+</span><Icon name="pin" size={15} /></a>
 			</div>
 		</div>
 	{/if}

@@ -77,8 +77,7 @@
 {/snippet}
 
 {#snippet actions()}
-	<!-- the one to hand: a tasting; the rest in the ⋯ menu -->
-	<a class="btn primary" href={links.newTasting({ wine_id: wine.id })}>＋ Tasting</a>
+	<!-- the ⋯ menu, the one to hand under it: a tasting -->
 	<ActionMenu>
 		<a class="menu-item" role="menuitem" href={links.newBottle({ wine_id: wine.id })}><Icon name="bottle" size={15} />Add a bottle</a>
 		<button class="menu-item" role="menuitem" onclick={() => (addingScore = true)}><Icon name="medal" size={15} />Add a critic's score</button>
@@ -89,6 +88,7 @@
 		<a class="menu-item" role="menuitem" href={links.editWine(wine.id)}><Icon name="edit" size={15} />Edit wine</a>
 		{#if !wine.vineyard}<button class="menu-item" role="menuitem" onclick={() => (drawingVineyard = true)}><Icon name="draw" size={15} />Draw its vineyard</button>{/if}
 	</ActionMenu>
+	<a class="btn icon primary" href={links.newTasting({ wine_id: wine.id })} title="Add a tasting" aria-label="Add a tasting"><span class="plus">+</span><Icon name="glass" size={15} /></a>
 	{#if said?.text}<span class="said small" class:muted={!said.error} class:error={said.error} class:busy={said.busy} role="status">{said.text}</span>{/if}
 {/snippet}
 
@@ -187,8 +187,8 @@
 
 <style>
 	.said {
-		align-self: center;
-		max-width: 280px;
+		max-width: 180px;
+		text-align: right;
 	}
 	.said.error {
 		color: var(--down);

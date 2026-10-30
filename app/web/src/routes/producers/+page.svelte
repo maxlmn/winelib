@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import { setParams } from '#lib/url.ts';
 	import { page } from '$app/state';
 	import type { ProducerRow } from '#lib/api/directory.ts';
@@ -54,7 +55,7 @@
 
 <div class="page-head">
 	<h1>Producers</h1>
-	<a class="btn primary" href={links.newProducer()}>+ Add producer</a>
+	<a class="btn icon primary" href={links.newProducer()} title="Add a producer" aria-label="Add a producer"><span class="plus">+</span><Icon name="person" size={15} /></a>
 </div>
 
 <DirectoryFilters

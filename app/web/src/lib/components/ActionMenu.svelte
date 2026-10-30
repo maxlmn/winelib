@@ -33,9 +33,12 @@
 		display: inline-flex;
 	}
 	.more {
-		font-size: 18px;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		padding: 0 0 6px;
+		font-size: 17px;
 		line-height: 1;
-		padding: 4px 10px 8px;
 	}
 	.panel {
 		position: absolute;
