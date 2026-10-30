@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- **Champagne's crus**: its 17 grand cru and ~42 premier cru villages (the échelle des crus) can be drawn as vineyards,
+  each its village's Champagne vines, shaded on the map like Burgundy's crus; *Champagne Grand Cru* and *Champagne
+  Premier Cru* as appellations, their villages together (the map pack's `champagne_cru` and `champagne_mention`).
+
 ## v0.3.7
 
 - **The Lyonnais in France**: Coteaux du Lyonnais (its wines, their vineyards, the Lyonnais' producers) is filed under

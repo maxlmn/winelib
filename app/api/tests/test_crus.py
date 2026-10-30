@@ -52,3 +52,22 @@ def test_map_shapes_carry_the_cru(client):
     assert levels == {"Clos de Bèze": 2, "Les Cazetiers": 1, "En Champs": 0, "Clos Saint-Jacques": 1}
     shapes = client.get(f"/api/appellations/{IDS['chambertin']}/shapes").json()  # detail pages' maps too
     assert shapes["appellations"]["features"][0]["properties"]["cru"] == 2
+
+
+def test_champagne_crus_by_their_level(tmp_path, monkeypatch):
+    """A Champagne cru village is shaded by the store's own level; the mentions' appellations by their name."""
+    from shapely.geometry import box
+    import geo
+    from tests.conftest import write_shapes
+    write_shapes(str(tmp_path), "champagne_cru", [("51030", "Aÿ", "grand cru", box(4.0, 49.0, 4.01, 49.01).wkb),
+                                                 ("51348", "Mareuil-sur-Aÿ", "premier cru", box(4.02, 49.0, 4.03, 49.01).wkb)],
+                 "vineyard")
+    monkeypatch.setattr(geo, "SHAPES_DIR", str(tmp_path))
+    crus.reset()
+    try:
+        levels = [crus.vineyard_level(Vineyard(name=n, boundary=b)) for n, b in (
+            ("Aÿ", "champagne_cru:51030"), ("Mareuil-sur-Aÿ", "champagne_cru:51348"), ("Nowhere", "champagne_cru:99"))]
+        assert levels == [2, 1, 0]
+        assert [crus.name_level(n) for n in ("Champagne Grand Cru", "Champagne Premier Cru", "Champagne")] == [2, 1, 0]
+    finally:
+        crus.reset()

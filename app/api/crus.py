@@ -6,7 +6,8 @@ No source says so outright, so:
 - a vineyard by where it lies: mostly (CONTAINED) inside an INAO grand cru's vines (inao_denom outlines named as
   above: Burgundy's and Alsace's grand crus), else inside a premier cru's; INAO's own premier cru climats
   ("vineyard:inao-pc:...") are premier crus at least. INAO's premier cru outlines include the grand cru land
-  (it may be declassified), so grand cru is tried first.
+  (it may be declassified), so grand cru is tried first. Champagne's crus are whole villages (the échelle des crus):
+  the store's champagne_cru source says each one's level ("grand cru", "premier cru").
 Worked out once per store (lru_cache), from the store's display outlines.
 """
 import re
@@ -86,8 +87,22 @@ def _vineyard_levels():
     return levels
 
 
+@lru_cache
+def _champagne_levels():
+    """{champagne_cru source_id: 1 or 2}: the store's own levels"""
+    import pyarrow.parquet as pq
+    import geo
+    try:
+        t = pq.read_table(f"{geo.SHAPES_DIR}/champagne_cru.parquet", columns=["source_id", "level"]).to_pydict()
+    except (OSError, ValueError):
+        return {}
+    return {sid: name_level(level or "") for sid, level in zip(t["source_id"], t["level"])}
+
+
 def vineyard_level(v):
     boundary = getattr(v, "boundary", None) or ""
+    if boundary.startswith("champagne_cru:"):
+        return _champagne_levels().get(boundary.split(":", 1)[1], 0)
     if not boundary.startswith("vineyard:"):
         return 0
     return _vineyard_levels().get(boundary.split(":", 1)[1], 0)
@@ -100,3 +115,4 @@ def warm():
 
 def reset():
     _vineyard_levels.cache_clear()
+    _champagne_levels.cache_clear()
