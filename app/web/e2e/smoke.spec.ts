@@ -110,3 +110,13 @@ test('Settings › Needs attention opens its check in Maintenance, the preview r
 	await expect(page.getByRole('tab', { name: 'Maintenance' })).toHaveAttribute('aria-selected', 'true');
 	await expect(page.getByText('1 group of duplicate wines')).toBeVisible({ timeout: 15_000 });
 });
+
+test("a wine's menu sets its drinking window", async ({ page }) => {
+	await page.goto(`/wines/${ids().plainWine}`);
+	await page.locator('header.head .action-menu > button').click();
+	await page.getByRole('menuitem', { name: /drinking window/ }).click();
+	await page.getByLabel('From').fill('2026');
+	await page.getByLabel('To').fill('2035');
+	await page.getByRole('button', { name: 'Save' }).click();
+	await expect(page.locator('header.head .about')).toContainText('Drink 2026–2035');
+});
