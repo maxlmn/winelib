@@ -5,7 +5,6 @@
 	import CellarSection from '#lib/components/details/CellarSection.svelte';
 	import DetailHeader from '#lib/components/details/DetailHeader.svelte';
 	import DetailMap from '#lib/components/details/DetailMap.svelte';
-	import Stats from '#lib/components/details/Stats.svelte';
 	import Tabs from '#lib/components/details/Tabs.svelte';
 	import TastingHistory from '#lib/components/details/TastingHistory.svelte';
 	import WineCatalog from '#lib/components/details/WineCatalog.svelte';
@@ -82,20 +81,11 @@
 				{#each v.appellations as ap (ap.id)}<a class="chip" href={links.appellation(ap.id)}>{ap.name}</a>{/each}
 			</div>
 		{/if}
-		<div class="stats">
-			<Stats
-				items={[
-					{ label: 'Bottles in cellar', value: v.stats.bottles, sub: v.stats.value ? money(v.stats.value) : undefined, gold: v.stats.bottles > 0 },
-					{ label: 'Wines tasted', value: v.stats.tastings },
-					{ label: 'Wines', value: nWines }
-				]}
-			/>
-		</div>
 	</DetailHeader>
 
 	<Tabs
 		tabs={[
-			{ id: 'cellar', label: 'Cellar', count: v.stats.bottles },
+			{ id: 'cellar', label: 'Cellar', count: v.stats.bottles, note: v.stats.value ? money(v.stats.value) : undefined },
 			{ id: 'history', label: 'History', count: v.tastings.length },
 			{ id: 'wines', label: 'Wines', count: nWines }
 		]}
@@ -134,9 +124,6 @@
 	}
 	.chip:hover {
 		border-color: var(--accent);
-	}
-	.stats {
-		margin-top: 16px;
 	}
 	.lieu {
 		display: flex;

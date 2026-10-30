@@ -5,7 +5,6 @@
 	import ListsPanel from '#lib/components/details/ListsPanel.svelte';
 	import DetailMap from '#lib/components/details/DetailMap.svelte';
 	import Facts from '#lib/components/details/Facts.svelte';
-	import Stats from '#lib/components/details/Stats.svelte';
 	import Tabs from '#lib/components/details/Tabs.svelte';
 	import TastingHistory from '#lib/components/details/TastingHistory.svelte';
 	import WineCatalog from '#lib/components/details/WineCatalog.svelte';
@@ -45,13 +44,6 @@
 {/snippet}
 
 {#snippet stats()}
-	<Stats
-		items={[
-			{ label: 'Bottles in cellar', value: p.stats.bottles, sub: p.stats.value ? money(p.stats.value) : undefined, gold: p.stats.bottles > 0 },
-			{ label: 'Wines tasted', value: p.stats.tastings },
-			{ label: 'Wines', value: p.stats.wines }
-		]}
-	/>
 	{#if p.website || p.profile_url}
 		<div class="ext">
 			{#if p.website}<a class="btn" href={p.website} target="_blank" rel="noreferrer">Website ↗</a>{/if}
@@ -145,7 +137,7 @@
 
 	<Tabs
 		tabs={[
-			{ id: 'cellar', label: 'Cellar', count: p.stats.bottles },
+			{ id: 'cellar', label: 'Cellar', count: p.stats.bottles, note: p.stats.value ? money(p.stats.value) : undefined },
 			{ id: 'history', label: 'History', count: p.tastings.length },
 			{ id: 'wines', label: 'Wines', count: p.stats.wines }
 		]}

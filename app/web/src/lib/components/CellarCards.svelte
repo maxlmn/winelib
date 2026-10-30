@@ -15,12 +15,15 @@
 	let {
 		bottles,
 		regionColors,
-		prices = false
+		prices = false,
+		plain = false
 	}: {
 		bottles: Bottle[];
 		regionColors: RegionColors;
 		/** each line's price paid a bottle, in its currency, and where it was bought (the home page's recent purchases) */
 		prices?: boolean;
+		/** one wine's bottles (its page, a bottle's): no rack strip, no reds / whites split, its lines as they are */
+		plain?: boolean;
 	} = $props();
 	const paid = (b: Bottle) => (b.price ? `${symbol(b.currency ?? appSettings.currency)}${Math.round(b.price).toLocaleString()}` : null);
 
@@ -77,10 +80,10 @@
 	{/each}
 {/snippet}
 
-{#snippet wineList(title: string, list: Bottle[], qty: number, color: string)}
+{#snippet wineList(title: string | null, list: Bottle[], qty: number, color: string)}
 	{#if list.length}
 		<div>
-			<h4><span class="dot" style:background={color}></span>{title} <span class="muted num">{qty}</span></h4>
+			{#if title}<h4><span class="dot" style:background={color}></span>{title} <span class="muted num">{qty}</span></h4>{/if}
 			<ul>
 				{#each list as b (b.bottle_id)}
 					<li class:hot={b.bottle_id === hot}>
@@ -108,17 +111,23 @@
 			<div class="sum-top">
 				<b>{c.name}</b>
 				<span class="muted num">{plural(c.qty, 'bottle')}{c.value ? ` · ${money(c.value)}` : ''}</span>
-				<span class="split num">
-					<span class="pair"><span class="dot" style:background={TYPE_COLORS.Red}></span>{c.redQty}</span>
-					<span class="pair"><span class="dot" style:background={TYPE_COLORS.White}></span>{c.otherQty}</span>
-				</span>
+				{#if !plain}
+					<span class="split num">
+						<span class="pair"><span class="dot" style:background={TYPE_COLORS.Red}></span>{c.redQty}</span>
+						<span class="pair"><span class="dot" style:background={TYPE_COLORS.White}></span>{c.otherQty}</span>
+					</span>
+				{/if}
 			</div>
-			<RegionStrip pips={bottlePips(c.strip)} variant="rack" height={11} onhover={(k) => (hot = k)} />
+			{#if !plain}<RegionStrip pips={bottlePips(c.strip)} variant="rack" height={11} onhover={(k) => (hot = k)} />{/if}
 		</summary>
-		<div class="columns">
-			{@render wineList('Reds', c.reds, c.redQty, TYPE_COLORS.Red)}
-			{@render wineList('Whites & others', c.others, c.otherQty, TYPE_COLORS.White)}
-		</div>
+		{#if plain}
+			<div class="columns">{@render wineList(null, [...c.reds, ...c.others], c.qty, '')}</div>
+		{:else}
+			<div class="columns">
+				{@render wineList('Reds', c.reds, c.redQty, TYPE_COLORS.Red)}
+				{@render wineList('Whites & others', c.others, c.otherQty, TYPE_COLORS.White)}
+			</div>
+		{/if}
 	</details>
 {/each}
 

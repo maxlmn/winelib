@@ -6,9 +6,11 @@
 		bottles: Bottle[];
 		regionColors: RegionColors;
 		empty?: string;
+		/** one wine's bottles: plain cards (CellarCards) */
+		plain?: boolean;
 	}
 
-	let { bottles, regionColors, empty = 'Nothing in the cellar.' }: Props = $props();
+	let { bottles, regionColors, empty = 'Nothing in the cellar.', plain = false }: Props = $props();
 
 	const OPEN_UP_TO = 30;
 	let wrap = $state<HTMLDivElement>();
@@ -20,7 +22,7 @@
 </script>
 
 {#if bottles.length}
-	<div bind:this={wrap}><CellarCards {bottles} {regionColors} /></div>
+	<div bind:this={wrap}><CellarCards {bottles} {regionColors} {plain} /></div>
 {:else}
 	<p class="muted">{empty}</p>
 {/if}
