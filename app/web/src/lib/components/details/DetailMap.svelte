@@ -204,7 +204,7 @@
 {#if blank}
 	<div class="empty muted" style:min-height="{Math.min(height, 120)}px">
 		{#if failed}The map couldn’t load.
-		{:else if shapes?.outlines === false}No map outlines installed yet: <a href={`${links.settings()}#maintenance`}>Settings › Maintenance › Map outlines</a> downloads them.
+		{:else if shapes?.outlines === false}No map outlines installed yet: <a href={links.settings('maintenance')}>Settings › Maintenance › Map outlines</a> downloads them.
 		{:else}{empty}{/if}
 	</div>
 {:else}

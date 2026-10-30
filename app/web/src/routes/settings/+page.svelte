@@ -2,6 +2,9 @@
 	import { beforeNavigate } from '$app/navigation';
 	import { messageOf, request } from '#lib/api/http.ts';
 	import Maintenance from '#lib/components/settings/Maintenance.svelte';
+	import Attention from '#lib/components/settings/Attention.svelte';
+	import Tabs from '#lib/components/details/Tabs.svelte';
+	import { page } from '$app/state';
 	import { appSettings, configured, integrations, setSettings } from '#lib/settings.svelte.ts';
 	import type { AppSettings, StorageGroup } from '#lib/settings.svelte.ts';
 	import { PALETTES, setTheme, theme } from '#lib/theme.svelte.ts';
@@ -54,6 +57,8 @@
 	);
 
 	beforeNavigate((nav) => {
+		// another tab of this page keeps the draft: only leaving Settings asks
+		if (nav.to?.url.pathname === page.url.pathname) return;
 		if (dirty && !saving && !confirm('Discard unsaved settings?')) nav.cancel();
 	});
 
@@ -128,6 +133,22 @@
 	<span class="muted">Shared with everyone using the app. Changes apply as soon as you save.</span>
 </div>
 
+<!-- The settings themselves, the Maintenance tasks, what needs attention: one tab each (?tab=); an old link to
+     #maintenance, or one naming a task, opens Maintenance -->
+<Tabs plain
+	tabs={[
+		{ id: 'settings', label: 'Settings' },
+		{ id: 'maintenance', label: 'Maintenance' },
+		{ id: 'attention', label: 'Needs attention', count: data.attention.length || undefined }
+	]}
+	initial={page.url.searchParams.get('task') || page.url.hash === '#maintenance' ? 'maintenance' : 'settings'}
+>
+	{#snippet children(tab)}
+{#if tab === 'maintenance'}
+	<div class="grid"><Maintenance /></div>
+{:else if tab === 'attention'}
+	<div class="grid"><Attention items={data.attention} /></div>
+{:else}
 <div class="grid">
 	<section class="card wide appearance">
 		<div class="title-row">
@@ -372,9 +393,10 @@
 			{/each}
 		</ul>
 	</section>
-
-	<Maintenance />
 </div>
+{/if}
+	{/snippet}
+</Tabs>
 
 <div class="bar card" class:show={dirty || saved || error}>
 	{#if error}

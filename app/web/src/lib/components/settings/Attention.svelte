@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { links } from '#lib/links.ts';
 
-	/** Needs attention (GET /api/attention): what the quick Maintenance checks found, warnings first; each line opens
-	 * its task in Settings › Maintenance with its preview started. Nothing shown when all is well. */
+	/** Settings › Needs attention (GET /api/attention): what the quick Maintenance checks found, warnings first; each
+	 * line opens its task in the Maintenance tab with its preview started. */
 	export interface AttentionItem {
 		id: string;
 		level: 'warn' | 'info';
@@ -14,9 +14,10 @@
 	let { items }: { items: AttentionItem[] } = $props();
 </script>
 
-{#if items.length}
-	<section class="card attention" aria-label="Needs attention">
-		<h2>Needs attention</h2>
+<section class="card attention" aria-label="Needs attention">
+	<h2>Needs attention</h2>
+	{#if items.length}
+		<p class="muted intro">What the quick checks found in your data. Each opens its Maintenance task with a preview, nothing changed until you run it.</p>
 		<ul>
 			{#each items as it (it.id)}
 				<li class={it.level}>
@@ -29,13 +30,19 @@
 				</li>
 			{/each}
 		</ul>
-	</section>
-{/if}
+	{:else}
+		<p class="muted">All clear: no duplicates, no orphans, nothing missing that a check looks for.</p>
+	{/if}
+</section>
 
 <style>
 	.attention {
-		margin-bottom: 14px;
-		padding: 12px 16px;
+		grid-column: 1 / -1;
+		padding: 16px 18px;
+	}
+	.intro {
+		margin: 0 0 8px;
+		font-size: 13px;
 	}
 	h2 {
 		margin: 0 0 6px;
