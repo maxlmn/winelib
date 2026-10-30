@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **A wine's header, shorter**: its grapes (after a grape icon), blend and drinking window just under the appellation;
+  no LWIN, no disgorgement (the title's vintage says it: "NV - Oct 2024"), no empty space when there's nothing more.
+- **A drinking window from the ⋯ menu**: *Add a drinking window* (or *Edit*) asks for its years under the appellation
+  (either left open, or cleared).
+- The menu's *Add to your wishlist* is gone: *Add to a list* picks the wishlist too.
 - **Champagne's crus**: its 17 grand cru and ~42 premier cru villages (the échelle des crus) can be drawn as vineyards,
   each its village's Champagne vines, shaded on the map like Burgundy's crus; *Champagne Grand Cru* and *Champagne
   Premier Cru* as appellations, their villages together (the map pack's `champagne_cru` and `champagne_mention`).
