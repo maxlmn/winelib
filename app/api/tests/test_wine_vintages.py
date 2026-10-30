@@ -46,3 +46,24 @@ def test_vineyard_goes_to_the_other_vintages(client):
     assert vineyards() == [IDS["haut"], IDS["clos"], None]
     assert put(client, IDS["picasses"]).json()["vintages_updated"] == 1  # the 2019 had the same one: it follows
     assert vineyards() == [IDS["picasses"], IDS["clos"], None]
+
+
+def test_a_new_vintage_takes_the_vineyard_its_other_vintages_share(client):
+    """A new wine without a vineyard takes its other vintages' when they all have the same one (the wine form, a
+    bottle of a new wine); none when they differ or have none; one given is kept."""
+    def new(cuvee, year, path="/api/wines", **extra):
+        wine = {"producer": IDS["coulaine"], "cuvee": cuvee, "vintage": year, "type": "Red", "region": IDS["loire"],
+                "appellation": IDS["chinon"], "varietal": IDS["cf"], **extra}
+        r = client.post(path, json=wine if path == "/api/wines" else {"wine": wine, "qty": 1, "location": "R1"})
+        assert r.status_code == 201, r.text
+        s = next(app.dependency_overrides[db.get_session]())
+        wid = r.json()["id"] if path == "/api/wines" else r.json()["wine_id"]
+        return s.get(Wine, wid).vineyard_id
+
+    assert new("Les Picasses", "2021") is None  # its vintages disagree (Les Picasses, Les Clos)
+    assert new("Autre", "2021") is None  # none has one
+    s = next(app.dependency_overrides[db.get_session]())
+    s.get(Wine, IDS["other_cuvee"]).vineyard_id = IDS["haut"]
+    s.commit()
+    assert new("Autre", "2022", path="/api/bottles") == IDS["haut"]  # Autre 2019 and 2021: one between them
+    assert new("Autre", "2023", vineyard=IDS["clos"]) == IDS["clos"]  # given: kept

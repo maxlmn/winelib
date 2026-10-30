@@ -286,12 +286,25 @@ def _fill_wine(session, w, data: WineIn):
     return w
 
 
+def _vintages(session, w):
+    """The wine's other vintages, as the wine page lists them: same producer, cuvée, appellation and grape."""
+    return (session.query(Wine)
+            .filter(Wine.id != w.id, Wine.producer_id == w.producer_id, same_cuvee(w.cuvee),
+                    same(Wine.appellation_id, w.appellation_id), same(Wine.varietal_id, w.varietal_id)))
+
+
 def _wine(session, ref):
+    """A wine by id, or a new one: without a vineyard given, its other vintages' when they all have the same."""
     if isinstance(ref, int):
         return _get(session, Wine, ref, "Wine")
     w = _fill_wine(session, Wine(), ref)
     session.add(w)
     session.flush()
+    if w.vineyard_id is None:
+        found = {v for (v,) in _vintages(session, w).with_entities(Wine.vineyard_id).filter(Wine.vineyard_id.isnot(None)).distinct()}
+        if len(found) == 1:
+            w.vineyard_id = found.pop()
+            session.flush()
     return w
 
 
@@ -531,9 +544,7 @@ def update_wine(wine_id: int, data: WineIn, session: Session = Depends(get_sessi
     as the wine page lists them) that had the same vineyard as it before, or none; one with another vineyard keeps it."""
     w = _get(session, Wine, wine_id, "Wine")
     before = w.vineyard_id
-    vintages = (session.query(Wine)
-                .filter(Wine.id != w.id, Wine.producer_id == w.producer_id, same_cuvee(w.cuvee),
-                        same(Wine.appellation_id, w.appellation_id), same(Wine.varietal_id, w.varietal_id))
+    vintages = (_vintages(session, w)
                 .filter((Wine.vineyard_id.is_(None)) | (Wine.vineyard_id == before) if before else Wine.vineyard_id.is_(None))
                 .all())
     _fill_wine(session, w, data)
