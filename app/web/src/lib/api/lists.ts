@@ -87,6 +87,8 @@ export interface Membership extends ListSummary {
 	as: EntryKind;
 	item: EntryStatus & { id: number; note: string | null };
 	wine: { cuvee: string; vintage: string } | null;
+	/** a wine's: the entry is that vintage itself (else another vintage, or the cuvée) */
+	this?: boolean;
 }
 
 export interface ListIn {

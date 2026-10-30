@@ -83,7 +83,7 @@
 						<span class="tick" class:on={ticked(m)} role="img" aria-label={ticked(m) ? 'Tasted' : 'Not tasted yet'}>{#if ticked(m)}✓{/if}</span>
 						<a href={links.list(m.id)}>{m.name}</a>
 						<span class="muted as">
-							{#if m.as === 'producer' && wineId}through its producer{:else if m.as === 'cuvee'}{wineId ? 'its cuvée, ' : `${m.wine?.cuvee || 'a cuvée'}, `}{KIND_LABEL.cuvee}{:else if m.as === 'wine'}{wineId ? KIND_LABEL.wine : `${m.wine?.cuvee ?? ''} ${m.wine?.vintage ?? ''}`}{:else}{KIND_LABEL.producer}{/if}
+							{#if m.as === 'cuvee'}{wineId ? '' : `${m.wine?.cuvee || 'a cuvée'}, `}{KIND_LABEL.cuvee}{:else if m.as === 'wine'}{wineId ? (m.this ? KIND_LABEL.wine : `the ${m.wine?.vintage ?? ''}`) : `${m.wine?.cuvee ?? ''} ${m.wine?.vintage ?? ''}`}{:else}{KIND_LABEL.producer}{/if}
 							{#if m.item.note}· “{m.item.note}”{/if}
 						</span>
 						<span class="progress num">{m.tasted}/{m.entries}</span>

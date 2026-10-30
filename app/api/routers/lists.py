@@ -341,13 +341,13 @@ def remove_item(list_id: int, item_id: int, session: Session = Depends(get_sessi
 
 
 def memberships(session, wine=None, producer=None):
-    """The lists a wine is on (as that wine, its cuvée, or through its producer) or a producer is on (itself or one
-    of its wines): [{list's summary, "as": entry kind, "item": its status}]."""
+    """The lists a wine is on (as that vintage, another vintage of it, or its cuvée; not through its producer: the
+    producer's page says those) or a producer is on (itself or one of its wines): [{list's summary, "as": entry kind,
+    "item": its status, "this": the entry is that wine itself (a wine's)}]."""
     pid = wine.producer_id if wine is not None else producer.id
     items = (session.query(ListItem).options(joinedload(ListItem.wine)).filter(ListItem.producer_id == pid).all())
     if wine is not None:
-        items = [i for i in items if i.kind == "producer" or (i.wine is not None and (
-            i.wine_id == wine.id if i.kind == "wine" else family(i.wine) == family(wine)))]
+        items = [i for i in items if i.kind != "producer" and i.wine is not None and family(i.wine) == family(wine)]
     if not items:
         return []
     found = {lst.id: lst for lst in _lists(session, WineList.id.in_({i.list_id for i in items}))}
@@ -355,7 +355,8 @@ def memberships(session, wine=None, producer=None):
     out = []
     for i in sorted(items, key=lambda i: found[i.list_id].name):
         out.append({**summary(found[i.list_id], facts), "as": i.kind, "item": {"id": i.id, "note": i.note, **facts.status(i)},
-                    "wine": {"cuvee": i.wine.cuvee or "", "vintage": i.wine.vintage} if i.wine and i.kind != "producer" else None})
+                    "wine": {"cuvee": i.wine.cuvee or "", "vintage": i.wine.vintage} if i.wine and i.kind != "producer" else None,
+                    "this": wine is not None and i.wine_id == wine.id and i.kind == "wine"})
     return out
 
 

@@ -131,6 +131,8 @@
 		</p>
 	{/if}
 	<WineStyle wineId={wine.id} tags={wine.tags ?? []} cuvee={wine.cuvee_tags ?? []} />
+	<!-- the lists naming this vintage, another one, or the cuvée (its producer's: the producer's page) -->
+	<ListsPanel inline wineId={wine.id} bind:adding={addingToList} />
 </DetailHeader>
 
 <div class="row">
@@ -138,7 +140,6 @@
 		{#if showVintages}
 			<section class="card vintages">
 				<h2>Vintages <span class="muted num">{wine.vintages.length}</span>
-					{#if wine.cuvee_lists?.length}<span class="listed any" title="Any vintage on: {wine.cuvee_lists.join(', ')}"><Icon name="bookmark" size={12} /> any vintage on {wine.cuvee_lists.join(', ')}</span>{/if}
 				</h2>
 				<div class="chips">
 					{#each wine.vintages as v (v.id)}
@@ -157,7 +158,6 @@
 		{/if}
 	</div>
 
-<ListsPanel wineId={wine.id} bind:adding={addingToList} />
 
 <Tabs
 	tabs={[
@@ -311,11 +311,6 @@
 	}
 	.listed :global(.icon) {
 		fill: currentColor;
-	}
-	.listed.any {
-		font-size: 12px;
-		font-weight: 400;
-		margin-left: 10px;
 	}
 	.tick {
 		color: var(--accent);
