@@ -13,6 +13,7 @@ from. **Plain** and **Satellite** change the background.
 - **Click a shape** (an appellation, a vineyard, a lieu-dit, a region): its card opens on the map, with its name,
   your bottles and tastings, and a link to its page. Nothing opens another page by itself; the card's ✕ closes it.
 - **Click a name in the legend**: the map zooms to it and opens its card (a second click shows everything again).
+  **Click its colour square** to hide it from the map (the square goes hollow), again to show it.
 - **Appellations**, **Vineyards** and **Lieux-dits**: each click goes from filled to outline only to hidden. Vineyards
   are drawn in their region's colours, a shade darker than the appellations; the lieux-dits (the cadastre's named
   places) appear from close zoom, as dashed outlines.

@@ -131,8 +131,21 @@
 		full && fullGeometry && current?.kind === kind
 			? { ...fc, features: fc.features.map((f) => (f.properties.id === current.id ? { ...f, geometry: fullGeometry! } : f)) }
 			: fc;
-	const drawnApps = $derived(shapes ? swap(shapes.appellations, 'appellation') : null);
-	const drawnVines = $derived(shapes ? swap(shapes.vineyards, 'vineyard') : null);
+	// The legend's entries hidden one by one (their swatch): left out of what the map draws
+	let hidden = $state<Set<string>>(new Set());
+	const keyOf = (k: { kind: string; id: number | string }) => `${k.kind}:${k.id}`;
+	const shown = (fc: MapCollection) =>
+		hidden.size ? { ...fc, features: fc.features.filter((f) => !hidden.has(keyOf(f.properties))) } : fc;
+	function toggleShown(k: MapProps) {
+		const next = new Set(hidden);
+		if (!next.delete(keyOf(k))) {
+			next.add(keyOf(k));
+			if (focused(k)) focus = null; // a hidden shape isn't zoomed to
+		}
+		hidden = next;
+	}
+	const drawnApps = $derived(shapes ? shown(swap(shapes.appellations, 'appellation')) : null);
+	const drawnVines = $derived(shapes ? shown(swap(shapes.vineyards, 'vineyard')) : null);
 
 	const outline = $derived(shapes?.region?.features.length ? { ...shapes.region, extent: null } : null);
 	const count = $derived((shapes?.appellations.features.length ?? 0) + (shapes?.vineyards.features.length ?? 0));
@@ -149,6 +162,7 @@
 		src;
 		focus = null;
 		picked = null;
+		hidden = new Set();
 	});
 	function pick(p: MapProps | null) {
 		picked = p ? { kind: p.kind, id: p.id } : null;
@@ -156,6 +170,7 @@
 	}
 	function zoomTo(k: MapProps) {
 		if (layers[k.kind] === 'off') layers[k.kind] = 'fill';
+		if (hidden.has(keyOf(k))) toggleShown(k); // zooming to it shows it again
 		picked = null;
 		focus = focused(k) ? null : { kind: k.kind, id: k.id };
 		focusCard = !!focus;
@@ -253,11 +268,15 @@
 				</div>
 				<div class="keys">
 				{#each keys as k (k.kind + k.id)}
-					<!-- a legend entry shows its shape (zoomed to, its card open), never another page -->
-					<button class="key" class:on={focused(k)} class:off={layers[k.kind] === 'off'} title={focused(k) ? 'Show all' : `Show ${k.name}`}
-						onclick={() => zoomTo(k)}>
-						<span class="sw" class:vine={k.kind === 'vineyard'} style:background={k.kind === 'appellation' ? cruShade(k.color ?? FALLBACK_REGION, k.cru) : darken(k.color ?? FALLBACK_REGION, (k.cru ?? 0) + 1)}></span>{k.name}
-					</button>
+					{@const off = hidden.has(keyOf(k))}
+					{@const colour = k.kind === 'appellation' ? cruShade(k.color ?? FALLBACK_REGION, k.cru) : darken(k.color ?? FALLBACK_REGION, (k.cru ?? 0) + 1)}
+					<!-- a legend entry: its swatch shows or hides its shape; its name zooms to it (its card open), never
+					     another page -->
+					<span class="key" class:on={focused(k)} class:off={layers[k.kind] === 'off'} class:hidden={off}>
+						<button class="sw" class:vine={k.kind === 'vineyard'} style:--sw={colour} aria-pressed={!off}
+							title={off ? `Show ${k.name} on the map` : `Hide ${k.name} from the map`} onclick={() => toggleShown(k)}></button>
+						<button class="name" title={focused(k) ? 'Show all' : `Zoom to ${k.name}`} onclick={() => zoomTo(k)}>{k.name}</button>
+					</span>
 				{/each}
 				</div>
 				{#if missing.length}<span class="missing" title={missing.join(' · ')}>{missing.length} without boundaries</span>{/if}
@@ -390,22 +409,45 @@
 		align-items: center;
 		gap: 6px;
 	}
-	button.key {
+	.key button {
 		border: none;
 		background: none;
 		padding: 0;
 		font: inherit;
+		color: inherit;
 		cursor: pointer;
 	}
-	button.key:hover,
-	button.key.on {
+	.key .name:hover,
+	.key.on .name {
 		color: var(--text);
 	}
-	button.key.on {
+	.key.on .name {
 		font-weight: 600;
 	}
-	button.key.off {
+	.key.off {
 		opacity: 0.45;
+	}
+	/* hidden from the map: a hollow swatch, the name struck through */
+	.key.hidden .name {
+		text-decoration: line-through;
+		opacity: 0.6;
+	}
+	.key .sw {
+		position: relative;
+		background: var(--sw);
+	}
+	/* a finger-sized target around the 10 px swatch */
+	.key .sw::after {
+		content: '';
+		position: absolute;
+		inset: -7px;
+	}
+	.key.hidden .sw {
+		background: transparent;
+		box-shadow: inset 0 0 0 1.5px var(--sw);
+	}
+	.key .sw:hover {
+		outline: 2px solid color-mix(in srgb, var(--sw) 40%, transparent);
 	}
 	.seg.detail {
 		margin-left: 0;

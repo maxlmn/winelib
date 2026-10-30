@@ -1,13 +1,26 @@
 # Changelog
 
-## Unreleased
+## v0.3.7
 
 - **The Lyonnais in France**: Coteaux du Lyonnais (its wines, their vineyards, the Lyonnais' producers) is filed under
-  France, in neither the Rhône (where v0.3.6 had put it) nor the Beaujolais (migration 0009); the Rhône's outline
-  stops above Côte-Rôtie, the Beaujolais' starts at its AOC's southern edge: they no longer overlap.
-- Tastings: a wine's note (or *No note*) always shown, opening the tasting, the *Notes inline* switches gone; a
-  tasting card's date opens the occasion in the journal. The cellar's wine label and bottle ends open the bottle.
-- A vineyard's map: a lieu-dit clicked can be made the vineyard's outline.
+  France, in neither the Rhône (where v0.3.6 had put it) nor the Beaujolais (migration 0009).
+- **Region outlines that follow the vineyards**: the Beaujolais is its AOC's area, the Rhône's north (up the valley to
+  Côte-Rôtie) and its Gard bank follow its appellations' outlines, with no straight cuts; the two no longer overlap.
+  Every region's outline is finer (~250 m, from ~1 km).
+- **Finer appellation outlines**: the map pack's outlines twice as fine (~25 m, from 40–60 m); the pack is 73 MB
+  (Settings › Maintenance › Map outlines downloads it again). Outlines you draw are simplified the same way.
+- **Clicks you can predict**: in the tastings (the journal, a wine's, producer's or bottle's history) each wine's
+  note (or *No note*) is shown and opens the tasting; the *Notes inline* switches are gone; a tasting card's date
+  opens the occasion in the journal (that day there, every wine poured). In the cellar, a wine's label and bottle ends
+  open the bottle. The tasting page says it's one, like the other pages.
+- **Map cards**: a shape's card shows its link from the first hover (*Details →*, a lieu-dit's *Its page →* and its
+  action); a click keeps the card. No more "Click for details" that only added a link, nor a link to the page you're on.
+- **Each appellation and vineyard shown or hidden**: on every page's map, an entry's colour square in the legend
+  hides its shape (hollow) or shows it again; its name still zooms to it.
+- **A vineyard's map**: a lieu-dit clicked can be made the vineyard's outline (its wines keep it; an outline you drew
+  is replaced after asking).
+- **A new vintage takes its vineyard**: a new wine without one takes the vineyard its other vintages share.
+- A page whose map has nothing to show (an appellation without an outline) no longer opens it full size.
 
 ## v0.3.6
 
