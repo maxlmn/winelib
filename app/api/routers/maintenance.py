@@ -66,22 +66,6 @@ def _orphans(session, job):
                        f"(of {t['tasting_notes']} notes, {t['cellar']} bottles).", "items": items[:MAX_ITEMS]}
 
 
-def _vineyard_gaps(session, job):
-    """Vintages without a vineyard their other vintages all share (tasks/vintages.py): listed, then given it."""
-    from tasks import vintages
-    gaps = vintages.vineyard_gaps(session)
-    items = [_item(f"{ws[0].producer.name} {ws[0].cuvee or ''}".strip(),
-                   f"{', '.join(str(w.vintage or 'NV') for w in ws)} → {v.name}", f"/wines/{ws[0].id}") for v, ws in gaps]
-    n = sum(len(ws) for _, ws in gaps)
-    if not job.commit:
-        for v, ws in gaps:
-            job.log(f"{ws[0].producer.name} {ws[0].cuvee}: {', '.join(str(w.vintage) for w in ws)} -> {v.name}")
-        return {"summary": f"{_n(n, 'vintage')} of {_n(len(gaps), 'cuvée')} without the vineyard their other "
-                           f"vintages share: running gives it them.", "items": items[:MAX_ITEMS]}
-    done = vintages.fill_vineyard_gaps(session, gaps)
-    return {"summary": f"{_n(done, 'vintage')} given their cuvée's vineyard.", "items": items[:MAX_ITEMS]}
-
-
 def _appellations_apart(session, job):
     """Cuvées filed under several appellations (tasks/vintages.py): a report, the likely duplicates first."""
     from tasks import vintages
@@ -579,10 +563,6 @@ def _no_map_pack():
 TASKS = {
     "duplicates": {"group": "Clean up", "title": "Duplicate wines", "fn": _duplicates, "preview": True, "writes": True,
                    "description": "Same producer, cuvée, color, appellation, grape and vintage: move the cellar lines to one wine and delete the others."},
-    "vineyard_gaps": {"group": "Clean up", "title": "Vineyards across vintages", "fn": _vineyard_gaps, "preview": True,
-                      "writes": True,
-                      "description": "Vintages without a vineyard whose other vintages (same producer, cuvée, "
-                                     "appellation and grape) all have the same one: given it."},
     "appellations_apart": {"group": "Clean up", "title": "Cuvées under several appellations", "fn": _appellations_apart,
                            "preview": False, "writes": False,
                            "description": "A cuvée filed under more than one appellation: a vintage entered twice, "

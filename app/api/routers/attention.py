@@ -47,15 +47,6 @@ def _twice_under_two_appellations(session):
         return WARN, f"{_n(len(found), 'vintage')} under two appellations", names, len(found), "appellations_apart"
 
 
-def _vineyard_gaps(session):
-    from tasks import vintages
-    gaps = vintages.vineyard_gaps(session)
-    n = sum(len(ws) for _, ws in gaps)
-    if n:
-        names = ", ".join(f"{ws[0].producer.name} {ws[0].cuvee}".strip() for _, ws in gaps[:3])
-        return INFO, f"{_n(n, 'vintage')} without the vineyard of the others", names, n, "vineyard_gaps"
-
-
 def _stale_prices(session):
     """Bottles in the cellar whose market price is older than twice the refresh age (the nightly refresh failing)."""
     from routers.maintenance import _no_price_source
@@ -100,7 +91,7 @@ def _outlines(session):
         return INFO, "No map outlines installed", "the maps show regions only", 1, "map_pack"
 
 
-CHECKS = [_duplicates, _orphans, _twice_under_two_appellations, _stale_prices, _vineyard_gaps, _no_lwin, _places,
+CHECKS = [_duplicates, _orphans, _twice_under_two_appellations, _stale_prices, _no_lwin, _places,
           _outlines]
 
 

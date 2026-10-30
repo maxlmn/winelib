@@ -1,9 +1,7 @@
-"""A cuvée's vintages, checked against each other (Settings › Maintenance):
-
-- vineyard gaps: vintages without a vineyard whose other vintages (same producer, cuvée, appellation and grape, as
-  the wine page lists them) all have the same one: given it, as a new vintage is;
-- appellations apart: one cuvée (producer, name, colour) filed under several appellations, often the same wine
-  entered twice or a vintage left under an old name (Vin de France one year, Hautes-Côtes the next).
+"""A cuvée's vintages, checked against each other (Settings › Maintenance): one cuvée (producer, name, colour) filed
+under several appellations, often the same wine entered twice or a vintage left under an old name (Vin de France one
+year, Hautes-Côtes the next). (A vintage's vineyard needs no check: a new one takes its other vintages', and one set
+on a vintage goes to the others: routers/forms.py.)
 """
 from collections import defaultdict
 
@@ -14,32 +12,6 @@ from models import Wine
 
 def _cuvee(w):
     return (w.cuvee or "").strip().lower()
-
-
-def vineyard_gaps(session):
-    """[(vineyard, [wines without it])]: the cuvées some of whose vintages lack the vineyard all the others share."""
-    groups = defaultdict(list)
-    for w in session.query(Wine).options(joinedload(Wine.producer), joinedload(Wine.vineyard)):
-        groups[(w.producer_id, _cuvee(w), w.appellation_id, w.varietal_id)].append(w)
-    out = []
-    for ws in groups.values():
-        found = {w.vineyard_id for w in ws if w.vineyard_id}
-        missing = [w for w in ws if not w.vineyard_id]
-        if len(found) == 1 and missing:
-            vineyard = next(w.vineyard for w in ws if w.vineyard_id)
-            out.append((vineyard, sorted(missing, key=lambda w: str(w.vintage or ""))))
-    return sorted(out, key=lambda x: (x[1][0].producer.name if x[1][0].producer else "", _cuvee(x[1][0])))
-
-
-def fill_vineyard_gaps(session, gaps):
-    """Gives each gap's wines their vineyard; the wines given it."""
-    n = 0
-    for vineyard, wines in gaps:
-        for w in wines:
-            w.vineyard_id = vineyard.id
-            n += 1
-    session.commit()
-    return n
 
 
 def appellations_apart(session):
