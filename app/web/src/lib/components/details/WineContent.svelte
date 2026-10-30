@@ -15,6 +15,7 @@
 	import TastingHistory from './TastingHistory.svelte';
 	import WishButton from './WishButton.svelte';
 	import WineActions from './WineActions.svelte';
+	import ActionMenu from '#lib/components/ActionMenu.svelte';
 	import ListsPanel from './ListsPanel.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 
@@ -29,6 +30,8 @@
 	// Add a critic's score, add to a list (the header's icons): their card's form, shown even when it has nothing yet
 	let addingScore = $state(false);
 	let addingToList = $state(false);
+	// a plug-in action's busy text, then its answer (WineActions), beside the menu
+	let said = $state<{ text: string; busy: boolean; error?: boolean } | null>(null);
 	// Draw vineyard: drawn on the wine's map (DetailMap), created with its outline and linked to the wine
 	let drawingVineyard = $state(false);
 
@@ -74,15 +77,19 @@
 {/snippet}
 
 {#snippet actions()}
-	<!-- icons, what each does on hover -->
-	<a class="btn icon" href={links.editWine(wine.id)} title="Edit wine" aria-label="Edit wine"><Icon name="edit" size={15} /></a>
-	{#if !wine.vineyard}<button class="btn icon" onclick={() => (drawingVineyard = true)} title="Draw its vineyard on the map" aria-label="Draw vineyard"><Icon name="draw" size={15} /></button>{/if}
-	<WishButton wineId={wine.id} />
-	<button class="btn icon" onclick={() => (addingScore = true)} title="Add a critic's score" aria-label="Add a critic's score"><span class="plus">+</span><Icon name="medal" size={15} /></button>
-	<button class="btn icon" onclick={() => (addingToList = true)} title="Add to a list" aria-label="Add to a list"><span class="plus">+</span><Icon name="list" size={15} /></button>
-	<WineActions wineId={wine.id} actions={wine.actions} />
-	<a class="btn icon" href={links.newBottle({ wine_id: wine.id })} title="Add a bottle" aria-label="Add a bottle"><span class="plus">+</span><Icon name="bottle" size={15} /></a>
-	<a class="btn icon primary" href={links.newTasting({ wine_id: wine.id })} title="Add a tasting" aria-label="Add a tasting"><span class="plus">+</span><Icon name="glass" size={15} /></a>
+	<!-- the one to hand: a tasting; the rest in the ⋯ menu -->
+	<a class="btn primary" href={links.newTasting({ wine_id: wine.id })}>＋ Tasting</a>
+	<ActionMenu>
+		<a class="menu-item" role="menuitem" href={links.newBottle({ wine_id: wine.id })}><Icon name="bottle" size={15} />Add a bottle</a>
+		<button class="menu-item" role="menuitem" onclick={() => (addingScore = true)}><Icon name="medal" size={15} />Add a critic's score</button>
+		<WineActions wineId={wine.id} actions={wine.actions} bind:said />
+		<button class="menu-item" role="menuitem" onclick={() => (addingToList = true)}><Icon name="list" size={15} />Add to a list</button>
+		<WishButton wineId={wine.id} />
+		<hr />
+		<a class="menu-item" role="menuitem" href={links.editWine(wine.id)}><Icon name="edit" size={15} />Edit wine</a>
+		{#if !wine.vineyard}<button class="menu-item" role="menuitem" onclick={() => (drawingVineyard = true)}><Icon name="draw" size={15} />Draw its vineyard</button>{/if}
+	</ActionMenu>
+	{#if said?.text}<span class="said small" class:muted={!said.error} class:error={said.error} class:busy={said.busy} role="status">{said.text}</span>{/if}
 {/snippet}
 
 {#snippet map()}
@@ -179,6 +186,21 @@
 </Tabs>
 
 <style>
+	.said {
+		align-self: center;
+		max-width: 280px;
+	}
+	.said.error {
+		color: var(--down);
+	}
+	.said.busy {
+		animation: pulse 1.2s ease-in-out infinite;
+	}
+	@keyframes pulse {
+		50% {
+			opacity: 0.45;
+		}
+	}
 	/* the grapes, blend, disgorgement, drinking window, LWIN: one line under the header's */
 	.about {
 		margin: 0 0 10px;

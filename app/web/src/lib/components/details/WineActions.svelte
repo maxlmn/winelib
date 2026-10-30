@@ -3,51 +3,35 @@
 	import type { WineAction } from '#lib/api/details.ts';
 	import Icon from '#lib/components/Icon.svelte';
 
-	/** A plug-in's actions on a wine (Fetch from Robert Parker, Search again), as icon buttons among the header's: what
-	 * each does on hover; while it runs its busy text, then its answer's message beside them. */
-	let { wineId, actions }: { wineId: number; actions: WineAction[] } = $props();
+	/** A plug-in's actions on a wine (Fetch from Robert Parker, Search again), as items of the page's ⋯ menu. While
+	 * one runs, `said` is its busy text, then its answer's message: the page shows it beside the menu (bound). */
+	interface Props {
+		wineId: number;
+		actions: WineAction[];
+		said?: { text: string; busy: boolean; error?: boolean } | null;
+	}
+	let { wineId, actions, said = $bindable(null) }: Props = $props();
 
-	let state = $state<{ id: string; busy: boolean; text: string; error?: boolean } | null>(null);
 	$effect(() => {
-		void wineId; // another vintage: back to the buttons
-		state = null;
+		void wineId; // another vintage: nothing said
+		said = null;
 	});
 
 	async function act(a: WineAction) {
 		if (a.confirm && !confirm(a.confirm)) return;
-		state = { id: a.id, busy: true, text: a.busy ?? '…' };
+		said = { busy: true, text: a.busy ?? '…' };
 		try {
 			const res = await fetch(a.endpoint, { method: 'POST' });
 			const body = await res.json().catch(() => ({}));
-			if (!res.ok) return void (state = { id: a.id, busy: false, text: body.detail ?? `Error ${res.status}`, error: true });
-			state = { id: a.id, busy: false, text: body.message ?? '' };
+			if (!res.ok) return void (said = { busy: false, text: body.detail ?? `Error ${res.status}`, error: true });
+			said = { busy: false, text: body.message ?? '' };
 			if (body.reload) await invalidateAll();
 		} catch {
-			state = { id: a.id, busy: false, text: 'The app couldn’t be reached', error: true };
+			said = { busy: false, text: 'The app couldn’t be reached', error: true };
 		}
 	}
 </script>
 
 {#each actions as a (a.id)}
-	<button class="btn icon" class:busy={state?.id === a.id && state.busy} disabled={!!state?.busy} onclick={() => act(a)}
-		title={a.label} aria-label={a.label}><Icon name="search" size={15} /></button>
+	<button class="menu-item" role="menuitem" disabled={!!said?.busy} onclick={() => act(a)}><Icon name="search" size={15} />{a.label}</button>
 {/each}
-{#if state?.text}<span class="said small" class:muted={!state.error} class:error={state.error} role="status">{state.text}</span>{/if}
-
-<style>
-	.busy {
-		animation: pulse 1.2s ease-in-out infinite;
-	}
-	@keyframes pulse {
-		50% {
-			opacity: 0.45;
-		}
-	}
-	.said {
-		align-self: center;
-		max-width: 260px;
-	}
-	.error {
-		color: var(--down);
-	}
-</style>
