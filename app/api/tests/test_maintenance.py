@@ -12,7 +12,7 @@ from conftest import rp_of
 def seed(s):
     p = Producer(name="Clos Rougeard")
     a = Wine(producer=p, cuvee="Le Bourg", vintage="2015", type="Red")
-    b = Wine(producer=p, cuvee="Le Bourg", vintage="2015", type="Red")  # duplicate of a
+    b = Wine(producer=p, cuvee="Le Bourg", vintage="2015", type="Red", disgorgement_date="")  # duplicate of a ("" is none)
     c = Wine(producer=p, cuvee="Les Poyeux", vintage="2016", type="Red")
     d = Wine(producer=p, cuvee="Poyeux", vintage="2017", type="Red")  # similar name to c
     s.add_all([a, b, c, d])

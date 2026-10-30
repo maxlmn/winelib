@@ -21,6 +21,8 @@
 	const critics = $derived(data.critics.includes(draft.preferred_critic) ? data.critics : [draft.preferred_critic, ...data.critics]);
 	// Currencies edited as rows, so renaming a code doesn't reorder or drop the row
 	let rates = $state(toRows(appSettings.exchange_rates, appSettings.currency));
+	// Buyer's premiums as rows too (a vendor renamed keeps its place)
+	let premiums = $state(Object.entries(appSettings.vendor_premiums ?? {}).map(([vendor, pct]) => ({ vendor, pct })));
 	let newKeyword = $state('');
 	let saving = $state(false);
 	let error = $state('');
@@ -44,7 +46,8 @@
 
 	const payload = $derived<AppSettings>({
 		...draft,
-		exchange_rates: { [draft.currency]: 1, ...Object.fromEntries(rates.filter((r) => r.code.trim()).map((r) => [r.code.trim().toUpperCase(), r.rate])) }
+		exchange_rates: { [draft.currency]: 1, ...Object.fromEntries(rates.filter((r) => r.code.trim()).map((r) => [r.code.trim().toUpperCase(), r.rate])) },
+		vendor_premiums: Object.fromEntries(premiums.filter((p) => p.vendor.trim()).map((p) => [p.vendor.trim(), p.pct ?? 0]))
 	});
 	// compared whatever the keys' order (the saved settings come back in the server's order: not a change)
 	const canon = (v: unknown): unknown =>
@@ -90,6 +93,7 @@
 	function reset(to: AppSettings) {
 		draft = clone(to);
 		rates = toRows(to.exchange_rates, to.currency);
+		premiums = Object.entries(to.vendor_premiums ?? {}).map(([vendor, pct]) => ({ vendor, pct }));
 		error = '';
 	}
 
@@ -204,6 +208,24 @@
 			</tbody>
 		</table>
 		<button class="link" onclick={() => rates.push({ code: '', rate: 1 })}>+ Add currency</button>
+	</section>
+
+	<section class="card">
+		<h2>Buyer's premiums</h2>
+		<p class="muted">An auction house's fee on the hammer price: a bottle bought from one of these vendors offers to add it to the price.</p>
+		<table>
+			<thead><tr><th>Vendor</th><th>Premium</th><th></th></tr></thead>
+			<tbody>
+				{#each premiums as p, i (i)}
+					<tr>
+						<td><input bind:value={p.vendor} placeholder="Idealwine" aria-label="Vendor" /></td>
+						<td><input class="short num" type="number" step="0.5" min="0" max="100" bind:value={p.pct} aria-label="Premium for {p.vendor || 'this vendor'} in percent" /> %</td>
+						<td><button class="icon-btn" onclick={() => premiums.splice(i, 1)} aria-label="Remove {p.vendor}">✕</button></td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+		<button class="link" onclick={() => premiums.push({ vendor: '', pct: 0 })}>+ Add vendor</button>
 	</section>
 
 	<section class="card">

@@ -291,6 +291,7 @@ def known_cuvee(session, out):
     out["grapes"] = [{"id": g.varietal_id, "name": g.varietal.name, "share": g.share} for g in w.grapes if g.varietal]
     out["blend"], out["lwin"] = w.blend or None, w.lwin or None
     out["wine_id"] = same.id if same else None
+    out["like_id"] = w.id  # the vintage it was read against: a new vintage starts from it (vineyard and all)
     return out
 
 

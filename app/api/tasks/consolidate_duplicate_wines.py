@@ -30,8 +30,9 @@ def find_duplicate_groups(session):
                                         joinedload(Wine.varietal)).all()
     for w in wines:
         # Color too: a red and a white of one cuvée name are two wines
-        groups[(w.producer_id, w.cuvee or "", w.type, w.appellation_id, w.varietal_id, w.vintage,
-                w.disgorgement_date)].append(w)
+        # an empty text and none are the same (older imports left "" where the form leaves nothing)
+        groups[(w.producer_id, (w.cuvee or "").strip(), w.type, w.appellation_id, w.varietal_id,
+                (w.vintage or "").strip(), (w.disgorgement_date or "").strip())].append(w)
     out = []
     for ws in groups.values():
         if len(ws) < 2:

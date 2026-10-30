@@ -108,6 +108,21 @@ def geocode(q: str):
         raise HTTPException(502, "OpenStreetMap couldn't be reached")
 
 
+class TextIn(BaseModel):
+    text: str
+
+
+@router.post("/api/lookups/from-text")
+def from_text(data: TextIn, session: Session = Depends(get_session)):
+    """A purchase from a pasted text (an order or auction email, an invoice, a sheet: the bottle form's Fill from
+    text): the wine read against the database, with the quantity, price, date and vendor it gives; a draft."""
+    from tasks import from_text as reader
+    try:
+        return reader.from_text(session, data.text)
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+
+
 @router.get("/api/lookups/from-link")
 def from_link(url: str, session: Session = Depends(get_session)):
     """A wine from a shop's or Vivino's page (the wine form's Fill from a link): its producer, cuvée, vintage,

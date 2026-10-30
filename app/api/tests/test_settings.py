@@ -57,6 +57,9 @@ def test_validation(client):
     dup = {**s, "storage_groups": [{"name": "A", "prefix": "H"}, {"name": "B", "prefix": "H"}]}
     assert client.put("/api/settings", json=dup).status_code == 422
     assert client.put("/api/settings", json={**s, "map_default_basemap": "nope"}).status_code == 422
+    premiums = client.put("/api/settings", json={**s, "vendor_premiums": {" Idealwine ": 22, "": 5}}).json()
+    assert premiums["vendor_premiums"] == {"Idealwine": 22.0}  # trimmed, a blank vendor dropped
+    assert client.put("/api/settings", json={**s, "vendor_premiums": {"X": 120}}).status_code == 422
 
 
 def test_another_main_currency(client):
