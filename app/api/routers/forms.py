@@ -677,6 +677,27 @@ def set_wine_tags(wine_id: int, data: TagsIn, session: Session = Depends(get_ses
     return {"wine_id": w.id, "tags": style_tags.of_wines(session, [w.id]).get(w.id, [])}
 
 
+class DrinkWindowIn(BaseModel):
+    start: int | None = Field(None, ge=1900, le=2200)
+    end: int | None = Field(None, ge=1900, le=2200)
+
+    @field_validator("start", "end", mode="before")
+    @classmethod
+    def zero_is_unset(cls, v):
+        return None if v in (0, "", "0") else v
+
+
+@router.put("/api/wines/{wine_id}/drink-window")
+def set_drink_window(wine_id: int, data: DrinkWindowIn, session: Session = Depends(get_session)):
+    """The years to drink a wine in, as you set them (its page's menu): either may be left open, both cleared."""
+    if data.start and data.end and data.end < data.start:
+        raise HTTPException(422, "The window ends before it starts")
+    w = _get(session, Wine, wine_id, "Wine")
+    w.drink_window_start, w.drink_window_end = data.start, data.end
+    session.commit()
+    return {"wine_id": w.id, "drink_window": [w.drink_window_start, w.drink_window_end]}
+
+
 # Bottles that leave other than by being drunk (that's a tasting): taken off the count, put back if undone
 OUT_KINDS = ("gifted", "sold", "broken", "other")
 

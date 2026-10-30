@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import { messageOf, request } from '#lib/api/http.ts';
 	import MaturityBadge from '#lib/components/MaturityBadge.svelte';
 	import type { WineDetail } from '#lib/api/details.ts';
 	import { shapesUrl } from '#lib/api/details.ts';
@@ -37,6 +38,26 @@
 	let addingToList = $state(false);
 	// Style tags (the menu): the picker under the appellation
 	let editingStyle = $state(false);
+	// The drinking window (the menu): its years set by hand, under the appellation
+	let editingDrink = $state(false);
+	let drinkStart = $state<number | null>(null);
+	let drinkEnd = $state<number | null>(null);
+	let drinkError = $state('');
+	function openDrink() {
+		[drinkStart, drinkEnd] = wine.drink_window;
+		drinkError = '';
+		editingDrink = true;
+	}
+	async function saveDrink(start: number | null, end: number | null) {
+		drinkError = '';
+		try {
+			await request(`/api/wines/${wine.id}/drink-window`, { method: 'PUT', body: { start, end } });
+			editingDrink = false;
+			await invalidateAll();
+		} catch (e) {
+			drinkError = messageOf(e);
+		}
+	}
 	// a plug-in action's busy text, then its answer (WineActions), beside the menu
 	let said = $state<{ text: string; busy: boolean; error?: boolean } | null>(null);
 	// Draw vineyard: drawn on the wine's map (DetailMap), created with its outline and linked to the wine
@@ -92,6 +113,7 @@
 		<WineActions wineId={wine.id} actions={wine.actions} bind:said />
 		<button class="menu-item" role="menuitem" onclick={() => (addingToList = true)}><Icon name="list" size={15} />Add to a list</button>
 		<button class="menu-item" role="menuitem" onclick={() => (editingStyle = true)}><Icon name="tag" size={15} />{wine.tags?.some((t) => t.set) ? 'Edit its style' : 'Add its style'}</button>
+		<button class="menu-item" role="menuitem" onclick={openDrink}><Icon name="calendar" size={15} />{drink ? 'Edit its drinking window' : 'Add a drinking window'}</button>
 		<WishButton wineId={wine.id} />
 		<hr />
 		<a class="menu-item" role="menuitem" href={links.editWine(wine.id)}><Icon name="edit" size={15} />Edit wine</a>
@@ -119,6 +141,18 @@
 			{#if wine.blend}<span class="item">{wine.blend}</span>{/if}
 			{#if drink}<span class="item">Drink <span class="num">{drink}</span>{#if wine.maturity}{' '}<MaturityBadge maturity={wine.maturity} />{/if}</span>{/if}
 		</p>
+	{/if}
+	{#if editingDrink}
+		<form class="drink-edit" onsubmit={(e) => { e.preventDefault(); saveDrink(drinkStart, drinkEnd); }}>
+			<span class="muted">Drink</span>
+			<input type="number" min="1900" max="2200" placeholder="from" aria-label="From" bind:value={drinkStart} />
+			<span class="muted">–</span>
+			<input type="number" min="1900" max="2200" placeholder="to" aria-label="To" bind:value={drinkEnd} />
+			<button class="btn primary">Save</button>
+			<button type="button" class="btn" onclick={() => (editingDrink = false)}>Cancel</button>
+			{#if drink}<button type="button" class="btn" onclick={() => saveDrink(null, null)}>Clear</button>{/if}
+			{#if drinkError}<span class="error">{drinkError}</span>{/if}
+		</form>
 	{/if}
 	<WineStyle wineId={wine.id} tags={wine.tags ?? []} cuvee={wine.cuvee_tags ?? []} bind:editing={editingStyle} />
 {/snippet}
@@ -220,6 +254,32 @@
 		margin: 2px 0 0;
 		font-size: 13px;
 		line-height: 1.5;
+	}
+	/* the drinking window's years, set from the menu */
+	.drink-edit {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px;
+		margin-top: 8px;
+		font-size: 13px;
+	}
+	.drink-edit input {
+		width: 76px;
+		padding: 4px 7px;
+		border: 1px solid var(--border);
+		border-radius: 7px;
+		background: var(--surface);
+		font: inherit;
+		color: inherit;
+	}
+	.drink-edit .btn {
+		padding: 4px 10px;
+		font-size: 12px;
+	}
+	.drink-edit .error {
+		color: var(--down);
+		font-size: 12px;
 	}
 	.grape-icon {
 		display: inline-flex;

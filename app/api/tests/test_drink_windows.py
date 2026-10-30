@@ -40,3 +40,14 @@ def test_home_lists_what_to_drink_soon(client):
     assert [l["cuvee"] for l in soon["lines"]] == ["Past", "Closing", "Ready"]  # past first, then closing soonest
     assert soon["lines"][1]["years_left"] == 1
     assert soon["bottles"] == {"ready": 5, "young": 4, "past": 1, "unknown": 2}
+
+
+def test_set_from_the_wine_page(client):
+    r = client.put("/api/wines/5/drink-window", json={"start": Y, "end": Y + 10})
+    assert r.status_code == 200 and r.json()["drink_window"] == [Y, Y + 10]
+    assert client.get("/api/wines/5").json()["maturity"] == "ready"
+    # one end left open, then cleared ("" or 0 is unset)
+    assert client.put("/api/wines/5/drink-window", json={"start": "", "end": Y + 3}).json()["drink_window"] == [None, Y + 3]
+    assert client.put("/api/wines/5/drink-window", json={"start": 0, "end": None}).json()["drink_window"] == [None, None]
+    assert client.put("/api/wines/5/drink-window", json={"start": Y + 5, "end": Y}).status_code == 422
+    assert client.put("/api/wines/999/drink-window", json={}).status_code == 404
