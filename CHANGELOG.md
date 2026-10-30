@@ -25,9 +25,9 @@
   or a new vintage of a cuvée you have), the quantity, the price a bottle (a lot's divided), the date and the vendor.
 - **A wine's page, said once**: the facts list is gone (the header already names the producer, colour, region and
   appellation, the map its vineyard); the grapes, blend, disgorgement, drinking window and LWIN on one line under the
-  title. Its buttons are icons, named on hover, a plug-in's (Fetch from Robert Parker) among them; no Critics card
-  without a score, no Lists card when it's on none (the header's icons add them); the Vintages card just its pills.
-  A producer's page adds to a list the same way.
+  title. One button, ＋ Tasting, and a ⋯ menu for the rest (a bottle, a critic's score, a plug-in's Fetch from Robert
+  Parker, a list, the wishlist, Edit, Draw its vineyard); no Critics card without a score, no Lists card when it's on
+  none (the menu adds them); the Vintages card just its pills. A producer's page: ＋ Wine, and its ⋯ menu.
 - **Settings in three tabs**: Settings, Maintenance, and **Needs attention**: what the quick checks find (wines entered twice, records pointing at nothing,
   a vintage under two appellations, market prices no longer refreshed, cellar wines
   without an LWIN, restaurants without coordinates), its count on the tab, each opening its Maintenance task with

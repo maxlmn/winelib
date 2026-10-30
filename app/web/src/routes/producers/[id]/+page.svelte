@@ -11,6 +11,7 @@
 	import WineCatalog from '#lib/components/details/WineCatalog.svelte';
 	import { links } from '#lib/links.ts';
 	import Icon from '#lib/components/Icon.svelte';
+	import ActionMenu from '#lib/components/ActionMenu.svelte';
 	import { money } from '#lib/format.ts';
 
 	let { data } = $props();
@@ -35,9 +36,12 @@
 <svelte:head><title>{p.name} · WineLib</title></svelte:head>
 
 {#snippet actions()}
-	<a class="btn" href={links.editProducer(p.id)}>Edit producer</a>
-	<a class="btn" href={links.newWine({ producer_id: p.id })}>＋ Wine</a>
-	<button class="btn icon" onclick={() => (addingToList = true)} title="Add to a list" aria-label="Add to a list"><span class="plus">+</span><Icon name="list" size={15} /></button>
+	<a class="btn primary" href={links.newWine({ producer_id: p.id })}>＋ Wine</a>
+	<ActionMenu>
+		<button class="menu-item" role="menuitem" onclick={() => (addingToList = true)}><Icon name="list" size={15} />Add to a list</button>
+		<hr />
+		<a class="menu-item" role="menuitem" href={links.editProducer(p.id)}><Icon name="edit" size={15} />Edit producer</a>
+	</ActionMenu>
 {/snippet}
 
 {#snippet stats()}

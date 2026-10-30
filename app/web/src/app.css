@@ -202,15 +202,36 @@ h3 {
 	color: white;
 }
 
-/* An icon-only button: what it does in its title (on hover) and aria-label; a "+" beside the icon adds one */
-.btn.icon {
-	gap: 1px;
-	padding: 6px 8px;
-	line-height: 1;
+/* An item of a ⋯ menu (ActionMenu): its icon, then what it does */
+.menu-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	padding: 7px 10px;
+	border: none;
+	border-radius: 6px;
+	background: none;
+	font: inherit;
+	font-size: 14px;
+	color: var(--text);
+	text-align: left;
+	text-decoration: none;
+	cursor: pointer;
+	white-space: nowrap;
 }
-.btn.icon .plus {
-	font-size: 13px;
-	font-weight: 600;
+.menu-item:hover:not(:disabled) {
+	background: var(--surface-2);
+	color: var(--accent);
+}
+.menu-item:disabled {
+	opacity: 0.5;
+	cursor: progress;
+}
+.action-menu hr {
+	border: none;
+	border-top: 1px solid var(--border);
+	margin: 4px 2px;
 }
 
 /* Segmented buttons: a few choices side by side, the chosen one filled (.on) */
