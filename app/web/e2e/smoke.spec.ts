@@ -96,3 +96,12 @@ test('a phone: no page wider than the screen', async ({ page }) => {
 		expect(wide, path).toBeLessThanOrEqual(1);
 	}
 });
+
+test('Needs attention on the home page opens its check, the preview run', async ({ page }) => {
+	await page.goto('/');
+	const panel = page.getByRole('region', { name: 'Needs attention' });
+	await expect(panel).toContainText('1 wine entered twice');
+	await panel.getByRole('link', { name: /entered twice/ }).click();
+	await expect(page).toHaveURL(/\/settings\?task=duplicates/);
+	await expect(page.getByText('1 group of duplicate wines')).toBeVisible({ timeout: 15_000 });
+});

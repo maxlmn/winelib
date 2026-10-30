@@ -6,6 +6,7 @@
 	import WhatToOpen from '#lib/components/home/WhatToOpen.svelte';
 	import CellarCards from '#lib/components/CellarCards.svelte';
 	import HomeMap from '#lib/components/home/HomeMap.svelte';
+	import Attention from '#lib/components/home/Attention.svelte';
 	import OccasionCard from '#lib/components/tastings/OccasionCard.svelte';
 	import TastingRibbon from '#lib/components/tastings/TastingRibbon.svelte';
 	import { occasions } from '#lib/components/tastings/journal.ts';
@@ -82,6 +83,7 @@
 	</a>
 </div>
 
+<Attention items={data.attention} />
 <!-- Two rows, their columns as tall as each other: the map beside the latest tasting and the year's wines; what to
      open beside what came in, half and half -->
 <div class="row">

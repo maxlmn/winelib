@@ -36,6 +36,9 @@ export default async function setup(config: FullConfig) {
 	const plain = await ok(await api.post('/api/bottles', {
 		data: { wine: { producer: { name: 'Domaine Sans Carte' }, cuvee: '', vintage: '2020', type: 'Red', appellation: other.id }, qty: 1, location: 'R2' }
 	}));
+	// a wine entered twice: the home page's Needs attention lists it
+	for (let i = 0; i < 2; i++)
+		await ok(await api.post('/api/wines', { data: { producer: { name: 'Domaine Double' }, cuvee: 'Bis', vintage: '2019', type: 'White' } }));
 	mkdirSync('e2e/.data', { recursive: true });
 	writeFileSync('e2e/.data/ids.json', JSON.stringify({
 		wine: bottle.wine_id, bottle: bottle.id, vineyard: vineyard.id, tasting: tasting.id, plainWine: plain.wine_id

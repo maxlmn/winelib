@@ -29,6 +29,8 @@ export const links = {
 	places: (query?: Query) => withQuery('/places', query),
 	map: (query?: Query) => withQuery('/map', query),
 	settings: () => '/settings',
+	/** Settings › Maintenance opened on one task, its preview started (a report: run) */
+	maintenance: (task: string) => withQuery('/settings', { task }) + '#maintenance',
 	/** where the reference data and the map come from, their licences */
 	about: () => '/about',
 	/** the Help guides, or one of them */
