@@ -70,7 +70,10 @@ test("the cellar's wine label opens the bottle", async ({ page }) => {
 	await page.goto('/cellar?view=list');
 	await page.getByRole('link', { name: 'Le Bourg' }).first().click();
 	await expect(page).toHaveURL(new RegExp(`/bottles/${ids().bottle}$`));
-	await expect(page.locator('.kind').first()).toHaveText(/Bottle/i);
+	// the bottle: the band at the foot of its wine's card; its line marked in the Cellar tab
+	await expect(page.locator('.foot .line1')).toContainText(/bottles? · In R1/);
+	await page.getByRole('tab', { name: /Cellar/ }).click();
+	await expect(page.locator('li.current')).toContainText('this bottle');
 });
 
 test('Fill from text fills the new-bottle form', async ({ page }) => {

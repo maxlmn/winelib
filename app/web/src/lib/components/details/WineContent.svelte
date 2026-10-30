@@ -18,13 +18,18 @@
 	import ActionMenu from '#lib/components/ActionMenu.svelte';
 	import ListsPanel from './ListsPanel.svelte';
 	import Icon from '#lib/components/Icon.svelte';
+	import type { Snippet } from 'svelte';
 
 	interface Props {
 		wine: WineDetail;
 		regionColors: RegionColors;
+		/** under the header, part of its card: the bottle a bottle's page is about */
+		bottle?: Snippet;
+		/** that bottle's id: its line marked in the Cellar tab */
+		bottleId?: number | null;
 	}
 
-	let { wine, regionColors }: Props = $props();
+	let { wine, regionColors, bottle, bottleId = null }: Props = $props();
 
 	let allVintages = $state(false);
 	// Add a critic's score, add to a list (the header's icons): their card's form, shown even when it has nothing yet
@@ -114,6 +119,7 @@
 	regionHref={wine.region ? links.region(wine.region) : null}
 	{actions}
 	aside={hasMap ? map : undefined}
+	footer={bottle}
 >
 	{#if grapes.length || wine.blend || wine.disgorgement_date || drink || wine.lwin}
 		<p class="about">
@@ -172,6 +178,7 @@
 		{#if tab === 'cellar'}
 			<CellarSection
 				plain
+				current={bottleId}
 				bottles={cellar}
 				{regionColors}
 				empty={allVintages ? 'No bottles of any vintage in stock.' : 'No bottles of this vintage in stock.'}

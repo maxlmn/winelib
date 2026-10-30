@@ -16,7 +16,8 @@
 		bottles,
 		regionColors,
 		prices = false,
-		plain = false
+		plain = false,
+		current = null
 	}: {
 		bottles: Bottle[];
 		regionColors: RegionColors;
@@ -24,6 +25,8 @@
 		prices?: boolean;
 		/** one wine's bottles (its page, a bottle's): no rack strip, no reds / whites split, its lines as they are */
 		plain?: boolean;
+		/** the bottle whose page this is: its line marked */
+		current?: number | null;
 	} = $props();
 	const paid = (b: Bottle) => (b.price ? `${symbol(b.currency ?? appSettings.currency)}${Math.round(b.price).toLocaleString()}` : null);
 
@@ -86,7 +89,7 @@
 			{#if title}<h4><span class="dot" style:background={color}></span>{title} <span class="muted num">{qty}</span></h4>{/if}
 			<ul>
 				{#each list as b (b.bottle_id)}
-					<li class:hot={b.bottle_id === hot}>
+					<li class:hot={b.bottle_id === hot} class:current={b.bottle_id === current}>
 						<a class="line-ends" href={links.bottle(b.bottle_id)} title="Open this bottle">{@render ends(b)}</a>
 						<span class="label">
 							<a href={links.bottle(b.bottle_id)}>
@@ -96,7 +99,8 @@
 							<span class="meta num">[{b.vintage}]</span><CriticPills scores={b.scores} />
 							{#if prices && paid(b)}<span class="paid num" title="Paid a bottle">{paid(b)}</span>{/if}
 							{#if prices && b.vendor}<span class="vendor muted" title="Bought from">{b.vendor}</span>{/if}
-								{#if b.maturity}<span class="mat"><MaturityBadge maturity={b.maturity} from={b.drink_from} to={b.drink_to} /></span>{/if}
+								{#if b.bottle_id === current}<span class="this">this bottle</span>{/if}
+							{#if b.maturity}<span class="mat"><MaturityBadge maturity={b.maturity} from={b.drink_from} to={b.drink_to} /></span>{/if}
 						</span>
 					</li>
 				{/each}
@@ -197,6 +201,19 @@
 	}
 	li.hot {
 		background: var(--accent-soft);
+	}
+	/* the bottle whose page this is */
+	li.current {
+		background: var(--accent-soft);
+		box-shadow: inset 2px 0 0 var(--accent);
+		border-radius: 4px;
+		padding-left: 6px;
+	}
+	.this {
+		font-size: 11px;
+		font-weight: 600;
+		color: var(--accent);
+		white-space: nowrap;
 	}
 	.line-ends {
 		display: inline-flex;
