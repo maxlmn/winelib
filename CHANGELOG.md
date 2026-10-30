@@ -28,6 +28,8 @@
   without an LWIN, restaurants without coordinates), its count on the tab, each opening its Maintenance task with
   the preview run.
 - **Keeping vintages together** (Settings › Maintenance): *Cuvées under several appellations* finds a vintage entered twice or left under an old name.
+- Market prices: a wine WineLabs has no price for is marked so on its bottles and asked again a month later, not every
+  night.
 - Fixes: *Duplicate wines* missed duplicates whose disgorgement date was empty on one and unset on the other; names
   match "Premier" and "1er" ("Premier Grand Cru Classé" is an auction's "1er Grand Cru Classé"); the map outlines
   that crossed themselves (rounding) are repaired: their fill no longer draws inside out.

@@ -188,3 +188,32 @@ def test_lwin18():
     assert lwin18("1080098", "2023", 6, 75) == "108009820230600750"
     assert lwin18("1000013", "NV - Oct 2024", 6, 150) == "100001310000601500"
     assert lwin18("108009", "2023", 6, 75) is None and lwin18("1080098", "2023", 6, None) is None
+
+
+def test_a_wine_winelabs_has_no_price_for_waits_a_month(client, monkeypatch):
+    """WineLabs has none: the bottle says so, and isn't asked again for NO_PRICE_RETRY_DAYS; a network failure isn't
+    a miss (asked again the next run)."""
+    from datetime import timedelta
+    import db
+    from main import app
+    from tasks import update_market_prices as prices
+    monkeypatch.setattr(prices, "api_key", lambda: "k")
+    monkeypatch.setattr(prices, "time", type("T", (), {"sleep": staticmethod(lambda s: None)}))
+    s = next(app.dependency_overrides[db.get_session]())
+    due = lambda: {b.id for b in prices.cellar_bottles(s)}  # noqa: E731
+    before = due()
+
+    monkeypatch.setattr(prices, "fetch_winelabs", lambda *a, **k: None)  # the network down
+    prices.refresh_prices(s, prices.cellar_bottles(s), log=lambda *a: None)
+    assert due() == before
+
+    monkeypatch.setattr(prices, "fetch_winelabs", lambda *a, **k: {})  # no price for it
+    prices.refresh_prices(s, prices.cellar_bottles(s), log=lambda *a: None)
+    unpriced = [b for b in s.query(Bottle).filter(Bottle.id.in_(before)) if b.last_price is None]
+    assert unpriced and all(b.last_price_source == prices.NO_PRICE for b in unpriced)
+    assert due() == before - {b.id for b in unpriced}  # a bottle with an older price is still due
+
+    for b in unpriced:  # a month on: asked again
+        b.last_price_date = date.today() - timedelta(days=prices.NO_PRICE_RETRY_DAYS + 1)
+    s.commit()
+    assert due() == before
