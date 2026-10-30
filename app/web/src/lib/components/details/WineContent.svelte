@@ -35,6 +35,8 @@
 	// Add a critic's score, add to a list (the header's icons): their card's form, shown even when it has nothing yet
 	let addingScore = $state(false);
 	let addingToList = $state(false);
+	// Style tags (the menu): the picker under the appellation
+	let editingStyle = $state(false);
 	// a plug-in action's busy text, then its answer (WineActions), beside the menu
 	let said = $state<{ text: string; busy: boolean; error?: boolean } | null>(null);
 	// Draw vineyard: drawn on the wine's map (DetailMap), created with its outline and linked to the wine
@@ -88,6 +90,7 @@
 		<button class="menu-item" role="menuitem" onclick={() => (addingScore = true)}><Icon name="medal" size={15} />Add a critic's score</button>
 		<WineActions wineId={wine.id} actions={wine.actions} bind:said />
 		<button class="menu-item" role="menuitem" onclick={() => (addingToList = true)}><Icon name="list" size={15} />Add to a list</button>
+		<button class="menu-item" role="menuitem" onclick={() => (editingStyle = true)}><Icon name="tag" size={15} />{wine.tags?.some((t) => t.set) ? 'Edit its style' : 'Add its style'}</button>
 		<WishButton wineId={wine.id} />
 		<hr />
 		<a class="menu-item" role="menuitem" href={links.editWine(wine.id)}><Icon name="edit" size={15} />Edit wine</a>
@@ -108,6 +111,10 @@
 		}} />
 {/snippet}
 
+{#snippet under()}
+	<WineStyle wineId={wine.id} tags={wine.tags ?? []} cuvee={wine.cuvee_tags ?? []} bind:editing={editingStyle} />
+{/snippet}
+
 <DetailHeader
 	kind={['Wine', wine.color].filter(Boolean).join(' · ')}
 	{title}
@@ -118,6 +125,7 @@
 	regionColor={wine.region_color}
 	regionHref={wine.region ? links.region(wine.region) : null}
 	{actions}
+	{under}
 	aside={hasMap ? map : undefined}
 	footer={bottle}
 >
@@ -130,7 +138,6 @@
 			{#if wine.lwin}<span class="item muted">LWIN <a class="num" href={links.winelabs(wine.lwin, wine.vintage)} target="_blank" rel="noreferrer">{wine.lwin} ↗</a></span>{/if}
 		</p>
 	{/if}
-	<WineStyle wineId={wine.id} tags={wine.tags ?? []} cuvee={wine.cuvee_tags ?? []} />
 	<!-- the lists naming this vintage, another one, or the cuvée (its producer's: the producer's page) -->
 	<ListsPanel inline wineId={wine.id} bind:adding={addingToList} />
 </DetailHeader>
