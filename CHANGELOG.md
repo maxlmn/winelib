@@ -33,6 +33,9 @@
   are icons; an appellation's, a vineyard's and a place's facts no longer repeat their header. A bottle's date, vendor
   and provenance sit small under its price; a tasting's page says the wine and the bottle in two lines under its
   header (no Wine and Bottle cards), the critics once in its note, That session only with other wines.
+- No stats boxes repeating the tabs (Bottles in cellar, Wines tasted, Wines): the Cellar tab says the cellar's value
+  ("Cellar 12 · €3,400"). A wine's and a bottle's cellar cards are plain (no rack strip, no reds / whites split); a
+  bottle's "What happened to it" only for the bottles that left other than drunk (gifted, sold, broken).
 - **Settings in three tabs**: Settings, Maintenance, and **Needs attention**: what the quick checks find (wines entered twice, records pointing at nothing,
   a vintage under two appellations, market prices no longer refreshed, cellar wines
   without an LWIN, restaurants without coordinates), its count on the tab, each opening its Maintenance task with

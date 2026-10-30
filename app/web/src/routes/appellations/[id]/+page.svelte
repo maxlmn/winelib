@@ -6,7 +6,6 @@
 	import DetailHeader from '#lib/components/details/DetailHeader.svelte';
 	import DetailMap from '#lib/components/details/DetailMap.svelte';
 	import Facts from '#lib/components/details/Facts.svelte';
-	import Stats from '#lib/components/details/Stats.svelte';
 	import Tabs from '#lib/components/details/Tabs.svelte';
 	import TastingHistory from '#lib/components/details/TastingHistory.svelte';
 	import { fmtDate, splitList } from '#lib/components/details/wine.ts';
@@ -83,21 +82,12 @@
 				<p>{a.details}</p>
 			</details>
 		{/if}
-		<div class="stats">
-			<Stats
-				items={[
-					{ label: 'Bottles in cellar', value: a.stats.bottles, sub: a.stats.value ? money(a.stats.value) : undefined, gold: a.stats.bottles > 0 },
-					{ label: 'Wines tasted', value: a.stats.tastings },
-					{ label: 'Producers', value: a.producers.length }
-				]}
-			/>
-		</div>
 	</DetailHeader>
 
 	<Tabs
 		tabs={[
 			{ id: 'history', label: 'History', count: a.tastings.length },
-			{ id: 'cellar', label: 'Cellar', count: a.stats.bottles },
+			{ id: 'cellar', label: 'Cellar', count: a.stats.bottles, note: a.stats.value ? money(a.stats.value) : undefined },
 			{ id: 'producers', label: 'Producers', count: a.producers.length },
 			{ id: 'vineyards', label: 'Vineyards', count: a.vineyards.length }
 		]}
@@ -164,9 +154,6 @@
 		background: var(--surface-2);
 		border: 1px solid var(--border);
 		font-size: 12px;
-	}
-	.stats {
-		margin-top: 16px;
 	}
 	.more {
 		display: inline-block;

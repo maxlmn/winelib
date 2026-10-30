@@ -5,7 +5,6 @@
 	import CellarSection from '#lib/components/details/CellarSection.svelte';
 	import DetailHeader from '#lib/components/details/DetailHeader.svelte';
 	import DetailMap from '#lib/components/details/DetailMap.svelte';
-	import Stats from '#lib/components/details/Stats.svelte';
 	import Tabs from '#lib/components/details/Tabs.svelte';
 	import TastingHistory from '#lib/components/details/TastingHistory.svelte';
 	import { links } from '#lib/links.ts';
@@ -57,17 +56,6 @@
 	<a class="btn icon" href={links.map({ region: r.name })} title="Open on the map" aria-label="Open on the map"><Icon name="map" size={15} /></a>
 {/snippet}
 
-{#snippet stats()}
-	<Stats
-		items={[
-			{ label: 'Bottles in cellar', value: r.stats.bottles, sub: r.stats.value ? money(r.stats.value) : undefined, gold: r.stats.bottles > 0 },
-			{ label: 'Wines tasted', value: r.stats.tastings },
-			{ label: 'Producers', value: r.stats.producers },
-			{ label: 'Appellations', value: r.stats.appellations, sub: r.stats.vineyards ? plural(r.stats.vineyards, 'vineyard') : undefined }
-		]}
-	/>
-{/snippet}
-
 {#snippet topList(title: string, rows: { id: number; name: string; bottles: number; tastings: number }[], href: (id: number) => string)}
 	<div class="top-list">
 		<h3>{title}</h3>
@@ -96,7 +84,7 @@
 {#key r.id}
 <!-- The page takes the region's color as its accent: each region its own room -->
 <div class:tinted={!!r.color} style:--tint={r.color || null}>
-	<DetailHeader icon="globe" kind={r.country && r.country !== r.name ? `Wine region · ${r.country}` : 'Wine region'} title={r.name} regionColor={r.color} {actions} aside={stats} />
+	<DetailHeader icon="globe" kind={r.country && r.country !== r.name ? `Wine region · ${r.country}` : 'Wine region'} title={r.name} regionColor={r.color} {actions} />
 
 	<!-- The map draws the region and only the top appellations listed beside it -->
 	<section class="card top">
@@ -130,7 +118,7 @@
 	<Tabs
 		tabs={[
 			{ id: 'history', label: 'History', count: r.tastings.length },
-			{ id: 'cellar', label: 'Cellar', count: r.stats.bottles },
+			{ id: 'cellar', label: 'Cellar', count: r.stats.bottles, note: r.stats.value ? money(r.stats.value) : undefined },
 			{ id: 'appellations', label: 'Appellations', count: r.appellations.length },
 			{ id: 'producers', label: 'Producers', count: r.producers.length }
 		]}

@@ -171,6 +171,7 @@
 	{#snippet children(tab)}
 		{#if tab === 'cellar'}
 			<CellarSection
+				plain
 				bottles={cellar}
 				{regionColors}
 				empty={allVintages ? 'No bottles of any vintage in stock.' : 'No bottles of this vintage in stock.'}

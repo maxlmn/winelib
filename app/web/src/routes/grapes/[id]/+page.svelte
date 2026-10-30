@@ -11,7 +11,6 @@
 	import Facts from '#lib/components/details/Facts.svelte';
 	import GrapeFamily from '#lib/components/details/GrapeFamily.svelte';
 	import { BERRY_COLORS } from '#lib/api/grapes.ts';
-	import Stats from '#lib/components/details/Stats.svelte';
 	import Tabs from '#lib/components/details/Tabs.svelte';
 	import TastingHistory from '#lib/components/details/TastingHistory.svelte';
 	import BarList from '#lib/components/summary/BarList.svelte';
@@ -62,14 +61,6 @@
 		regionColor={colour ? (TYPE_COLORS[colour] ?? BERRY_COLORS[colour] ?? null) : null}
 		aside={g.regions.length ? regions : undefined}
 	>
-		<Stats
-			items={[
-				{ label: 'Bottles in cellar', value: g.stats.bottles, sub: g.stats.value ? money(g.stats.value) : undefined, gold: g.stats.bottles > 0 },
-				{ label: 'Wines tasted', value: g.stats.tastings },
-				{ label: 'Producers', value: g.stats.producers },
-				{ label: 'Regions', value: g.stats.regions }
-			]}
-		/>
 		{#if g.tastings.length || g.cellar.length}
 			<!-- Where yours come from: a pip per bottle and per tasting, in its region's color -->
 			<div class="palette">
@@ -102,7 +93,7 @@
 	<Tabs
 		tabs={[
 			{ id: 'history', label: 'History', count: g.tastings.length },
-			{ id: 'cellar', label: 'Cellar', count: g.stats.bottles },
+			{ id: 'cellar', label: 'Cellar', count: g.stats.bottles, note: g.stats.value ? money(g.stats.value) : undefined },
 			{ id: 'producers', label: 'Producers', count: g.producers.length }
 		]}
 		initial={g.tastings.length || !g.stats.bottles ? 'history' : 'cellar'}

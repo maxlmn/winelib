@@ -102,12 +102,12 @@
 			outError = messageOf(e);
 		}
 	}
-	// The bottles' story, newest first: drunk (its tastings) and the rest
+	// What happened to the bottles that left other than by being drunk (gifted, sold, broken...), newest first: the
+	// ones drunk are the wine's tastings, below
 	const story = $derived(
-		[
-			...b.drunk.map((t) => ({ key: `t${t.id}`, date: t.date, tasting: t, event: null })),
-			...b.events.map((e) => ({ key: `e${e.id}`, date: e.date, tasting: null, event: e }))
-		].sort((x, y) => (y.date ?? '').localeCompare(x.date ?? ''))
+		b.events
+			.map((e) => ({ key: `e${e.id}`, date: e.date, event: e }))
+			.sort((x, y) => (y.date ?? '').localeCompare(x.date ?? ''))
 	);
 	const gone = $derived(b.drunk.length + b.events.reduce((n, e) => n + e.qty, 0));
 
@@ -256,15 +256,12 @@
 	</div>
 	{#if story.length}
 		<div class="story">
-			<div class="label">What happened to {gone > 1 ? 'them' : 'it'}</div>
+			<div class="label">What happened to {story.reduce((n, s) => n + (s.event?.qty ?? 1), 0) > 1 ? 'them' : 'it'}</div>
 			<ul>
 				{#each story as s (s.key)}
 					<li>
 						<span class="when num">{s.date ? fmtDate(s.date) : 'Undated'}</span>
-						{#if s.tasting}
-							<span class="what drunk">Drunk</span>
-							<a href={links.tasting(s.tasting.id)}>{s.tasting.place ?? 'the tasting'}</a>
-						{:else if s.event}
+						{#if s.event}
 							<span class="what {s.event.kind}">{kindOf(s.event.kind).past}{s.event.qty > 1 ? ` ×${s.event.qty}` : ''}</span>
 							{#if s.event.note}<span>{s.event.note}</span>{/if}
 							{#if s.event.price}<span class="muted num">{amount(s.event.price, s.event.currency)}</span>{/if}

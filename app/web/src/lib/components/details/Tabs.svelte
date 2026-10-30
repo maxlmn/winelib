@@ -3,6 +3,8 @@
 		id: string;
 		label: string;
 		count?: number;
+		/** after the count, small: the cellar's value */
+		note?: string;
 	}
 </script>
 
@@ -41,7 +43,7 @@
 	<div class="tabs" role="tablist">
 		{#each tabs as t (t.id)}
 			<button role="tab" aria-selected={active === t.id} class:on={active === t.id} onclick={() => open(t.id)}>
-				{t.label}{#if t.count !== undefined}<span class="count num">{t.count}</span>{/if}
+				{t.label}{#if t.count !== undefined}<span class="count num">{t.count}</span>{/if}{#if t.note}<span class="count num">· {t.note}</span>{/if}
 			</button>
 		{/each}
 		{#if tools}<div class="tools">{@render tools()}</div>{/if}
