@@ -265,7 +265,7 @@
 		{#if overview && overview.outlines === false}
 			<div class="no-outlines card">
 				No appellation or vineyard outlines installed yet: only regions are drawn.
-				<a href={`${links.settings()}#maintenance`}>Settings › Maintenance › Map outlines</a> downloads them.
+				<a href={links.settings('maintenance')}>Settings › Maintenance › Map outlines</a> downloads them.
 			</div>
 		{/if}
 		{#if loadError}<div class="loading card failed" role="alert">{loadError}</div>

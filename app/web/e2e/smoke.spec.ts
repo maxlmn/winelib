@@ -97,11 +97,13 @@ test('a phone: no page wider than the screen', async ({ page }) => {
 	}
 });
 
-test('Needs attention on the home page opens its check, the preview run', async ({ page }) => {
-	await page.goto('/');
+test('Settings › Needs attention opens its check in Maintenance, the preview run', async ({ page }) => {
+	await page.goto('/settings');
+	await page.getByRole('tab', { name: /Needs attention/ }).click();
 	const panel = page.getByRole('region', { name: 'Needs attention' });
 	await expect(panel).toContainText('1 wine entered twice');
 	await panel.getByRole('link', { name: /entered twice/ }).click();
-	await expect(page).toHaveURL(/\/settings\?task=duplicates/);
+	await expect(page).toHaveURL(/\/settings\?tab=maintenance&task=duplicates/);
+	await expect(page.getByRole('tab', { name: 'Maintenance' })).toHaveAttribute('aria-selected', 'true');
 	await expect(page.getByText('1 group of duplicate wines')).toBeVisible({ timeout: 15_000 });
 });

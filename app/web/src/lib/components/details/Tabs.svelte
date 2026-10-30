@@ -17,10 +17,12 @@
 		initial?: string;
 		/** extra controls at the right of the tab bar */
 		tools?: Snippet;
+		/** the bar alone, no card around the content (a page of cards: Settings) */
+		plain?: boolean;
 		children: Snippet<[string]>;
 	}
 
-	let { tabs, initial, tools, children }: Props = $props();
+	let { tabs, initial, tools, plain = false, children }: Props = $props();
 
 	// The open tab lives in the URL (?tab=), so reloads and links keep it
 	const active = $derived.by(() => {
@@ -35,7 +37,7 @@
 	}
 </script>
 
-<section class="panel card">
+<section class="panel" class:card={!plain} class:plain>
 	<div class="tabs" role="tablist">
 		{#each tabs as t (t.id)}
 			<button role="tab" aria-selected={active === t.id} class:on={active === t.id} onclick={() => open(t.id)}>
@@ -89,5 +91,12 @@
 	}
 	.body {
 		padding: 16px;
+	}
+	.plain .tabs {
+		padding: 0;
+		margin-bottom: 14px;
+	}
+	.plain .body {
+		padding: 0;
 	}
 </style>
