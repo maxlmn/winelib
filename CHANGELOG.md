@@ -36,6 +36,18 @@
 - No stats boxes repeating the tabs (Bottles in cellar, Wines tasted, Wines): the Cellar tab says the cellar's value
   ("Cellar 12 · €3,400"). A wine's and a bottle's cellar cards are plain (no rack strip, no reds / whites split); a
   bottle's "What happened to it" only for the bottles that left other than drunk (gifted, sold, broken).
+- **A bottle's page**: the bottle is a band at the foot of its wine's card, two lines: how many and where (its ⋯
+  menu and the glass beside them), what it cost and what it's worth; the shelf strip only when its storage holds
+  several bins. The Cellar tab marks the bottle's own line.
+- **Map legends in columns**: one row of controls (the layers, the basemap, the full-size button as an icon), every
+  appellation and vineyard in columns, a long name cut and whole on hover.
+- **A producer's page**: its map takes the card's width, the legend carrying the producer's tastings and bottles by
+  appellation and vineyard (no Top appellations nor vineyards list beside it; the list comes back when the map has
+  nothing to draw). The lists it's on sit in its header card.
+- **A wine's lists** sit in its header card too, only those naming this vintage, another vintage or the cuvée: a
+  producer's lists stay on the producer's page (`/api/lists-of`).
+- **A wine's style**: small tags under its appellation, nothing when there are none; the ⋯ menu's *Add its style*
+  opens the picker there.
 - **Settings in three tabs**: Settings, Maintenance, and **Needs attention**: what the quick checks find (wines entered twice, records pointing at nothing,
   a vintage under two appellations, market prices no longer refreshed, cellar wines
   without an LWIN, restaurants without coordinates), its count on the tab, each opening its Maintenance task with
