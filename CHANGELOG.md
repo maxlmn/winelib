@@ -24,7 +24,7 @@
 - **Fill from text**: a new bottle from a pasted order or auction email, invoice or producer's sheet: the wine (yours,
   or a new vintage of a cuvée you have), the quantity, the price a bottle (a lot's divided), the date and the vendor.
 - **Settings in three tabs**: Settings, Maintenance, and **Needs attention**: what the quick checks find (wines entered twice, records pointing at nothing,
-  a vintage under two appellations, market prices not refreshed, cellar wines
+  a vintage under two appellations, market prices no longer refreshed, cellar wines
   without an LWIN, restaurants without coordinates), its count on the tab, each opening its Maintenance task with
   the preview run.
 - **Keeping vintages together** (Settings › Maintenance): *Cuvées under several appellations* finds a vintage entered twice or left under an old name.
