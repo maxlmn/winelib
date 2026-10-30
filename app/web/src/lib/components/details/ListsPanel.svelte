@@ -4,8 +4,13 @@
 
 	/** The lists a wine or a producer is on (as that wine, its cuvée, or through its producer), each with its tick and
 	 * the list's progress; and adding it to a list. On none: no card, unless `adding` (the page header's Add to a list
-	 * icon, bound: false again once added or cancelled). */
-	let { wineId, producerId, adding = $bindable(false) }: { wineId?: number; producerId?: number; adding?: boolean } = $props();
+	 * icon, bound: false again once added or cancelled). `inline`: inside the page's header card, not a card of its own. */
+	let {
+		wineId,
+		producerId,
+		adding = $bindable(false),
+		inline = false
+	}: { wineId?: number; producerId?: number; adding?: boolean; inline?: boolean } = $props();
 
 	const of = $derived(wineId ? { wine_id: wineId } : { producer_id: producerId! });
 	let on = $state<Membership[] | null>(null);
@@ -47,10 +52,11 @@
 </script>
 
 {#if on && (on.length || open)}
-	<section class="card lists">
+	<svelte:element this={inline ? 'div' : 'section'} class={inline ? 'lists inline' : 'card lists'}>
 		<div class="head">
 			<h2>Lists {#if on.length}<span class="muted num">{on.length}</span>{/if}</h2>
-			<button class="btn small" onclick={openAdd}>{open ? 'Cancel' : '＋ Add to a list'}</button>
+			<!-- inline, adding is the header menu's: only its Cancel here -->
+			{#if !inline || open}<button class="btn small" onclick={openAdd}>{open ? 'Cancel' : '＋ Add to a list'}</button>{/if}
 		</div>
 		{#if open}
 			<div class="add">
@@ -85,7 +91,7 @@
 				{/each}
 			</ul>
 		{/if}
-	</section>
+	</svelte:element>
 {/if}
 
 <style>
@@ -101,6 +107,21 @@
 	h2 {
 		margin: 0;
 		font-size: 15px;
+	}
+	/* in a header card: under its title, its heading a caption */
+	.lists.inline {
+		padding: 0;
+		margin: 12px 0 0;
+	}
+	.inline h2 {
+		font-size: 11px;
+		font-weight: 400;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--muted);
+	}
+	.inline ul {
+		margin-top: 4px;
 	}
 	.head .btn {
 		margin-left: auto;

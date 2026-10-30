@@ -12,23 +12,22 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import ActionMenu from '#lib/components/ActionMenu.svelte';
 	import { money } from '#lib/format.ts';
+	import { mapView } from '#lib/mapView.svelte.ts';
 
 	let { data } = $props();
 	// Add to a list (the header's icon): the lists card's form, shown even when it's on none yet
 	let addingToList = $state(false);
 	const p = $derived(data.detail);
 
-	// Next to the map: top appellations by tastings, bottles in the cellar or number of wines, and the vineyards
-	type By = 'tastings' | 'bottles' | 'wines';
-	let chosenBy = $state<By | null>(null);
-	const topBy = $derived<By>(chosenBy ?? (p.stats.tastings ? 'tastings' : p.stats.bottles ? 'bottles' : 'wines'));
-	const TOP = 8;
-	const topApps = $derived(
-		p.appellations
-			.filter((a) => a[topBy] > 0)
-			.sort((a, b) => b[topBy] - a[topBy] || a.name.localeCompare(b.name))
-			.slice(0, TOP)
+	// The map's legend: the producer's tastings and bottles by appellation and vineyard (the map's own figures are the
+	// whole cellar's); its vineyards listed only when the map has nothing to draw
+	const mapCounts = $derived(
+		Object.fromEntries([
+			...p.appellations.map((a) => [`appellation:${a.id}`, a] as const),
+			...p.vineyards.map((v) => [`vineyard:${v.id}`, v] as const)
+		])
 	);
+	let mapEmpty = $state(false);
 	const vineyards = $derived(p.vineyards.toSorted((a, b) => a.name.localeCompare(b.name)));
 </script>
 
@@ -63,6 +62,7 @@
 		{actions}
 		aside={stats}
 	>
+		<ListsPanel inline producerId={p.id} bind:adding={addingToList} />
 		<Facts
 			items={[
 				{ label: 'Also known as', value: p.aliases },
@@ -86,54 +86,25 @@
 	</DetailHeader>
 
 	{#if p.appellations.length || p.vineyards.length}
-		<section class="card map-card">
-			<div class="map-col">
-				<h2>Where the wines come from</h2>
-				<DetailMap src={shapesUrl('producers', p.id)} height={340} empty="No boundary data for these appellations." />
-			</div>
-			<aside class="side">
-				{#if p.appellations.length}
-					<div class="side-head">
-						<h3>Top appellations</h3>
-						<div class="seg" role="group" aria-label="Rank by">
-							{#each [['tastings', 'Tastings'], ['bottles', 'Cellar'], ['wines', 'Wines']] as [id, label] (id)}
-								<button class:on={topBy === id} onclick={() => (chosenBy = id as By)}>{label}</button>
-							{/each}
-						</div>
-					</div>
-					{#if topApps.length}
-						{@const max = topApps[0][topBy]}
-						<ol class="top">
-							{#each topApps as a (a.id)}
-								<li>
-									<a href={links.appellation(a.id)}>{a.name}</a>
-									<span class="bar" class:gold={topBy === 'bottles'} class:grey={topBy === 'wines'} style:width="{(a[topBy] / max) * 100}%"></span>
-									<span class="num count">{a[topBy]}</span>
-								</li>
-							{/each}
-						</ol>
-					{:else}
-						<p class="muted small">{topBy === 'tastings' ? 'No tastings yet.' : 'No bottles in the cellar.'}</p>
-					{/if}
-				{/if}
-				{#if vineyards.length}
-					<h3 class="vine-head">Vineyards <span class="muted num">{vineyards.length}</span></h3>
-					<ul class="vines">
-						{#each vineyards as v (v.id)}
-							<li>
-								<a href={links.vineyard(v.id)}>{v.name}</a>
-								{#if v.village}<span class="muted where">{v.village}</span>{/if}
-								{#if v.tastings}<span class="badge tasted num" title="{v.tastings} tasting{v.tastings > 1 ? 's' : ''}">✎ {v.tastings}</span>{/if}
-								{#if v.bottles}<span class="badge num" title="{v.bottles} bottle{v.bottles > 1 ? 's' : ''} in the cellar">{v.bottles}</span>{/if}
-							</li>
-						{/each}
-					</ul>
-				{/if}
-			</aside>
+		<!-- full size, the map is out behind the page (portal): its card, left with its title, hidden -->
+		<section class="card map-card" class:away={mapView.full && !mapEmpty}>
+			<h2>Where the wines come from</h2>
+			<DetailMap src={shapesUrl('producers', p.id)} height={340} empty="No boundary data for these appellations." counts={mapCounts} bind:nothing={mapEmpty} />
+			{#if mapEmpty && vineyards.length}
+				<ul class="vines">
+					{#each vineyards as v (v.id)}
+						<li>
+							<a href={links.vineyard(v.id)}>{v.name}</a>
+							{#if v.village}<span class="muted where">{v.village}</span>{/if}
+							{#if v.tastings}<span class="badge tasted num" title="{v.tastings} tasting{v.tastings > 1 ? 's' : ''}">✎ {v.tastings}</span>{/if}
+							{#if v.bottles}<span class="badge num" title="{v.bottles} bottle{v.bottles > 1 ? 's' : ''} in the cellar">{v.bottles}</span>{/if}
+						</li>
+					{/each}
+				</ul>
+			{/if}
 		</section>
 	{/if}
 
-	<ListsPanel producerId={p.id} bind:adding={addingToList} />
 
 	<Tabs
 		tabs={[
@@ -182,89 +153,23 @@
 		background: var(--accent-soft);
 	}
 	.map-card {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) 340px;
-		gap: 20px;
 		padding: 14px 18px;
 		margin-bottom: 14px;
 	}
-	.map-col {
-		min-width: 0;
+	.map-card.away {
+		display: none;
 	}
-	.side {
-		display: flex;
-		flex-direction: column;
-		min-width: 0;
-		max-height: 380px;
-	}
-	.side-head {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 8px;
-		margin-bottom: 8px;
-	}
-	h3 {
-		font-size: 13px;
-		margin: 0;
-	}
-	.vine-head {
-		margin: 14px 0 6px;
-	}
-	.seg {
-		display: inline-flex;
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		overflow: hidden;
-		font-size: 11px;
-	}
-	.seg button {
-		padding: 3px 9px;
-	}
-	.top {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-	}
-	.top li {
-		display: grid;
-		grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) 2.2em;
-		align-items: center;
-		gap: 8px;
-		padding: 2px 0;
-		font-size: 13px;
-	}
-	.top a,
 	.vines a {
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
-	.top a:hover,
 	.vines a:hover {
 		color: var(--accent);
 	}
-	.bar {
-		height: 8px;
-		min-width: 3px;
-		border-radius: 4px;
-		background: var(--accent);
-		opacity: 0.75;
-	}
-	.bar.gold {
-		background: var(--gold);
-	}
-	.bar.grey {
-		background: var(--muted);
-	}
-	.count {
-		text-align: right;
-		color: var(--muted);
-		font-size: 12px;
-	}
 	.vines {
 		list-style: none;
-		margin: 0;
+		margin: 10px 0 0;
 		padding: 0;
 		overflow-y: auto;
 		min-height: 0;
@@ -291,18 +196,6 @@
 	.badge.tasted {
 		color: var(--accent);
 		box-shadow: inset 0 0 0 1px var(--accent);
-	}
-	.small {
-		font-size: 12px;
-		margin: 0;
-	}
-	@media (max-width: 860px) {
-		.map-card {
-			grid-template-columns: minmax(0, 1fr);
-		}
-		.side {
-			max-height: none;
-		}
 	}
 	h2 {
 		font-size: 14px;

@@ -36,9 +36,14 @@
 		draw?: DrawSpec | null;
 		/** the drawing closed: saved (or the new vineyard's id) */
 		ondrawn?: (saved: boolean, created?: number) => void;
+		/** the page's own tastings and bottles by shape ("appellation:12", "vineyard:3"): badges in the legend (the
+		 * shapes' own figures are the whole cellar's) */
+		counts?: Record<string, { bottles: number; tastings: number }> | null;
+		/** bound: loaded with nothing to draw (no boundary data): its "no data" line in place of the map */
+		nothing?: boolean;
 	}
 
-	let { src, current = null, frame = null, height = 320, empty = 'No boundary data for this one.', fullUrl = null, lieuAction = null, draw = null, ondrawn }: Props = $props();
+	let { src, current = null, frame = null, height = 320, empty = 'No boundary data for this one.', fullUrl = null, lieuAction = null, draw = null, ondrawn, counts = null, nothing = $bindable(false) }: Props = $props();
 
 	// Full size (Settings › Appearance, or ⤢ here): the map fills the window behind the page, which becomes a column
 	// of cards over its left side (html.map-full in app.css); Esc goes back. Not for a map with nothing to show (no
@@ -148,6 +153,9 @@
 	const drawnVines = $derived(shapes ? shown(swap(shapes.vineyards, 'vineyard')) : null);
 
 	const outline = $derived(shapes?.region?.features.length ? { ...shapes.region, extent: null } : null);
+	$effect(() => {
+		nothing = blank;
+	});
 	const count = $derived((shapes?.appellations.features.length ?? 0) + (shapes?.vineyards.features.length ?? 0));
 	const keys = $derived(shapes ? [...shapes.appellations.features, ...shapes.vineyards.features].map((f) => f.properties) : []);
 	const missing = $derived(shapes ? [...shapes.appellations.missing, ...shapes.vineyards.missing] : []);
@@ -273,12 +281,15 @@
 				{#each keys as k (k.kind + k.id)}
 					{@const off = hidden.has(keyOf(k))}
 					{@const colour = k.kind === 'appellation' ? cruShade(k.color ?? FALLBACK_REGION, k.cru) : darken(k.color ?? FALLBACK_REGION, (k.cru ?? 0) + 1)}
+					{@const c = counts?.[keyOf(k)]}
 					<!-- a legend entry: its swatch shows or hides its shape; its name zooms to it (its card open), never
 					     another page -->
 					<span class="key" class:on={focused(k)} class:off={layers[k.kind] === 'off'} class:hidden={off}>
 						<button class="sw" class:vine={k.kind === 'vineyard'} style:--sw={colour} aria-pressed={!off}
 							title={off ? `Show ${k.name} on the map` : `Hide ${k.name} from the map`} onclick={() => toggleShown(k)}></button>
 						<button class="name" title={focused(k) ? 'Show all' : `Zoom to ${k.name}`} onclick={() => zoomTo(k)}>{k.name}</button>
+						{#if c?.tastings}<span class="badge tasted num" title="{c.tastings} tasting{c.tastings > 1 ? 's' : ''}">✎ {c.tastings}</span>{/if}
+						{#if c?.bottles}<span class="badge num" title="{c.bottles} bottle{c.bottles > 1 ? 's' : ''} in the cellar">{c.bottles}</span>{/if}
 					</span>
 				{/each}
 				</div>
@@ -442,6 +453,20 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 		text-align: left;
+	}
+	.badge {
+		flex: none;
+		font-size: 10px;
+		font-weight: 600;
+		line-height: 1.4;
+		color: var(--gold);
+		box-shadow: inset 0 0 0 1px var(--gold);
+		border-radius: 8px;
+		padding: 0 5px;
+	}
+	.badge.tasted {
+		color: var(--accent);
+		box-shadow: inset 0 0 0 1px var(--accent);
 	}
 	.key .name:hover,
 	.key.on .name {
