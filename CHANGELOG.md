@@ -23,7 +23,6 @@
 - A page whose map has nothing to show (an appellation without an outline) no longer opens it full size.
 - **Fill from text**: a new bottle from a pasted order or auction email, invoice or producer's sheet: the wine (yours,
   or a new vintage of a cuvée you have), the quantity, the price a bottle (a lot's divided), the date and the vendor.
-- **Buyer's premiums** (Settings): an auction house's percentage, offered under the price of a bottle bought from it.
 - **Keeping vintages together** (Settings › Maintenance): *Vineyards across vintages* fills in the vineyard the other
   vintages share; *Cuvées under several appellations* finds a vintage entered twice or left under an old name.
 - Fixes: *Duplicate wines* missed duplicates whose disgorgement date was empty on one and unset on the other; names

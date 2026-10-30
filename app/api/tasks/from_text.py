@@ -118,11 +118,9 @@ def _date(text):
 
 
 def _vendor(session, text):
-    """A vendor you've bought from before (or have a buyer's premium for) the text names."""
-    import settings
+    """A vendor you've bought from before the text names."""
     from models import Bottle
     names = {v for (v,) in session.query(Bottle.vendor).filter(Bottle.vendor.isnot(None)).distinct() if v and v.strip()}
-    names |= set(settings.current.vendor_premiums)
     folded = re.sub(r"[^a-z0-9]+", " ", text.lower())
     for name in sorted(names, key=len, reverse=True):
         key = re.sub(r"[^a-z0-9]+", " ", name.lower()).strip()
