@@ -11,8 +11,8 @@
 		/** before `kind`: person for a producer, globe for a region... */
 		icon?: IconName;
 		title: Snippet | string;
-		/** region > sub-region > village, the region drawn in its color */
-		trail?: (string | null | undefined)[];
+		/** region > sub-region > village, the region drawn in its color; an item may be a link ({ label, href }) */
+		trail?: (string | { label: string; href: string | null; title?: string } | null | undefined)[];
 		regionColor?: string | null;
 		/** makes the trail's first item (the region) a link to its page */
 		regionHref?: string | null;
@@ -26,7 +26,10 @@
 
 	// The first item is the region when the page has one (regionColor / regionHref): named with its country
 	const parts = $derived(
-		trail.filter((x): x is string => !!x && !!x.trim()).map((p, i) => (i === 0 && (regionColor !== undefined || regionHref) ? regionLabel(p) : p))
+		trail
+			.map((x) => (typeof x === 'string' ? { label: x, href: null, title: undefined } : x))
+			.filter((x): x is { label: string; href: string | null; title?: string } => !!x && !!x.label?.trim())
+			.map((p, i) => (i === 0 && (regionColor !== undefined || regionHref) ? { ...p, label: regionLabel(p.label) } : p))
 	);
 </script>
 
@@ -38,7 +41,7 @@
 			{#if parts.length}
 				<div class="trail">
 					{#each parts as p, i}
-						{#if i}<span class="sep">›</span>{/if}{#if i === 0 && regionHref}<a class="region-link" class:region={!!regionColor} href={regionHref}>{p}</a>{:else}<span class:region={i === 0 && regionColor}>{p}</span>{/if}
+						{#if i}<span class="sep">›</span>{/if}{#if i === 0 && regionHref}<a class="region-link" class:region={!!regionColor} href={regionHref}>{p.label}</a>{:else if p.href}<a class="trail-link" href={p.href} title={p.title}>{p.label}</a>{:else}<span class:region={i === 0 && regionColor}>{p.label}</span>{/if}
 					{/each}
 				</div>
 			{/if}
@@ -120,7 +123,12 @@
 			grid-template-columns: 1fr;
 		}
 	}
-	.region-link:hover {
+	.region-link:hover,
+	.trail-link:hover {
 		text-decoration: underline;
+	}
+	.trail-link {
+		color: inherit;
+		text-decoration: none;
 	}
 </style>
