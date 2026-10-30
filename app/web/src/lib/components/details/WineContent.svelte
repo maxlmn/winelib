@@ -55,7 +55,8 @@
 	const [drinkFrom, drinkTo] = $derived(wine.drink_window);
 	// The header says the producer, cuvée, vintage, colour and region › appellation (the vineyard: on the map); this
 	// line the rest:
-	// its grapes (each linked), blend, disgorgement, drinking window and LWIN, whichever it has
+	// under the appellation: its grapes (each linked), blend and drinking window, whichever it has (a disgorgement is
+	// in the title, with the vintage: "NV - Oct 2024")
 	const grapes = $derived(wine.grapes?.length ? wine.grapes : wine.varietal ? [{ id: 0, name: wine.varietal, share: null }] : []);
 	const drink = $derived(drinkFrom || drinkTo ? `${drinkFrom ?? '…'}–${drinkTo ?? '…'}` : null);
 	const hasMap = $derived(!!(wine.appellation || wine.vineyard));
@@ -112,6 +113,13 @@
 {/snippet}
 
 {#snippet under()}
+	{#if grapes.length || wine.blend || drink}
+		<p class="about">
+			{#if grapes.length}<span class="grape-icon" aria-hidden="true"><Icon name="grape" size={13} /></span>{/if}{#each grapes as g, i (g.name)}{#if i}, {/if}<a href={links.grape(g.name)}>{g.name}</a>{#if g.share && g.share < 100}{' '}<span class="muted num">{+g.share.toFixed(1)}%</span>{/if}{/each}
+			{#if wine.blend}<span class="item">{wine.blend}</span>{/if}
+			{#if drink}<span class="item">Drink <span class="num">{drink}</span>{#if wine.maturity}{' '}<MaturityBadge maturity={wine.maturity} />{/if}</span>{/if}
+		</p>
+	{/if}
 	<WineStyle wineId={wine.id} tags={wine.tags ?? []} cuvee={wine.cuvee_tags ?? []} bind:editing={editingStyle} />
 {/snippet}
 
@@ -129,15 +137,6 @@
 	aside={hasMap ? map : undefined}
 	footer={bottle}
 >
-	{#if grapes.length || wine.blend || wine.disgorgement_date || drink || wine.lwin}
-		<p class="about">
-			{#each grapes as g, i (g.name)}{#if i}, {/if}<a href={links.grape(g.name)}>{g.name}</a>{#if g.share && g.share < 100}{' '}<span class="muted num">{+g.share.toFixed(1)}%</span>{/if}{/each}
-			{#if wine.blend}<span class="item">{wine.blend}</span>{/if}
-			{#if wine.disgorgement_date}<span class="item">Disgorged {wine.disgorgement_date}</span>{/if}
-			{#if drink}<span class="item">Drink <span class="num">{drink}</span>{#if wine.maturity}{' '}<MaturityBadge maturity={wine.maturity} />{/if}</span>{/if}
-			{#if wine.lwin}<span class="item muted">LWIN <a class="num" href={links.winelabs(wine.lwin, wine.vintage)} target="_blank" rel="noreferrer">{wine.lwin} ↗</a></span>{/if}
-		</p>
-	{/if}
 	<!-- the lists naming this vintage, another one, or the cuvée (its producer's: the producer's page) -->
 	<ListsPanel inline wineId={wine.id} bind:adding={addingToList} />
 </DetailHeader>
@@ -216,11 +215,17 @@
 			opacity: 0.45;
 		}
 	}
-	/* the grapes, blend, disgorgement, drinking window, LWIN: one line under the header's */
+	/* the grapes, blend, drinking window: one line under the appellation */
 	.about {
-		margin: 0 0 10px;
-		font-size: 14px;
-		line-height: 1.6;
+		margin: 2px 0 0;
+		font-size: 13px;
+		line-height: 1.5;
+	}
+	.grape-icon {
+		display: inline-flex;
+		vertical-align: -2px;
+		margin-right: 5px;
+		color: var(--muted);
 	}
 	.about a {
 		color: inherit;

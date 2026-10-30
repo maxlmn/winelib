@@ -128,6 +128,15 @@
 	.aside {
 		min-width: 0;
 	}
+	/* nothing in it (a wine on no list, its map out full size): no gap under the title, no empty column */
+	.main:empty,
+	.aside:empty,
+	.body:not(:has(> :not(:empty))) {
+		display: none;
+	}
+	.body.split:has(> :empty) {
+		grid-template-columns: minmax(0, 1fr);
+	}
 	@media (max-width: 900px) {
 		.body.split {
 			grid-template-columns: 1fr;
