@@ -1,33 +1,44 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
-	import { grapesText } from '#lib/grapes.ts';
-	import { regionColor, regionLabel } from '#lib/regions.svelte.ts';
+	import MaturityBadge from '#lib/components/MaturityBadge.svelte';
 	import type { WineDetail } from '#lib/api/details.ts';
 	import { shapesUrl } from '#lib/api/details.ts';
 	import type { RegionColors } from '#lib/types.ts';
 	import { links } from '#lib/links.ts';
-	import { TYPE_COLORS } from '#lib/colors.ts';
 	import CellarSection from './CellarSection.svelte';
 	import DetailHeader from './DetailHeader.svelte';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
 	import DetailMap from './DetailMap.svelte';
-	import Facts from './Facts.svelte';
 	import WineStyle from './WineStyle.svelte';
 	import CriticScores from './CriticScores.svelte';
 	import Tabs from './Tabs.svelte';
 	import TastingHistory from './TastingHistory.svelte';
 	import WishButton from './WishButton.svelte';
+	import WineActions from './WineActions.svelte';
+	import ActionMenu from '#lib/components/ActionMenu.svelte';
 	import ListsPanel from './ListsPanel.svelte';
 	import Icon from '#lib/components/Icon.svelte';
+	import type { Snippet } from 'svelte';
 
 	interface Props {
 		wine: WineDetail;
 		regionColors: RegionColors;
+		/** under the header, part of its card: the bottle a bottle's page is about */
+		bottle?: Snippet;
+		/** that bottle's id: its line marked in the Cellar tab */
+		bottleId?: number | null;
 	}
 
-	let { wine, regionColors }: Props = $props();
+	let { wine, regionColors, bottle, bottleId = null }: Props = $props();
 
 	let allVintages = $state(false);
+	// Add a critic's score, add to a list (the header's icons): their card's form, shown even when it has nothing yet
+	let addingScore = $state(false);
+	let addingToList = $state(false);
+	// Style tags (the menu): the picker under the appellation
+	let editingStyle = $state(false);
+	// a plug-in action's busy text, then its answer (WineActions), beside the menu
+	let said = $state<{ text: string; busy: boolean; error?: boolean } | null>(null);
 	// Draw vineyard: drawn on the wine's map (DetailMap), created with its outline and linked to the wine
 	let drawingVineyard = $state(false);
 
@@ -42,20 +53,11 @@
 	const showVintages = $derived(wine.vintages.length > 1 || inCellar.length > 0 || tasted.length > 0);
 
 	const [drinkFrom, drinkTo] = $derived(wine.drink_window);
-	const facts = $derived([
-		{ label: 'Producer', value: wine.producer.name, href: links.producer(wine.producer.id), icon: 'person' as const },
-		{ label: 'Region', value: regionLabel(wine.region), dot: regionColor(wine.region), href: wine.region ? links.region(wine.region) : null, icon: 'globe' as const },
-		{ label: 'Type', value: wine.color, dot: TYPE_COLORS[wine.color ?? ''] },
-		{ label: 'Disgorged', value: wine.disgorgement_date },
-		{ label: 'Appellation', value: wine.appellation?.name ?? 'N/A', href: wine.appellation && links.appellation(wine.appellation.id), icon: 'map' as const },
-		{ label: 'Vineyard', value: wine.vineyard?.label, href: wine.vineyard && links.vineyard(wine.vineyard.id) },
-		// one grape: a link to its page; several: listed, each linked below the facts
-		{ label: (wine.grapes?.length ?? 0) > 1 ? 'Grapes' : 'Grape', value: grapesText(wine.grapes, wine.varietal) ?? 'N/A',
-			href: (wine.grapes?.length ?? 0) <= 1 && wine.varietal ? links.grape(wine.varietal) : null, icon: 'grape' as const },
-		{ label: 'Blend', value: wine.blend },
-		{ label: 'Drink', value: drinkFrom || drinkTo ? `${drinkFrom ?? '…'} – ${drinkTo ?? '…'}` : null, maturity: wine.maturity },
-		{ label: 'LWIN', value: wine.lwin, href: wine.lwin && links.winelabs(wine.lwin, wine.vintage) }
-	]);
+	// The header says the producer, cuvée, vintage, colour and region › appellation (the vineyard: on the map); this
+	// line the rest:
+	// its grapes (each linked), blend, disgorgement, drinking window and LWIN, whichever it has
+	const grapes = $derived(wine.grapes?.length ? wine.grapes : wine.varietal ? [{ id: 0, name: wine.varietal, share: null }] : []);
+	const drink = $derived(drinkFrom || drinkTo ? `${drinkFrom ?? '…'}–${drinkTo ?? '…'}` : null);
 	const hasMap = $derived(!!(wine.appellation || wine.vineyard));
 
 	// A lieu-dit clicked on the map: this wine's vineyard (and its cuvée's other vintages')
@@ -82,11 +84,20 @@
 {/snippet}
 
 {#snippet actions()}
-	<a class="btn" href={links.editWine(wine.id)}>Edit wine</a>
-	{#if !wine.vineyard}<button class="btn" onclick={() => (drawingVineyard = true)}>Draw vineyard</button>{/if}
-	<WishButton wineId={wine.id} />
-	<a class="btn" href={links.newBottle({ wine_id: wine.id })}>＋ Bottle</a>
-	<a class="btn primary" href={links.newTasting({ wine_id: wine.id })}>＋ Tasting</a>
+	<!-- the ⋯ menu, the one to hand under it: a tasting -->
+	<ActionMenu>
+		<a class="menu-item" role="menuitem" href={links.newBottle({ wine_id: wine.id })}><Icon name="bottle" size={15} />Add a bottle</a>
+		<button class="menu-item" role="menuitem" onclick={() => (addingScore = true)}><Icon name="medal" size={15} />Add a critic's score</button>
+		<WineActions wineId={wine.id} actions={wine.actions} bind:said />
+		<button class="menu-item" role="menuitem" onclick={() => (addingToList = true)}><Icon name="list" size={15} />Add to a list</button>
+		<button class="menu-item" role="menuitem" onclick={() => (editingStyle = true)}><Icon name="tag" size={15} />{wine.tags?.some((t) => t.set) ? 'Edit its style' : 'Add its style'}</button>
+		<WishButton wineId={wine.id} />
+		<hr />
+		<a class="menu-item" role="menuitem" href={links.editWine(wine.id)}><Icon name="edit" size={15} />Edit wine</a>
+		{#if !wine.vineyard}<button class="menu-item" role="menuitem" onclick={() => (drawingVineyard = true)}><Icon name="draw" size={15} />Draw its vineyard</button>{/if}
+	</ActionMenu>
+	<a class="btn icon primary" href={links.newTasting({ wine_id: wine.id })} title="Add a tasting" aria-label="Add a tasting"><span class="plus">+</span><Icon name="glass" size={15} /></a>
+	{#if said?.text}<span class="said small" class:muted={!said.error} class:error={said.error} class:busy={said.busy} role="status">{said.text}</span>{/if}
 {/snippet}
 
 {#snippet map()}
@@ -100,25 +111,42 @@
 		}} />
 {/snippet}
 
+{#snippet under()}
+	<WineStyle wineId={wine.id} tags={wine.tags ?? []} cuvee={wine.cuvee_tags ?? []} bind:editing={editingStyle} />
+{/snippet}
+
 <DetailHeader
 	kind={['Wine', wine.color].filter(Boolean).join(' · ')}
 	{title}
-	trail={[wine.region, wine.appellation?.name]}
+	trail={[
+		wine.region,
+		wine.appellation && { label: wine.appellation.name, href: links.appellation(wine.appellation.id) }
+	]}
 	regionColor={wine.region_color}
 	regionHref={wine.region ? links.region(wine.region) : null}
 	{actions}
+	{under}
 	aside={hasMap ? map : undefined}
+	footer={bottle}
 >
-	<Facts items={facts} />
-	<WineStyle wineId={wine.id} tags={wine.tags ?? []} cuvee={wine.cuvee_tags ?? []} />
+	{#if grapes.length || wine.blend || wine.disgorgement_date || drink || wine.lwin}
+		<p class="about">
+			{#each grapes as g, i (g.name)}{#if i}, {/if}<a href={links.grape(g.name)}>{g.name}</a>{#if g.share && g.share < 100}{' '}<span class="muted num">{+g.share.toFixed(1)}%</span>{/if}{/each}
+			{#if wine.blend}<span class="item">{wine.blend}</span>{/if}
+			{#if wine.disgorgement_date}<span class="item">Disgorged {wine.disgorgement_date}</span>{/if}
+			{#if drink}<span class="item">Drink <span class="num">{drink}</span>{#if wine.maturity}{' '}<MaturityBadge maturity={wine.maturity} />{/if}</span>{/if}
+			{#if wine.lwin}<span class="item muted">LWIN <a class="num" href={links.winelabs(wine.lwin, wine.vintage)} target="_blank" rel="noreferrer">{wine.lwin} ↗</a></span>{/if}
+		</p>
+	{/if}
+	<!-- the lists naming this vintage, another one, or the cuvée (its producer's: the producer's page) -->
+	<ListsPanel inline wineId={wine.id} bind:adding={addingToList} />
 </DetailHeader>
 
 <div class="row">
-		<CriticScores wineId={wine.id} scores={wine.scores} actions={wine.actions} />
+		<CriticScores wineId={wine.id} scores={wine.scores} bind:adding={addingScore} />
 		{#if showVintages}
 			<section class="card vintages">
 				<h2>Vintages <span class="muted num">{wine.vintages.length}</span>
-					{#if wine.cuvee_lists?.length}<span class="listed any" title="Any vintage on: {wine.cuvee_lists.join(', ')}"><Icon name="bookmark" size={12} /> any vintage on {wine.cuvee_lists.join(', ')}</span>{/if}
 				</h2>
 				<div class="chips">
 					{#each wine.vintages as v (v.id)}
@@ -133,15 +161,10 @@
 						</a>
 					{/each}
 				</div>
-				<dl>
-					{#if inCellar.length}<dt>In cellar</dt><dd>{inCellar.map((v) => v.vintage).join(', ')}</dd>{/if}
-					{#if tasted.length}<dt>Tasted</dt><dd>{tasted.map((v) => v.vintage).join(', ')}</dd>{/if}
-				</dl>
 			</section>
 		{/if}
 	</div>
 
-<ListsPanel wineId={wine.id} />
 
 <Tabs
 	tabs={[
@@ -161,6 +184,8 @@
 	{#snippet children(tab)}
 		{#if tab === 'cellar'}
 			<CellarSection
+				plain
+				current={bottleId}
 				bottles={cellar}
 				{regionColors}
 				empty={allVintages ? 'No bottles of any vintage in stock.' : 'No bottles of this vintage in stock.'}
@@ -176,6 +201,42 @@
 </Tabs>
 
 <style>
+	.said {
+		max-width: 180px;
+		text-align: right;
+	}
+	.said.error {
+		color: var(--down);
+	}
+	.said.busy {
+		animation: pulse 1.2s ease-in-out infinite;
+	}
+	@keyframes pulse {
+		50% {
+			opacity: 0.45;
+		}
+	}
+	/* the grapes, blend, disgorgement, drinking window, LWIN: one line under the header's */
+	.about {
+		margin: 0 0 10px;
+		font-size: 14px;
+		line-height: 1.6;
+	}
+	.about a {
+		color: inherit;
+	}
+	.about a:hover {
+		color: var(--accent);
+	}
+	.about .item::before {
+		content: '·';
+		margin: 0 8px;
+		color: var(--muted);
+	}
+	.about > .item:first-child::before {
+		content: none;
+		margin: 0;
+	}
 	.bottle {
 		display: inline-block;
 		margin-right: 8px;
@@ -258,27 +319,9 @@
 	.listed :global(.icon) {
 		fill: currentColor;
 	}
-	.listed.any {
-		font-size: 12px;
-		font-weight: 400;
-		margin-left: 10px;
-	}
 	.tick {
 		color: var(--accent);
 		font-size: 11px;
-	}
-	dl {
-		display: grid;
-		grid-template-columns: max-content 1fr;
-		gap: 4px 12px;
-		margin: 12px 0 0;
-		font-size: 13px;
-	}
-	dt {
-		color: var(--muted);
-	}
-	dd {
-		margin: 0;
 	}
 	.seg button {
 		padding: 4px 10px;

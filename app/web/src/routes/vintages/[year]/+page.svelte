@@ -38,9 +38,12 @@
 <svelte:head><title>{v.vintage} · WineLib</title></svelte:head>
 
 {#snippet actions()}
-	{#if v.prev}<a class="btn" href={links.vintage(v.prev)}>← {v.prev}</a>{/if}
-	<a class="btn" href={links.vintages()}>All vintages</a>
-	{#if v.next}<a class="btn" href={links.vintage(v.next)}>{v.next} →</a>{/if}
+	<!-- the vintages before and after: a row -->
+	<div class="vnav">
+		{#if v.prev}<a class="btn small-btn" href={links.vintage(v.prev)}>← {v.prev}</a>{/if}
+		<a class="btn small-btn" href={links.vintages()}>All</a>
+		{#if v.next}<a class="btn small-btn" href={links.vintage(v.next)}>{v.next} →</a>{/if}
+	</div>
 {/snippet}
 
 {#snippet regions()}
@@ -56,21 +59,13 @@
 
 {#key v.vintage}
 	<DetailHeader kind="Vintage" title={v.vintage === 'NV' ? 'Non-vintage' : v.vintage} {actions} aside={regionBars.length ? regions : undefined}>
-		<Stats
-			items={[
-				{ label: 'Bottles in cellar', value: v.stats.bottles, sub: v.stats.value ? money(v.stats.value) : undefined, gold: v.stats.bottles > 0 },
-				{ label: 'Wines tasted', value: v.stats.tastings },
-				{ label: 'Wines', value: v.stats.wines },
-				{ label: 'Producers', value: v.stats.producers },
-				...(v.stats.score_mine ? [{ label: `Your wines’ ${v.stats.critic}`, value: v.stats.score_mine, sub: 'average, owned or tasted' }] : [])
-			]}
-		/>
+		{#if v.stats.score_mine}<Stats items={[{ label: `Your wines’ ${v.stats.critic}`, value: v.stats.score_mine, sub: 'average, owned or tasted' }]} />{/if}
 	</DetailHeader>
 
 	<Tabs
 		tabs={[
 			{ id: 'history', label: 'History', count: v.tastings.length },
-			{ id: 'cellar', label: 'Cellar', count: v.stats.bottles },
+			{ id: 'cellar', label: 'Cellar', count: v.stats.bottles, note: v.stats.value ? money(v.stats.value) : undefined },
 			{ id: 'best', label: 'Best rated', count: v.stats.score_count },
 			{ id: 'wines', label: 'Wines', count: v.stats.wines }
 		]}
@@ -111,6 +106,10 @@
 {/key}
 
 <style>
+	.vnav {
+		display: flex;
+		gap: 6px;
+	}
 	.aside-h {
 		font-size: 13px;
 		font-weight: 600;

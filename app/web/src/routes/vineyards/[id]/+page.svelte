@@ -1,12 +1,10 @@
 <script lang="ts">
-	import { regionLabel } from '#lib/regions.svelte.ts';
+	import ActionMenu from '#lib/components/ActionMenu.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import { shapesUrl } from '#lib/api/details.ts';
 	import CellarSection from '#lib/components/details/CellarSection.svelte';
 	import DetailHeader from '#lib/components/details/DetailHeader.svelte';
 	import DetailMap from '#lib/components/details/DetailMap.svelte';
-	import Facts from '#lib/components/details/Facts.svelte';
-	import Stats from '#lib/components/details/Stats.svelte';
 	import Tabs from '#lib/components/details/Tabs.svelte';
 	import TastingHistory from '#lib/components/details/TastingHistory.svelte';
 	import WineCatalog from '#lib/components/details/WineCatalog.svelte';
@@ -18,7 +16,6 @@
 	let { data } = $props();
 	const v = $derived(data.detail);
 	const nWines = $derived(v.wines.reduce((n, w) => n + w.vintages.length, 0));
-	const location = $derived([regionLabel(v.region), v.subregion, v.village].filter(Boolean).join(' › '));
 
 	// Its own outline, drawn or imported on its map (DetailMap, OutlineTools): the map reloads once one is saved or removed
 	let drawing = $state(false);
@@ -46,9 +43,12 @@
 <svelte:head><title>{v.name} · WineLib</title></svelte:head>
 
 {#snippet actions()}
-	<a class="btn" href={links.map({ region: v.region, sel: `vineyard:${v.id}` })}>Open on the map</a>
-	<a class="btn" href={links.editVineyard(v.id)}>Edit vineyard</a>
-	<button class="btn" onclick={() => (drawing = true)}>Draw outline</button>
+	<ActionMenu>
+		<button class="menu-item" role="menuitem" onclick={() => (drawing = true)}><Icon name="draw" size={15} />Draw its outline</button>
+		<hr />
+		<a class="menu-item" role="menuitem" href={links.editVineyard(v.id)}><Icon name="edit" size={15} />Edit vineyard</a>
+	</ActionMenu>
+	<a class="btn icon" href={links.map({ region: v.region, sel: `vineyard:${v.id}` })} title="Open on the map" aria-label="Open on the map"><Icon name="map" size={15} /></a>
 {/snippet}
 
 {#snippet map()}
@@ -65,7 +65,6 @@
 
 {#key v.id}
 	<DetailHeader kind={v.lieu_dit ? 'Vineyard · lieu-dit' : 'Vineyard'} title={v.name} trail={[v.region, v.subregion, v.village]} regionColor={v.region_color} regionHref={v.region ? links.region(v.region) : null} {actions} aside={map}>
-		<Facts items={[{ label: 'Location', value: location, icon: 'globe' }, { label: 'External ID', value: v.vineyard_id }]} />
 		{#if v.lieu_dit}
 			<div class="lieu">
 				<div>
@@ -82,20 +81,11 @@
 				{#each v.appellations as ap (ap.id)}<a class="chip" href={links.appellation(ap.id)}>{ap.name}</a>{/each}
 			</div>
 		{/if}
-		<div class="stats">
-			<Stats
-				items={[
-					{ label: 'Bottles in cellar', value: v.stats.bottles, sub: v.stats.value ? money(v.stats.value) : undefined, gold: v.stats.bottles > 0 },
-					{ label: 'Wines tasted', value: v.stats.tastings },
-					{ label: 'Wines', value: nWines }
-				]}
-			/>
-		</div>
 	</DetailHeader>
 
 	<Tabs
 		tabs={[
-			{ id: 'cellar', label: 'Cellar', count: v.stats.bottles },
+			{ id: 'cellar', label: 'Cellar', count: v.stats.bottles, note: v.stats.value ? money(v.stats.value) : undefined },
 			{ id: 'history', label: 'History', count: v.tastings.length },
 			{ id: 'wines', label: 'Wines', count: nWines }
 		]}
@@ -134,9 +124,6 @@
 	}
 	.chip:hover {
 		border-color: var(--accent);
-	}
-	.stats {
-		margin-top: 16px;
 	}
 	.lieu {
 		display: flex;

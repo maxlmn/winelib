@@ -15,12 +15,18 @@
 	let {
 		bottles,
 		regionColors,
-		prices = false
+		prices = false,
+		plain = false,
+		current = null
 	}: {
 		bottles: Bottle[];
 		regionColors: RegionColors;
 		/** each line's price paid a bottle, in its currency, and where it was bought (the home page's recent purchases) */
 		prices?: boolean;
+		/** one wine's bottles (its page, a bottle's): no rack strip, no reds / whites split, its lines as they are */
+		plain?: boolean;
+		/** the bottle whose page this is: its line marked */
+		current?: number | null;
 	} = $props();
 	const paid = (b: Bottle) => (b.price ? `${symbol(b.currency ?? appSettings.currency)}${Math.round(b.price).toLocaleString()}` : null);
 
@@ -77,13 +83,13 @@
 	{/each}
 {/snippet}
 
-{#snippet wineList(title: string, list: Bottle[], qty: number, color: string)}
+{#snippet wineList(title: string | null, list: Bottle[], qty: number, color: string)}
 	{#if list.length}
 		<div>
-			<h4><span class="dot" style:background={color}></span>{title} <span class="muted num">{qty}</span></h4>
+			{#if title}<h4><span class="dot" style:background={color}></span>{title} <span class="muted num">{qty}</span></h4>{/if}
 			<ul>
 				{#each list as b (b.bottle_id)}
-					<li class:hot={b.bottle_id === hot}>
+					<li class:hot={b.bottle_id === hot} class:current={b.bottle_id === current}>
 						<a class="line-ends" href={links.bottle(b.bottle_id)} title="Open this bottle">{@render ends(b)}</a>
 						<span class="label">
 							<a href={links.bottle(b.bottle_id)}>
@@ -93,7 +99,8 @@
 							<span class="meta num">[{b.vintage}]</span><CriticPills scores={b.scores} />
 							{#if prices && paid(b)}<span class="paid num" title="Paid a bottle">{paid(b)}</span>{/if}
 							{#if prices && b.vendor}<span class="vendor muted" title="Bought from">{b.vendor}</span>{/if}
-								{#if b.maturity}<span class="mat"><MaturityBadge maturity={b.maturity} from={b.drink_from} to={b.drink_to} /></span>{/if}
+								{#if b.bottle_id === current}<span class="this">this bottle</span>{/if}
+							{#if b.maturity}<span class="mat"><MaturityBadge maturity={b.maturity} from={b.drink_from} to={b.drink_to} /></span>{/if}
 						</span>
 					</li>
 				{/each}
@@ -108,17 +115,23 @@
 			<div class="sum-top">
 				<b>{c.name}</b>
 				<span class="muted num">{plural(c.qty, 'bottle')}{c.value ? ` · ${money(c.value)}` : ''}</span>
-				<span class="split num">
-					<span class="pair"><span class="dot" style:background={TYPE_COLORS.Red}></span>{c.redQty}</span>
-					<span class="pair"><span class="dot" style:background={TYPE_COLORS.White}></span>{c.otherQty}</span>
-				</span>
+				{#if !plain}
+					<span class="split num">
+						<span class="pair"><span class="dot" style:background={TYPE_COLORS.Red}></span>{c.redQty}</span>
+						<span class="pair"><span class="dot" style:background={TYPE_COLORS.White}></span>{c.otherQty}</span>
+					</span>
+				{/if}
 			</div>
-			<RegionStrip pips={bottlePips(c.strip)} variant="rack" height={11} onhover={(k) => (hot = k)} />
+			{#if !plain}<RegionStrip pips={bottlePips(c.strip)} variant="rack" height={11} onhover={(k) => (hot = k)} />{/if}
 		</summary>
-		<div class="columns">
-			{@render wineList('Reds', c.reds, c.redQty, TYPE_COLORS.Red)}
-			{@render wineList('Whites & others', c.others, c.otherQty, TYPE_COLORS.White)}
-		</div>
+		{#if plain}
+			<div class="columns">{@render wineList(null, [...c.reds, ...c.others], c.qty, '')}</div>
+		{:else}
+			<div class="columns">
+				{@render wineList('Reds', c.reds, c.redQty, TYPE_COLORS.Red)}
+				{@render wineList('Whites & others', c.others, c.otherQty, TYPE_COLORS.White)}
+			</div>
+		{/if}
 	</details>
 {/each}
 
@@ -188,6 +201,19 @@
 	}
 	li.hot {
 		background: var(--accent-soft);
+	}
+	/* the bottle whose page this is */
+	li.current {
+		background: var(--accent-soft);
+		box-shadow: inset 2px 0 0 var(--accent);
+		border-radius: 4px;
+		padding-left: 6px;
+	}
+	.this {
+		font-size: 11px;
+		font-weight: 600;
+		color: var(--accent);
+		white-space: nowrap;
 	}
 	.line-ends {
 		display: inline-flex;

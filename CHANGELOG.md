@@ -21,6 +21,45 @@
   is replaced after asking).
 - **A new vintage takes its vineyard**: a new wine without one takes the vineyard its other vintages share.
 - A page whose map has nothing to show (an appellation without an outline) no longer opens it full size.
+- **Fill from text**: a new bottle from a pasted order or auction email, invoice or producer's sheet: the wine (yours,
+  or a new vintage of a cuvée you have), the quantity, the price a bottle (a lot's divided), the date and the vendor.
+- **A wine's page, said once**: the facts list is gone (the header already names the producer, colour, region and
+  appellation, the map its vineyard); the grapes, blend, disgorgement, drinking window and LWIN on one line under the
+  title. One button, ＋ Tasting, and a ⋯ menu for the rest (a bottle, a critic's score, a plug-in's Fetch from Robert
+  Parker, a list, the wishlist, Edit, Draw its vineyard); no Critics card without a score, no Lists card when it's on
+  none (the menu adds them); the Vintages card just its pills. A producer's page: ＋ Wine, and its ⋯ menu.
+- **The other pages, tidied the same way**: every detail page's actions are a ⋯ menu at its card's top right and its
+  main action under it, a small icon named on hover; the add buttons (tasting, purchase, visit, place, producer, list)
+  are icons; an appellation's, a vineyard's and a place's facts no longer repeat their header. A bottle's date, vendor
+  and provenance sit small under its price; a tasting's page says the wine and the bottle in two lines under its
+  header (no Wine and Bottle cards), the critics once in its note, That session only with other wines.
+- No stats boxes repeating the tabs (Bottles in cellar, Wines tasted, Wines): the Cellar tab says the cellar's value
+  ("Cellar 12 · €3,400"). A wine's and a bottle's cellar cards are plain (no rack strip, no reds / whites split); a
+  bottle's "What happened to it" only for the bottles that left other than drunk (gifted, sold, broken).
+- **A bottle's page**: the bottle is a band at the foot of its wine's card, two lines: how many and where (its ⋯
+  menu and the glass beside them), what it cost and what it's worth; the shelf strip only when its storage holds
+  several bins. The Cellar tab marks the bottle's own line.
+- **Map legends in columns**: one row of controls (the layers, the basemap, the full-size button as an icon), every
+  appellation and vineyard in columns, a long name cut and whole on hover.
+- **A producer's page**: its map takes the card's width, the legend carrying the producer's tastings and bottles by
+  appellation and vineyard (no Top appellations nor vineyards list beside it; the list comes back when the map has
+  nothing to draw). The lists it's on sit in its header card.
+- **A wine's lists** sit in its header card too, only those naming this vintage, another vintage or the cuvée: a
+  producer's lists stay on the producer's page (`/api/lists-of`).
+- **A wine's style**: small tags under its appellation, nothing when there are none; the ⋯ menu's *Add its style*
+  opens the picker there.
+- **Settings in three tabs**: Settings, Maintenance, and **Needs attention**: what the quick checks find (wines entered twice, records pointing at nothing,
+  a vintage under two appellations, market prices no longer refreshed, cellar wines
+  without an LWIN, restaurants without coordinates), its count on the tab, each opening its Maintenance task with
+  the preview run.
+- **Keeping vintages together** (Settings › Maintenance): *Cuvées under several appellations* finds a vintage entered twice or left under an old name.
+- Market prices: a wine WineLabs has no price for is marked so on its bottles and asked again a month later, not every
+  night.
+- Fixes: *Duplicate wines* missed duplicates whose disgorgement date was empty on one and unset on the other; names
+  match "Premier" and "1er" ("Premier Grand Cru Classé" is an auction's "1er Grand Cru Classé"); the map outlines
+  that crossed themselves (rounding) are repaired: their fill no longer draws inside out.
+- Browser smoke tests (app/web/e2e, `npm run e2e`) in CI: the pages load, and the clicks go where they should.
+- The server no longer logs "No response returned" for a page left while it loaded.
 
 ## v0.3.6
 

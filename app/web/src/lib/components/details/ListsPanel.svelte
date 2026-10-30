@@ -3,8 +3,14 @@
 	import { links } from '#lib/links.ts';
 
 	/** The lists a wine or a producer is on (as that wine, its cuvée, or through its producer), each with its tick and
-	 * the list's progress; and adding it to a list. */
-	let { wineId, producerId }: { wineId?: number; producerId?: number } = $props();
+	 * the list's progress; and adding it to a list. On none: no card, unless `adding` (the page header's Add to a list
+	 * icon, bound: false again once added or cancelled). `inline`: inside the page's header card, not a card of its own. */
+	let {
+		wineId,
+		producerId,
+		adding = $bindable(false),
+		inline = false
+	}: { wineId?: number; producerId?: number; adding?: boolean; inline?: boolean } = $props();
 
 	const of = $derived(wineId ? { wine_id: wineId } : { producer_id: producerId! });
 	let on = $state<Membership[] | null>(null);
@@ -22,6 +28,14 @@
 		refresh();
 	});
 
+	// the header's icon: the form, opened
+	$effect(() => {
+		if (adding && !open) openAdd();
+	});
+	$effect(() => {
+		if (!open) adding = false;
+	});
+
 	async function openAdd() {
 		open = !open;
 		if (open && !all.length) all = await loadLists(fetch).catch(() => []);
@@ -37,11 +51,12 @@
 	const ticked = (m: Membership) => m.item.tasted;
 </script>
 
-{#if on}
-	<section class="card lists">
+{#if on && (on.length || open)}
+	<svelte:element this={inline ? 'div' : 'section'} class={inline ? 'lists inline' : 'card lists'}>
 		<div class="head">
 			<h2>Lists {#if on.length}<span class="muted num">{on.length}</span>{/if}</h2>
-			<button class="btn small" onclick={openAdd}>{open ? 'Cancel' : '＋ Add to a list'}</button>
+			<!-- inline, adding is the header menu's: only its Cancel here -->
+			{#if !inline || open}<button class="btn small" onclick={openAdd}>{open ? 'Cancel' : '＋ Add to a list'}</button>{/if}
 		</div>
 		{#if open}
 			<div class="add">
@@ -68,17 +83,15 @@
 						<span class="tick" class:on={ticked(m)} role="img" aria-label={ticked(m) ? 'Tasted' : 'Not tasted yet'}>{#if ticked(m)}✓{/if}</span>
 						<a href={links.list(m.id)}>{m.name}</a>
 						<span class="muted as">
-							{#if m.as === 'producer' && wineId}through its producer{:else if m.as === 'cuvee'}{wineId ? 'its cuvée, ' : `${m.wine?.cuvee || 'a cuvée'}, `}{KIND_LABEL.cuvee}{:else if m.as === 'wine'}{wineId ? KIND_LABEL.wine : `${m.wine?.cuvee ?? ''} ${m.wine?.vintage ?? ''}`}{:else}{KIND_LABEL.producer}{/if}
+							{#if m.as === 'cuvee'}{wineId ? '' : `${m.wine?.cuvee || 'a cuvée'}, `}{KIND_LABEL.cuvee}{:else if m.as === 'wine'}{wineId ? (m.this ? KIND_LABEL.wine : `the ${m.wine?.vintage ?? ''}`) : `${m.wine?.cuvee ?? ''} ${m.wine?.vintage ?? ''}`}{:else}{KIND_LABEL.producer}{/if}
 							{#if m.item.note}· “{m.item.note}”{/if}
 						</span>
 						<span class="progress num">{m.tasted}/{m.entries}</span>
 					</li>
 				{/each}
 			</ul>
-		{:else if !open}
-			<p class="muted none">Not on any list.</p>
 		{/if}
-	</section>
+	</svelte:element>
 {/if}
 
 <style>
@@ -94,6 +107,21 @@
 	h2 {
 		margin: 0;
 		font-size: 15px;
+	}
+	/* in a header card: under its title, its heading a caption */
+	.lists.inline {
+		padding: 0;
+		margin: 12px 0 0;
+	}
+	.inline h2 {
+		font-size: 11px;
+		font-weight: 400;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--muted);
+	}
+	.inline ul {
+		margin-top: 4px;
 	}
 	.head .btn {
 		margin-left: auto;
@@ -152,9 +180,5 @@
 		margin-left: auto;
 		font-size: 12px;
 		color: var(--muted);
-	}
-	.none {
-		margin: 8px 0 0;
-		font-size: 13px;
 	}
 </style>

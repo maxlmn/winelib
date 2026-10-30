@@ -36,9 +36,14 @@
 		draw?: DrawSpec | null;
 		/** the drawing closed: saved (or the new vineyard's id) */
 		ondrawn?: (saved: boolean, created?: number) => void;
+		/** the page's own tastings and bottles by shape ("appellation:12", "vineyard:3"): badges in the legend (the
+		 * shapes' own figures are the whole cellar's) */
+		counts?: Record<string, { bottles: number; tastings: number }> | null;
+		/** bound: loaded with nothing to draw (no boundary data): its "no data" line in place of the map */
+		nothing?: boolean;
 	}
 
-	let { src, current = null, frame = null, height = 320, empty = 'No boundary data for this one.', fullUrl = null, lieuAction = null, draw = null, ondrawn }: Props = $props();
+	let { src, current = null, frame = null, height = 320, empty = 'No boundary data for this one.', fullUrl = null, lieuAction = null, draw = null, ondrawn, counts = null, nothing = $bindable(false) }: Props = $props();
 
 	// Full size (Settings › Appearance, or ⤢ here): the map fills the window behind the page, which becomes a column
 	// of cards over its left side (html.map-full in app.css); Esc goes back. Not for a map with nothing to show (no
@@ -148,6 +153,9 @@
 	const drawnVines = $derived(shapes ? shown(swap(shapes.vineyards, 'vineyard')) : null);
 
 	const outline = $derived(shapes?.region?.features.length ? { ...shapes.region, extent: null } : null);
+	$effect(() => {
+		nothing = blank;
+	});
 	const count = $derived((shapes?.appellations.features.length ?? 0) + (shapes?.vineyards.features.length ?? 0));
 	const keys = $derived(shapes ? [...shapes.appellations.features, ...shapes.vineyards.features].map((f) => f.properties) : []);
 	const missing = $derived(shapes ? [...shapes.appellations.missing, ...shapes.vineyards.missing] : []);
@@ -204,7 +212,7 @@
 {#if blank}
 	<div class="empty muted" style:min-height="{Math.min(height, 120)}px">
 		{#if failed}The map couldn’t load.
-		{:else if shapes?.outlines === false}No map outlines installed yet: <a href={`${links.settings()}#maintenance`}>Settings › Maintenance › Map outlines</a> downloads them.
+		{:else if shapes?.outlines === false}No map outlines installed yet: <a href={links.settings('maintenance')}>Settings › Maintenance › Map outlines</a> downloads them.
 		{:else}{empty}{/if}
 	</div>
 {:else}
@@ -243,10 +251,12 @@
 		</div>
 		{#if shapes && !drawing}
 			<figcaption>
-				<div class="seg size">
-					<button onclick={() => (mapView.full = !big)} title={big ? 'Back to the page (Esc)' : 'The map full size, the page’s details over it'}>
-						{big ? '✕ Back to the page' : '⤢ Full map'}
-					</button>
+				<!-- one row: the layers at the left, the map's buttons at the right -->
+				<div class="bar">
+				<div class="kinds">
+					<LayerToggle label="Appellations" bind:mode={layers.appellation} swatch={appColor} />
+					<LayerToggle label="Vineyards" bind:mode={layers.vineyard} swatch={darken(appColor, 1)} />
+					<LayerToggle label="Lieux-dits" bind:mode={layers.lieu} dashed />
 				</div>
 				<div class="seg">
 					{#each [['plain', 'Plain'], ['satellite', 'Satellite']] as [id, label]}
@@ -261,21 +271,25 @@
 						</button>
 					</div>
 				{/if}
-				<div class="kinds">
-					<LayerToggle label="Appellations" bind:mode={layers.appellation} swatch={appColor} />
-					<LayerToggle label="Vineyards" bind:mode={layers.vineyard} swatch={darken(appColor, 1)} />
-					<LayerToggle label="Lieux-dits" bind:mode={layers.lieu} dashed />
+				<div class="seg size">
+					<button onclick={() => (mapView.full = !big)} title={big ? 'Back to the page (Esc)' : 'The map full size, the page’s details over it'}
+						aria-label={big ? 'Back to the page' : 'Full map'}>{big ? '✕' : '⤢'}</button>
 				</div>
+				</div>
+				<!-- every shape, in columns -->
 				<div class="keys">
 				{#each keys as k (k.kind + k.id)}
 					{@const off = hidden.has(keyOf(k))}
 					{@const colour = k.kind === 'appellation' ? cruShade(k.color ?? FALLBACK_REGION, k.cru) : darken(k.color ?? FALLBACK_REGION, (k.cru ?? 0) + 1)}
+					{@const c = counts?.[keyOf(k)]}
 					<!-- a legend entry: its swatch shows or hides its shape; its name zooms to it (its card open), never
 					     another page -->
 					<span class="key" class:on={focused(k)} class:off={layers[k.kind] === 'off'} class:hidden={off}>
 						<button class="sw" class:vine={k.kind === 'vineyard'} style:--sw={colour} aria-pressed={!off}
 							title={off ? `Show ${k.name} on the map` : `Hide ${k.name} from the map`} onclick={() => toggleShown(k)}></button>
 						<button class="name" title={focused(k) ? 'Show all' : `Zoom to ${k.name}`} onclick={() => zoomTo(k)}>{k.name}</button>
+						{#if c?.tastings}<span class="badge tasted num" title="{c.tastings} tasting{c.tastings > 1 ? 's' : ''}">✎ {c.tastings}</span>{/if}
+						{#if c?.bottles}<span class="badge num" title="{c.bottles} bottle{c.bottles > 1 ? 's' : ''} in the cellar">{c.bottles}</span>{/if}
 					</span>
 				{/each}
 				</div>
@@ -319,7 +333,8 @@
 		position: absolute;
 		right: 14px;
 		bottom: 40px;
-		max-width: min(560px, calc(100% - 600px));
+		width: min(520px, calc(100% - 600px));
+		box-sizing: border-box;
 		margin: 0;
 		padding: 10px 12px;
 		background: var(--surface);
@@ -339,7 +354,7 @@
 			left: 10px;
 			right: 54px;
 			bottom: auto;
-			max-width: none;
+			width: auto;
 			padding: 8px 10px;
 		}
 		figure.big :global(:is(.maplibregl-ctrl-bottom-left, .maplibregl-ctrl-bottom-right)) {
@@ -367,9 +382,16 @@
 		place-items: center;
 		font-size: 13px;
 	}
+	.bar {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+	.bar .kinds {
+		margin-right: auto;
+	}
 	.seg {
-		order: 1;
-		margin-left: auto;
 		display: inline-flex;
 		border: 1px solid var(--border);
 		border-radius: 8px;
@@ -380,34 +402,42 @@
 	.seg button {
 		padding: 4px 9px;
 	}
-	/* Every shape listed; past a few lines the list scrolls */
+	/* Every shape listed, in columns (a name too long cut, whole on hover); past a few rows the list scrolls */
 	.keys {
-		flex: 1 1 100%;
-		order: 2;
-		display: flex;
-		flex-wrap: wrap;
-		gap: 4px 14px;
-		max-height: 4.6em;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+		gap: 3px 14px;
+		max-height: calc(5 * 1.6em);
 		overflow-y: auto;
 		overscroll-behavior: contain;
 	}
-	.missing {
-		order: 3;
+	figure.big .keys {
+		max-height: calc(9 * 1.6em);
+	}
+	@media (max-width: 760px) {
+		/* a phone, over the map: a few rows, the rest scrolls */
+		figure.big .keys {
+			max-height: calc(4 * 1.6em);
+		}
+	}
+	.keys:empty {
+		display: none;
 	}
 	figcaption {
 		display: flex;
-		align-items: center;
-		flex-wrap: wrap;
-		gap: 4px 14px;
+		flex-direction: column;
+		gap: 8px;
 		margin-top: 8px;
 		font-size: 12px;
 		color: var(--muted);
 	}
 	.key {
 		color: inherit;
-		display: inline-flex;
+		display: flex;
 		align-items: center;
 		gap: 6px;
+		min-width: 0;
+		line-height: 1.6;
 	}
 	.key button {
 		border: none;
@@ -416,6 +446,27 @@
 		font: inherit;
 		color: inherit;
 		cursor: pointer;
+	}
+	.key .name {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		text-align: left;
+	}
+	.badge {
+		flex: none;
+		font-size: 10px;
+		font-weight: 600;
+		line-height: 1.4;
+		color: var(--gold);
+		box-shadow: inset 0 0 0 1px var(--gold);
+		border-radius: 8px;
+		padding: 0 5px;
+	}
+	.badge.tasted {
+		color: var(--accent);
+		box-shadow: inset 0 0 0 1px var(--accent);
 	}
 	.key .name:hover,
 	.key.on .name {
@@ -448,9 +499,6 @@
 	}
 	.key .sw:hover {
 		outline: 2px solid color-mix(in srgb, var(--sw) 40%, transparent);
-	}
-	.seg.detail {
-		margin-left: 0;
 	}
 	.seg button:disabled {
 		cursor: progress;

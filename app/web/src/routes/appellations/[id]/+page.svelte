@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { regionColor, regionLabel } from '#lib/regions.svelte.ts';
+	import ActionMenu from '#lib/components/ActionMenu.svelte';
+	import Icon from '#lib/components/Icon.svelte';
 	import { shapesUrl } from '#lib/api/details.ts';
 	import CellarSection from '#lib/components/details/CellarSection.svelte';
 	import DetailHeader from '#lib/components/details/DetailHeader.svelte';
 	import DetailMap from '#lib/components/details/DetailMap.svelte';
 	import Facts from '#lib/components/details/Facts.svelte';
-	import Stats from '#lib/components/details/Stats.svelte';
 	import Tabs from '#lib/components/details/Tabs.svelte';
 	import TastingHistory from '#lib/components/details/TastingHistory.svelte';
 	import { fmtDate, splitList } from '#lib/components/details/wine.ts';
@@ -34,9 +34,12 @@
 <svelte:head><title>{a.name} · WineLib</title></svelte:head>
 
 {#snippet actions()}
-	<a class="btn" href={links.map({ region: a.region, ap: a.id, sel: `appellation:${a.id}` })}>Open on the map</a>
-	<a class="btn" href={links.editAppellation(a.id)}>Edit appellation</a>
-	<button class="btn" onclick={() => (drawing = true)}>Draw outline</button>
+	<ActionMenu>
+		<button class="menu-item" role="menuitem" onclick={() => (drawing = true)}><Icon name="draw" size={15} />Draw its outline</button>
+		<hr />
+		<a class="menu-item" role="menuitem" href={links.editAppellation(a.id)}><Icon name="edit" size={15} />Edit appellation</a>
+	</ActionMenu>
+	<a class="btn icon" href={links.map({ region: a.region, ap: a.id, sel: `appellation:${a.id}` })} title="Open on the map" aria-label="Open on the map"><Icon name="map" size={15} /></a>
 {/snippet}
 
 {#snippet map()}
@@ -60,9 +63,6 @@
 		<Facts
 			items={[
 				{ label: 'Also known as', value: a.aliases },
-				{ label: 'Region', value: a.region ? regionLabel(a.region) : 'Unknown', dot: regionColor(a.region), href: a.region ? links.region(a.region) : null, icon: 'globe' },
-				{ label: 'Sub-region', value: a.subregion },
-				{ label: 'Type', value: a.type },
 				{ label: 'Category', value: a.category },
 				{ label: 'Colors', value: colors },
 				{ label: 'PDO ID', value: a.pdo_id && `${a.pdo_id}${a.registration_date ? ` (reg. ${fmtDate(a.registration_date)})` : ''}` },
@@ -82,21 +82,12 @@
 				<p>{a.details}</p>
 			</details>
 		{/if}
-		<div class="stats">
-			<Stats
-				items={[
-					{ label: 'Bottles in cellar', value: a.stats.bottles, sub: a.stats.value ? money(a.stats.value) : undefined, gold: a.stats.bottles > 0 },
-					{ label: 'Wines tasted', value: a.stats.tastings },
-					{ label: 'Producers', value: a.producers.length }
-				]}
-			/>
-		</div>
 	</DetailHeader>
 
 	<Tabs
 		tabs={[
 			{ id: 'history', label: 'History', count: a.tastings.length },
-			{ id: 'cellar', label: 'Cellar', count: a.stats.bottles },
+			{ id: 'cellar', label: 'Cellar', count: a.stats.bottles, note: a.stats.value ? money(a.stats.value) : undefined },
 			{ id: 'producers', label: 'Producers', count: a.producers.length },
 			{ id: 'vineyards', label: 'Vineyards', count: a.vineyards.length }
 		]}
@@ -163,9 +154,6 @@
 		background: var(--surface-2);
 		border: 1px solid var(--border);
 		font-size: 12px;
-	}
-	.stats {
-		margin-top: 16px;
 	}
 	.more {
 		display: inline-block;

@@ -66,12 +66,16 @@ def test_on_the_wine_and_producer_pages(client):
     client.post(f"/api/lists/{lst}/items", json={"kind": "cuvee", "wine_id": wine("le bourg 2016")})
     other = client.post("/api/lists", json={"name": "Loire producers"}).json()["id"]
     client.post(f"/api/lists/{other}/items", json={"kind": "producer", "producer_id": producer("rougeard")})
-    # The 2017 is on "Rougeard" through its cuvée, on "Loire producers" through its producer
+    vintages = client.post("/api/lists", json={"name": "Verticals"}).json()["id"]
+    client.post(f"/api/lists/{vintages}/items", json={"kind": "wine", "wine_id": wine("le bourg 2016")})
+    # The 2017: on "Rougeard" through its cuvée, on "Verticals" through its 2016; not its producer's list (its page's)
     on = client.get("/api/lists-of", params={"wine_id": wine("le bourg 2017")}).json()
-    assert {(x["name"], x["as"]) for x in on} >= {("Rougeard", "cuvee"), ("Loire producers", "producer")}
-    # Les Poyeux only through its producer
-    on = client.get("/api/lists-of", params={"wine_id": wine("poyeux")}).json()
-    assert [(x["name"], x["as"]) for x in on] == [("Loire producers", "producer")]
+    assert {(x["name"], x["as"], x["this"]) for x in on} == {("Rougeard", "cuvee", False), ("Verticals", "wine", False)}
+    # The 2016: the vintage itself
+    on = client.get("/api/lists-of", params={"wine_id": wine("le bourg 2016")}).json()
+    assert ("Verticals", "wine", True) in {(x["name"], x["as"], x["this"]) for x in on}
+    # Les Poyeux: on none (only through its producer)
+    assert client.get("/api/lists-of", params={"wine_id": wine("poyeux")}).json() == []
     # The producer: both lists
     on = client.get("/api/lists-of", params={"producer_id": producer("rougeard")}).json()
     assert {x["name"] for x in on} >= {"Rougeard", "Loire producers"}

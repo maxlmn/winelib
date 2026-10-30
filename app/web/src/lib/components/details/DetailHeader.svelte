@@ -11,8 +11,8 @@
 		/** before `kind`: person for a producer, globe for a region... */
 		icon?: IconName;
 		title: Snippet | string;
-		/** region > sub-region > village, the region drawn in its color */
-		trail?: (string | null | undefined)[];
+		/** region > sub-region > village, the region drawn in its color; an item may be a link ({ label, href }) */
+		trail?: (string | { label: string; href: string | null; title?: string } | null | undefined)[];
 		regionColor?: string | null;
 		/** makes the trail's first item (the region) a link to its page */
 		regionHref?: string | null;
@@ -20,13 +20,20 @@
 		/** right column next to the facts, e.g. a map or the stats */
 		aside?: Snippet;
 		children?: Snippet;
+		/** a band at the card's foot, part of it (a bottle's page: that bottle under its wine) */
+		footer?: Snippet;
+		/** just under the trail, in the title's column (a wine's style tags) */
+		under?: Snippet;
 	}
 
-	let { kind, icon, title, trail = [], regionColor, regionHref = null, actions, aside, children }: Props = $props();
+	let { kind, icon, title, trail = [], regionColor, regionHref = null, actions, aside, children, footer, under }: Props = $props();
 
 	// The first item is the region when the page has one (regionColor / regionHref): named with its country
 	const parts = $derived(
-		trail.filter((x): x is string => !!x && !!x.trim()).map((p, i) => (i === 0 && (regionColor !== undefined || regionHref) ? regionLabel(p) : p))
+		trail
+			.map((x) => (typeof x === 'string' ? { label: x, href: null, title: undefined } : x))
+			.filter((x): x is { label: string; href: string | null; title?: string } => !!x && !!x.label?.trim())
+			.map((p, i) => (i === 0 && (regionColor !== undefined || regionHref) ? { ...p, label: regionLabel(p.label) } : p))
 	);
 </script>
 
@@ -38,12 +45,13 @@
 			{#if parts.length}
 				<div class="trail">
 					{#each parts as p, i}
-						{#if i}<span class="sep">›</span>{/if}{#if i === 0 && regionHref}<a class="region-link" class:region={!!regionColor} href={regionHref}>{p}</a>{:else}<span class:region={i === 0 && regionColor}>{p}</span>{/if}
+						{#if i}<span class="sep">›</span>{/if}{#if i === 0 && regionHref}<a class="region-link" class:region={!!regionColor} href={regionHref}>{p.label}</a>{:else if p.href}<a class="trail-link" href={p.href} title={p.title}>{p.label}</a>{:else}<span class:region={i === 0 && regionColor}>{p.label}</span>{/if}
 					{/each}
 				</div>
 			{/if}
+			{#if under}{@render under()}{/if}
 		</div>
-		{#if actions}<div class="actions">{@render actions()}</div>{/if}
+		{#if actions}<div class="page-actions">{@render actions()}</div>{/if}
 	</div>
 	{#if children || aside}
 		<div class="body" class:split={aside && children}>
@@ -51,6 +59,7 @@
 			{#if aside}<div class="aside">{@render aside()}</div>{/if}
 		</div>
 	{/if}
+	{#if footer}<div class="foot">{@render footer()}</div>{/if}
 </header>
 
 <style>
@@ -59,14 +68,23 @@
 		padding: 18px 20px;
 		margin-bottom: 14px;
 	}
+	/* the footer: to the card's edges, tinted, its bottom corners the card's */
+	.foot {
+		margin: 16px -20px -18px;
+		padding: 12px 20px 14px;
+		background: var(--surface-2);
+		border-top: 1px solid var(--border);
+		border-radius: 0 0 var(--radius) var(--radius);
+	}
+	/* the buttons at the top right, whatever the title's length (it wraps in its column) */
 	.top {
 		display: flex;
 		align-items: flex-start;
 		justify-content: space-between;
 		gap: 12px 20px;
-		flex-wrap: wrap;
 	}
 	.titles {
+		flex: 1;
 		min-width: 0;
 	}
 	.kind {
@@ -98,11 +116,6 @@
 	.sep {
 		opacity: 0.6;
 	}
-	.actions {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-	}
 	.body {
 		margin-top: 16px;
 		display: grid;
@@ -120,7 +133,12 @@
 			grid-template-columns: 1fr;
 		}
 	}
-	.region-link:hover {
+	.region-link:hover,
+	.trail-link:hover {
 		text-decoration: underline;
+	}
+	.trail-link {
+		color: inherit;
+		text-decoration: none;
 	}
 </style>

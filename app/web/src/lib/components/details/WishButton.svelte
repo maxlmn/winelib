@@ -3,8 +3,8 @@
 	import { addEntry, listsOf, wishlistId } from '#lib/api/lists.ts';
 	import { links } from '#lib/links.ts';
 
-	/** The wine page's Wishlist button: adds the wine (this vintage) to the wishlist, one of the lists; once there, a
-	 * link to it */
+	/** The wine page's wishlist item (its ⋯ menu): adds the wine (this vintage) to the wishlist, one of the lists; once
+	 * there, a link to it */
 	let { wineId }: { wineId: number } = $props();
 
 	let listId = $state<number | null>(null);
@@ -35,17 +35,12 @@
 </script>
 
 {#if listId}
-	<a class="btn wished" href={links.list(listId)} title="On your wishlist: see it"><Icon name="star" size={13} /> On your wishlist</a>
+	<a class="menu-item wished" role="menuitem" href={links.list(listId)}><Icon name="star" size={15} />On your wishlist: see it</a>
 {:else}
-	<button class="btn" onclick={add} disabled={busy} title={failed || 'Add this wine to your wishlist'}><Icon name="star" size={13} /> Wishlist</button>
+	<button class="menu-item" role="menuitem" onclick={add} disabled={busy} title={failed || undefined}><Icon name="star" size={15} />{failed || 'Add to your wishlist'}</button>
 {/if}
 
 <style>
-	.btn {
-		display: inline-flex;
-		align-items: center;
-		gap: 5px;
-	}
 	.wished {
 		color: var(--accent);
 		border-color: color-mix(in srgb, var(--accent) 45%, var(--border));

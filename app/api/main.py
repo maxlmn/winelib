@@ -40,11 +40,21 @@ app = FastAPI(title="WineLib API", lifespan=lifespan)
 app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=5)
 
 
-@app.middleware("http")
-async def store_fresh(request, call_next):
-    """The shape store rebuilt while the app runs: what was read from it is forgotten (geo.fresh)"""
-    geo.fresh()
-    return await call_next(request)
+class StoreFresh:
+    """The shape store rebuilt while the app runs: what was read from it is forgotten (geo.fresh), before each request.
+    A plain ASGI middleware: Starlette's @app.middleware("http") logs "No response returned" for every request a
+    browser abandons (a page left while loading)."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            geo.fresh()
+        await self.app(scope, receive, send)
+
+
+app.add_middleware(StoreFresh)
 
 
 @app.get("/api/health")

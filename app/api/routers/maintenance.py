@@ -66,6 +66,22 @@ def _orphans(session, job):
                        f"(of {t['tasting_notes']} notes, {t['cellar']} bottles).", "items": items[:MAX_ITEMS]}
 
 
+def _appellations_apart(session, job):
+    """Cuvées filed under several appellations (tasks/vintages.py): a report, the likely duplicates first."""
+    from tasks import vintages
+    found = vintages.appellations_apart(session)
+    items = []
+    for c in found:
+        w = c["wine"]
+        apart = " · ".join(f"{a}: {', '.join(v)}" for a, v in c["by"])
+        twice = f" (under two: {', '.join(c['both'])})" if c["both"] else ""
+        items.append(_item(f"{w.producer.name} {w.cuvee}{twice}", apart, f"/wines/{w.id}"))
+    both = sum(1 for c in found if c["both"])
+    return {"summary": f"{_n(len(found), 'cuvée')} under more than one appellation; {both} with a vintage under two "
+                       f"(probably entered twice: set one's appellation like the other's, then Duplicate wines "
+                       f"merges them).", "items": items[:MAX_ITEMS]}
+
+
 def _offer(task, a, b, wines_a, wines_b, keep_a, keep_b):
     """A pair the page can merge: keep a or b, the pick posted to `task` (merge_cuvees, merge_producers)."""
     return {"task": task, "a": a, "b": b, "wines": [wines_a, wines_b], "pick": {"a": keep_a, "b": keep_b}}
@@ -547,6 +563,10 @@ def _no_map_pack():
 TASKS = {
     "duplicates": {"group": "Clean up", "title": "Duplicate wines", "fn": _duplicates, "preview": True, "writes": True,
                    "description": "Same producer, cuvée, color, appellation, grape and vintage: move the cellar lines to one wine and delete the others."},
+    "appellations_apart": {"group": "Clean up", "title": "Cuvées under several appellations", "fn": _appellations_apart,
+                           "preview": False, "writes": False,
+                           "description": "A cuvée filed under more than one appellation: a vintage entered twice, "
+                                          "or one left under an old name."},
     "orphans": {"group": "Clean up", "title": "Orphans", "fn": _orphans, "preview": False, "writes": False,
                 "description": "Tasting notes without a bottle, bottles without a wine."},
     "similar": {"group": "Clean up", "title": "Similar cuvée names", "fn": _similar, "preview": False, "writes": False,

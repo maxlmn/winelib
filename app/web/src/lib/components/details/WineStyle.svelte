@@ -1,20 +1,29 @@
 <script lang="ts">
-	/** A wine's style tags on its page: those set on it (filled) and its tastings' (with how many found it);
-	 * Edit sets its own, the other vintages' and the shared words offered. */
+	/** A wine's style tags on its page, under its appellation: those set on it (outlined in the accent) and its
+	 * tastings' (with how many found it); none, nothing shown. `editing` (bound, the header menu's Style tags) opens
+	 * the picker: its own set, the other vintages' and the shared words offered. */
 	import { invalidateAll } from '$app/navigation';
 	import TagPicker from '#lib/components/TagPicker.svelte';
 	import { setWineTags, suggestions, type WineTag } from '#lib/api/tags.ts';
 
-	let { wineId, tags, cuvee = [] }: { wineId: number; tags: WineTag[]; cuvee?: string[] } = $props();
+	let {
+		wineId,
+		tags,
+		cuvee = [],
+		editing = $bindable(false)
+	}: { wineId: number; tags: WineTag[]; cuvee?: string[]; editing?: boolean } = $props();
 
-	let editing = $state(false);
 	let picked = $state<string[]>([]);
 	let offered = $state<string[]>([]);
 	let error = $state('');
-	async function edit() {
+	// opened (the menu): the picker starts from what's set
+	$effect(() => {
+		if (editing) load();
+	});
+	async function load() {
+		error = '';
 		picked = tags.filter((t) => t.set).map((t) => t.tag);
 		offered = await suggestions(cuvee, tags.map((t) => t.tag));
-		editing = true;
 	}
 	async function save() {
 		error = '';
@@ -30,9 +39,8 @@
 		[t.set && 'set on the wine', t.tastings && `found in ${t.tastings} tasting${t.tastings > 1 ? 's' : ''}`].filter(Boolean).join(', ');
 </script>
 
-<div class="style">
-	<span class="label">Style</span>
-	{#if editing}
+{#if editing}
+	<div class="style">
 		<div class="edit">
 			<TagPicker bind:value={picked} suggestions={offered} />
 			<div class="buttons">
@@ -42,42 +50,32 @@
 			</div>
 			<p class="muted hint">The words from its tastings show on their own: pick here what you'd say of the wine itself.</p>
 		</div>
-	{:else}
-		<div class="pills">
-			{#each tags as t (t.tag)}
-				<span class="pill" class:set={t.set} title={title(t)}>{t.tag}{#if t.tastings > 1}<span class="n num">×{t.tastings}</span>{/if}</span>
-			{:else}
-				<span class="muted none">{cuvee.length ? `Other vintages: ${cuvee.join(', ')}` : 'None yet'}</span>
-			{/each}
-			<button class="link" onclick={edit}>{tags.some((t) => t.set) ? 'Edit' : '+ Add'}</button>
-		</div>
-	{/if}
-</div>
+	</div>
+{:else if tags.length}
+	<div class="pills" aria-label="Style">
+		{#each tags as t (t.tag)}
+			<span class="pill" class:set={t.set} title={title(t)}>{t.tag}{#if t.tastings > 1}<span class="n num">×{t.tastings}</span>{/if}</span>
+		{/each}
+	</div>
+{/if}
 
 <style>
 	.style {
-		display: flex;
-		gap: 10px;
-		align-items: baseline;
-		margin-top: 10px;
+		margin-top: 8px;
 		font-size: 13px;
-	}
-	.label {
-		flex: none;
-		width: 92px;
-		color: var(--muted);
 	}
 	.pills {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 5px;
-		align-items: baseline;
+		gap: 4px;
+		margin-top: 6px;
 	}
 	.pill {
-		padding: 1px 9px;
+		padding: 0 8px;
 		border: 1px solid var(--border);
-		border-radius: 11px;
-		font-size: 12px;
+		border-radius: 10px;
+		font-size: 11px;
+		line-height: 1.6;
 	}
 	.pill.set {
 		border-color: var(--accent);
@@ -87,18 +85,6 @@
 		margin-left: 4px;
 		color: var(--muted);
 		font-size: 11px;
-	}
-	.none {
-		font-size: 12px;
-	}
-	.link {
-		border: none;
-		background: none;
-		padding: 0 4px;
-		color: var(--accent);
-		font: inherit;
-		font-size: 12px;
-		cursor: pointer;
 	}
 	.edit {
 		display: flex;

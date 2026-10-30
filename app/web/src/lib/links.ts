@@ -28,7 +28,10 @@ export const links = {
 	vintages: () => '/vintages',
 	places: (query?: Query) => withQuery('/places', query),
 	map: (query?: Query) => withQuery('/map', query),
-	settings: () => '/settings',
+	/** Settings, or one of its tabs: maintenance, attention */
+	settings: (tab?: 'maintenance' | 'attention') => withQuery('/settings', { tab }),
+	/** Settings › Maintenance opened on one task, its preview started (a report: run) */
+	maintenance: (task: string) => withQuery('/settings', { tab: 'maintenance', task }),
 	/** where the reference data and the map come from, their licences */
 	about: () => '/about',
 	/** the Help guides, or one of them */

@@ -1,7 +1,7 @@
 <script lang="ts">
+	import ActionMenu from '#lib/components/ActionMenu.svelte';
 	import CriticPills from '#lib/components/CriticPills.svelte';
 	import PlaceName from '#lib/components/PlaceName.svelte';
-	import { grapesText } from '#lib/grapes.ts';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import { regionColor, regionLabel } from '#lib/regions.svelte.ts';
@@ -23,7 +23,11 @@
 	const price = $derived(
 		b.price_base ? `${money(b.price_base)}${b.currency && b.currency !== appSettings.currency ? ` (${b.price} ${b.currency})` : ''}` : null
 	);
-	const fields = (rows: [string, string | number | null | undefined][]) => rows.filter(([, v]) => v !== null && v !== undefined && v !== '');
+	// The header's two lines: this bottle (its size, vendor, price, date: a link to it) and the wine (what its page's
+	// header line says: grapes, blend, disgorgement, drinking window, vineyard)
+	const bottleLine = $derived([b.format, b.vendor, price, b.purchase_date && `bought ${b.purchase_date}`].filter(Boolean).join(' · '));
+	const grapes = $derived(w.grapes?.length ? w.grapes : w.varietal ? [{ id: 0, name: w.varietal, share: null }] : []);
+	const others = $derived(t.occasion.length > 1);
 	// The critics with a score ("-": searched, none found)
 	const critics = $derived(w.scores.filter((s) => s.score && !['-', '0'].includes(s.score.trim())));
 	// For the share sticker: this wine and your note, the evening's wines in order (no score: the journal's 90 is a
@@ -47,7 +51,7 @@
 		<div class="kind"><Icon name="glass" size={12} />Tasting</div>
 		<div class="kicker">
 			{#if w.region}<span class="swatch" style:background={w.region_color ?? FALLBACK_REGION}></span><a class="kicker-link" href={links.region(w.region)}>{regionLabel(w.region)}</a>{/if}
-			{#if w.appellation} · <a class="kicker-link" href={links.appellation(w.appellation.id)}>{w.appellation.name}</a>{/if}
+			{#if w.appellation}{#if w.region} · {/if}<a class="kicker-link" href={links.appellation(w.appellation.id)}>{w.appellation.name}</a>{/if}
 		</div>
 		<h1>
 			<span class="bottle"><BottleEnd region={w.region_color ?? FALLBACK_REGION} color={w.color} format={b.format} size={20} title="{regionLabel(w.region)} · {w.color ?? ''}" /></span>
@@ -62,10 +66,24 @@
 				· {t.location}
 			{/if}
 		</div>
+		{#if grapes.length || w.blend || w.disgorged || drinkWindow || w.vineyard}
+			<p class="line">
+				{#each grapes as g, i (g.name)}{#if i}, {/if}<a href={links.grape(g.name)}>{g.name}</a>{#if g.share && g.share < 100}{' '}<span class="muted num">{+g.share.toFixed(1)}%</span>{/if}{/each}
+				{#if w.blend}<span class="item">{w.blend}</span>{/if}
+				{#if w.disgorged}<span class="item">Disgorged {w.disgorged}</span>{/if}
+				{#if drinkWindow}<span class="item">Drink <span class="num">{drinkWindow}</span></span>{/if}
+				{#if w.vineyard}<span class="item"><a href={links.vineyard(w.vineyard.id)}>{w.vineyard.label}</a></span>{/if}
+			</p>
+		{/if}
+		{#if bottleLine}<a class="line bottle-line muted" href={links.bottle(b.id)}>{bottleLine} ›</a>{/if}
 	</div>
-	<div class="actions">
-		<a class="btn primary" href={links.editTasting(t.id)}>✎ Edit tasting</a>
-		<a class="btn" href={links.editBottle(b.id)}>Edit bottle</a>
+	<div class="page-actions">
+		<ActionMenu>
+			<a class="menu-item" role="menuitem" href={links.newTasting({ place_id: t.place?.id, date: t.date })}><Icon name="glass" size={15} />Add a wine to this occasion</a>
+			<hr />
+			<a class="menu-item" role="menuitem" href={links.editBottle(b.id)}><Icon name="bottle" size={15} />Edit the bottle</a>
+		</ActionMenu>
+		<a class="btn icon primary" href={links.editTasting(t.id)} title="Edit tasting" aria-label="Edit tasting"><Icon name="edit" size={15} /></a>
 		<ShareSticker {...sticker} />
 	</div>
 </div>
@@ -84,8 +102,13 @@
 			{#if position >= 0 && t.occasion.length > 1}
 				<div><div class="label">Order</div><div class="value num">{position + 1}<span class="muted">&nbsp;of {t.occasion.length}</span></div></div>
 			{/if}
-			{#each critics as s (s.critic)}<div><div class="label">{s.critic}</div><div class="value num">{s.score}</div></div>{/each}
+			{#each critics as s (s.critic)}
+				<div><div class="label">{s.critic}</div><div class="value num">{#if s.url}<a href={s.url} target="_blank" rel="noreferrer" title="The review">{s.score} ↗</a>{:else}{s.score}{/if}</div></div>
+			{/each}
 		</div>
+		{#each critics.filter((c) => c.note) as s (s.critic)}
+			<p class="review"><span class="label">{s.critic}</span> {s.note}</p>
+		{/each}
 		{#if t.styles?.length}
 			<div class="tags styles" title="The wine's style, as you found it">{#each t.styles as s (s)}<span class="tag style">{s}</span>{/each}</div>
 		{/if}
@@ -99,6 +122,7 @@
 		{/if}
 	</section>
 
+	{#if others}
 	<section class="card">
 		<h2>That session <span class="muted num">{plural(t.occasion.length, 'wine')}</span></h2>
 		<ol class="occasion">
@@ -111,38 +135,10 @@
 				</li>
 			{/each}
 		</ol>
-		<a class="accent small" href={links.newTasting({ place_id: t.place?.id, date: t.date })}>+ Add a wine to this occasion</a>
 	</section>
+	{/if}
 
-	<section class="card">
-		<h2>Wine</h2>
-		<dl>
-			{#each fields([['Producer', w.producer], ['Type', w.color], ['Disgorged', w.disgorged], [w.grapes?.length > 1 ? 'Grapes' : 'Grape', grapesText(w.grapes, w.varietal)], ['Blend', w.blend], ['Drink', drinkWindow]]) as [k, v]}
-				<dt>{k}</dt>
-				<dd>{#if k === 'Producer'}<a href={links.producer(w.producer_id)}>{v}</a>{:else if k === 'Grape'}<a href={links.grape(String(v))}>{v}</a>{:else if k === 'Grapes'}{#each w.grapes as g, i (g.id)}{#if i}{', '}{/if}<a href={links.grape(g.name)}>{g.name}</a>{#if g.share}&nbsp;{+g.share.toFixed(1)}%{/if}{/each}{:else}{v}{/if}</dd>
-			{/each}
-			{#if w.appellation}<dt>Appellation</dt><dd><a href={links.appellation(w.appellation.id)}>{w.appellation.name}</a></dd>{/if}
-			{#if w.vineyard}<dt>Vineyard</dt><dd><a href={links.vineyard(w.vineyard.id)}>{w.vineyard.label}</a></dd>{/if}
-			{#if w.lwin}<dt>LWIN</dt><dd><a href={links.winelabs(w.lwin, w.vintage)} target="_blank" rel="noreferrer">{w.lwin} ↗</a></dd>{/if}
-		</dl>
-		{#each critics as s (s.critic)}
-			<div class="scores">
-				<div class="label">{s.critic} {s.score}{#if s.url} · <a href={s.url} target="_blank" rel="noreferrer">Review ↗</a>{/if}</div>
-				{#if s.note}<p>{s.note}</p>{/if}
-			</div>
-		{/each}
-		<a class="accent small" href={links.wine(w.id)}>Wine details →</a>
-	</section>
 
-	<section class="card">
-		<h2>Bottle</h2>
-		<dl>
-			{#each fields([['Format', b.format], ['Location', b.location], ['Vendor', b.vendor], ['Provenance', b.provenance], ['Price', price], ['Purchased', b.purchase_date]]) as [k, v]}
-				<dt>{k}</dt><dd class:num={k === 'Price'}>{v}</dd>
-			{/each}
-		</dl>
-		<a class="accent small" href={links.bottle(b.id)}>Bottle details →</a>
-	</section>
 
 	{#if t.history.length}
 		<section class="card wide">
@@ -185,6 +181,40 @@
 		color: var(--muted);
 		margin-bottom: 2px;
 	}
+	/* the wine's line and the bottle's, under the date and place */
+	.line {
+		margin: 4px 0 0;
+		font-size: 14px;
+	}
+	.line a {
+		color: inherit;
+	}
+	.line a:hover,
+	a.bottle-line:hover {
+		color: var(--accent);
+	}
+	.line .item::before {
+		content: '·';
+		margin: 0 8px;
+		color: var(--muted);
+	}
+	.line > .item:first-child::before {
+		content: none;
+		margin: 0;
+	}
+	a.bottle-line {
+		display: block;
+		font-size: 13px;
+		text-decoration: none;
+	}
+	.review {
+		margin: 8px 0 0;
+		font-size: 13px;
+		color: var(--muted);
+	}
+	.review .label {
+		margin-right: 6px;
+	}
 	.kicker {
 		display: flex;
 		align-items: center;
@@ -218,10 +248,6 @@
 		color: var(--gold);
 		letter-spacing: 1px;
 		font-size: 12px;
-	}
-	.actions {
-		display: flex;
-		gap: 8px;
 	}
 	.btn.primary:hover {
 		color: white;
@@ -344,47 +370,6 @@
 	}
 	.mine-value {
 		color: var(--accent);
-	}
-	dl {
-		display: grid;
-		grid-template-columns: max-content 1fr;
-		gap: 5px 16px;
-		margin: 0 0 12px;
-		font-size: 13px;
-	}
-	dt {
-		color: var(--muted);
-	}
-	dd {
-		margin: 0;
-		min-width: 0;
-	}
-	dd a {
-		color: var(--link);
-		text-decoration: var(--link-decoration, none);
-	}
-	dd a:hover {
-		color: var(--accent);
-	}
-	.scores {
-		padding: 10px 12px;
-		margin-bottom: 12px;
-		border-radius: 8px;
-		background: var(--surface-2);
-		font-size: 13px;
-	}
-	.scores p {
-		margin: 4px 0 0;
-	}
-	.scores a {
-		color: var(--link);
-		text-decoration: var(--link-decoration, none);
-	}
-	.scores a:hover {
-		color: var(--accent);
-	}
-	.small {
-		font-size: 13px;
 	}
 	.history {
 		list-style: none;

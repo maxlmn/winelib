@@ -2,7 +2,8 @@
 	import { appSettings, integrations } from '#lib/settings.svelte.ts';
 	import { messageOf, request } from '#lib/api/http.ts';
 	import { invalidateAll } from '$app/navigation';
-	import Facts from '#lib/components/details/Facts.svelte';
+	import ActionMenu from '#lib/components/ActionMenu.svelte';
+	import Icon from '#lib/components/Icon.svelte';
 	import WineContent from '#lib/components/details/WineContent.svelte';
 	import { fmtDate } from '#lib/components/details/wine.ts';
 	import { links } from '#lib/links.ts';
@@ -27,6 +28,8 @@
 	const purchase = $derived(
 		b.price ? `${amount(b.price, b.currency)}${b.currency !== appSettings.currency && b.price_base ? ` · ${money(b.price_base)}` : ''}` : 'N/A'
 	);
+
+	const bought = $derived([b.vendor, b.provenance && b.provenance !== b.vendor ? b.provenance : null, b.purchase_date && fmtDate(b.purchase_date)].filter(Boolean).join(', '));
 
 	// The market price sources set up (Settings › Integrations), named on the button while it asks
 	const priceSources = $derived(integrations.list.filter((i) => i.configured && ['bordeaux_index', 'winelabs'].includes(i.id)).map((i) => i.name).join(' / '));
@@ -101,12 +104,12 @@
 			outError = messageOf(e);
 		}
 	}
-	// The bottles' story, newest first: drunk (its tastings) and the rest
+	// What happened to the bottles that left other than by being drunk (gifted, sold, broken...), newest first: the
+	// ones drunk are the wine's tastings, below
 	const story = $derived(
-		[
-			...b.drunk.map((t) => ({ key: `t${t.id}`, date: t.date, tasting: t, event: null })),
-			...b.events.map((e) => ({ key: `e${e.id}`, date: e.date, tasting: null, event: e }))
-		].sort((x, y) => (y.date ?? '').localeCompare(x.date ?? ''))
+		b.events
+			.map((e) => ({ key: `e${e.id}`, date: e.date, event: e }))
+			.sort((x, y) => (y.date ?? '').localeCompare(x.date ?? ''))
 	);
 	const gone = $derived(b.drunk.length + b.events.reduce((n, e) => n + e.qty, 0));
 
@@ -128,86 +131,81 @@
 
 <svelte:head><title>Bottle · {wine.producer.name} {wine.cuvee} {wine.vintage} · WineLib</title></svelte:head>
 
-<section class="card bottle">
-	<div class="top">
-		<div>
-			<div class="kind">Bottle</div>
-			<div class="title-row">
-			<h2>{what}</h2>
-			<!-- one bottle end per bottle, beside the title: those in the cellar, then those gone (drunk, gifted...) faded -->
-			{#if b.qty || gone}
-				<div class="ends" aria-label="{b.qty} in the cellar{gone ? `, ${gone} gone` : ''}">
-					{#each { length: b.qty } as _, i (i)}<BottleEnd region={wine.region_color} color={wine.color} format={b.bottle_size} size={16} title="In the cellar" />{/each}
-					{#each { length: gone } as _, i (`g${i}`)}<span class="gone"><BottleEnd region={wine.region_color} color={wine.color} format={b.bottle_size} size={16} title="Gone" /></span>{/each}
+<!-- the bottle: a band at the foot of its wine's header card, two lines (how many and where; paid and worth), the shelf
+	strip when its storage holds several bins; taking some out, new market prices and what happened to them open under -->
+{#snippet bottle()}
+	<div class="bottle">
+		<div class="line1">
+			<div class="what">
+				{#if b.qty || gone}
+					<span class="ends" aria-label="{b.qty} in the cellar{gone ? `, ${gone} gone` : ''}">
+						{#each { length: b.qty } as _, i (i)}<BottleEnd region={wine.region_color} color={wine.color} format={b.bottle_size} size={14} title="In the cellar" />{/each}
+						{#each { length: gone } as _, i (`g${i}`)}<span class="gone"><BottleEnd region={wine.region_color} color={wine.color} format={b.bottle_size} size={14} title="Gone" /></span>{/each}
+					</span>
+				{/if}
+				<b>{what}</b>
+				{#if b.location && b.location !== 'Consumed'}<!-- Consumed: a bottle recorded only for a tasting, no place -->
+					<span class="sep">·</span>
+					<a class="where" href={links.cellar({ loc: b.location, view: 'shelves' })} title="See it on the shelf map">
+						{b.qty ? 'In' : 'Was in'} {b.location}{b.location_group !== b.location ? ` · ${b.location_group}` : ''}
+					</a>
+				{/if}
+			</div>
+			<!-- as on the wine's header: the one to hand (Drink, while there's one left), the rest in the ⋯ menu -->
+			<div class="acts">
+				<ActionMenu>
+					{#if b.qty}<button class="menu-item" role="menuitem" onclick={startOut} disabled={!!out}><Icon name="bottle" size={15} />Take some out (gifted, sold…)</button>{/if}
+					<a class="menu-item" role="menuitem" href={links.editBottle(b.id)}><Icon name="edit" size={15} />Edit bottle</a>
+				</ActionMenu>
+				{#if b.qty}<a class="btn icon primary" href={links.newTasting({ bottle_id: b.id })} title="Drink it: a tasting" aria-label="Drink it"><Icon name="glass" size={15} /></a>{/if}
+			</div>
+		</div>
+		<div class="line2">
+			<span><span class="k">Paid</span> <span class="num">{purchase}</span>{#if bought}{' '}<span class="muted">({bought})</span>{/if}</span>
+			<span class="sep">·</span>
+			<span>
+				<span class="k">Market</span>
+				{#if b.last_price}
+					<span class="num" title={[b.last_price_source, b.last_price_date && `as of ${fmtDate(b.last_price_date)}`].filter(Boolean).join(', ')}>{amount(b.last_price, b.currency)}</span>
+					{#if b.change_pct !== null}<span class="change"><Change value={b.change_pct} /></span>{/if}
+				{:else}<span class="muted">–</span>{/if}
+				{#if wine.lwin && priceSources}
+					<button class="fetch" disabled={fetching || saving} onclick={fetchPrice} title="Ask {priceSources}">
+						{fetching ? 'asking…' : b.last_price ? 'refresh' : 'fetch'}
+					</button>
+				{:else if !wine.lwin && priceSources}
+					<a class="fetch" href={links.editWine(wine.id)} title="No LWIN on this wine: add one to fetch a market price">add an LWIN</a>
+				{/if}
+			</span>
+		</div>
+		{#if priceMessage}<p class="msg small">{priceMessage}</p>{/if}
+		{#if b.shelf && b.qty && b.shelf.bins.length > 1}<div class="shelf"><BottleShelf shelf={b.shelf} /></div>{/if}<!-- a place on its own (Away): no shelf to show -->
+		{#if out}
+			<form class="out" onsubmit={(e) => { e.preventDefault(); saveOut(); }}>
+				<div class="seg" role="group" aria-label="What happened">
+					{#each KINDS as k (k.id)}
+						<button type="button" class:on={out.kind === k.id} onclick={() => out && (out.kind = k.id)}>{k.label}</button>
+					{/each}
 				</div>
-			{/if}
-			</div>
-			{#if b.location && b.location !== 'Consumed'}<!-- Consumed: a bottle recorded only for a tasting, no place -->
-				<a class="where muted" href={links.cellar({ loc: b.location, view: 'shelves' })}>
-					{b.qty ? 'In' : 'Was in'} <b>{b.location}</b>{b.location_group !== b.location ? ` · ${b.location_group}` : ''} · see on the shelf map →
-				</a>
-			{/if}
-			{#if b.shelf && b.qty && b.shelf.bins.length > 1}<BottleShelf shelf={b.shelf} />{/if}<!-- a place on its own (Away): no shelf to show -->
-		</div>
-		<div class="actions">
-			<a class="btn" href={links.editBottle(b.id)}>Edit bottle</a>
-			{#if b.qty}<button class="btn" onclick={startOut} disabled={!!out}>Take some out</button>{/if}
-			<a class="btn primary" href={links.newTasting({ bottle_id: b.id })}>Drink</a>
-		</div>
-	</div>
-	{#if out}
-		<form class="out" onsubmit={(e) => { e.preventDefault(); saveOut(); }}>
-			<div class="seg" role="group" aria-label="What happened">
-				{#each KINDS as k (k.id)}
-					<button type="button" class:on={out.kind === k.id} onclick={() => out && (out.kind = k.id)}>{k.label}</button>
-				{/each}
-			</div>
-			<div class="fields">
-				{#if b.qty > 1}
-					<label><span class="label">How many</span><input type="number" min="1" max={b.qty} bind:value={out.qty} /></label>
-				{/if}
-				<label><span class="label">When</span><input type="date" bind:value={out.date} /></label>
-				{#if out.kind === 'sold'}
-					<label><span class="label">For, a bottle ({b.currency ?? appSettings.currency})</span><input type="number" min="0" step="any" bind:value={out.price} placeholder="Optional" /></label>
-				{/if}
-				<label class="note"><span class="label">Note</span><input bind:value={out.note} placeholder={kindOf(out.kind).note} /></label>
-			</div>
-			<div class="buttons">
-				<button class="btn primary">Take {out.qty > 1 ? `${out.qty} bottles` : 'it'} out</button>
-				<button type="button" class="btn" onclick={() => (out = null)}>Cancel</button>
-				{#if outError}<span class="msg">{outError}</span>{/if}
-			</div>
-		</form>
-	{:else if outError}
-		<p class="msg" role="alert">{outError}</p><!-- an undo that failed -->
-	{/if}
-	<div class="grid">
-		<div class="price">
-			<div class="label">Purchase</div>
-			<div class="value num">{purchase}</div>
-		</div>
-		<div class="price">
-			<div class="label">Market{b.last_price && b.last_price_source ? ` · ${b.last_price_source}` : ''}</div>
-			{#if b.last_price}
-				<div class="value num">
-					{amount(b.last_price, b.currency)}
-					{#if b.change_pct !== null}
-						<span class="change"><Change value={b.change_pct} /></span>
+				<div class="fields">
+					{#if b.qty > 1}
+						<label><span class="label">How many</span><input type="number" min="1" max={b.qty} bind:value={out.qty} /></label>
 					{/if}
+					<label><span class="label">When</span><input type="date" bind:value={out.date} /></label>
+					{#if out.kind === 'sold'}
+						<label><span class="label">For, a bottle ({b.currency ?? appSettings.currency})</span><input type="number" min="0" step="any" bind:value={out.price} placeholder="Optional" /></label>
+					{/if}
+					<label class="note"><span class="label">Note</span><input bind:value={out.note} placeholder={kindOf(out.kind).note} /></label>
 				</div>
-				{#if b.last_price_date}<div class="sub muted">as of {fmtDate(b.last_price_date)}</div>{/if}
-			{:else}
-				<div class="value num muted">–</div>
-			{/if}
-			{#if wine.lwin && priceSources}
-				<button class="link fetch" disabled={fetching || saving} onclick={fetchPrice}>
-					{fetching ? `Asking ${priceSources}…` : b.last_price ? 'Refresh market price' : 'Fetch market price'}
-				</button>
-			{:else if !wine.lwin && priceSources}
-				<div class="sub muted">No LWIN on this wine: <a href={links.editWine(wine.id)}>add one</a> to fetch a market price</div>
-			{/if}
-			{#if priceMessage}<div class="sub msg">{priceMessage}</div>{/if}
-		</div>
+				<div class="buttons">
+					<button class="btn primary">Take {out.qty > 1 ? `${out.qty} bottles` : 'it'} out</button>
+					<button type="button" class="btn" onclick={() => (out = null)}>Cancel</button>
+					{#if outError}<span class="msg">{outError}</span>{/if}
+				</div>
+			</form>
+		{:else if outError}
+			<p class="msg" role="alert">{outError}</p><!-- an undo that failed -->
+		{/if}
 		{#if proposals}
 			<div class="proposal">
 				<div class="label">New market prices · check before saving</div>
@@ -245,100 +243,128 @@
 				</div>
 			</div>
 		{/if}
-		<Facts
-			items={[
-				{ label: 'Purchase date', value: b.purchase_date && fmtDate(b.purchase_date) },
-				{ label: 'Vendor', value: b.vendor },
-				{ label: 'Provenance', value: b.provenance }
-			]}
-		/>
+		{#if story.length}
+			<div class="story">
+				<div class="label">What happened to {story.reduce((n, s) => n + (s.event?.qty ?? 1), 0) > 1 ? 'them' : 'it'}</div>
+				<ul>
+					{#each story as s (s.key)}
+						<li>
+							<span class="when num">{s.date ? fmtDate(s.date) : 'Undated'}</span>
+							{#if s.event}
+								<span class="what {s.event.kind}">{kindOf(s.event.kind).past}{s.event.qty > 1 ? ` ×${s.event.qty}` : ''}</span>
+								{#if s.event.note}<span>{s.event.note}</span>{/if}
+								{#if s.event.price}<span class="muted num">{amount(s.event.price, s.event.currency)}</span>{/if}
+								<button class="undo" onclick={() => s.event && undoOut(s.event.id)} title="Put {s.event.qty > 1 ? 'them' : 'it'} back in the cellar">Undo</button>
+							{/if}
+						</li>
+					{/each}
+				</ul>
+			</div>
+		{/if}
 	</div>
-	{#if story.length}
-		<div class="story">
-			<div class="label">What happened to {gone > 1 ? 'them' : 'it'}</div>
-			<ul>
-				{#each story as s (s.key)}
-					<li>
-						<span class="when num">{s.date ? fmtDate(s.date) : 'Undated'}</span>
-						{#if s.tasting}
-							<span class="what drunk">Drunk</span>
-							<a href={links.tasting(s.tasting.id)}>{s.tasting.place ?? 'the tasting'}</a>
-						{:else if s.event}
-							<span class="what {s.event.kind}">{kindOf(s.event.kind).past}{s.event.qty > 1 ? ` ×${s.event.qty}` : ''}</span>
-							{#if s.event.note}<span>{s.event.note}</span>{/if}
-							{#if s.event.price}<span class="muted num">{amount(s.event.price, s.event.currency)}</span>{/if}
-							<button class="undo" onclick={() => s.event && undoOut(s.event.id)} title="Put {s.event.qty > 1 ? 'them' : 'it'} back in the cellar">Undo</button>
-						{/if}
-					</li>
-				{/each}
-			</ul>
-		</div>
-	{/if}
-</section>
+{/snippet}
 
 {#key wine.id}
-	<WineContent {wine} regionColors={data.regionColors} />
+	<WineContent {wine} regionColors={data.regionColors} {bottle} bottleId={b.id} />
 {/key}
 
 <style>
-	.title-row {
+	.bottle {
+		font-size: 13px;
+	}
+	/* how many and where, the ⋯ and the glass at the right */
+	.line1 {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px 12px;
+	}
+	.what {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 6px 12px;
-		margin-bottom: 4px;
-	}
-	.title-row h2 {
-		margin: 0;
+		gap: 4px 8px;
+		min-width: 0;
+		font-size: 15px;
 	}
 	.ends {
-		display: flex;
+		display: inline-flex;
 		flex-wrap: wrap;
-		gap: 4px;
+		gap: 3px;
 	}
 	.ends .gone {
 		display: inline-flex;
 		opacity: 0.3;
 	}
-	.bottle {
-		padding: 16px 20px;
-		margin-bottom: 14px;
+	.sep {
+		color: var(--muted);
 	}
-	.top {
+	.where {
+		font-size: 13px;
+		color: var(--muted);
+	}
+	.where:hover {
+		color: var(--accent);
+	}
+	.acts {
 		display: flex;
-		justify-content: space-between;
-		align-items: flex-start;
-		flex-wrap: wrap;
-		gap: 12px;
+		align-items: center;
+		gap: 6px;
+		flex: none;
 	}
-	.kind,
+	/* paid and worth */
+	.line2 {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 2px 8px;
+		margin-top: 4px;
+	}
+	.line2 .num {
+		font-weight: 600;
+	}
+	.k {
+		color: var(--muted);
+		margin-right: 2px;
+	}
+	.change {
+		font-size: 12px;
+		margin-left: 4px;
+	}
+	.fetch {
+		margin-left: 6px;
+		padding: 0;
+		border: none;
+		background: none;
+		color: var(--accent);
+		font: inherit;
+		font-size: 12px;
+		cursor: pointer;
+	}
+	.fetch:disabled {
+		color: var(--muted);
+		cursor: default;
+	}
+	.small {
+		font-size: 12px;
+		margin: 4px 0 0;
+	}
+	.shelf {
+		margin-top: 10px;
+	}
 	.label {
 		font-size: 11px;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		color: var(--muted);
 	}
-	h2 {
-		margin: 2px 0;
-		font-size: 20px;
-	}
-	.where {
-		font-size: 12px;
-	}
-	.where:hover {
-		color: var(--accent);
-	}
-	.actions {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-	}
+
 	.out {
-		margin-top: 14px;
+		margin-top: 12px;
 		padding: 12px 14px;
 		border: 1px solid var(--border);
 		border-radius: 10px;
-		background: var(--surface-2);
+		background: var(--surface);
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
@@ -394,8 +420,8 @@
 		gap: 8px;
 	}
 	.story {
-		margin-top: 16px;
-		padding-top: 12px;
+		margin-top: 12px;
+		padding-top: 10px;
 		border-top: 1px solid var(--border);
 	}
 	.story ul {
@@ -436,42 +462,12 @@
 	.undo:hover {
 		color: var(--accent);
 	}
-	.grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
-		gap: 16px 24px;
-		margin-top: 14px;
-		align-items: start;
-	}
-	.value {
-		font-size: 17px;
-		font-weight: 600;
-	}
-	.change {
-		font-size: 13px;
-		margin-left: 6px;
-	}
-	.sub {
-		font-size: 12px;
-	}
-	.fetch {
-		margin-top: 4px;
-		padding: 0;
-		border: none;
-		background: none;
-		color: var(--accent);
-		font-size: 12px;
-		cursor: pointer;
-	}
-	.fetch:disabled {
-		color: var(--muted);
-		cursor: default;
-	}
 	.msg {
 		color: #c0392b;
 	}
 	.proposal {
-		grid-column: 1 / -1;
+		margin-top: 12px;
+		background: var(--surface);
 		border: 1px solid var(--border);
 		border-radius: 8px;
 		padding: 12px;

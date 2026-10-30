@@ -207,6 +207,9 @@ front (Tailscale, a proxy with login): never expose it bare. Postgres works too 
 From the source: Node.js to build the web app once (`cd app/web && npm install && npm run build`), then
 `python run.py`; or `docker compose up -d --build`.
 
+Tests: `cd app/api && python -m pytest -q`; the browser smoke tests, after a build: `cd app/web && npx playwright
+install chromium && npm run e2e` (a new installation on a scratch folder, clicked through in Chromium).
+
 ## The data and its sources
 
 The reference data and the map come from official, open sources (INAO, the EU's eAmbrosia register, UC Davis's AVA

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import ActionMenu from '#lib/components/ActionMenu.svelte';
+	import Icon from '#lib/components/Icon.svelte';
 	import PlaceName from '#lib/components/PlaceName.svelte';
 	import PointMap from '#lib/components/PointMap.svelte';
 	import RegionStrip from '#lib/components/RegionStrip.svelte';
@@ -28,9 +30,12 @@
 {/snippet}
 
 {#snippet actions()}
-	<a class="btn" href={links.editPlace(p.id)}>Edit place</a>
-	<a class="btn" href={links.newVisit({ place_id: p.id })}>＋ Visit</a>
-	<a class="btn primary" href={links.newTasting({ place_id: p.id })}>＋ Tasting</a>
+	<ActionMenu>
+		<a class="menu-item" role="menuitem" href={links.newVisit({ place_id: p.id })}><Icon name="pin" size={15} />Add a visit (no wine)</a>
+		<hr />
+		<a class="menu-item" role="menuitem" href={links.editPlace(p.id)}><Icon name="edit" size={15} />Edit place</a>
+	</ActionMenu>
+	<a class="btn icon primary" href={links.newTasting({ place_id: p.id })} title="Add a tasting here" aria-label="Add a tasting here"><span class="plus">+</span><Icon name="glass" size={15} /></a>
 {/snippet}
 
 {#snippet map()}
@@ -47,15 +52,6 @@
 				{ label: 'Wine value', value: p.stats.value ? money(p.stats.value) : '–' }
 			]}
 		/>
-		<div class="facts">
-			<Facts
-				items={[
-					{ label: 'City', value: p.city },
-					{ label: 'Country', value: p.country },
-					{ label: 'Type', value: p.type }
-				]}
-			/>
-		</div>
 		{#if p.tastings.length}
 			<!-- The place's palette: what you drank here, a pip per wine in its region's color -->
 			<div class="palette">
@@ -96,9 +92,6 @@
 		border-radius: 8px;
 		overflow: hidden;
 		border: 1px solid var(--border);
-	}
-	.facts {
-		margin-top: 16px;
 	}
 	.palette {
 		margin-top: 14px;

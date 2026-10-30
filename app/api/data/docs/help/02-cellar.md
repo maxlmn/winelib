@@ -14,6 +14,14 @@ wine's fields), and its producer, cuvée, vintage, colour and appellation are fi
 brings its spelling, grapes and LWIN, as a new vintage of it. The page's picture and price show beside, to check. Some
 shops don't let apps read their pages: then fill it in by hand.
 
+A bottle can start from what you were sent: paste an order or auction email, an invoice or a producer's sheet in
+**Fill from text** (at the top of a new bottle), and the wine (the one you have, or a new vintage of a cuvée you
+have, with its grapes and vineyard), the quantity, the price a bottle (a lot's price divided by its bottles), the date
+and the vendor are filled in, to check. A new wine without a vineyard takes the one its other vintages share.
+
+**Keeping vintages together** (Settings › Maintenance): *Cuvées under several appellations* lists a cuvée filed under more than one,
+often a vintage entered twice (set its appellation like the other's, then *Duplicate wines* merges them).
+
 ## The views
 
 - **Cards** and **List**: every line in stock, with its value (the list sorts by any column).

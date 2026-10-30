@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import { setParams } from '#lib/url.ts';
 	import RegionName from '#lib/components/RegionName.svelte';
 	import { regionLabel } from '#lib/regions.svelte.ts';
@@ -85,8 +86,8 @@
 <div class="page-head">
 	<h1>Tasting Notes</h1>
 	<div class="actions">
-		<a class="btn primary" href={links.newTasting()}>+ Add tasting</a>
-		<a class="btn" href={links.newVisit()}>+ Restaurant visit</a>
+		<a class="btn icon primary" href={links.newTasting()} title="Add a tasting" aria-label="Add a tasting"><span class="plus">+</span><Icon name="glass" size={15} /></a>
+		<a class="btn icon" href={links.newVisit()} title="Add a restaurant visit" aria-label="Add a restaurant visit"><span class="plus">+</span><Icon name="pin" size={15} /></a>
 		<button class="btn" onclick={exportMarkdown} disabled={!tastings.length}>↓ Export</button>
 	</div>
 </div>
