@@ -26,8 +26,9 @@
 	let { wine, regionColors }: Props = $props();
 
 	let allVintages = $state(false);
-	// Add a critic's score (the header's icon): the critics card's form, shown even without any score
+	// Add a critic's score, add to a list (the header's icons): their card's form, shown even when it has nothing yet
 	let addingScore = $state(false);
+	let addingToList = $state(false);
 	// Draw vineyard: drawn on the wine's map (DetailMap), created with its outline and linked to the wine
 	let drawingVineyard = $state(false);
 
@@ -78,6 +79,7 @@
 	{#if !wine.vineyard}<button class="btn icon" onclick={() => (drawingVineyard = true)} title="Draw its vineyard on the map" aria-label="Draw vineyard"><Icon name="draw" size={15} /></button>{/if}
 	<WishButton wineId={wine.id} />
 	<button class="btn icon" onclick={() => (addingScore = true)} title="Add a critic's score" aria-label="Add a critic's score"><span class="plus">+</span><Icon name="medal" size={15} /></button>
+	<button class="btn icon" onclick={() => (addingToList = true)} title="Add to a list" aria-label="Add to a list"><span class="plus">+</span><Icon name="list" size={15} /></button>
 	<WineActions wineId={wine.id} actions={wine.actions} />
 	<a class="btn icon" href={links.newBottle({ wine_id: wine.id })} title="Add a bottle" aria-label="Add a bottle"><span class="plus">+</span><Icon name="bottle" size={15} /></a>
 	<a class="btn icon primary" href={links.newTasting({ wine_id: wine.id })} title="Add a tasting" aria-label="Add a tasting"><span class="plus">+</span><Icon name="glass" size={15} /></a>
@@ -138,15 +140,11 @@
 						</a>
 					{/each}
 				</div>
-				<dl>
-					{#if inCellar.length}<dt>In cellar</dt><dd>{inCellar.map((v) => v.vintage).join(', ')}</dd>{/if}
-					{#if tasted.length}<dt>Tasted</dt><dd>{tasted.map((v) => v.vintage).join(', ')}</dd>{/if}
-				</dl>
 			</section>
 		{/if}
 	</div>
 
-<ListsPanel wineId={wine.id} />
+<ListsPanel wineId={wine.id} bind:adding={addingToList} />
 
 <Tabs
 	tabs={[
@@ -292,19 +290,6 @@
 	.tick {
 		color: var(--accent);
 		font-size: 11px;
-	}
-	dl {
-		display: grid;
-		grid-template-columns: max-content 1fr;
-		gap: 4px 12px;
-		margin: 12px 0 0;
-		font-size: 13px;
-	}
-	dt {
-		color: var(--muted);
-	}
-	dd {
-		margin: 0;
 	}
 	.seg button {
 		padding: 4px 10px;

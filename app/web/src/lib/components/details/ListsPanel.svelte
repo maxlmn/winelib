@@ -3,8 +3,9 @@
 	import { links } from '#lib/links.ts';
 
 	/** The lists a wine or a producer is on (as that wine, its cuvée, or through its producer), each with its tick and
-	 * the list's progress; and adding it to a list. */
-	let { wineId, producerId }: { wineId?: number; producerId?: number } = $props();
+	 * the list's progress; and adding it to a list. On none: no card, unless `adding` (the page header's Add to a list
+	 * icon, bound: false again once added or cancelled). */
+	let { wineId, producerId, adding = $bindable(false) }: { wineId?: number; producerId?: number; adding?: boolean } = $props();
 
 	const of = $derived(wineId ? { wine_id: wineId } : { producer_id: producerId! });
 	let on = $state<Membership[] | null>(null);
@@ -22,6 +23,14 @@
 		refresh();
 	});
 
+	// the header's icon: the form, opened
+	$effect(() => {
+		if (adding && !open) openAdd();
+	});
+	$effect(() => {
+		if (!open) adding = false;
+	});
+
 	async function openAdd() {
 		open = !open;
 		if (open && !all.length) all = await loadLists(fetch).catch(() => []);
@@ -37,7 +46,7 @@
 	const ticked = (m: Membership) => m.item.tasted;
 </script>
 
-{#if on}
+{#if on && (on.length || open)}
 	<section class="card lists">
 		<div class="head">
 			<h2>Lists {#if on.length}<span class="muted num">{on.length}</span>{/if}</h2>
@@ -75,8 +84,6 @@
 					</li>
 				{/each}
 			</ul>
-		{:else if !open}
-			<p class="muted none">Not on any list.</p>
 		{/if}
 	</section>
 {/if}
@@ -152,9 +159,5 @@
 		margin-left: auto;
 		font-size: 12px;
 		color: var(--muted);
-	}
-	.none {
-		margin: 8px 0 0;
-		font-size: 13px;
 	}
 </style>
