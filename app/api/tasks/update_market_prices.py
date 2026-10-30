@@ -20,7 +20,7 @@ import urllib.error
 import urllib.request
 from datetime import datetime, timedelta
 
-from sqlalchemy import create_engine, or_
+from sqlalchemy import and_, create_engine, func, or_
 from sqlalchemy.orm import sessionmaker
 
 # app/api on the path (models, paths, tasks), for running this file as a script
@@ -42,6 +42,10 @@ PRICE_MAX_AGE_DAYS = 90
 # single mis-recorded sales (a Japanese wine at about 55,000 euros a bottle)
 MIN_SALES = 3
 MAX_JUMP = 5  # "way off": more than 5x, or less than a fifth
+# WineLabs has no price for a wine (a small grower, an old vintage): the bottle says so (its price source, the date
+# asked) and isn't asked again for this many days (every night otherwise, the same calls answered the same way)
+NO_PRICE = "WineLabs.ai: no price"
+NO_PRICE_RETRY_DAYS = 30
 
 
 def _saved_settings(session):
@@ -136,7 +140,8 @@ def pick_price(stats):
 
 
 def fetch_winelabs(lwin, vintage, target_currency="GBP", log=print):
-    """{"price", "currency", "sales"} from WineLabs.ai for an LWIN and vintage, or None."""
+    """{"price", "currency", "sales"} from WineLabs.ai for an LWIN and vintage; {} when it has no price for it (not
+    found, no sales); None when it couldn't be asked (no key, the network, an error)."""
     key = api_key()
     if not key:
         log("  [ERROR] WINELABS_API_KEY isn't set.")
@@ -154,8 +159,8 @@ def fetch_winelabs(lwin, vintage, target_currency="GBP", log=print):
     except urllib.error.HTTPError as e:
         if e.code in (400, 404):
             log("  [WARN] Wine not found on WineLabs.ai")
-        else:
-            log(f"  [ERROR] WineLabs API returned HTTP {e.code}")
+            return {}
+        log(f"  [ERROR] WineLabs API returned HTTP {e.code}")
         return None
     except (urllib.error.URLError, TimeoutError, OSError, ValueError) as e:
         log(f"  [ERROR] Connection to WineLabs.ai failed: {e}")
@@ -163,12 +168,12 @@ def fetch_winelabs(lwin, vintage, target_currency="GBP", log=print):
     results = data.get('results', [])
     if not results:
         log("  [WARN] No pricing results found for this wine on WineLabs.ai")
-        return None
+        return {}
     # The first result usually has the latest price stats
     first_res = results[0]
     price = pick_price(first_res)
     if not price:
-        return None
+        return {}
     return {"price": price, "currency": first_res.get('currency', data.get('currency', target_currency)),
             "sales": first_res.get('count')}
 
@@ -198,6 +203,11 @@ def price_bottle(b, cache=None, log=print, bi=None, market=None):
         r = fetch_winelabs(wine.lwin, wine.vintage, target_currency=currency, log=log)
         if cache is not None:
             cache[cache_key] = r
+    if r == {}:  # WineLabs has none: said on the bottle, not asked again for NO_PRICE_RETRY_DAYS
+        if b.last_price is None:
+            b.last_price_date = datetime.now()
+            b.last_price_source = NO_PRICE
+        return None
     if not r:
         return None
     price, api_currency = r["price"], r["currency"]
@@ -236,11 +246,15 @@ def stale_before(max_age_days=PRICE_MAX_AGE_DAYS):
 
 def cellar_bottles(session, max_age_days=PRICE_MAX_AGE_DAYS):
     """Bottles in the cellar whose wine has an LWIN, dearest first: only those whose price is missing or more than
-    max_age_days old (0: all of them)."""
+    max_age_days old (0: all of them), a bottle WineLabs had no price for in the last NO_PRICE_RETRY_DAYS aside."""
     query = session.query(Bottle).join(Wine).filter(Bottle.qty > 0, Wine.lwin.isnot(None), Wine.lwin != "")
     if max_age_days:
         query = query.filter(or_(Bottle.last_price.is_(None), Bottle.last_price_date.is_(None),
                                  Bottle.last_price_date < stale_before(max_age_days)))
+        # coalesce: no source or no date is "not asked lately" (false), not SQL's unknown, which ~ would drop
+        asked_lately = and_(Bottle.last_price.is_(None), func.coalesce(Bottle.last_price_source, "") == NO_PRICE,
+                            Bottle.last_price_date.isnot(None), Bottle.last_price_date >= stale_before(NO_PRICE_RETRY_DAYS))
+        query = query.filter(~asked_lately)
     return query.order_by(Bottle.price.desc().nullslast()).all()
 
 
