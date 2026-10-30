@@ -62,14 +62,15 @@
 		padding: 18px 20px;
 		margin-bottom: 14px;
 	}
+	/* the buttons at the top right, whatever the title's length (it wraps in its column) */
 	.top {
 		display: flex;
 		align-items: flex-start;
 		justify-content: space-between;
 		gap: 12px 20px;
-		flex-wrap: wrap;
 	}
 	.titles {
+		flex: 1;
 		min-width: 0;
 	}
 	.kind {
@@ -102,8 +103,9 @@
 		opacity: 0.6;
 	}
 	.actions {
+		flex: none;
 		display: flex;
-		flex-wrap: wrap;
+		align-items: center;
 		gap: 8px;
 	}
 	.body {

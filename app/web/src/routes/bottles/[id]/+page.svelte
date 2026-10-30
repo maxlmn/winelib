@@ -2,7 +2,8 @@
 	import { appSettings, integrations } from '#lib/settings.svelte.ts';
 	import { messageOf, request } from '#lib/api/http.ts';
 	import { invalidateAll } from '$app/navigation';
-	import Facts from '#lib/components/details/Facts.svelte';
+	import ActionMenu from '#lib/components/ActionMenu.svelte';
+	import Icon from '#lib/components/Icon.svelte';
 	import WineContent from '#lib/components/details/WineContent.svelte';
 	import { fmtDate } from '#lib/components/details/wine.ts';
 	import { links } from '#lib/links.ts';
@@ -149,10 +150,13 @@
 			{/if}
 			{#if b.shelf && b.qty && b.shelf.bins.length > 1}<BottleShelf shelf={b.shelf} />{/if}<!-- a place on its own (Away): no shelf to show -->
 		</div>
+		<!-- as on the wine page: the one to hand (Drink, while there's one left), the rest in the ⋯ menu -->
 		<div class="actions">
-			<a class="btn" href={links.editBottle(b.id)}>Edit bottle</a>
-			{#if b.qty}<button class="btn" onclick={startOut} disabled={!!out}>Take some out</button>{/if}
-			<a class="btn primary" href={links.newTasting({ bottle_id: b.id })}>Drink</a>
+			{#if b.qty}<a class="btn primary" href={links.newTasting({ bottle_id: b.id })}>Drink</a>{/if}
+			<ActionMenu>
+				{#if b.qty}<button class="menu-item" role="menuitem" onclick={startOut} disabled={!!out}><Icon name="bottle" size={15} />Take some out (gifted, sold…)</button>{/if}
+				<a class="menu-item" role="menuitem" href={links.editBottle(b.id)}><Icon name="edit" size={15} />Edit bottle</a>
+			</ActionMenu>
 		</div>
 	</div>
 	{#if out}
@@ -185,6 +189,10 @@
 		<div class="price">
 			<div class="label">Purchase</div>
 			<div class="value num">{purchase}</div>
+			<!-- when, from whom, through whom: small, under the price -->
+			{#if b.purchase_date || b.vendor || b.provenance}
+				<div class="sub muted">{[b.purchase_date && fmtDate(b.purchase_date), b.vendor, b.provenance && b.provenance !== b.vendor ? b.provenance : null].filter(Boolean).join(' · ')}</div>
+			{/if}
 		</div>
 		<div class="price">
 			<div class="label">Market{b.last_price && b.last_price_source ? ` · ${b.last_price_source}` : ''}</div>
@@ -245,13 +253,6 @@
 				</div>
 			</div>
 		{/if}
-		<Facts
-			items={[
-				{ label: 'Purchase date', value: b.purchase_date && fmtDate(b.purchase_date) },
-				{ label: 'Vendor', value: b.vendor },
-				{ label: 'Provenance', value: b.provenance }
-			]}
-		/>
 	</div>
 	{#if story.length}
 		<div class="story">
@@ -304,12 +305,16 @@
 		padding: 16px 20px;
 		margin-bottom: 14px;
 	}
+	/* the buttons at the top right (the title wraps in its column) */
 	.top {
 		display: flex;
 		justify-content: space-between;
 		align-items: flex-start;
-		flex-wrap: wrap;
 		gap: 12px;
+	}
+	.top > div:first-child {
+		flex: 1;
+		min-width: 0;
 	}
 	.kind,
 	.label {
@@ -329,8 +334,9 @@
 		color: var(--accent);
 	}
 	.actions {
+		flex: none;
 		display: flex;
-		flex-wrap: wrap;
+		align-items: center;
 		gap: 8px;
 	}
 	.out {
