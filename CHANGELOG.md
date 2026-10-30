@@ -28,6 +28,11 @@
   title. One button, ＋ Tasting, and a ⋯ menu for the rest (a bottle, a critic's score, a plug-in's Fetch from Robert
   Parker, a list, the wishlist, Edit, Draw its vineyard); no Critics card without a score, no Lists card when it's on
   none (the menu adds them); the Vintages card just its pills. A producer's page: ＋ Wine, and its ⋯ menu.
+- **The other pages, tidied the same way**: every detail page's actions are a ⋯ menu at its card's top right and its
+  main action under it, a small icon named on hover; the add buttons (tasting, purchase, visit, place, producer, list)
+  are icons; an appellation's, a vineyard's and a place's facts no longer repeat their header. A bottle's date, vendor
+  and provenance sit small under its price; a tasting's page says the wine and the bottle in two lines under its
+  header (no Wine and Bottle cards), the critics once in its note, That session only with other wines.
 - **Settings in three tabs**: Settings, Maintenance, and **Needs attention**: what the quick checks find (wines entered twice, records pointing at nothing,
   a vintage under two appellations, market prices no longer refreshed, cellar wines
   without an LWIN, restaurants without coordinates), its count on the tab, each opening its Maintenance task with
