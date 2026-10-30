@@ -19,8 +19,7 @@ A bottle can start from what you were sent: paste an order or auction email, an 
 have, with its grapes and vineyard), the quantity, the price a bottle (a lot's price divided by its bottles), the date
 and the vendor are filled in, to check. A new wine without a vineyard takes the one its other vintages share.
 
-**Keeping vintages together** (Settings › Maintenance): *Vineyards across vintages* gives the vintages without a
-vineyard the one their others share; *Cuvées under several appellations* lists a cuvée filed under more than one,
+**Keeping vintages together** (Settings › Maintenance): *Cuvées under several appellations* lists a cuvée filed under more than one,
 often a vintage entered twice (set its appellation like the other's, then *Duplicate wines* merges them).
 
 ## The views

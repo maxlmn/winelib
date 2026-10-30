@@ -28,7 +28,6 @@ def test_what_needs_attention(client):
     assert items["orphans"]["count"] == 1 and items["orphans"]["level"] == "warn"
     assert items["twice_under_two_appellations"]["count"] == 1
     assert "Domaine du Collier La Ripaille 2017" in items["twice_under_two_appellations"]["detail"]
-    assert items["vineyard_gaps"]["count"] == 1 and items["vineyard_gaps"]["level"] == "info"
     assert items["places"]["count"] == 1
     assert "stale_prices" not in items and "no_lwin" not in items  # no price source here
     levels = [i["level"] for i in client.get("/api/attention").json()["items"]]

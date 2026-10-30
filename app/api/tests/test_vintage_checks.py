@@ -1,5 +1,5 @@
-"""A cuvée's vintages checked against each other (tasks/vintages.py, Settings › Maintenance): vineyard gaps filled,
-cuvées under several appellations reported. Run from app/api:  pytest"""
+"""A cuvée's vintages checked against each other (tasks/vintages.py, Settings › Maintenance): cuvées under several
+appellations reported. Run from app/api:  pytest"""
 from conftest import wait_job as wait
 from db import Appellation, Producer, Region, Vineyard, Wine
 
@@ -24,19 +24,6 @@ def seed(s):
         # another producer's cuvée of the same name: apart
         Wine(producer=other, cuvee="Marcelle", vintage="2022", type="Red", appellation=hcdn),
     ])
-
-
-def test_vineyard_gaps_preview_then_fill(client):
-    client.post("/api/maintenance/vineyard_gaps", json={})
-    job = wait(client)
-    assert job["status"] == "done", job
-    assert job["result"]["summary"].startswith("1 vintage of 1 cuvée")
-    assert [(i["label"], i["detail"]) for i in job["result"]["items"]] == [("Maison Valentin Krug Marcelle", "2022 → Dessus les Vermots")]
-
-    client.post("/api/maintenance/vineyard_gaps", json={"commit": True})
-    assert wait(client)["result"]["summary"] == "1 vintage given their cuvée's vineyard."
-    client.post("/api/maintenance/vineyard_gaps", json={})
-    assert wait(client)["result"]["summary"].startswith("0 vintages")
 
 
 def test_appellations_apart(client):
