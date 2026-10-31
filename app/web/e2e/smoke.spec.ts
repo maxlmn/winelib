@@ -127,3 +127,16 @@ test("a wine's menu sets its drinking window", async ({ page }) => {
 	await page.getByRole('button', { name: 'Save' }).click();
 	await expect(page.locator('header.head .about')).toContainText('Drink 2026–2035');
 });
+
+// last: it merges the seeded duplicate
+test('Needs attention checks again after a task fixed what it found', async ({ page }) => {
+	await page.goto('/settings?tab=attention');
+	const panel = page.getByRole('region', { name: 'Needs attention' });
+	await expect(panel).toContainText('entered twice');
+	await page.getByRole('tab', { name: 'Maintenance' }).click();
+	page.on('dialog', (d) => d.accept());
+	await page.locator('#task-duplicates').getByRole('button', { name: 'Run' }).click();
+	await expect(page.getByText(/duplicate deleted/).first()).toBeVisible({ timeout: 15_000 });
+	await page.getByRole('tab', { name: /Needs attention/ }).click();
+	await expect(panel).not.toContainText('entered twice');
+});

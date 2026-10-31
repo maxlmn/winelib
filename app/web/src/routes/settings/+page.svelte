@@ -155,7 +155,7 @@
 {#if tab === 'maintenance'}
 	<div class="grid"><Maintenance /></div>
 {:else if tab === 'attention'}
-	<div class="grid"><Attention items={attention} /></div>
+	<div class="grid"><Attention bind:items={attention} /></div>
 {:else}
 <div class="grid">
 	<section class="card wide appearance">

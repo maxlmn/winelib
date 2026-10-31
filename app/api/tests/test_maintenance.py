@@ -67,7 +67,7 @@ def test_duplicates_preview_then_merge(client):
     last = {t["id"]: t["last"] for t in client.get("/api/maintenance").json()["tasks"]}
     assert last["duplicates"]["status"] == "done" and last["duplicates"]["commit"]
     client.post("/api/maintenance/duplicates", json={})
-    assert wait(client)["result"]["summary"].startswith("0 wines")  # nothing left to merge
+    assert wait(client)["result"]["summary"] == "No wine entered more than once."  # nothing left to merge
 
 
 def test_reports(client):
