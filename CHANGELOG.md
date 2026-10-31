@@ -5,6 +5,8 @@
 - **Find a lieu-dit by name** for a vineyard: a wine's *Add its vineyard* (the ⋯ menu; was *Draw its vineyard*) and a
   vineyard's outline search the cadastre's lieux-dits (village and AOC beside each). One picked is drawn on the map:
   saved as it is, the vineyard is that lieu-dit; reshaped first, it's saved as your own outline, named after it.
+- **A sparkling wine's disgorgement** in its title, smaller, after the vintage ("NV Disg. 23", "2012 Disg. 24"; the full
+  date in its tooltip): a vintage's was shown nowhere.
 - **Change a wine's vineyard** from its ⋯ menu (*Change its vineyard*, when it has one): a lieu-dit picked or a vineyard
   drawn replaces it, on its other vintages that had the same one too.
 - **Grand Cru, Premier Cru** capitalised in appellation and vineyard names ("Alsace Grand Cru Brand", "Pommard Premier Cru
