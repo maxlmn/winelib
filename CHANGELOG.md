@@ -10,8 +10,8 @@
 - **Grand Cru, Premier Cru** capitalised in appellation and vineyard names ("Alsace Grand Cru Brand", "Pommard Premier Cru
   Clos des Epeneaux"; INAO writes them in lower case): the reference lists a new installation starts from, and the
   map's lieux-dits. An existing database keeps its names.
-- **On a phone, the map full size**: the page's cards float over its lower half, the map between and behind them
-  (no more sheet).
+- **On a phone, the map full size**: the page's cards float over its lower half, the map behind them (no more sheet);
+  a touch there scrolls the cards, one above pans the map.
 - Fix: a check opened from *Needs attention* started its Maintenance preview over and over; once now.
 - **Duplicate wines' preview, readable**: each copy on its own line, linked to its page, with what it holds (bottles
   and where, tastings, scores, LWIN, vineyard) and whether it's kept or merged into the other.

@@ -140,3 +140,17 @@ test('Needs attention checks again after a task fixed what it found', async ({ p
 	await page.getByRole('tab', { name: /Needs attention/ }).click();
 	await expect(panel).not.toContainText('entered twice');
 });
+
+// (desktop Chromium scrolls them even when a phone's touch scrolling doesn't: a basic check, not that one)
+test('a phone, the map full size: the cards over it scroll', async ({ page }) => {
+	await page.setViewportSize({ width: 390, height: 700 });
+	await page.goto(`/wines/${ids().wine}`);
+	const full = page.getByRole('button', { name: /Full map/ });
+	if (await full.count()) await full.click();
+	const card = page.locator('main .card.vintages');
+	await expect(card).toBeVisible();
+	const box = (await card.boundingBox())!;
+	await page.mouse.move(box.x + box.width / 2, box.y + 10);
+	await page.mouse.wheel(0, 300);
+	await expect.poll(() => page.evaluate(() => document.querySelector('main')!.scrollTop)).toBeGreaterThan(0);
+});
