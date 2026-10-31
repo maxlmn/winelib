@@ -35,18 +35,40 @@ def _item(label, detail=None, href=None, **extra):
 # --- Tasks: fn(session, job) -> {"summary", "items"} ------------------------------------------------------
 
 
+def _copy(session, wine_id, keep):
+    """One copy of a duplicate wine, as the preview shows it: its page, and what it holds (bottles and where, tastings,
+    scores, LWIN, vineyard), so you can tell the copies apart"""
+    from sqlalchemy import func
+    from models import Bottle, TastingNote, Wine
+    w = session.get(Wine, wine_id)
+    bottles = session.query(Bottle).filter(Bottle.wine_id == wine_id).all()
+    here = sum(b.qty or 0 for b in bottles)
+    places = sorted({b.location for b in bottles if b.qty and b.location})
+    tasted = (session.query(func.count(TastingNote.id)).join(Bottle, TastingNote.bottle_id == Bottle.id)
+              .filter(Bottle.wine_id == wine_id).scalar())
+    scores = [f"{c.critic} {c.score}" for c in w.scores if c.score and c.score != "-"]
+    facts = [f"{_n(here, 'bottle')} in {', '.join(places)}" if here else None,
+             _n(tasted, "tasting") if tasted else None,
+             ", ".join(scores) or None,
+             f"LWIN {w.lwin}" if w.lwin else None,
+             f"vineyard {w.vineyard.name}" if w.vineyard else None]
+    return {"href": f"/wines/{wine_id}", "keep": keep,
+            "facts": " · ".join(f for f in facts if f) or "nothing recorded on it"}
+
+
 def _duplicates(session, job):
     from tasks import consolidate_duplicate_wines as dup
     groups = dup.find_duplicate_groups(session)
-    bottles = sum(len(b) for g in groups for b in g["bottles"].values())
-    items = [_item(g["label"], f"wines {', '.join(map(str, g['duplicates']))} → {g['primary']} · "
-                   f"{_n(sum(len(b) for b in g['bottles'].values()), 'cellar line')}", f"/wines/{g['primary']}")
+    # each group: the wine, then each of its copies (the one kept, the ones merged into it) with what it holds
+    items = [_item(g["label"], href=f"/wines/{g['primary']}",
+                   copies=[_copy(session, g["primary"], True)] + [_copy(session, d, False) for d in g["duplicates"]])
              for g in groups[:MAX_ITEMS]]
     dropped = sum(len(g["duplicates"]) for g in groups)
     if not job.commit:
         dup.describe(groups, log=job.log)
-        return {"summary": f"{_n(len(groups), 'group')} of duplicate wines; merging moves {_n(bottles, 'cellar line')} "
-                           f"and deletes {_n(dropped, 'emptied duplicate')}.", "items": items}
+        return {"summary": f"{_n(len(groups), 'wine')} entered more than once: merging gathers each one's bottles and "
+                           f"tastings on the copy kept, and deletes {'the other copy' if dropped == 1 else f'the {dropped} others'}.",
+                "items": items}
     try:
         moved = dup.merge_groups(session, groups, log=job.log)
     except ValueError as e:

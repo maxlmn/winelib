@@ -5,6 +5,9 @@
 - **On a phone, the map full size**: the page's cards float over its lower half, the map between and behind them
   (no more sheet).
 - Fix: a check opened from *Needs attention* started its Maintenance preview over and over; once now.
+- **Duplicate wines' preview, readable**: each copy on its own line, linked to its page, with what it holds (bottles
+  and where, tastings, scores, LWIN, vineyard) and whether it's kept or merged into the other.
+- **Settings opens at once**: *Needs attention* fills in when its checks are done (they took ~3 s on a NAS).
 
 ## v0.3.8
 

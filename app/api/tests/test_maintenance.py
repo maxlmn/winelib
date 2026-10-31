@@ -48,8 +48,14 @@ def test_duplicates_preview_then_merge(client):
     client.post("/api/maintenance/duplicates", json={})
     job = wait(client)
     assert job["status"] == "done" and not job["commit"]
-    assert job["result"]["summary"] == "1 group of duplicate wines; merging moves 1 cellar line and deletes 1 emptied duplicate."
+    assert job["result"]["summary"] == ("1 wine entered more than once: merging gathers each one's bottles and tastings "
+                                        "on the copy kept, and deletes the other copy.")
     assert client.get("/api/wines/2").json()["cellar"]  # the preview moved nothing
+    # each copy said apart: its page and what it holds, the one kept first
+    group = job["result"]["items"][0]
+    assert group["label"].startswith("Clos Rougeard Le Bourg 2015")
+    assert [(c["href"], c["keep"], c["facts"]) for c in group["copies"]] == [
+        ("/wines/1", True, "1 bottle in H2"), ("/wines/2", False, "2 bottles in H1")]
 
     client.post("/api/maintenance/duplicates", json={"commit": True})
     job = wait(client)
@@ -61,7 +67,7 @@ def test_duplicates_preview_then_merge(client):
     last = {t["id"]: t["last"] for t in client.get("/api/maintenance").json()["tasks"]}
     assert last["duplicates"]["status"] == "done" and last["duplicates"]["commit"]
     client.post("/api/maintenance/duplicates", json={})
-    assert wait(client)["result"]["summary"].startswith("0 groups")  # nothing left to merge
+    assert wait(client)["result"]["summary"].startswith("0 wines")  # nothing left to merge
 
 
 def test_reports(client):

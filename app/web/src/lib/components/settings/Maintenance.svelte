@@ -32,7 +32,7 @@
 		columns?: { headers: string[]; mapping: Record<string, string>; fields: string[]; required: string[] };
 		/** a line each; `action`: a button posting to its endpoint (a plug-in's: Clear and search again), whose answer's
 		 * message is shown (`ok: false` keeps the button); `pick`: a suggestion to tick before the run (PickList) */
-		items?: { label: string; detail: string | null; href: string | null; merge?: MergeOffer; action?: ItemAction; pick?: PickItem['pick'] }[];
+		items?: { label: string; detail: string | null; href: string | null; copies?: Copy[]; merge?: MergeOffer; action?: ItemAction; pick?: PickItem['pick'] }[];
 	}
 	interface ItemAction {
 		label: string;
@@ -239,6 +239,8 @@
 	const when = (s: number) =>
 		new Date(s * 1000).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 	const size = (n: number) => (n > 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1e3))} KB`);
+	// A duplicate wine's copies (Duplicate wines' preview): each one's page and what it holds, the one kept first
+	type Copy = { href: string; keep: boolean; facts: string };
 	const STATUS: Record<Job['status'], string> = { running: 'Running…', done: 'Done', failed: 'Failed', stopped: 'Stopped' };
 
 	onMount(load);
@@ -299,6 +301,16 @@
 					<li>
 						{#if it.href}<a href={it.href}>{it.label}</a>{:else}{it.label}{/if}
 						{#if it.detail}<span class="muted"> · {it.detail}</span>{/if}
+						{#if it.copies}
+							<ul class="copies">
+								{#each it.copies as c (c.href)}
+									<li>
+										<a href={c.href} title="Open this copy">{c.keep ? 'Kept' : 'Merged into it, then deleted'}</a>
+										<span class="muted"> · {c.facts}</span>
+									</li>
+								{/each}
+							</ul>
+						{/if}
 						{#if it.action && !running}
 							{@const r = acted[i]}
 							{#if r?.done}
@@ -585,6 +597,12 @@
 	}
 	.items li {
 		padding: 1px 0;
+	}
+	/* a duplicate's copies under it */
+	.copies {
+		margin: 2px 0 6px;
+		padding-left: 16px;
+		font-size: 12px;
 	}
 	.items a {
 		color: var(--link);

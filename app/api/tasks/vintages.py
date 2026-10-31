@@ -5,7 +5,7 @@ on a vintage goes to the others: routers/forms.py.)
 """
 from collections import defaultdict
 
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, lazyload
 
 from models import Wine
 
@@ -18,7 +18,8 @@ def appellations_apart(session):
     """[{"wine": a wine of the cuvée, "by": [(appellation name, [vintages])], "both": [vintages under two]}]: the
     cuvées filed under more than one appellation; `both` the vintages found under several (likely entered twice)."""
     groups = defaultdict(list)
-    for w in session.query(Wine).options(joinedload(Wine.producer), joinedload(Wine.appellation)):
+    # its critics' scores loaded only if asked: most of the time on a large cellar
+    for w in session.query(Wine).options(joinedload(Wine.producer), joinedload(Wine.appellation), lazyload(Wine.scores)):
         if w.producer_id and _cuvee(w):  # a wine without a cuvée name is its appellation's: two are two wines
             groups[(w.producer_id, _cuvee(w), w.type)].append(w)
     out = []
