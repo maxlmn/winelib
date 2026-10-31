@@ -115,7 +115,7 @@
 		<button class="menu-item" role="menuitem" onclick={openDrink}><Icon name="calendar" size={15} />{drink ? 'Edit its drinking window' : 'Add a drinking window'}</button>
 		<hr />
 		<a class="menu-item" role="menuitem" href={links.editWine(wine.id)}><Icon name="edit" size={15} />Edit wine</a>
-		{#if !wine.vineyard}<button class="menu-item" role="menuitem" onclick={() => (drawingVineyard = true)}><Icon name="draw" size={15} />Add its vineyard</button>{/if}
+		<button class="menu-item" role="menuitem" onclick={() => (drawingVineyard = true)}><Icon name="draw" size={15} />{wine.vineyard ? 'Change its vineyard' : 'Add its vineyard'}</button>
 	</ActionMenu>
 	<a class="btn icon primary" href={links.newTasting({ wine_id: wine.id })} title="Add a tasting" aria-label="Add a tasting"><span class="plus">+</span><Icon name="glass" size={15} /></a>
 	{#if said?.text}<span class="said small" class:muted={!said.error} class:error={said.error} class:busy={said.busy} role="status">{said.text}</span>{/if}

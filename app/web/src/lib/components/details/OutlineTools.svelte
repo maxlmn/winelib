@@ -39,7 +39,7 @@
 		frame: [number, number, number, number] | null;
 		/** a new vineyard: its suggested name (the cuvée) and the wine it's for */
 		name?: string;
-		wine?: { vineyard_id: number | null };
+		wine?: { vineyard_id: number | null; vineyard: string | null };
 	}
 
 	let fileInput: HTMLInputElement;
@@ -213,7 +213,7 @@
 
 <div class="tools-card card" role="toolbar" aria-label="Outline of {spec.name || 'the new vineyard'}">
 	<div class="head">
-		<b>{spec.wine !== undefined ? 'New vineyard' : `Outline · ${spec.name}`}</b>
+		<b>{spec.wine !== undefined ? (reply?.wine?.vineyard ? 'Change its vineyard' : 'New vineyard') : `Outline · ${spec.name}`}</b>
 		<span class="muted small">{shapes ? `${shapes} shape${shapes > 1 ? 's' : ''}` : 'nothing drawn yet'}</span>
 	</div>
 	{#if spec.kind === 'vineyards'}
@@ -228,7 +228,7 @@
 			<label>Name <input bind:value={newName} placeholder="e.g. Les Poyeux" /></label>
 			<label>Village <input bind:value={village} placeholder="optional" /></label>
 		</div>
-		{#if reply?.wine?.vineyard_id}<p class="warn small">This wine already has a vineyard: creating this one links the wine to it instead.</p>{/if}
+		{#if reply?.wine?.vineyard}<p class="muted small">Its vineyard now: {reply.wine.vineyard}. The one you pick or draw replaces it, on its other vintages with it too.</p>{/if}
 	{/if}
 	<div class="tools">
 		<div class="seg">
