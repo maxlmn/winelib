@@ -139,10 +139,15 @@
 		await opened();
 	}
 
-	// Opened on one task (links.maintenance, from the home page's Needs attention): its preview started, or a report
-	// run, unless a job is already running; its card brought into view
+	// Opened on one task (links.maintenance, from Needs attention): its preview started, or a report run, unless a job
+	// is already running; its card brought into view. Once per link: load() runs again when a job ends, and would
+	// start the preview again, and again
+	let openedFor: string | null = null;
 	async function opened() {
-		const t = tasks.find((x) => x.id === page.url.searchParams.get('task'));
+		const id = page.url.searchParams.get('task');
+		if (!id || id === openedFor) return;
+		openedFor = id;
+		const t = tasks.find((x) => x.id === id);
 		if (!t) return;
 		if (!job || job.status !== 'running') {
 			if (t.preview) await start(t, false);
