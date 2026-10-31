@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **On a phone, the map full size**: the page's cards float over its lower half, the map between and behind them
+  (no more sheet).
+
 ## v0.3.8
 
 - **A wine's header, shorter**: its grapes (after a grape icon), blend and drinking window just under the appellation;
