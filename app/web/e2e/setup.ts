@@ -39,9 +39,14 @@ export default async function setup(config: FullConfig) {
 	// a wine entered twice: the home page's Needs attention lists it
 	for (let i = 0; i < 2; i++)
 		await ok(await api.post('/api/wines', { data: { producer: { name: 'Domaine Double' }, cuvee: 'Bis', vintage: '2019', type: 'White' } }));
+	// sparkling wines with their disgorgement, a vintage and an NV: under the appellation
+	const sparkling = (cuvee: string, vintage: string, type: string, disgorgement_date: string) =>
+		api.post('/api/wines', { data: { producer: { name: 'Maison Rosée' }, cuvee, vintage, type, disgorgement_date } });
+	const rose = await ok(await sparkling('Brut Rosé', '2012', 'Bubbles Rose', 'Oct 2024'));
+	const nv = await ok(await sparkling('Brut', 'NV', 'Bubbles', 'Mar 2023'));
 	mkdirSync('e2e/.data', { recursive: true });
 	writeFileSync('e2e/.data/ids.json', JSON.stringify({
-		wine: bottle.wine_id, bottle: bottle.id, vineyard: vineyard.id, tasting: tasting.id, plainWine: plain.wine_id
+		wine: bottle.wine_id, bottle: bottle.id, vineyard: vineyard.id, tasting: tasting.id, plainWine: plain.wine_id, rose: rose.id, nv: nv.id
 	}));
 	await api.dispose();
 }

@@ -75,9 +75,11 @@
 	const [drinkFrom, drinkTo] = $derived(wine.drink_window);
 	// The header says the producer, cuvée, vintage, colour and region › appellation (the vineyard: on the map); this
 	// line the rest:
-	// under the appellation: its grapes (each linked), blend and drinking window, whichever it has (a disgorgement is
-	// in the title, with the vintage: "NV - Oct 2024")
+	// under the appellation: its grapes (each linked), blend and drinking window, whichever it has (a sparkling wine's
+	// disgorgement is in the title, smaller, after its vintage: "NV Disg. 24", the full date in its tooltip)
 	const grapes = $derived(wine.grapes?.length ? wine.grapes : wine.varietal ? [{ id: 0, name: wine.varietal, share: null }] : []);
+	const disgorged = $derived(wine.color?.startsWith('Bubbles') ? wine.disgorgement_date : null);
+	const disgYear = $derived(disgorged?.match(/(\d{4})(?!.*\d{4})/)?.[1].slice(2) ?? disgorged);
 	const drink = $derived(drinkFrom || drinkTo ? `${drinkFrom ?? '…'}–${drinkTo ?? '…'}` : null);
 	const hasMap = $derived(!!(wine.appellation || wine.vineyard));
 
@@ -101,7 +103,7 @@
 	<a class="producer" href={links.producer(wine.producer.id)}>{wine.producer.name}</a>
 	<!-- Without a cuvée name the appellation is the headline -->
 	{wine.cuvee || wine.appellation?.name || ''}
-	<a class="muted num vintage" href={links.vintage(wine.vintage)}>{wine.vintage}</a>
+	<a class="muted num vintage" href={links.vintage(wine.vintage)}>{disgorged && wine.vintage.startsWith('NV') ? 'NV' : wine.vintage}</a>{#if disgorged}<span class="muted disg" title="Disgorged {disgorged}">Disg. <span class="num">{disgYear}</span></span>{/if}
 {/snippet}
 
 {#snippet actions()}
@@ -308,6 +310,13 @@
 	.producer:hover,
 	.vintage:hover {
 		color: var(--accent);
+	}
+	/* a sparkling wine's disgorgement, after its vintage: smaller */
+	.disg {
+		margin-left: 6px;
+		font-size: 0.55em;
+		font-weight: 400;
+		white-space: nowrap;
 	}
 	.row {
 		display: grid;

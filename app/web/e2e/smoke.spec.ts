@@ -128,6 +128,24 @@ test("a wine's menu sets its drinking window", async ({ page }) => {
 	await expect(page.locator('header.head .about')).toContainText('Drink 2026–2035');
 });
 
+test("a sparkling wine's disgorgement: its year after the vintage, the date in its tooltip; set in its form, a new vintage's too", async ({ page }) => {
+	const disg = page.locator('header.head .disg');
+	await page.goto(`/wines/${ids().nv}`);
+	await expect(page.locator('header.head .vintage')).toHaveText('NV');
+	await expect(disg).toHaveText('Disg. 23');
+	await page.goto(`/wines/${ids().rose}`);
+	await expect(disg).toHaveText('Disg. 24');
+	await expect(disg).toHaveAttribute('title', 'Disgorged Oct 2024');
+	await page.goto(`/wines/${ids().rose}/edit`);
+	await page.getByLabel('Disgorgement date').fill('Jan 2025');
+	await page.getByRole('button', { name: 'Save wine' }).click();
+	await expect(disg).toHaveText('Disg. 25');
+	// adding a bottle of another vintage of it: its form asks for the new one's disgorgement
+	await page.goto(`/bottles/new?wine_id=${ids().rose}`);
+	await page.getByRole('button', { name: /New vintage/ }).click();
+	await expect(page.getByLabel('Disgorgement date')).toHaveValue('');
+});
+
 // last: it merges the seeded duplicate
 test('Needs attention checks again after a task fixed what it found', async ({ page }) => {
 	await page.goto('/settings?tab=attention');
