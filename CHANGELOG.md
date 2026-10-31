@@ -3,8 +3,8 @@
 ## Unreleased
 
 - **Find a lieu-dit by name** for a vineyard: a wine's *Add its vineyard* (the ⋯ menu; was *Draw its vineyard*) and a
-  vineyard's outline search the cadastre's lieux-dits (village and AOC beside each); one picked is the vineyard, outline
-  and all, nothing to draw.
+  vineyard's outline search the cadastre's lieux-dits (village and AOC beside each). One picked is drawn on the map:
+  saved as it is, the vineyard is that lieu-dit; reshaped first, it's saved as your own outline, named after it.
 - **Change a wine's vineyard** from its ⋯ menu (*Change its vineyard*, when it has one): a lieu-dit picked or a vineyard
   drawn replaces it, on its other vintages that had the same one too.
 - **Grand Cru, Premier Cru** capitalised in appellation and vineyard names ("Alsace Grand Cru Brand", "Pommard Premier Cru
