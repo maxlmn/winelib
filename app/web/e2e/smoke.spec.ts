@@ -146,6 +146,22 @@ test("a sparkling wine's disgorgement: its year after the vintage, the date in i
 	await expect(page.getByLabel('Disgorgement date')).toHaveValue('');
 });
 
+// the app on plain http (a NAS): no crypto.randomUUID there, outside https and localhost
+test('a vineyard outline imported over plain http is drawn on the map', async ({ page }) => {
+	await page.addInitScript(() => Object.defineProperty(crypto, 'randomUUID', { value: undefined }));
+	const errors: string[] = [];
+	page.on('pageerror', (e) => errors.push(e.message));
+	await page.goto(`/wines/${ids().plainWine}`);
+	await page.locator('header.head .action-menu > button').click();
+	await page.getByRole('menuitem', { name: /vineyard/ }).click();
+	const tools = page.getByRole('toolbar');
+	await expect(tools).toContainText('nothing drawn yet');
+	const square = { type: 'Polygon', coordinates: [[[0.2, 47.1], [0.21, 47.1], [0.21, 47.11], [0.2, 47.11], [0.2, 47.1]]] };
+	await tools.locator('input[type=file]').setInputFiles({ name: 'v.geojson', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(square)) });
+	await expect(tools).toContainText('1 shape');
+	expect(errors).toEqual([]);
+});
+
 // last: it merges the seeded duplicate
 test('Needs attention checks again after a task fixed what it found', async ({ page }) => {
 	await page.goto('/settings?tab=attention');

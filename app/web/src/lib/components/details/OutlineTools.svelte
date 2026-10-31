@@ -57,10 +57,20 @@
 	// TerraDraw checks coordinate precision: 7 decimals is ~1 cm
 	const round = (rings: number[][][]) => rings.map((r) => r.map(([x, y]) => [+x.toFixed(7), +y.toFixed(7)]));
 
+	// TerraDraw wants a v4 UUID per shape; crypto.randomUUID is https/localhost only (the app runs on plain http on a
+	// NAS): one from getRandomValues, there everywhere
+	const uuid = () => {
+		const b = crypto.getRandomValues(new Uint8Array(16));
+		b[6] = (b[6] & 0x0f) | 0x40;
+		b[8] = (b[8] & 0x3f) | 0x80;
+		const h = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
+		return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+	};
+
 	function add(g: Geometry) {
 		if (!draw) return;
 		const features = polygonsOf(g).map((rings) => ({
-			id: crypto.randomUUID(),
+			id: uuid(),
 			type: 'Feature' as const,
 			geometry: { type: 'Polygon' as const, coordinates: round(rings) },
 			properties: { mode: 'polygon' }
