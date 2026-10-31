@@ -119,6 +119,21 @@ def test_in_the_wine_form(client, monkeypatch):
     assert not any(x.get("ref") == "lieu_dit:49373:le-bourg" for x in again)
 
 
+
+def test_lieu_dit_search(client, monkeypatch):
+    """Find a lieu-dit by name (its wine's Add its vineyard, a vineyard's outline): its village and AOCs, the vineyard
+    it already is"""
+    monkeypatch.setattr(geo, "_lieux_dits", fake_store)
+    assert client.get("/api/lookups/lieux-dits", params={"q": "bo"}).json() == []  # 3 letters at least
+    rows = client.get("/api/lookups/lieux-dits", params={"q": "bourg"}).json()
+    varrains = next(r for r in rows if r["ref"] == "lieu_dit:49373:le-bourg")
+    assert varrains["name"] == "Le Bourg" and varrains["village"] == "Varrains" and varrains["mine"] is None
+    wine = next(r["id"] for r in client.get("/api/search", params={"q": "le bourg 2016"}).json()["results"] if r["kind"] == "wine")
+    w = client.post(f"/api/wines/{wine}/lieu-dit", json={"lieu_dit": varrains["ref"]}).json()
+    again = next(r for r in client.get("/api/lookups/lieux-dits", params={"q": "bourg"}).json() if r["ref"] == varrains["ref"])
+    assert again["mine"] == w["vineyard_id"]
+
+
 def test_plurals():
     """A label's plural is the cadastre's singular, and back"""
     from lieux_dits import _matches, span, words, core
