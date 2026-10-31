@@ -228,7 +228,7 @@
 			<label>Name <input bind:value={newName} placeholder="e.g. Les Poyeux" /></label>
 			<label>Village <input bind:value={village} placeholder="optional" /></label>
 		</div>
-		{#if reply?.wine?.vineyard}<p class="muted small">Its vineyard now: {reply.wine.vineyard}. The one you pick or draw replaces it, on its other vintages with it too.</p>{/if}
+		{#if reply?.wine?.vineyard}<p class="muted small hint">Its vineyard now: {reply.wine.vineyard}. The one you pick or draw replaces it, on its other vintages with it too.</p>{/if}
 	{/if}
 	<div class="tools">
 		<div class="seg">
@@ -323,14 +323,12 @@
 	.seg button {
 		padding: 6px 12px;
 	}
-	.hint,
-	.warn {
+	.hint {
 		margin: 0;
 	}
 	.small {
 		font-size: 12px;
 	}
-	.warn,
 	.message,
 	.danger {
 		color: var(--down);
