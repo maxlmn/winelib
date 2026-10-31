@@ -48,3 +48,17 @@ def test_create_links_the_wine_and_its_vintages(client):
     assert outline["boundary"].startswith("custom:") and outline["custom"]["type"] in ("Polygon", "MultiPolygon")
     shapes = client.get(f"/api/vineyards/{vid}/shapes").json()
     assert shapes["vineyards"]["features"]  # drawn on its page's map
+
+
+def test_change_a_wines_vineyard(client):
+    """A wine with a vineyard (Change its vineyard): the one drawn replaces it, on its vintages with the same one too;
+    a vintage with another vineyard keeps its own"""
+    first = client.post("/api/vineyards", json={"wine": 1, "name": "Old", "geometry": SQUARE}).json()["id"]
+    assert client.get("/api/wines/1/new-vineyard").json()["wine"]["vineyard"] == "Old"
+    r = client.post("/api/vineyards", json={"wine": 1, "name": "Les Amoureuses", "geometry": SQUARE})
+    assert r.status_code == 201 and r.json()["wines_linked"] == 2
+    new = r.json()["id"]
+    assert new != first
+    assert client.get("/api/wines/1").json()["vineyard"]["id"] == new
+    assert client.get("/api/wines/2").json()["vineyard"]["id"] == new  # had the old one: moved too
+    assert client.get("/api/wines/3").json()["vineyard"]["name"] == "Les Cras"  # its own: kept

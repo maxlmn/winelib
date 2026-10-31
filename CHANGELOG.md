@@ -5,6 +5,8 @@
 - **Find a lieu-dit by name** for a vineyard: a wine's *Add its vineyard* (the ⋯ menu; was *Draw its vineyard*) and a
   vineyard's outline search the cadastre's lieux-dits (village and AOC beside each); one picked is the vineyard, outline
   and all, nothing to draw.
+- **Change a wine's vineyard** from its ⋯ menu (*Change its vineyard*, when it has one): a lieu-dit picked or a vineyard
+  drawn replaces it, on its other vintages that had the same one too.
 - **Grand Cru, Premier Cru** capitalised in appellation and vineyard names ("Alsace Grand Cru Brand", "Pommard Premier Cru
   Clos des Epeneaux"; INAO writes them in lower case): the reference lists a new installation starts from, and the
   map's lieux-dits. An existing database keeps its names.

@@ -9,6 +9,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 import geo
@@ -145,14 +146,16 @@ def new_vineyard_start(wine_id: int, session: Session = Depends(get_session)):
             "name": w.cuvee or "", "region": region.name if region else None,
             "appellation": w.appellation.name if w.appellation else None,
             "wine": {"id": w.id, "producer": w.producer.name if w.producer else "", "cuvee": w.cuvee or "",
-                     "vintage": w.vintage or "NV", "vineyard_id": w.vineyard_id}}
+                     "vintage": w.vintage or "NV", "vineyard_id": w.vineyard_id,
+                     "vineyard": w.vineyard.name if w.vineyard else None}}
 
 
 @router.post("/api/vineyards", status_code=201)
 def create_vineyard(body: NewVineyard, session: Session = Depends(get_session)):
     """A vineyard drawn from a wine's page: created with its outline, then linked to the wine and to its other
-    vintages that have no vineyard (as the wine form does)."""
+    vintages that have no vineyard or the one it replaces (as a lieu-dit picked does)."""
     w = _wine(session, body.wine)
+    before = w.vineyard_id
     name = body.name.strip()
     if not name:
         raise HTTPException(422, "Give the vineyard a name")
@@ -164,7 +167,8 @@ def create_vineyard(body: NewVineyard, session: Session = Depends(get_session)):
     session.flush()
     _link(session, v, "vineyard", g)
     family = (session.query(Wine)
-              .filter(Wine.producer_id == w.producer_id, same_cuvee(w.cuvee), Wine.vineyard_id.is_(None),
+              .filter(Wine.producer_id == w.producer_id, same_cuvee(w.cuvee),
+                      Wine.vineyard_id.is_(None) if before is None else or_(Wine.vineyard_id.is_(None), Wine.vineyard_id == before),
                       Wine.appellation_id.is_(None) if w.appellation_id is None else Wine.appellation_id == w.appellation_id,
                       Wine.varietal_id.is_(None) if w.varietal_id is None else Wine.varietal_id == w.varietal_id)
               .all())
