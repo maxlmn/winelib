@@ -71,3 +71,12 @@ def test_champagne_crus_by_their_level(tmp_path, monkeypatch):
         assert [crus.name_level(n) for n in ("Champagne Grand Cru", "Champagne Premier Cru", "Champagne")] == [2, 1, 0]
     finally:
         crus.reset()
+
+
+def test_cru_case():
+    from crus import cru_case
+    assert cru_case("Alsace grand cru Brand") == "Alsace Grand Cru Brand"
+    assert cru_case("Pommard premier cru Clos des Epeneaux") == "Pommard Premier Cru Clos des Epeneaux"
+    assert cru_case("Chablis 1er cru Montmains") == "Chablis 1er Cru Montmains"
+    assert cru_case("Grand cru classé") == "Grand Cru classé"
+    assert cru_case("Les Grands Échezeaux") == "Les Grands Échezeaux" and cru_case(None) is None

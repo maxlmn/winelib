@@ -13,6 +13,7 @@ from collections import defaultdict
 from sqlalchemy.orm import joinedload
 
 import geo
+from crus import cru_case
 from models import Vineyard, Wine
 
 ARTICLES = {"le", "la", "les", "l", "au", "aux", "du", "de", "des", "d", "en", "sur", "sous"}
@@ -131,7 +132,7 @@ def vineyard(session, sid, name, details, region_id=None, label=None):
     boundary = f"lieu_dit:{sid}"
     v = session.query(Vineyard).filter(Vineyard.boundary == boundary).first()
     if v is None:
-        v = Vineyard(name=label or name, region_id=region_id, village=details.get("commune_name"), boundary=boundary)
+        v = Vineyard(name=label or cru_case(name), region_id=region_id, village=details.get("commune_name"), boundary=boundary)
         session.add(v)
         session.flush()
     return v
@@ -214,5 +215,5 @@ def details(boundary):
     if i is None:
         return None
     d = json.loads(dets[i]) if dets[i] else {}
-    return {"name": names[i], "village": d.get("commune_name"), "aocs": [a for a in (d.get("aocs") or "").split("; ") if a],
+    return {"name": cru_case(names[i]), "village": d.get("commune_name"), "aocs": [a for a in (d.get("aocs") or "").split("; ") if a],
             "vines": d.get("vines")}
