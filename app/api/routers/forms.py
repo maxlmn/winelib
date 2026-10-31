@@ -1077,6 +1077,20 @@ def lookup_lieux_dits(q: str = "", limit: int = Query(LOOKUP_LIMIT, le=50), sess
             for i, (sid, name, d) in enumerate(lieux_dits.search(q, limit))]
 
 
+@router.get("/api/lookups/lieu-dit")
+def lookup_lieu_dit(ref: str):
+    """One lieu-dit's outline (ref: "lieu_dit:49060:les-poyeux"), its name and village: shown on the map to keep as it
+    is or reshape before saving"""
+    import json
+    import lieux_dits
+    from crus import cru_case
+    found = lieux_dits.outline(ref.removeprefix("lieu_dit:"))
+    if found is None:
+        raise HTTPException(404, "No such lieu-dit in the map store")
+    name, d, geometry = found
+    return {"ref": ref, "name": cru_case(name), "village": d.get("commune_name"), "geometry": json.loads(geometry)}
+
+
 @router.get("/api/lookups/places")
 def lookup_places(q: str = "", limit: int = Query(LOOKUP_LIMIT, le=100), session: Session = Depends(get_session)):
     rows = session.query(Place.id, Place.name, Place.city, Place.country, Place.type).order_by(Place.name).all()

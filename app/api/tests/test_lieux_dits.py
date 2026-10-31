@@ -132,6 +132,9 @@ def test_lieu_dit_search(client, monkeypatch):
     w = client.post(f"/api/wines/{wine}/lieu-dit", json={"lieu_dit": varrains["ref"]}).json()
     again = next(r for r in client.get("/api/lookups/lieux-dits", params={"q": "bourg"}).json() if r["ref"] == varrains["ref"])
     assert again["mine"] == w["vineyard_id"]
+    one = client.get("/api/lookups/lieu-dit", params={"ref": varrains["ref"]}).json()
+    assert (one["name"], one["village"], one["geometry"]["type"]) == ("Le Bourg", "Varrains", "Point")
+    assert client.get("/api/lookups/lieu-dit", params={"ref": "lieu_dit:nowhere"}).status_code == 404
 
 
 def test_plurals():

@@ -86,7 +86,10 @@
 		onclose(saved, created);
 	}
 
-	const count = () => (shapes = draw ? draw.getSnapshot().filter((f) => f.geometry.type === 'Polygon').length : 0);
+	const count = () => {
+		shapes = draw ? draw.getSnapshot().filter((f) => f.geometry.type === 'Polygon').length : 0;
+		lieuEdited = !!lieu && drawing() !== lieuShape;
+	};
 
 	function setMode(m: 'polygon' | 'select') {
 		mode = m;
@@ -159,6 +162,7 @@
 	}
 
 	async function save() {
+		if (lieu && !lieuEdited) return linkLieu(lieu.ref); // as it is: the lieu-dit itself
 		const polygons = (draw?.getSnapshot() ?? []).filter((f) => f.geometry.type === 'Polygon');
 		if (!polygons.length) return (message = 'Draw at least one shape (click its corners, click the first one to close it)');
 		const geometry: Geometry = { type: 'MultiPolygon', coordinates: polygons.map((f) => (f.geometry as Polygon).coordinates) };
@@ -181,19 +185,45 @@
 		else close(true, spec.wine !== undefined ? body.id : undefined);
 	}
 
-	// Or a lieu-dit of the cadastre (the map store), found by name: the new vineyard (a wine's), or this vineyard's
-	// outline (its drawn one replaced); nothing to draw
+	// Or a lieu-dit of the cadastre (the map store), found by name: its outline put on the map to keep as it is (saved,
+	// the vineyard is that lieu-dit: the new one of a wine, or this vineyard's outline) or reshape first (saved as your
+	// own outline, named after it)
 	type Lieu = { id: number; name: string; ref: string; village: string | null; aocs: string[]; vines: number | null; mine: number | null };
 	const lieuHint = (l: Lieu) =>
 		[l.village, l.aocs[0] ?? null, l.mine ? 'your vineyard' : null].filter(Boolean).join(' · ');
+	let lieu = $state<{ ref: string; name: string } | null>(null);
+	let lieuShape = ''; // the drawing as the lieu-dit was loaded
+	let lieuEdited = $state(false);
+	const drawing = () =>
+		JSON.stringify((draw?.getSnapshot() ?? []).filter((f) => f.geometry.type === 'Polygon').map((f) => (f.geometry as Polygon).coordinates));
+
 	async function useLieu(l: Lieu) {
-		if (spec.wine === undefined && reply?.custom && !confirm(`Use the lieu-dit ${l.name} as ${spec.name}'s outline? Your drawn one goes.`)) return;
+		if (!draw) return;
+		if (shapes && !lieu && !confirm(`Replace what's drawn here with the lieu-dit ${l.name}?`)) return;
+		message = '';
+		const res = await fetch(`/api/lookups/lieu-dit?ref=${encodeURIComponent(l.ref)}`);
+		if (!res.ok) return (message = 'That lieu-dit’s outline couldn’t be loaded');
+		const one: { name: string; village: string | null; geometry: Geometry } = await res.json();
+		draw.clear();
+		add(one.geometry);
+		fit(one.geometry);
+		if (spec.wine !== undefined) {
+			newName = one.name;
+			village = one.village ?? '';
+		}
+		lieu = { ref: l.ref, name: one.name };
+		lieuShape = drawing();
+		lieuEdited = false;
+	}
+
+	async function linkLieu(ref: string) {
+		if (spec.wine === undefined && reply?.custom && !confirm(`Use the lieu-dit as ${spec.name}'s outline? Your drawn one goes.`)) return;
 		busy = true;
 		message = '';
 		const res = await fetch(spec.wine !== undefined ? `/api/wines/${spec.wine}/lieu-dit` : `/api/vineyards/${spec.id}/lieu-dit`, {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ lieu_dit: l.ref })
+			body: JSON.stringify({ lieu_dit: ref })
 		});
 		busy = false;
 		const body = await res.json().catch(() => ({}));
@@ -220,7 +250,11 @@
 		<div class="lieu">
 			<Combobox id="lieu-search" value={null} search={(q) => lookup<Lieu>('lieux-dits', { q })} hint={lieuHint}
 				placeholder="Find a lieu-dit by name…" onchange={(_, item) => item && useLieu(item)} />
-			<span class="muted small">{spec.wine !== undefined ? 'its vineyard, outline and all; or draw one below' : 'its outline instead; or draw it below'}</span>
+			<span class="muted small">
+				{#if lieu && lieuEdited}{lieu.name}, reshaped: saved as your own outline
+				{:else if lieu}{lieu.name} on the map: save it as it is, or reshape it first
+				{:else}{spec.wine !== undefined ? 'shown on the map to keep or reshape; or draw one below' : 'shown on the map to keep or reshape; or draw it below'}{/if}
+			</span>
 		</div>
 	{/if}
 	{#if spec.wine !== undefined}
@@ -257,7 +291,7 @@
 		{#if reply?.custom}<button class="btn danger" disabled={busy} onclick={remove}>Remove my outline</button>{/if}
 		<span class="spacer"></span>
 		<button class="btn" disabled={busy} onclick={() => close(false)}>Cancel</button>
-		<button class="btn primary" disabled={busy || !shapes} onclick={save}>{busy ? 'Saving…' : spec.wine !== undefined ? 'Create vineyard' : 'Save outline'}</button>
+		<button class="btn primary" disabled={busy || !shapes} onclick={save}>{busy ? 'Saving…' : lieu && !lieuEdited ? `Use ${lieu.name}` : spec.wine !== undefined ? 'Create vineyard' : 'Save outline'}</button>
 	</div>
 </div>
 
