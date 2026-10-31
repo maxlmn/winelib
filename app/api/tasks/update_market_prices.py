@@ -204,7 +204,14 @@ def price_bottle(b, cache=None, log=print, bi=None, market=None):
         if cache is not None:
             cache[cache_key] = r
     if r == {}:  # WineLabs has none: said on the bottle, not asked again for NO_PRICE_RETRY_DAYS
-        if b.last_price is None:
+        # A price it had is kept a while (one miss isn't the market gone); older than Needs attention's limit (twice the
+        # refresh age), or undated, it's dropped: no current price, rather than one asked for every night forever
+        when = b.last_price_date.date() if isinstance(b.last_price_date, datetime) else b.last_price_date
+        old = when is None or when < stale_before(2 * PRICE_MAX_AGE_DAYS)
+        if b.last_price is None or old:
+            if b.last_price is not None:
+                log(f"  → no price now: the one from {b.last_price_date or 'an unknown date'} ({b.last_price:,.2f}) dropped")
+            b.last_price = None
             b.last_price_date = datetime.now()
             b.last_price_source = NO_PRICE
         return None

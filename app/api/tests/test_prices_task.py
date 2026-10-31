@@ -207,11 +207,23 @@ def test_a_wine_winelabs_has_no_price_for_waits_a_month(client, monkeypatch):
     prices.refresh_prices(s, prices.cellar_bottles(s), log=lambda *a: None)
     assert due() == before
 
+    # a price 100 days old (due, kept on a miss) and one 200 days old (dropped: Needs attention's limit is 180)
+    recent = s.get(Bottle, 1)
+    recent.last_price_date = date.today() - timedelta(days=100)
+    old = Bottle(wine_id=2, qty=1, location="H4", price=150, currency="EUR", last_price=70,
+                 last_price_date=date.today() - timedelta(days=200))
+    s.add(old)
+    s.commit()
+    before = due()
+    assert {recent.id, old.id} <= before
+
     monkeypatch.setattr(prices, "fetch_winelabs", lambda *a, **k: {})  # no price for it
     prices.refresh_prices(s, prices.cellar_bottles(s), log=lambda *a: None)
     unpriced = [b for b in s.query(Bottle).filter(Bottle.id.in_(before)) if b.last_price is None]
     assert unpriced and all(b.last_price_source == prices.NO_PRICE for b in unpriced)
-    assert due() == before - {b.id for b in unpriced}  # a bottle with an older price is still due
+    assert old in unpriced  # its old price dropped
+    assert recent.last_price == 89.99 and recent.id in due()  # kept, asked again
+    assert due() == before - {b.id for b in unpriced}
 
     for b in unpriced:  # a month on: asked again
         b.last_price_date = date.today() - timedelta(days=prices.NO_PRICE_RETRY_DAYS + 1)
