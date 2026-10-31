@@ -12,6 +12,8 @@
   map's lieux-dits. An existing database keeps its names.
 - **On a phone, the map full size**: the page's cards float over its lower half, the map behind them (no more sheet);
   a touch there scrolls the cards, one above pans the map.
+- Fix: a lieu-dit picked for a vineyard, or an outline imported, wasn't drawn (nor could be saved) when the app is
+  opened over plain http, as on a NAS: only https and localhost have the browser's `crypto.randomUUID`.
 - Fix: a check opened from *Needs attention* started its Maintenance preview over and over; once now.
 - **Duplicate wines' preview, readable**: each copy on its own line, linked to its page, with what it holds (bottles
   and where, tastings, scores, LWIN, vineyard) and whether it's kept or merged into the other.
