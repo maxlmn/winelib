@@ -11,12 +11,14 @@
 		count: number;
 		task: string;
 	}
-	let { items }: { items: AttentionItem[] } = $props();
+	let { items }: { items: AttentionItem[] | null } = $props();  // null: its checks still running
 </script>
 
 <section class="card attention" aria-label="Needs attention">
 	<h2>Needs attention</h2>
-	{#if items.length}
+	{#if items === null}
+		<p class="muted intro">Checking…</p>
+	{:else if items.length}
 		<p class="muted intro">What the quick checks found in your data. Each opens its Maintenance task with a preview, nothing changed until you run it.</p>
 		<ul>
 			{#each items as it (it.id)}

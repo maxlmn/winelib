@@ -14,7 +14,7 @@ import sys
 from collections import defaultdict
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import joinedload, sessionmaker
+from sqlalchemy.orm import joinedload, lazyload, sessionmaker
 
 # app/api on the path (models, paths, tasks), for running this file as a script
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -26,8 +26,9 @@ from models import Bottle, Wine  # noqa: E402
 def find_duplicate_groups(session):
     """[{"label", "primary": wine id, "duplicates": [wine ids], "bottles": {wine id: [bottles]}}], biggest first."""
     groups = defaultdict(list)
+    # every wine, its critics' scores loaded only if asked (merging carries them): most of the time on a large cellar
     wines = session.query(Wine).options(joinedload(Wine.producer), joinedload(Wine.appellation),
-                                        joinedload(Wine.varietal)).all()
+                                        joinedload(Wine.varietal), lazyload(Wine.scores)).all()
     for w in wines:
         # Color too: a red and a white of one cuvée name are two wines
         # an empty text and none are the same (older imports left "" where the form leaves nothing)

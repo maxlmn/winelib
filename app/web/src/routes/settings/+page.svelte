@@ -2,7 +2,7 @@
 	import { beforeNavigate } from '$app/navigation';
 	import { messageOf, request } from '#lib/api/http.ts';
 	import Maintenance from '#lib/components/settings/Maintenance.svelte';
-	import Attention from '#lib/components/settings/Attention.svelte';
+	import Attention, { type AttentionItem } from '#lib/components/settings/Attention.svelte';
 	import Tabs from '#lib/components/details/Tabs.svelte';
 	import { page } from '$app/state';
 	import { appSettings, configured, integrations, setSettings } from '#lib/settings.svelte.ts';
@@ -16,6 +16,14 @@
 	const FONTS: [Font, string][] = [['sans', 'Modern'], ['serif', 'Classic']];
 
 	let { data } = $props();
+	// What needs attention: filled in when its checks are done (the page doesn't wait for them)
+	let attention = $state<AttentionItem[] | null>(null);
+	$effect(() => {
+		let current = true;
+		attention = null;
+		data.attention.then((items) => current && (attention = items));
+		return () => (current = false);
+	});
 
 	const clone = (s: AppSettings): AppSettings => JSON.parse(JSON.stringify(s));
 
@@ -139,7 +147,7 @@
 	tabs={[
 		{ id: 'settings', label: 'Settings' },
 		{ id: 'maintenance', label: 'Maintenance' },
-		{ id: 'attention', label: 'Needs attention', count: data.attention.length || undefined }
+		{ id: 'attention', label: 'Needs attention', count: attention?.length || undefined }
 	]}
 	initial={page.url.searchParams.get('task') || page.url.hash === '#maintenance' ? 'maintenance' : 'settings'}
 >
@@ -147,7 +155,7 @@
 {#if tab === 'maintenance'}
 	<div class="grid"><Maintenance /></div>
 {:else if tab === 'attention'}
-	<div class="grid"><Attention items={data.attention} /></div>
+	<div class="grid"><Attention items={attention} /></div>
 {:else}
 <div class="grid">
 	<section class="card wide appearance">
