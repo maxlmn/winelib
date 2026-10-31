@@ -1,8 +1,11 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { request } from '#lib/api/http.ts';
 	import { links } from '#lib/links.ts';
 
 	/** Settings › Needs attention (GET /api/attention): what the quick Maintenance checks found, warnings first; each
-	 * line opens its task in the Maintenance tab with its preview started. */
+	 * line opens its task in the Maintenance tab with its preview started. Checked again each time the tab opens (a task
+	 * run meanwhile fixed some), the tab's count with it (`items`, bound). */
 	export interface AttentionItem {
 		id: string;
 		level: 'warn' | 'info';
@@ -11,7 +14,11 @@
 		count: number;
 		task: string;
 	}
-	let { items }: { items: AttentionItem[] | null } = $props();  // null: its checks still running
+	let { items = $bindable() }: { items: AttentionItem[] | null } = $props();  // null: its checks still running
+
+	onMount(() => {
+		request<{ items: AttentionItem[] }>('/api/attention').then((r) => (items = r.items)).catch(() => {});
+	});
 </script>
 
 <section class="card attention" aria-label="Needs attention">

@@ -66,6 +66,8 @@ def _duplicates(session, job):
     dropped = sum(len(g["duplicates"]) for g in groups)
     if not job.commit:
         dup.describe(groups, log=job.log)
+        if not groups:
+            return {"summary": "No wine entered more than once.", "items": []}
         return {"summary": f"{_n(len(groups), 'wine')} entered more than once: merging gathers each one's bottles and "
                            f"tastings on the copy kept, and deletes {'the other copy' if dropped == 1 else f'the {dropped} others'}.",
                 "items": items}
