@@ -1062,6 +1062,21 @@ def lookup_vineyards(q: str = "", region_id: int | None = None, limit: int = Que
                   for i, (sid, name, d) in enumerate(hits)]
 
 
+@router.get("/api/lookups/lieux-dits")
+def lookup_lieux_dits(q: str = "", limit: int = Query(LOOKUP_LIMIT, le=50), session: Session = Depends(get_session)):
+    """The cadastre's lieux-dits (the map store) whose name has every word of q (3 letters at least), the most in vines
+    first: to make one a wine's vineyard, or a vineyard's outline. `mine`: the vineyard it is already, if any."""
+    import lieux_dits
+    from crus import cru_case
+    if len(q.strip()) < 3:
+        return []
+    mine = dict(session.query(Vineyard.boundary, Vineyard.id).filter(Vineyard.boundary.like("lieu_dit:%")).all())
+    return [{"id": i + 1, "name": cru_case(name), "ref": f"lieu_dit:{sid}", "village": d.get("commune_name"),
+             "aocs": [a for a in (d.get("aocs") or "").split("; ") if a], "vines": d.get("vines"),
+             "mine": mine.get(f"lieu_dit:{sid}")}
+            for i, (sid, name, d) in enumerate(lieux_dits.search(q, limit))]
+
+
 @router.get("/api/lookups/places")
 def lookup_places(q: str = "", limit: int = Query(LOOKUP_LIMIT, le=100), session: Session = Depends(get_session)):
     rows = session.query(Place.id, Place.name, Place.city, Place.country, Place.type).order_by(Place.name).all()

@@ -12,6 +12,8 @@
 
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import Combobox from '#lib/components/forms/Combobox.svelte';
+	import { lookup } from '#lib/api/forms.ts';
 	import type { Map as MlMap } from 'maplibre-gl';
 	import type { Basemap } from '#lib/basemap.ts';
 
@@ -179,6 +181,26 @@
 		else close(true, spec.wine !== undefined ? body.id : undefined);
 	}
 
+	// Or a lieu-dit of the cadastre (the map store), found by name: the new vineyard (a wine's), or this vineyard's
+	// outline (its drawn one replaced); nothing to draw
+	type Lieu = { id: number; name: string; ref: string; village: string | null; aocs: string[]; vines: number | null; mine: number | null };
+	const lieuHint = (l: Lieu) =>
+		[l.village, l.aocs[0] ?? null, l.mine ? 'your vineyard' : null].filter(Boolean).join(' · ');
+	async function useLieu(l: Lieu) {
+		if (spec.wine === undefined && reply?.custom && !confirm(`Use the lieu-dit ${l.name} as ${spec.name}'s outline? Your drawn one goes.`)) return;
+		busy = true;
+		message = '';
+		const res = await fetch(spec.wine !== undefined ? `/api/wines/${spec.wine}/lieu-dit` : `/api/vineyards/${spec.id}/lieu-dit`, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ lieu_dit: l.ref })
+		});
+		busy = false;
+		const body = await res.json().catch(() => ({}));
+		if (!res.ok) message = typeof body.detail === 'string' ? body.detail : `Error ${res.status}`;
+		else close(true, spec.wine !== undefined ? body.vineyard_id : undefined);
+	}
+
 	async function remove() {
 		if (!confirm(`Remove your outline for ${spec.name}?${reply?.official ? ' The official one is drawn again.' : ''}`)) return;
 		busy = true;
@@ -194,6 +216,13 @@
 		<b>{spec.wine !== undefined ? 'New vineyard' : `Outline · ${spec.name}`}</b>
 		<span class="muted small">{shapes ? `${shapes} shape${shapes > 1 ? 's' : ''}` : 'nothing drawn yet'}</span>
 	</div>
+	{#if spec.kind === 'vineyards'}
+		<div class="lieu">
+			<Combobox id="lieu-search" value={null} search={(q) => lookup<Lieu>('lieux-dits', { q })} hint={lieuHint}
+				placeholder="Find a lieu-dit by name…" onchange={(_, item) => item && useLieu(item)} />
+			<span class="muted small">{spec.wine !== undefined ? 'its vineyard, outline and all; or draw one below' : 'its outline instead; or draw it below'}</span>
+		</div>
+	{/if}
 	{#if spec.wine !== undefined}
 		<div class="fields">
 			<label>Name <input bind:value={newName} placeholder="e.g. Les Poyeux" /></label>
@@ -261,6 +290,15 @@
 		gap: 12px;
 	}
 	.tools,
+	/* a lieu-dit found by name, above the drawing tools */
+	.lieu {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		margin-bottom: 8px;
+		padding-bottom: 8px;
+		border-bottom: 1px solid var(--border);
+	}
 	.fields {
 		display: flex;
 		flex-wrap: wrap;
