@@ -9,6 +9,8 @@
   and where, tastings, scores, LWIN, vineyard) and whether it's kept or merged into the other.
 - **Settings opens at once**: *Needs attention* fills in when its checks are done (they took ~3 s on a NAS).
 - *Needs attention* checks again each time its tab opens: a task you just ran no longer leaves its warning up.
+- Market prices: a bottle whose price is over 6 months old and that WineLabs no longer prices loses that price (marked
+  *no price*, asked again a month later) instead of staying in *Needs attention* and being asked every night.
 
 ## v0.3.8
 
