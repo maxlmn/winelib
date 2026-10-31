@@ -3,8 +3,8 @@
 ## Unreleased
 
 - **Grand Cru, Premier Cru** capitalised in appellation and vineyard names ("Alsace Grand Cru Brand", "Pommard Premier Cru
-  Clos des Epeneaux"; INAO writes them in lower case): your data (migration 0010), the reference lists, the map's
-  lieux-dits.
+  Clos des Epeneaux"; INAO writes them in lower case): the reference lists a new installation starts from, and the
+  map's lieux-dits. An existing database keeps its names.
 - **On a phone, the map full size**: the page's cards float over its lower half, the map between and behind them
   (no more sheet).
 - Fix: a check opened from *Needs attention* started its Maintenance preview over and over; once now.
