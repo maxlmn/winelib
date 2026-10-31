@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.4.0
 
 - **Find a lieu-dit by name** for a vineyard: a wine's *Add its vineyard* (the ⋯ menu; was *Draw its vineyard*) and a
   vineyard's outline search the cadastre's lieux-dits (village and AOC beside each). One picked is drawn on the map:
