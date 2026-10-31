@@ -40,10 +40,9 @@ def find_duplicate_groups(session):
         ws.sort(key=lambda w: w.id)
         first = ws[0]
         vintage = (first.vintage or "NV") + (f" - {first.disgorgement_date}" if first.disgorgement_date else "")
-        label = " · ".join(x for x in (
-            first.producer.name if first.producer else "N/A", first.cuvee,
-            first.appellation.name if first.appellation else None,
-            first.varietal.name if first.varietal else None, vintage) if x)
+        # "Egly-Ouriet Les Crayères NV (Champagne Grand Cru)": the wine as its page names it
+        label = " ".join(x for x in (first.producer.name if first.producer else "N/A", first.cuvee, vintage) if x) + (
+            f" ({first.appellation.name})" if first.appellation else "")
         dups = [w.id for w in ws[1:]]
         bottles = {i: session.query(Bottle).filter(Bottle.wine_id == i).all() for i in dups}
         out.append({"label": label, "primary": first.id, "duplicates": dups, "bottles": bottles})

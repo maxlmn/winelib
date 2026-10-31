@@ -50,7 +50,7 @@ def test_report_offers_the_pair(client):
 
 def test_red_and_white_are_not_duplicates(client):
     client.post("/api/maintenance/duplicates", json={})
-    assert wait(client)["result"]["summary"].startswith("0 groups")  # Poyeux 2016 red and white
+    assert wait(client)["result"]["summary"].startswith("0 wines")  # Poyeux 2016 red and white
 
 
 def test_preview_changes_nothing(client):

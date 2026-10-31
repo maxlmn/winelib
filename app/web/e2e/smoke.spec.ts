@@ -113,7 +113,7 @@ test('Settings › Needs attention opens its check in Maintenance, the preview r
 	await panel.getByRole('link', { name: /entered twice/ }).click();
 	await expect(page).toHaveURL(/\/settings\?tab=maintenance&task=duplicates/);
 	await expect(page.getByRole('tab', { name: 'Maintenance' })).toHaveAttribute('aria-selected', 'true');
-	await expect(page.getByText('1 group of duplicate wines').first()).toBeVisible({ timeout: 15_000 });
+	await expect(page.getByText('1 wine entered more than once').first()).toBeVisible({ timeout: 15_000 });
 	await page.waitForTimeout(3000);
 	expect(starts).toBe(1);
 });
