@@ -326,7 +326,8 @@ html.map-full main :is(.body.split, .about.has-image, .top, .map-card) {
 html.map-full main .card {
 	box-shadow: var(--shadow);
 }
-/* On a phone the page is a sheet over the map's lower part, scrolled on its own */
+/* On a phone the page's cards float over the map's lower half, scrolled on their own; between them the map shows, and
+   takes the touches (panned, zoomed) */
 @media (max-width: 760px) {
 	html.map-full main {
 		position: fixed;
@@ -337,21 +338,14 @@ html.map-full main .card {
 		width: auto;
 		overflow-y: auto;
 		overscroll-behavior: contain;
-		padding: 18px 10px 40px;
-		background: var(--bg);
-		border-top: 1px solid var(--border);
-		border-radius: 16px 16px 0 0;
-		box-shadow: 0 -6px 24px rgb(0 0 0 / 0.35);
+		padding: 12px 10px 40px;
+		background: transparent;
+		pointer-events: none;
+		/* the cards fade out at the top as they scroll up, not cut */
+		mask-image: linear-gradient(to bottom, transparent 0, #000 12px);
 	}
-	html.map-full main::before {
-		content: '';
-		position: absolute;
-		top: 7px;
-		left: calc(50% - 20px);
-		width: 40px;
-		height: 4px;
-		border-radius: 2px;
-		background: var(--border);
+	html.map-full main .card {
+		pointer-events: auto;
 	}
 }
 
