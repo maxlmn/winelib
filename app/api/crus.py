@@ -15,6 +15,16 @@ import unicodedata
 from functools import lru_cache
 
 CONTAINED = 0.5
+# "grand cru", "premier cru", "1er cru" as INAO writes them in its names: capitalised for showing
+CRU_WORDS = re.compile(r"\b([Gg]rand|[Pp]remier|1er) cru\b")
+
+
+def cru_case(name):
+    """A name with its rank capitalised: "Alsace grand cru Brand" -> "Alsace Grand Cru Brand", "Pommard premier cru
+    Les Epenots" -> "Pommard Premier Cru Les Epenots" (the official names write it in lower case)"""
+    return CRU_WORDS.sub(lambda m: f"{m.group(1).capitalize()} Cru", name) if name else name
+
+
 NOT_CRUS = ("saint-emilion grand cru", "saint emilion grand cru", "st-emilion grand cru", "st emilion grand cru")
 
 BURGUNDY_GRAND_CRUS = {

@@ -14,6 +14,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 import geo
+from crus import cru_case
 from cellar import load_cellar
 from db import Appellation, Bottle, Region, TastingNote, Vineyard, Wine, get_session
 
@@ -121,7 +122,7 @@ def lieu_shapes_response(session, app_ids, sid):
     name, d, geom = found
     app_stats, _ = map_stats(session)
     a = geo.collection_json("appellation", _apps(session, app_ids), app_stats)
-    props = json.dumps({"id": 0, "kind": "vineyard", "name": name, "village": d.get("commune_name"),
+    props = json.dumps({"id": 0, "kind": "vineyard", "name": cru_case(name), "village": d.get("commune_name"),
                         "bottles": 0, "value": 0, "tastings": 0}, ensure_ascii=False)
     v = f'{{"type":"FeatureCollection","features":[{{"type":"Feature","id":0,"geometry":{geom},"properties":{props}}}]}}'
     return json_response(f'{{"appellations":{a},"vineyards":{v},"outlines":{json.dumps(geo.outlines_installed())}}}')
@@ -215,7 +216,7 @@ def lieux_dits(bbox: str, session: Session = Depends(get_session)):
                 .filter(Vineyard.boundary.in_([f"lieu_dit:{sid}" for sid, *_ in found])).all()) if found else {}
     for sid, name, details, geometry in found:
         d = json.loads(details) if details else {}
-        props = {"id": f"lieu_dit:{sid}", "kind": "lieu-dit", "name": name, "village": d.get("commune_name"),
+        props = {"id": f"lieu_dit:{sid}", "kind": "lieu-dit", "name": cru_case(name), "village": d.get("commune_name"),
                  "aocs": d.get("aocs"), "vines": d.get("vines"), "vineyard_id": mine.get(f"lieu_dit:{sid}")}
         features.append(f'{{"type":"Feature","properties":{json.dumps(props, ensure_ascii=False)},"geometry":{geometry}}}')
     return json_response('{"type":"FeatureCollection","features":[' + ",".join(features) + '],"more":false}')
