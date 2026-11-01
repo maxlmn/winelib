@@ -97,9 +97,10 @@ def test_new_installation(client):
 
 
 def test_integrations(client, monkeypatch):
-    for key in ("BI_EMAIL", "BI_PASSWORD", "BI_SALES_LEDGER", "BI_PURCHASE_LEDGER", "WINELABS_API_KEY"):
+    for key in ("BI_EMAIL", "BI_PASSWORD", "BI_SALES_LEDGER", "BI_PURCHASE_LEDGER", "WINELABS_API_KEY",
+                "ANTHROPIC_API_KEY"):
         monkeypatch.delenv(key, raising=False)
     found = {i["id"]: i for i in client.get("/api/integrations").json()["integrations"]}
-    assert set(found) == {"bordeaux_index", "winelabs", "lwin"} and not found["bordeaux_index"]["configured"]
+    assert set(found) == {"bordeaux_index", "winelabs", "anthropic", "lwin"} and not found["bordeaux_index"]["configured"]
     monkeypatch.setenv("WINELABS_API_KEY", "k")
     assert {i["id"]: i["configured"] for i in client.get("/api/integrations").json()["integrations"]}["winelabs"]

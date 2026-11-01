@@ -5,7 +5,7 @@
 	import FormPage from './FormPage.svelte';
 	import Section from './Section.svelte';
 	import WinePicker from './WinePicker.svelte';
-	import TextFill from './TextFill.svelte';
+	import Fill from './Fill.svelte';
 	import { blank, bottleDraft, check, num, remove, save, scoped, toBottleDetails, toWineIn, wineErrors } from '#lib/api/forms.ts';
 	import type { BottleForm, Options, WineDraft, WineSummary } from '#lib/api/forms.ts';
 	import { links } from '#lib/links.ts';
@@ -61,7 +61,7 @@
 		: undefined}
 >
 	<Section title="Wine">
-		{#if !b}<TextFill bind:wine bind:draft bind:details bind:qty {options} />{/if}
+		{#if !b}<Fill bind:wine bind:draft bind:details bind:qty {options} />{/if}
 		<WinePicker bind:wine bind:draft {options} prefix="b" errors={{ ...scoped(errors, 'wine'), wine: errors.wine }} />
 	</Section>
 

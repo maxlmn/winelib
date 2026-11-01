@@ -20,6 +20,7 @@ import settings
 from cellar import location_sort_key
 from display import vineyard_label
 from textsearch import fold, search
+from tasks import from_photos
 from tasks.matching import is_rose
 from tasks.blends import BLEND_STYLES, blend_style
 import style_tags
@@ -1003,6 +1004,7 @@ def lookup_options(session: Session = Depends(get_session)):
         "wine_types": WINE_TYPES, "bottle_sizes": BOTTLE_SIZES, "currencies": currencies(), "blend_styles": BLEND_STYLES,
         "producer_types": PRODUCER_TYPES, "place_types": list(dict.fromkeys(PLACE_TYPES + place_types)),
         "locations": locations, "ad_hoc": AD_HOC,
+        "label_photos": from_photos.api_key() is not None,  # Fill from photos: an Anthropic API key is set
         "regions": [{"id": r.id, "name": r.name, "country": r.country, "color": r.color}
                     for r in session.query(Region).order_by(Region.name)],
     }
