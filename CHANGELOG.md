@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- **Fill from photos**: a new bottle from photos of its labels, the front and (optional) the back, taken or picked on
+  the bottle form; Claude reads the producer, cuvée, vintage, appellation, colour, size and a sparkling wine's
+  disgorgement, and the reading is matched against your cellar as *Fill from text*'s is (the wine you have, a new
+  vintage or disgorgement of it, or a new wine). Says what it couldn't read; nothing is saved until you do. Needs your
+  own Anthropic API key (`ANTHROPIC_API_KEY` in `.secrets.env`): the photos are sent to Anthropic, shrunk to ~1600 px.
+
 ## v0.4.0
 
 - **Find a lieu-dit by name** for a vineyard: a wine's *Add its vineyard* (the ⋯ menu; was *Draw its vineyard*) and a

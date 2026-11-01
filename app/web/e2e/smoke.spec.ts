@@ -90,6 +90,41 @@ test('Fill from text fills the new-bottle form', async ({ page }) => {
 	await expect(page.locator('#b-price')).toHaveValue('340'); // the lot's 680 for 2 bottles
 });
 
+// Claude isn't called: the options say a key is set, and the server's reading is the test's
+test('Fill from photos sends the labels shrunk to JPEG and fills the new-bottle form', async ({ page }) => {
+	await page.route('**/api/lookups/options', async (route) => {
+		const r = await route.fetch();
+		await route.fulfill({ response: r, json: { ...(await r.json()), label_photos: true } });
+	});
+	let sent: { side: string; media_type: string; data: string }[] = [];
+	await page.route('**/api/lookups/from-photos', (route) => {
+		sent = route.request().postDataJSON().photos;
+		return route.fulfill({
+			json: {
+				line: 'Maison Photo Blanc de Blancs 2015', producer: { id: null, name: 'Maison Photo' }, cuvee: 'Blanc de Blancs',
+				vintage: '2015', type: 'Bubbles', size: null, appellation: null, region: null, wine_id: null, like_id: null,
+				qty: null, price: null, currency: null, price_total: null, purchase_date: null, vendor: null,
+				disgorgement_date: 'Mar 2024', not_read: ['size'], note: 'Vintage read from the neck label'
+			}
+		});
+	});
+	await page.goto('/bottles/new');
+	await page.getByRole('button', { name: /Fill from photos/ }).click();
+	// a 2×2 PNG for each label
+	const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP4z8DAwMDAwMDAwMDAAAANAAEUY7mBAAAAAElFTkSuQmCC', 'base64');
+	await page.getByLabel('Photo of the back label').locator('input').setInputFiles({ name: 'back.png', mimeType: 'image/png', buffer: png });
+	await page.getByLabel('Photo of the front label').locator('input').setInputFiles({ name: 'front.png', mimeType: 'image/png', buffer: png });
+	await expect(page.locator('.shot img')).toHaveCount(2);
+	await page.getByRole('button', { name: 'Fill', exact: true }).click();
+	await expect(page.locator('.fill .found')).toContainText('a new wine');
+	await expect(page.locator('.fill .found')).toContainText('Not read: size. Vintage read from the neck label');
+	expect(sent.map((p) => [p.side, p.media_type])).toEqual([['front', 'image/jpeg'], ['back', 'image/jpeg']]);
+	expect(Buffer.from(sent[0].data, 'base64').subarray(0, 2)).toEqual(Buffer.from([0xff, 0xd8])); // a JPEG
+	await expect(page.locator('#b-new-vintage')).toHaveValue('2015');
+	await expect(page.locator('#b-new-cuvee')).toHaveValue('Blanc de Blancs');
+	await expect(page.getByLabel('Disgorgement date')).toHaveValue('Mar 2024');
+});
+
 test('a phone: no page wider than the screen', async ({ page }) => {
 	await page.setViewportSize({ width: 375, height: 812 });
 	for (const path of ['/', `/wines/${ids().wine}`, '/cellar', '/tastings']) {

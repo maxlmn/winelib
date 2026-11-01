@@ -123,6 +123,27 @@ def from_text(data: TextIn, session: Session = Depends(get_session)):
         raise HTTPException(422, str(e))
 
 
+class PhotoIn(BaseModel):
+    side: str = "front"  # front or back
+    media_type: str
+    data: str  # base64
+
+
+class PhotosIn(BaseModel):
+    photos: list[PhotoIn]
+
+
+@router.post("/api/lookups/from-photos")
+def from_photos(data: PhotosIn, session: Session = Depends(get_session)):
+    """A bottle from photos of its labels, the front and the back (the bottle form's Fill from photos): what Claude
+    reads on them, against the database; a draft. Needs ANTHROPIC_API_KEY."""
+    from tasks import from_photos as reader
+    try:
+        return reader.from_photos(session, [p.model_dump() for p in data.photos])
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+
+
 @router.get("/api/lookups/from-link")
 def from_link(url: str, session: Session = Depends(get_session)):
     """A wine from a shop's or Vivino's page (the wine form's Fill from a link): its producer, cuvée, vintage,

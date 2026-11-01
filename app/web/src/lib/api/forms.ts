@@ -37,6 +37,8 @@ export interface Options {
 	regions: Region[];
 	/** the blend styles a wine can have (Bordeaux blend, Rhône blend...) */
 	blend_styles: string[];
+	/** Fill from photos: an Anthropic API key is set */
+	label_photos: boolean;
 }
 
 export interface WineSummary {

@@ -171,6 +171,7 @@ And more:
 - **Vintages**, **producers** and **places** pages.
 - **Critics' scores** from any critic (a CSV of reviews), shown together.
 - **Market prices** by LWIN, from Bordeaux Index or WineLabs (with your own keys).
+- **A bottle from photos of its labels**, the front and the back, read by Claude (with your own Anthropic key).
 - **Imports** from CellarTracker, Vivino or any spreadsheet; **export** of everything as JSON or CSV.
 - **Plug-ins** for your own extras: their pages, Maintenance tasks and actions on the wine page.
 

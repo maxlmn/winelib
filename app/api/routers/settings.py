@@ -26,7 +26,7 @@ def integrations():
     import os
     import map_pack
     import plugins
-    from tasks import bordeaux_index, match_lwin
+    from tasks import bordeaux_index, from_photos, match_lwin
     from tasks import update_market_prices as prices
     return {
         "integrations": [
@@ -38,6 +38,10 @@ def integrations():
             {"id": "winelabs", "name": "WineLabs.ai", "configured": bool(prices.api_key()),
              "what": "Market prices for bottles with an LWIN (the bottle page's button, Maintenance › Market prices).",
              "needs": "An API key: WINELABS_API_KEY in .secrets.env."},
+            {"id": "anthropic", "name": "Anthropic (Claude)", "configured": bool(from_photos.api_key()),
+             "what": "Fill from photos in the bottle form: the labels' photos (front and back) read by Claude. The "
+                     "photos are sent to Anthropic; billed to your key (about a cent or two a bottle).",
+             "needs": "An API key from console.anthropic.com: ANTHROPIC_API_KEY in .secrets.env."},
             {"id": "lwin", "name": "LWIN list", "configured": os.path.exists(match_lwin.LWIN_DB),
              "what": "LWIN suggestions in the wine form and Maintenance › LWIN codes (needed for market prices).",
              "needs": "Liv-ex's LWIN file, indexed on a PC (python app/api/tasks/match_lwin.py --build-index) and "

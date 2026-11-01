@@ -1,5 +1,5 @@
 # Each within its major version (the next major may break): tested with fastapi 0.161, uvicorn 0.54, geopandas 1.2,
-# shapely 2.2, pyarrow 22, pillow 12 (October 2026)
+# shapely 2.2, pyarrow 22, pillow 12, anthropic 2.3 (November 2026)
 fastapi>=0.115,<1
 uvicorn[standard]>=0.30,<1
 # 2.1 makes postgresql:// use psycopg (v3) instead of psycopg2: stay on 2.0 with psycopg2
@@ -13,6 +13,8 @@ shapely>=2.0,<3
 pyarrow>=17
 # Photo thumbnails
 pillow>=10
+# Fill from photos (optional: needs ANTHROPIC_API_KEY)
+anthropic>=2.3,<3
 # Name matching (imports, merges, LWIN suggestions)
 unidecode>=1.3,<2
 rapidfuzz>=3,<4
