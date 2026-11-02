@@ -196,14 +196,16 @@
 						'fill-color': ['coalesce', ['get', 'color'], FALLBACK_REGION],
 						// Kept light so vineyards drawn inside stay readable; hover and selection lift it.
 						// Your bottles and tastings aren't marked on the shapes (busy with many small ones): see the tooltip
-						'fill-opacity': ['case', sel, 0.4, hover, 0.3, ['boolean', ['get', 'umbrella'], false], 0, 0.16]
+						'fill-opacity': ['case', sel, 0.4, hover, 0.3, ['boolean', ['get', 'umbrella'], false], 0, ['boolean', ['get', 'dim'], false], 0.06, 0.16]
 					}
 				});
 				mm.addLayer({
 					id: 'apps-line', type: 'line', source: 'apps',
 					paint: {
 						'line-color': ['case', sel, accentColor(), ['coalesce', ['get', 'color'], FALLBACK_REGION]],
-						'line-width': ['case', sel, 3, 1.2]
+						'line-width': ['case', sel, 3, 1.2],
+						// a region page's appellations outside its top list: there, but quieter
+						'line-opacity': ['case', sel, 1, hover, 1, ['boolean', ['get', 'dim'], false], 0.45, 1]
 					}
 				});
 				// Lieux-dits: a fine dashed line, filled only under the pointer (under the vineyards, over the appellations)
@@ -404,7 +406,7 @@
 			: ['case', sel, (photo ? 0.4 : 0.95) * k, hover, (photo ? 0.35 : 0.92) * k, (photo ? 0.22 : 0.8) * k];
 		const apps = (k: number): ExpressionSpecification => layers.appellation === 'outline'
 			? ['case', sel, 0.12, hover, 0.08, 0]
-			: ['case', sel, (photo ? 0.18 : 0.4) * k, hover, (photo ? 0.14 : 0.3) * k, ['boolean', ['get', 'umbrella'], false], 0, (photo ? 0.06 : 0.16) * k];
+			: ['case', sel, (photo ? 0.18 : 0.4) * k, hover, (photo ? 0.14 : 0.3) * k, ['boolean', ['get', 'umbrella'], false], 0, ['boolean', ['get', 'dim'], false], (photo ? 0.02 : 0.06) * k, (photo ? 0.06 : 0.16) * k];
 		map.setPaintProperty('vines-fill', 'fill-opacity', ['interpolate', ['linear'], ['zoom'], LIEUX_ZOOM - 1, vines(1), LIEUX_ZOOM + 1, vines(0.55)]);
 		map.setPaintProperty('apps-fill', 'fill-opacity', ['interpolate', ['linear'], ['zoom'], LIEUX_ZOOM - 1, apps(1), LIEUX_ZOOM + 1, apps(0.25)]);
 		// the lieux-dits' dashes: cream over a dark or photo basemap, a warm grey over the light Plain one

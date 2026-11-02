@@ -41,6 +41,15 @@ test("a wine's map: its legend shows and hides each shape, its names zoom", asyn
 	expect(errors).toEqual([]);
 });
 
+test("a region's map draws your appellations and vineyards, not only its top list's", async ({ page }) => {
+	const errors = errorsOf(page);
+	await page.goto('/regions/Loire');
+	const legend = page.locator('.keys .key');
+	await expect(legend.filter({ hasText: 'Saumur-Champigny' })).toHaveCount(1);
+	await expect(legend.filter({ hasText: 'Le Bourg' })).toHaveCount(1); // the vineyard you hold
+	expect(errors).toEqual([]);
+});
+
 test('a wine without an outline keeps its page as it is', async ({ page }) => {
 	await page.goto(`/wines/${ids().plainWine}`);
 	// "No boundary data…", or "No map outlines installed yet" where none are (CI)

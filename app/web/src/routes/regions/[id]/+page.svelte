@@ -86,7 +86,8 @@
 <div class:tinted={!!r.color} style:--tint={r.color || null}>
 	<DetailHeader icon="globe" kind={r.country && r.country !== r.name ? `Wine region · ${r.country}` : 'Wine region'} title={r.name} regionColor={r.color} {actions} />
 
-	<!-- The map draws the region and only the top appellations listed beside it -->
+	<!-- The map draws the region with the appellations and vineyards you've tasted or hold: the top ones listed beside it
+	     as usual, the other appellations fainter -->
 	<section class="card top">
 		<div class="map-col">
 			<DetailMap

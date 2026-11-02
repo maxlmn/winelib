@@ -612,18 +612,19 @@ def appellation_shapes(appellation_id: int, session: Session = Depends(get_sessi
 @router.get("/api/regions/{key}/shapes")
 def region_shapes(key: str, top: str = "", limit: int = 8, session: Session = Depends(get_session)):
     """The region's outline, with the appellations and vineyards you hold bottles from or have tasted
-    (a region holds hundreds: the rest are on the map page). With top=tastings or top=bottles, only the
-    `limit` appellations you've tasted / hold the most (the region page's list), no vineyards."""
+    (a region holds hundreds: the rest are on the map page). With top=tastings or top=bottles, the `limit`
+    appellations you've tasted / hold the most (the region page's list) drawn as usual, the others fainter."""
     r = _region_by_key(session, key)
     app_stats, vine_stats = map_stats(session)
     in_region_apps = {i for (i,) in session.query(Appellation.id).filter(Appellation.region_id == r.id)}
-    if top in ("tastings", "bottles"):
-        ranked = sorted((k for k, s in app_stats.items() if k in in_region_apps and s.get(top)),
-                        key=lambda k: -app_stats[k][top])
-        return shapes_response(session, ranked[:max(0, limit)], [], region=r)
     in_region_vines = {i for (i,) in session.query(Vineyard.id).filter(Vineyard.region_id == r.id)}
     mine = lambda stats, ids: [k for k, s in stats.items() if k in ids and (s.get("bottles") or s.get("tastings"))]  # noqa: E731
-    return shapes_response(session, mine(app_stats, in_region_apps), mine(vine_stats, in_region_vines), region=r)
+    apps, dim = mine(app_stats, in_region_apps), set()
+    if top in ("tastings", "bottles"):  # the same order as the page's list: most first, then by name
+        names = dict(session.query(Appellation.id, Appellation.name).filter(Appellation.id.in_(apps)))
+        ranked = sorted((k for k in apps if app_stats[k].get(top)), key=lambda k: (-app_stats[k][top], names[k].lower()))
+        dim = set(apps) - set(ranked[:max(0, limit)])
+    return shapes_response(session, apps, mine(vine_stats, in_region_vines), region=r, dim=dim)
 
 
 @router.get("/api/vineyards/{vineyard_id}/shapes")
