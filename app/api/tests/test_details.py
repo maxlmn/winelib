@@ -223,12 +223,15 @@ def test_region_shapes_have_its_outline_and_what_you_hold(client):
     assert outline["properties"]["bbox"]
 
 
-def test_region_shapes_top_appellations_only(client):
+def test_region_shapes_top_appellations_stand_out(client):
     s = client.get("/api/regions/Bourgogne/shapes?top=tastings").json()
-    assert [f["properties"]["name"] for f in s["appellations"]["features"]] == ["Savigny-lès-Beaune"]
-    assert s["vineyards"]["features"] == []  # the top list is appellations only
+    (app,) = s["appellations"]["features"]
+    assert app["properties"]["name"] == "Savigny-lès-Beaune" and "dim" not in app["properties"]
+    assert [f["properties"]["name"] for f in s["vineyards"]["features"]] == ["Les Vergelesses"]  # yours, drawn too
     assert s["region"]["features"]  # the outline stays
-    assert client.get("/api/regions/Bourgogne/shapes?top=bottles&limit=0").json()["appellations"]["features"] == []
+    # outside the top list: still drawn, fainter
+    (app,) = client.get("/api/regions/Bourgogne/shapes?top=bottles&limit=0").json()["appellations"]["features"]
+    assert app["properties"]["dim"] is True
 
 
 def test_grape_detail(client):

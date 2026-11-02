@@ -7,6 +7,8 @@
   disgorgement, and the reading is matched against your cellar as *Fill from text*'s is (the wine you have, a new
   vintage or disgorgement of it, or a new wine). Says what it couldn't read; nothing is saved until you do. Needs your
   own Anthropic API key (`ANTHROPIC_API_KEY` in `.secrets.env`): the photos are sent to Anthropic, shrunk to ~1600 px.
+- **A region's map** draws every appellation you've tasted or hold bottles from, and their vineyards: the top list's
+  as before, the others fainter. It drew only the top 8 appellations, and no vineyards.
 
 ## v0.4.0
 

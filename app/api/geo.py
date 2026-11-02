@@ -335,15 +335,16 @@ def vineyard_props(v, stats):
 PROPS = {"appellation": appellation_props, "vineyard": vineyard_props}
 
 
-def collection_json(kind, objs, stats):
-    """A GeoJSON FeatureCollection (plus "missing": names without a boundary), as a JSON string."""
+def collection_json(kind, objs, stats, dim=()):
+    """A GeoJSON FeatureCollection (plus "missing": names without a boundary), as a JSON string. The ids in `dim`
+    are drawn fainter ("dim": a region page's appellations outside its top list)."""
     features, missing = [], []
     found = shapes(kind, objs) if geo_available() else [(None, None)] * len(objs)
     for o, (geom, _) in zip(objs, found):
         if geom is None:
             missing.append(o.name)
         else:
-            props = json.dumps(PROPS[kind](o, stats), ensure_ascii=False)
+            props = json.dumps({**PROPS[kind](o, stats), **({"dim": True} if o.id in dim else {})}, ensure_ascii=False)
             features.append(f'{{"type":"Feature","id":{o.id},"geometry":{geom},"properties":{props}}}')
     return f'{{"type":"FeatureCollection","features":[{",".join(features)}],"missing":{json.dumps(sorted(missing), ensure_ascii=False)}}}'
 

@@ -66,6 +66,8 @@ export interface MapProps {
 	type?: string | null;
 	/** 2 grand cru, 1 premier cru, 0 otherwise: drawn that many notches darker */
 	cru?: number;
+	/** drawn fainter: a region page's appellation outside its top list */
+	dim?: boolean;
 	/** vineyards: village shade, set by the map */
 	fill?: string;
 	edge?: string;

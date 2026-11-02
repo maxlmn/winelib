@@ -96,11 +96,12 @@ def _vines(session, ids):
             .filter(Vineyard.id.in_(ids)).order_by(Vineyard.name).all()) if ids else []
 
 
-def shapes_response(session, app_ids, vine_ids, region=None):
+def shapes_response(session, app_ids, vine_ids, region=None, dim=()):
     """{"appellations": FeatureCollection, "vineyards": FeatureCollection} for some rows (detail pages);
-    with `region`, also "region": a FeatureCollection holding its outline (drawn as context)."""
+    with `region`, also "region": a FeatureCollection holding its outline (drawn as context). The appellation ids in
+    `dim` are drawn fainter."""
     app_stats, vine_stats = map_stats(session)
-    a = geo.collection_json("appellation", _apps(session, app_ids), app_stats)
+    a = geo.collection_json("appellation", _apps(session, app_ids), app_stats, dim)
     v = geo.collection_json("vineyard", _vines(session, vine_ids), vine_stats)
     extra = ""
     if region is not None:
