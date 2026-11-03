@@ -13,6 +13,7 @@
   their region, linked to it ("Escolle Vineyard", "Wehlener Sonnenuhr Spätlese", "Chaillots"); the site's kind, the
   grape or the village's adjective around the name are allowed. A preview to tick, each on its map; ticked when it's
   the only one and in a village the appellation names. *Lieux-dits for your wines* leaves those cuvées to it.
+- **A wine at random**: the home page's dice opens one of your wines, any you hold or have tasted.
 
 ## v0.4.0
 

@@ -10,6 +10,7 @@
 	import OccasionCard from '#lib/components/tastings/OccasionCard.svelte';
 	import TastingRibbon from '#lib/components/tastings/TastingRibbon.svelte';
 	import { occasions } from '#lib/components/tastings/journal.ts';
+	import { goto } from '$app/navigation';
 
 	let { data } = $props();
 	const d = $derived(data.dashboard);
@@ -42,6 +43,10 @@
 	);
 	const recentQty = $derived(recentBottles.reduce((n, b) => n + b.qty, 0));
 
+	// A wine at random: any you hold or have tasted, each once however many bottles or notes
+	const wineIds = $derived([...new Set([...data.cellar.bottles, ...data.journal.tastings].map((x) => x.wine_id))]);
+	const randomWine = () => goto(links.wine(wineIds[Math.floor(Math.random() * wineIds.length)]));
+
 	const greeting = (() => {
 		const h = new Date().getHours();
 		return h < 5 ? 'Good evening' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
@@ -60,6 +65,9 @@
 		<a class="btn icon primary" href={links.newTasting()} title="Add a tasting" aria-label="Add a tasting"><span class="plus">+</span><Icon name="glass" size={15} /></a>
 		<a class="btn icon primary" href={links.newBottle()} title="Add a purchase" aria-label="Add a purchase"><span class="plus">+</span><Icon name="bottle" size={15} /></a>
 		<a class="btn icon" href={links.newVisit()} title="Add a restaurant visit" aria-label="Add a restaurant visit"><span class="plus">+</span><Icon name="pin" size={15} /></a>
+		{#if wineIds.length}
+			<button class="btn icon" onclick={randomWine} title="A wine at random" aria-label="A wine at random"><Icon name="dice" size={15} /></button>
+		{/if}
 	</div>
 </div>
 
