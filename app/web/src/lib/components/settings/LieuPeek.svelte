@@ -3,8 +3,9 @@
 	import type { Shapes } from '#lib/api/details.ts';
 	import { bbox } from '#lib/geo.ts';
 
-	/** A suggestion's map before it's linked (Maintenance › Lieux-dits for your wines): the wine's appellation, the
-	 * suggested lieu-dit as its vineyard, the lieux-dits around it. `src`: a wine's shapes with ?lieu_dit= */
+	/** A suggestion's map before it's linked (Maintenance › Lieux-dits / Vineyards for your wines): the wine's
+	 * appellation, the suggested lieu-dit or vineyard as its vineyard, the lieux-dits around it. `src`: a wine's shapes
+	 * with ?lieu_dit= or ?suggested= */
 	let { src }: { src: string } = $props();
 
 	let shapes = $state<Shapes | null>(null);

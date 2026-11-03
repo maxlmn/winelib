@@ -241,6 +241,8 @@
 	const size = (n: number) => (n > 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1e3))} KB`);
 	// A duplicate wine's copies (Duplicate wines' preview): each one's page and what it holds, the one kept first
 	type Copy = { href: string; keep: boolean; facts: string };
+	// The tasks that link wines to a place, each seen on its map first
+	const LINKS = ['lieux_dits', 'vineyards'];
 	const STATUS: Record<Job['status'], string> = { running: 'Running…', done: 'Done', failed: 'Failed', stopped: 'Stopped' };
 
 	onMount(load);
@@ -282,7 +284,7 @@
 		{/if}
 		{#if job.result?.items?.length && job.result.items[0].pick}
 			{#if job.result.unknown}<UnknownProducers unknown={job.result.unknown} />{/if}
-			<PickList bind:ticked row={job.result.items[0].pick.wine ? cardRow : undefined} peek={job.task === 'lieux_dits' ? lieuPeek : undefined} items={job.result.items as PickItem[]} verb={job.task === 'lieux_dits' ? 'Link' : 'Import'}
+			<PickList bind:ticked row={job.result.items[0].pick.wine ? cardRow : undefined} peek={LINKS.includes(job.task) ? lieuPeek : undefined} items={job.result.items as PickItem[]} verb={LINKS.includes(job.task) ? 'Link' : 'Import'}
 				disabled={running} flag={job.result.flag}
 				onrun={(keys) => tasks.find((t) => t.id === job!.task)?.upload
 					? post(job!.task, { commit: true, keys, ...uploadBody(job!.task, columns) })

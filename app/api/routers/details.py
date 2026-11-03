@@ -588,11 +588,14 @@ def producer_shapes(producer_id: int, session: Session = Depends(get_session)):
 
 
 @router.get("/api/wines/{wine_id}/shapes")
-def wine_shapes(wine_id: int, lieu_dit: str = "", session: Session = Depends(get_session)):
-    """The wine's appellation and vineyard; with lieu_dit (a store id), that lieu-dit as its vineyard instead (a
-    suggestion seen before it's linked: Maintenance's Lieux-dits for your wines)."""
+def wine_shapes(wine_id: int, lieu_dit: str = "", suggested: int | None = None,
+                session: Session = Depends(get_session)):
+    """The wine's appellation and vineyard; with lieu_dit (a store id) or suggested (a vineyard id), that one as its
+    vineyard instead (a suggestion seen before it's linked: Maintenance's Lieux-dits / Vineyards for your wines)."""
     w = _get(session, Wine, wine_id, "Wine")
     apps = [w.appellation_id] if w.appellation_id else []
+    if suggested is not None:
+        return shapes(session, apps, [suggested])
     if lieu_dit:
         found = lieu_shapes_response(session, apps, lieu_dit)
         if found is None:
