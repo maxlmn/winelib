@@ -24,6 +24,13 @@ test('the main pages load without errors', async ({ page }) => {
 	expect(errors).toEqual([]);
 });
 
+test("the home page's dice opens one of your wines", async ({ page }) => {
+	await page.goto('/');
+	await page.getByRole('button', { name: 'A wine at random' }).click();
+	await expect(page).toHaveURL(/\/wines\/\d+$/);
+	await expect(page.locator('main h1')).toBeVisible();
+});
+
 test("a wine's map: its legend shows and hides each shape, its names zoom", async ({ page }) => {
 	const errors = errorsOf(page);
 	await page.goto(`/wines/${ids().wine}`);
