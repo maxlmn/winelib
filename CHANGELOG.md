@@ -9,6 +9,10 @@
   own Anthropic API key (`ANTHROPIC_API_KEY` in `.secrets.env`): the photos are sent to Anthropic, shrunk to ~1600 px.
 - **A region's map** draws every appellation you've tasted or hold bottles from, and their vineyards: the top list's
   as before, the others fainter. It drew only the top 8 appellations, and no vineyards.
+- **Vineyards for your wines** (Settings › Maintenance): cuvées named after a vineyard WineLib has an outline for, in
+  their region, linked to it ("Escolle Vineyard", "Wehlener Sonnenuhr Spätlese", "Chaillots"); the site's kind, the
+  grape or the village's adjective around the name are allowed. A preview to tick, each on its map; ticked when it's
+  the only one and in a village the appellation names. *Lieux-dits for your wines* leaves those cuvées to it.
 
 ## v0.4.0
 

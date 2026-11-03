@@ -77,12 +77,12 @@ def _at(hay, needle):
     return next((i for i in range(len(hay) - len(needle) + 1) if [same(w) for w in hay[i:i + len(needle)]] == needle), -1)
 
 
-def _matches(cuvee_words, name_words, core_words):
+def _matches(cuvee_words, name_words, core_words, generic=GENERIC):
     """Whether the cuvée names this lieu-dit, and how well: 2 its whole name ("Sur les Pouches"), 1 its name
-    without the articles ("Pouches"), 0 not (or the rest of the cuvée's name isn't generic)"""
+    without the articles ("Pouches"), 0 not (or the rest of the cuvée's name isn't in `generic`)"""
     for whole, needle in ((2, name_words), (1, core_words)):
         i = _at(cuvee_words, needle)
-        if i >= 0 and all(w in GENERIC for w in cuvee_words[:i] + cuvee_words[i + len(needle):]):
+        if i >= 0 and all(w in generic for w in cuvee_words[:i] + cuvee_words[i + len(needle):]):
             return whole
     return 0
 

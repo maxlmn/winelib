@@ -479,10 +479,15 @@ def _lieux_dits(session, job):
     single possible lieu-dit ticked, several to choose from), then the ticked ones linked (params "keys":
     "<wine id>=<lieu-dit id>")."""
     import lieux_dits as ld
+    import vineyard_names
     found = ld.candidates(session)
     if found is None:
         raise RuntimeError("No lieux-dits in the map store yet: Map outlines downloads them (or "
                            "geo_scripts/etl_lieux_dits.py builds them)")
+    # a cuvée named after a vineyard WineLib already has (Vineyards for your wines) is linked to that one, not to a
+    # second one made from its lieu-dit
+    named = {w.id for wines, _ in vineyard_names.candidates(session) for w in wines}
+    found = [(wines, options) for wines, options in found if wines[0].id not in named]
     items = []
     for wines, options in found:
         w = wines[0]
@@ -508,6 +513,39 @@ def _lieux_dits(session, job):
                 break
     session.commit()
     return {"summary": f"{_n(cuvees, 'cuvée')} linked to their lieu-dit ({_n(linked, 'wine')}, every vintage).",
+            "items": [it for it in items if it["pick"]["key"] in keys][:MAX_ITEMS]}
+
+
+def _vineyards(session, job):
+    """The cuvées whose name holds a vineyard of their region that has an outline (vineyard_names.py): a preview to
+    tick (the only one it can be, in a village the appellation names, ticked), then the ticked ones linked (params
+    "keys": "<wine id>=<vineyard id>")."""
+    import vineyard_names as vn
+    found = vn.candidates(session)
+    items = []
+    for wines, options in found:
+        w = wines[0]
+        wine = f"{w.producer.name} {w.cuvee}" + (f" ({w.appellation.name})" if w.appellation else "") + f", {_n(len(wines), 'vintage')}"
+        for v in options:
+            items.append(_item(f"{v.name} · {v.village or '?'}", wine, f"/wines/{w.id}",
+                               pick={"key": f"{w.id}={v.id}", "group": w.producer.name, "on": vn.sure(w, options),
+                                     "map": f"/api/wines/{w.id}/shapes?suggested={v.id}"}))
+    if not job.commit:
+        sure = sum(1 for wines, options in found if vn.sure(wines[0], options))
+        return {"summary": f"{_n(len(found), 'cuvée')} name a vineyard of their region: {sure} sure (ticked), "
+                           f"{len(found) - sure} to check (a name found in several places, or in a village the "
+                           f"appellation doesn't name).",
+                "items": items[:MAX_ITEMS]}
+    keys, linked, cuvees = set(job.params.get("keys") or []), 0, 0
+    for wines, options in found:
+        for v in options:
+            if f"{wines[0].id}={v.id}" in keys:
+                vn.link(wines, v)
+                job.log(f"{wines[0].producer.name} {wines[0].cuvee}: {v.name} ({v.village})")
+                linked, cuvees = linked + len(wines), cuvees + 1
+                break
+    session.commit()
+    return {"summary": f"{_n(cuvees, 'cuvée')} linked to their vineyard ({_n(linked, 'wine')}, every vintage).",
             "items": [it for it in items if it["pick"]["key"] in keys][:MAX_ITEMS]}
 
 
@@ -626,11 +664,17 @@ TASKS = {
                  "description": "Download the map's outlines (appellations of France, the EU, the US and Australia, "
                                 "Burgundy's premiers crus) into the shape store, then link them. Their credits are "
                                 "listed in Settings."},
+    "vineyards": {"group": "Maps and places", "title": "Vineyards for your wines", "fn": _vineyards, "preview": True,
+                  "writes": True, "params": _keys_params,
+                  "description": "Cuvées named after a vineyard WineLib has an outline for, in their region (Escolle "
+                                 "Vineyard, Wehlener Sonnenuhr, Cannubi Boschis): linked to it. A preview to tick "
+                                 "first; a name found in several places is yours to choose."},
     "lieux_dits": {"group": "Maps and places", "title": "Lieux-dits for your wines", "fn": _lieux_dits, "preview": True,
                    "writes": True, "params": _keys_params,
                    "description": "French cuvées named after a lieu-dit of their appellation (Le Bourg, Les Poyeux): "
                                   "linked to it as their vineyard, its outline from the cadastre. A preview to tick "
-                                  "first; a name found in several villages is yours to choose."},
+                                  "first; a name found in several villages is yours to choose. Those Vineyards for "
+                                  "your wines finds are left to it."},
     "shape_links": {"group": "Maps and places", "title": "Shape links", "fn": _shape_links, "preview": True, "writes": True,
                     "description": "Link appellations and vineyards to their outline in the shape store (after "
                                    "adding some, or a rebuilt store): what changes, and what has no outline."},
