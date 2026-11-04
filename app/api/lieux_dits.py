@@ -22,7 +22,25 @@ MIN_LETTERS = 4  # "Clos", "Bois": shorter cores match too much
 # Blanc"): any other word means the lieu-dit is only part of the name ("Bonnes Blanches" isn't "Les Blanches")
 GENERIC = ARTICLES | {"clos", "cuvee", "blanc", "blanche", "rouge", "rose", "sec", "doux", "demi", "liquoreux",
                       "moelleux", "vieilles", "vieille", "vignes", "vv", "partie", "haute", "haut", "basse", "bas",
-                      "gauche", "droite", "grand", "grande", "vin", "cru", "premier", "1er", "et", "a"}
+                      "gauche", "droite", "grand", "grande", "vin", "cru", "premier", "premiere", "1er", "et", "a",
+                      "lieu", "dit", "trie", "tries", "fut", "futs", "franc", "pied", "brut", "nature", "extra",
+                      "jaune", "tastevinage"}
+# A lieu-dit named only with wine's words isn't told by a cuvée's name ("Brut Rosé" isn't "Rosé", "Grand Blanc" isn't
+# "Les Blancs", "Vieilles Vignes" isn't "Vieilles Vignes")
+PLAIN = GENERIC | {"crus", "cote", "cotes", "coteau", "coteaux", "cave", "caves", "cellier", "vigne", "village",
+                   "villages", "reserve", "tradition", "chardonnay", "sauvignon", "pinot", "gamay", "chenin", "syrah",
+                   "grenache"}
+# A colour in a cuvée's name is the wine's: a lieu-dit named only with one ("Rosé", "Les Blanches") is offered for a
+# still wine of another colour only (a red "Les Blanches"), never a white's "Grand Blanc" or a rosé's "Brut Rosé"
+COLOURS = {"rose": "rose", "roses": "rose", "blanc": "white", "blancs": "white", "blanche": "white",
+           "blanches": "white", "rouge": "red", "rouges": "red"}
+# Nor one named only with these with other words around it in the cuvée's: the land's, in many a cuvée's name
+# ("Montée des Roches", "La Colline Inspirée"), though "Le Bourg" alone is Le Bourg
+COMMON = PLAIN | set(COLOURS) | {"montagne", "roche", "vallee", "colline", "puits", "terre", "noyer", "serre", "travers", "comme",
+                  "foret", "paradis", "rue", "coulee", "chapitre", "chateau", "marne", "bourg", "folie", "varenne",
+                  "mont", "saint", "croix", "champ", "bois", "pierre", "fontaine", "moulin", "clou", "robin", "mission"}
+# A number after these is a barrel's or a lot's ("La Peyanne Fût 3")
+NUMBERED = {"fut", "futs", "lot", "cuve"}
 SURE_VINES = 0.5  # a lieu-dit mostly in vines: ticked when it's the only one
 
 
@@ -54,21 +72,40 @@ def core(tokens):
 
 
 def _index():
-    """{appellation (folded): [(store id, name, details, core words)]} for the store's lieux-dits"""
+    """({appellation (folded): [(store id, name, details, core words)]}, the same by village) for the store's
+    lieux-dits"""
     found = geo._lieux_dits()
     if found is None:
         return None
     ids, names, details, _, _ = found
-    out = defaultdict(list)
+    by_aoc, by_village = defaultdict(list), defaultdict(list)
     for sid, name, d in zip(ids, names, details):
         d = json.loads(d) if d else {}
         c = core(words(name))
-        if not c or len("".join(c)) < MIN_LETTERS:
+        if not c or len("".join(c)) < MIN_LETTERS or not _distinct(c, PLAIN - set(COLOURS)):
             continue
         for aoc in (d.get("aocs") or "").split("; "):
             if aoc:
-                out[" ".join(words(aoc))].append((sid, name, d, c))
-    return out
+                by_aoc[" ".join(words(aoc))].append((sid, name, d, c))
+        if d.get("commune_name"):
+            by_village[" ".join(words(d["commune_name"]))].append((sid, name, d, c))
+    return by_aoc, by_village
+
+
+def _lieux_of(by_aoc, appellation):
+    """An appellation's lieux-dits, by its name or its name's start ("Chassagne-Montrachet Premier Cru",
+    "Muscadet Sèvre et Maine sur Lie", "Beaujolais Villages": Chassagne-Montrachet's, ...)"""
+    aw = words(appellation)
+    for n in range(len(aw), 0, -1):
+        if " ".join(aw[:n]) in by_aoc:
+            return by_aoc[" ".join(aw[:n])]
+    return []
+
+
+def _within(cuvee_words, core_words, appellation_words):
+    """Whether a distinctive lieu-dit's name is in the cuvée's, other words around it ("La Caniere Tastevinage"): not
+    one named only with common words, nor one the appellation's name already says ("Corton Charlemagne Grand Cru")"""
+    return _at(cuvee_words, core_words) >= 0 and _distinct(core_words, COMMON) and _at(appellation_words, core_words) < 0
 
 
 def _at(hay, needle):
@@ -77,12 +114,36 @@ def _at(hay, needle):
     return next((i for i in range(len(hay) - len(needle) + 1) if [same(w) for w in hay[i:i + len(needle)]] == needle), -1)
 
 
+def _distinct(core_words, common):
+    """Whether a name has a word of its own, not one of `common`'s"""
+    return any(w not in common and same(w) not in common for w in core_words)
+
+
+def _colour(wine):
+    """A still wine's colour, as COLOURS says it; None for the others (sparkling, sweet, orange: a colour's word in
+    their names isn't told from a place's)"""
+    return {"red": "red", "white": "white", "rose": "rose"}.get(fold(wine.type or ""))
+
+
+def _for_colour(core_words, colour):
+    """Whether a lieu-dit can be a wine of this colour's: one named with a colour (and wine's words) only when it's
+    another colour's"""
+    named = {COLOURS[w] for w in core_words if w in COLOURS}
+    only = named and all(w in COLOURS or w in PLAIN or same(w) in PLAIN for w in core_words)
+    return not only or (colour is not None and colour not in named)
+
+
+def _filler(ws, generic):
+    """Whether these words of a cuvée's name say nothing of a place"""
+    return all(w in generic or (w.isdigit() and i and ws[i - 1] in NUMBERED) for i, w in enumerate(ws))
+
+
 def _matches(cuvee_words, name_words, core_words, generic=GENERIC):
     """Whether the cuvée names this lieu-dit, and how well: 2 its whole name ("Sur les Pouches"), 1 its name
     without the articles ("Pouches"), 0 not (or the rest of the cuvée's name isn't in `generic`)"""
     for whole, needle in ((2, name_words), (1, core_words)):
         i = _at(cuvee_words, needle)
-        if i >= 0 and all(w in generic for w in cuvee_words[:i] + cuvee_words[i + len(needle):]):
+        if i >= 0 and _filler(cuvee_words[:i], generic) and _filler(cuvee_words[i + len(needle):], generic):
             return whole
     return 0
 
@@ -97,10 +158,13 @@ def span(cuvee, name):
 def candidates(session):
     """[(the cuvée's wines, [(store id, name, details)])]: the cuvées without a vineyard named after a lieu-dit eligible
     for their appellation (the rest of the name generic: "Clos des Carmes", "La Charpentrie Blanc"), those naming its
-    whole name first ("Sur les Pouches" over "Les Pouches" for "Sur les Pouches"), the most in vines first."""
-    index = _index()
-    if index is None:
+    whole name first ("Sur les Pouches" over "Les Pouches" for "Sur les Pouches"), the most in vines first. Failing
+    that, less sure (details' "loose" says how, never ticked): one in the producer's village (a Vin de France, a
+    lieu-dit the cadastre puts in another appellation), or a distinctive one with other words around it."""
+    found = _index()
+    if found is None:
         return None
+    by_aoc, by_village = found
     wines = (session.query(Wine).options(joinedload(Wine.producer), joinedload(Wine.appellation))
              .filter(Wine.vineyard_id.is_(None), Wine.appellation_id.isnot(None), Wine.cuvee.isnot(None), Wine.cuvee != "")
              .all())
@@ -110,9 +174,19 @@ def candidates(session):
     out = []
     for group in cuvees.values():
         w = group[0]
-        lieux = index.get(" ".join(words(w.appellation.name)), [])
-        cw = words(w.cuvee)
+        colour = _colour(w)
+        lieux = [x for x in _lieux_of(by_aoc, w.appellation.name) if _for_colour(x[3], colour)]
+        village = [x for x in (by_village.get(" ".join(words(w.producer.village or "")), []) if w.producer else [])
+                   if _for_colour(x[3], colour)]
+        cw, aw = words(w.cuvee), words(w.appellation.name)
         found = [(sid, name, d, q) for sid, name, d, c in lieux if (q := _matches(cw, words(name), c))]
+        if not found:
+            found = [(sid, name, dict(d, loose="in the producer's village"), q)
+                     for sid, name, d, c in village if (q := _matches(cw, words(name), c))]
+        if not found:
+            # the longest names found first: "Les Grandes Rogeries" over "Les Rogeries"
+            found = [(sid, name, dict(d, loose="other words around it"), len(c))
+                     for sid, name, d, c in lieux if _within(cw, c, aw)]
         if not found:
             continue
         best = max(q for *_, q in found)  # the whole name when one is
@@ -122,8 +196,9 @@ def candidates(session):
 
 
 def sure(options):
-    """Ticked in the preview: the only lieu-dit it can be, mostly in vines"""
-    return len(options) == 1 and (options[0][2].get("vines") or 0) >= SURE_VINES
+    """Ticked in the preview: the only lieu-dit it can be, mostly in vines, its whole name the cuvée's in its
+    appellation"""
+    return len(options) == 1 and (options[0][2].get("vines") or 0) >= SURE_VINES and not options[0][2].get("loose")
 
 
 def vineyard(session, sid, name, details, region_id=None, label=None):

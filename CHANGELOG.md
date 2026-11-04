@@ -14,6 +14,12 @@
   grape or the village's adjective around the name are allowed. A preview to tick, each on its map; ticked when it's
   the only one and in a village the appellation names. *Lieux-dits for your wines* leaves those cuvées to it.
 - **A wine at random**: the home page's dice opens one of your wines, any you hold or have tasted.
+- **Lieux-dits for your wines** finds more: a premier or grand cru's lieu-dit by its village appellation (La
+  Boudriotte, *Chassagne-Montrachet Premier Cru*), and words saying nothing of the place around it (Fût 3, Franc de
+  Pied, Première Trie, Vin Jaune). Less sure, never ticked: a lieu-dit of the producer's village the cadastre puts in
+  another appellation (Les Greffieux, Hermitage), or a distinctive one with other words around it (La Peyanne Cuvée
+  Lou). A colour in a cuvée's name is the wine's own: a lieu-dit named only with one (Rosé, Les Blanches) is offered
+  for a still wine of another colour only, and one named only with wine's words (Vieilles Vignes, La Côte) never.
 
 ## v0.4.0
 

@@ -137,6 +137,51 @@ def test_lieu_dit_search(client, monkeypatch):
     assert client.get("/api/lookups/lieu-dit", params={"ref": "lieu_dit:nowhere"}).status_code == 404
 
 
+MORE = [  # a few more, for the less sure matches
+    ("21146:la-boudriotte", "La Boudriotte", {"commune_name": "Chassagne-Montrachet", "aocs": "Chassagne-Montrachet", "vines": 0.9}),
+    ("26347:les-greffieux", "Les Greffieux", {"commune_name": "Tain l Hermitage", "aocs": "Crozes-Hermitage", "vines": 0.9}),
+    ("49060:la-peyanne", "La Peyanne", {"commune_name": "Courchamps", "aocs": "Saumur", "vines": 0.9}),
+    ("49060:les-roches", "Les Roches", {"commune_name": "Courchamps", "aocs": "Saumur", "vines": 0.9}),
+    ("51367:rose", "Rosé", {"commune_name": "Le Mesnil sur Oger", "aocs": "Champagne", "vines": 0.9}),
+    ("49060:les-blanches", "Les Blanches", {"commune_name": "Courchamps", "aocs": "Saumur", "vines": 0.9}),
+]
+
+
+def test_less_sure_matches(client, monkeypatch):
+    """A premier cru's lieu-dit by its village appellation's name; one of the producer's village the cadastre puts in
+    another appellation; one with other words around it, but not a common word ("Montée des Roches"): all to check,
+    never ticked. A colour's name is the wine's: "Rosé" isn't a rosé's lieu-dit, "Les Blanches" is a red's only."""
+    import db
+    from main import app
+    session = next(app.dependency_overrides[db.get_session]())
+    store = STORE + MORE
+    monkeypatch.setattr(geo, "_lieux_dits", lambda: (
+        [s for s, _, _ in store], [n for _, n, _ in store], [json.dumps(d) for *_, d in store],
+        ['{"type":"Point","coordinates":[0,0]}'] * len(store), np.zeros((len(store), 4))))
+    fr = Region(name="France", country="France")
+    apps = {n: Appellation(name=n, region_obj=fr) for n in ("Chassagne-Montrachet Premier Cru", "Hermitage", "Saumur", "Champagne")}
+    chave = Producer(name="Chave", village="Tain-l'Hermitage", region_obj=fr)
+    other = Producer(name="Domaine", region_obj=fr)
+    wines = {cuvee: Wine(producer=chave if app == "Hermitage" else other, cuvee=cuvee, vintage="2020", type=t,
+                         appellation=apps[app], region_obj=fr)
+             for cuvee, app, t in [("La Boudriotte", "Chassagne-Montrachet Premier Cru", "White"),
+                                   ("Les Greffieux", "Hermitage", "Red"), ("La Peyanne Fût 3", "Saumur", "White"),
+                                   ("La Peyanne Cuvée Lou", "Saumur", "White"), ("Montée des Roches", "Saumur", "Red"),
+                                   ("Brut Rosé", "Champagne", "Bubbles Rose"), ("Les Blanches", "Saumur", "Red"),
+                                   ("Blanches", "Saumur", "White")]}
+    session.add_all(wines.values())
+    session.flush()
+    found = {wines_[0].cuvee: (options[0][1], options[0][2].get("loose"), ld.sure(options)) for wines_, options in ld.candidates(session)
+             if wines_[0].producer.name in ("Chave", "Domaine")}
+    assert found == {
+        "La Boudriotte": ("La Boudriotte", None, True),
+        "Les Greffieux": ("Les Greffieux", "in the producer's village", False),
+        "La Peyanne Fût 3": ("La Peyanne", None, True),  # a barrel's number says nothing of the place
+        "La Peyanne Cuvée Lou": ("La Peyanne", "other words around it", False),
+        "Les Blanches": ("Les Blanches", None, True),  # a red's
+    }
+
+
 def test_plurals():
     """A label's plural is the cadastre's singular, and back"""
     from lieux_dits import _matches, span, words, core
