@@ -494,14 +494,15 @@ def _lieux_dits(session, job):
         wine = f"{w.producer.name} {w.cuvee} ({w.appellation.name}), {_n(len(wines), 'vintage')}"
         for sid, name, d in options:
             share = f" · {round(d['vines'] * 100)}% in vines" if d.get("vines") is not None else ""
-            items.append(_item(f"{name} · {d.get('commune_name') or '?'}", f"{wine}{share}", f"/wines/{w.id}",
+            loose = f" · {d['loose']}" if d.get("loose") else ""
+            items.append(_item(f"{name} · {d.get('commune_name') or '?'}", f"{wine}{share}{loose}", f"/wines/{w.id}",
                                pick={"key": f"{w.id}={sid}", "group": w.producer.name, "on": ld.sure(options),
                                      "map": f"/api/wines/{w.id}/shapes?lieu_dit={sid}"}))
     if not job.commit:
         sure = sum(1 for _, options in found if ld.sure(options))
         return {"summary": f"{_n(len(found), 'cuvée')} name a lieu-dit of their appellation: {sure} sure (ticked), "
-                           f"{len(found) - sure} to check (a name found in several villages, or a lieu-dit mostly "
-                           f"not in vines).",
+                           f"{len(found) - sure} to check (a name found in several villages, a lieu-dit mostly "
+                           f"not in vines, in the producer's village or with other words around it).",
                 "items": items[:MAX_ITEMS]}
     keys, linked, cuvees = set(job.params.get("keys") or []), 0, 0
     for wines, options in found:
