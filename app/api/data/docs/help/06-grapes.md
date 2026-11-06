@@ -23,6 +23,6 @@ move. The filters keep their grapes; a relative they leave out is a small hollow
 
 ## A grape's page
 
-Its profile (climate, acidity, tannin, aromas, the classic regions), its description and where it's planted (Pl@ntGrape's
+Its profile (climate, acidity, tannin, aromas), its description and where it's planted (Pl@ntGrape's
 sheets, the University of Adelaide's hectares), and its **family tree**: grandparents, parents, offspring. The parentage is VIVC's (the Vitis International Variety
 Catalogue), confirmed by DNA.

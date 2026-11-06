@@ -240,16 +240,25 @@ test('a phone, the map full size: the cards over it scroll', async ({ page }) =>
 	await expect.poll(() => page.evaluate(() => document.querySelector('main')!.scrollTop)).toBeGreaterThan(0);
 });
 
-test("a grape's page: its description, where it's planted, the sources' credits", async ({ page }) => {
+test("a grape's page: its description in its one card, the family beside it, the sources' credits", async ({ page }) => {
 	const errors = errorsOf(page);
-	await page.goto('/grapes/Cabernet%20Franc');
-	const card = page.locator('section.about');
+	await page.goto('/grapes/Cabernet%20Sauvignon');
+	const card = page.locator('header.card section.about');
 	await expect(card.getByRole('heading', { name: 'Origin' })).toBeVisible();
+	await expect(page.getByText('Origin', { exact: true })).toHaveCount(1); // said once, not also as a fact
 	await expect(card.getByRole('heading', { name: 'Ripening' })).toHaveCount(0); // the vine's sections wait for "More"
 	await card.getByRole('button', { name: 'More' }).click();
 	await expect(card.getByRole('heading', { name: 'Ripening' })).toBeVisible();
 	await expect(card.getByText("Where it's planted")).toBeVisible();
 	await expect(card.getByText(/Pl@ntGrape, Catalogue of Vines/)).toBeVisible();
-	if (process.env.SHOT) await card.screenshot({ path: process.env.SHOT });
+	const side = (await page.locator('section.family').boundingBox())!;
+	const main = (await page.locator('header.card').boundingBox())!;
+	expect(side.x).toBeGreaterThan(main.x + main.width - 1);
+	expect(Math.abs(side.width - main.width)).toBeLessThan(2); // half each
+	const tabs = (await page.getByRole('tab', { name: /History/ }).boundingBox())!;
+	expect(tabs.x).toBeGreaterThan(main.x + main.width - 1); // your wines under the family
+	expect(tabs.y).toBeGreaterThan(side.y + side.height - 1);
+	await expect(page.locator('section.family a', { hasText: 'Cabernet Franc' })).toBeVisible();
+	if (process.env.SHOT) await page.screenshot({ path: process.env.SHOT, fullPage: true });
 	expect(errors).toEqual([]);
 });

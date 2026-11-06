@@ -28,7 +28,6 @@ id,name,aliases,color,origin,vivc,parents,climate,depth,acidity,acid_shape,acid_
 27,Pinot Gris,"Pinot Grigio, Pinot Sivi, Ruländer, Sivi Pinot, Szurkebarat, Grauburgunder",White,France,9275,Pinot Noir,Cool,Pale,Medium,"Linear, horizontal","Tingly, zesty, humming",,,,"Strone to tropical fruits, lemon","More complex, more body (if yields controlled, delayed harvest). Can be high in alcohol",France : Alsace (Noble)
 28,Poulsard,"Poulsard Noir, Ploussard",Red,France,9643,,Cool,,,,,,,,,,France: Jura
 29,Cinsault,"Ottavianello, Cinsaut",Red,France,2672,,Warm,Medium,High,,,Low,,,Red Fruit,Blended with Grenache for rose,"France : Southern Rhone, Southern France"
-30,Gewürtztraminer,,White,,,Savagnin,Cool-Moderate,Pale,Low-Med,Ball/point,Soft,,,,"Stone and tropical fruit (lychee), floral (rose)","Aromatic. More body, can be sweet. Unoaked. High alcohol frequent",France : Alsace (Noble)
 31,Pinot Meunier,"Meunier, Schwarzriesling, Müllerrebe",Red,France,9278,Pinot Noir,Cool,,,,,,,,,,France: Champagne
 32,Grolleau,Grolleau Noir,Red,France,5073,Gouais Blanc,Cool,,,,,,,,,,France: Loire
 33,Garganega,,White,Italy,4419,Grecanico Dorato,Moderate,Pale,High,Linear,"Consistent, steady",,,,"Green, citrus, stone fruits",Medium body,"Italy : Veneto : Soave, Soave Classico DOC, Reccioto"
@@ -45,7 +44,7 @@ id,name,aliases,color,origin,vivc,parents,climate,depth,acidity,acid_shape,acid_
 45,Saperavi,,Red,Georgia,10708,,Warm,,Moderate,Gums,"Sticky, grainy",,,,,,Georgia
 46,Marsanne,Marsanne Blanche,White,France,7434,,Moderate-Warm,Pale,Low-Medium,Circle,Bright,,,,,Richness and weight,"France : Northern Rhone, Southern Rhone"
 47,Albariño,Alvarinho,White,Portugal,15689,,Moderate,Pale,High,Wall to wall,"Zesty, tart",,,,"Citrus, stone fruits",Light body. Early Drinking,Spain : Rias Baixas
-48,Muscat,Moscato,White,France,8243,"Ingram'S Muscat, Chasselas",Moderate,Pale,Low-Med,Linear,Firm,,,,"Pear, peach, grape, floral",Usually sweet,"Italy : Asti Spumante, South Africa : Vin de Constance, France: Muscat de Beaumes-de-Venise. Australia: Rutherglen France : Alsace (Noble)"
+48,Muscat,Moscato,White,,,,Moderate,Pale,Low-Med,Linear,Firm,,,,"Pear, peach, grape, floral",Usually sweet,"Italy : Asti Spumante, South Africa : Vin de Constance, France: Muscat de Beaumes-de-Venise. Australia: Rutherglen France : Alsace (Noble)"
 49,Obaideh,,White,France,2455,"Gouais Blanc, Pinot Noir",,,,,,,,,,,Lebanon
 50,Aglianico,,Red,Italy,121,,Warm,Deep,High,,,High,,,Black fruit,"Oak and aged, earthy, forest floor. Best at Taurasi DOCG. Nebbiolo of the south","Italy : Campania, Basilicata (Taurasi DOCG)"
 51,Touriga Nacional,,Red,Portugal,12594,,Warm,Deep,High,,,High,,,Black fruit,"Hard to grow, good for blend",Portugal : Douro
@@ -81,7 +80,6 @@ id,name,aliases,color,origin,vivc,parents,climate,depth,acidity,acid_shape,acid_
 83,Grolleau Blanc,,White,France,5071,,Cool,,,,,,,,,,France: Loire
 84,Alicante Bouschet,"Alicante Henri Bouschet, Garnacha Tintorera",Red,France,304,"Petit Bouschet, Grenache",Warm,Deep,,,,,,,,Teinturier Variety : pulp is red !,Portucal : south
 85,Carignan,"Carignan Noir, Cariñena, Mazuelo, Samsó, Carignano",Red,France,2098,Castellana Blanca,Warm,Deep,High,,,High,Grainy,Gums,Black fruit,"Can lack finesse or fruit, used to produce enormous yields. Thick skin",France : Southern France. Spain :
-86,Valdigué,Napa Gamay,Red,,,,Warm,Medium,High,,,,,,,Gamay of Napa,California : Napa
 87,Fiano,,White,Italy,4124,,Moderate,Pale,High,Linear,Steely,,,,Stone to tropical fruits. Flowers,"Med-full body, can age on lees, can oak",Italy : Campania : Fiano di Avellino DOCG
 89,Pinot Blanc,"Beli Pinot, Feher Burgundi, Pinot Bianco, Pinot Bijeli, Weissburgunder",White,France,9272,Pinot Noir,Cool,Pale,Medium,Linear,Bright,,,,,,"Germany, Alsace"
 90,Nielluciu,,Red,,,,,,,,,,,,,,"Italy, Corsica"
@@ -311,7 +309,7 @@ id,name,aliases,color,origin,vivc,parents,climate,depth,acidity,acid_shape,acid_
 315,Garanoir,,Red,Switzerland,16870,"Gamay, Reichensteiner",,,,,,,,,,,
 316,Garrido Fino,,White,Spain,4470,Garrido Macho,,,,,,,,,,,
 317,Garró,,Red,Spain,7326,"Hebén, Graciano",,,,,,,,,,,
-318,Gewürztraminer,"Gewuerztraminer, Diseci Traminec, Traminac, Traminer Aromatico, Tramini",Pink,Germany,12609,,,,,,,,,,,,
+318,Gewürztraminer,"Gewuerztraminer, Diseci Traminec, Traminac, Traminer Aromatico, Tramini, Gewürtztraminer, Gewurtztraminer",Pink,Germany,12609,Savagnin,Cool-Moderate,Pale,Low-Med,Ball/point,Soft,,,,"Stone and tropical fruit (lychee), floral (rose)","Aromatic. More body, can be sweet. Unoaked. High alcohol frequent",France : Alsace (Noble)
 319,Girò di Cagliari Doc,Giro Nero,Red,Spain,4811,,,,,,,,,,,,
 320,Glera,,White,Italy,9741,Vulpea,Moderate,Pale,,,,,,,"Apple, melon",Can be off-dry,Prosecco
 321,Goldburger,,White,Austria,4868,"Borba Blanca, Orangetraube",,,,,,,,,,,
@@ -575,7 +573,7 @@ id,name,aliases,color,origin,vivc,parents,climate,depth,acidity,acid_shape,acid_
 579,Usakhelauri,Usakheluri,Red,Georgia,12796,,,,,,,,,,,,
 580,Uva di Troia,,Red,Italy,12819,"Bombino Bianco, Quagliano",,,,,,,,,,,
 581,Uva Rara,,Red,Italy,12830,Coccalona Nera,,,,,,,,,,,
-582,Valdiguié,,Red,France,12861,,,,,,,,,,,,
+582,Valdiguié,"Valdigué, Napa Gamay, Valdigue",Red,France,12861,,Warm,Medium,High,,,,,,,Gamay of Napa,California : Napa
 583,Valentino Nero,,Red,Italy,12872,"Chatus, Dolcetto",,,,,,,,,,,
 584,Vega,,White,Italy,12926,"Furmint, Malvasia Istriana",,,,,,,,,,,
 585,Verdeca,Verdea,White,Italy,12944,,,,,,,,,,,,

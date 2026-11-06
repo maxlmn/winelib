@@ -20,13 +20,15 @@
 		/** right column next to the facts, e.g. a map or the stats */
 		aside?: Snippet;
 		children?: Snippet;
+		/** under the columns, the card's whole width (a grape's description) */
+		below?: Snippet;
 		/** a band at the card's foot, part of it (a bottle's page: that bottle under its wine) */
 		footer?: Snippet;
 		/** just under the trail, in the title's column (a wine's style tags) */
 		under?: Snippet;
 	}
 
-	let { kind, icon, title, trail = [], regionColor, regionHref = null, actions, aside, children, footer, under }: Props = $props();
+	let { kind, icon, title, trail = [], regionColor, regionHref = null, actions, aside, children, below, footer, under }: Props = $props();
 
 	// The first item is the region when the page has one (regionColor / regionHref): named with its country
 	const parts = $derived(
@@ -59,6 +61,7 @@
 			{#if aside}<div class="aside">{@render aside()}</div>{/if}
 		</div>
 	{/if}
+	{#if below}{@render below()}{/if}
 	{#if footer}<div class="foot">{@render footer()}</div>{/if}
 </header>
 

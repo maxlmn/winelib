@@ -1,6 +1,6 @@
 <script lang="ts">
-	/** A grape's description and where it's planted, shipped with the app (see app/api/grape_about.py).
-	 *  Loaded after the page so it never holds it up; hidden when nothing is known of it. */
+	/** A grape's description and where it's planted, shipped with the app (see app/api/grape_about.py): the lower part
+	 *  of its page's card. Loaded after the page so it never holds it up; hidden when nothing is known of it. */
 	import { links } from '#lib/links.ts';
 	interface Section {
 		title: string;
@@ -53,8 +53,7 @@
 </script>
 
 {#if about?.found}
-	<section class="card about">
-		<h2>{about.name}</h2>
+	<section class="about">
 		{#each shown as s (s.title)}
 			<h3>{s.title}</h3>
 			<p>{s.text}</p>
@@ -106,12 +105,9 @@
 
 <style>
 	.about {
-		padding: 16px 18px;
-		margin-bottom: 14px;
-	}
-	h2 {
-		font-size: 15px;
-		margin: 0;
+		margin-top: 16px;
+		padding-top: 4px;
+		border-top: 1px solid var(--border);
 	}
 	h3 {
 		font-size: 12px;
