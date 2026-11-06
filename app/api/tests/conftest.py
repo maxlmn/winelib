@@ -21,7 +21,6 @@ import db  # noqa: E402
 import geo  # noqa: E402
 import paths  # noqa: E402
 import settings  # noqa: E402
-import wiki  # noqa: E402
 from main import app  # noqa: E402
 
 
@@ -79,7 +78,6 @@ def client(module_store, tmp_path):
     engine = create_engine(f"sqlite:///{tmp_path / 'test.db'}", connect_args={"check_same_thread": False})
     Session = sessionmaker(bind=engine)
     geo.reset()
-    wiki.reset()
     _forget_bi()
 
     def get_session():
@@ -96,7 +94,6 @@ def client(module_store, tmp_path):
     app.dependency_overrides.pop(db.get_session, None)
     settings.apply(TEST_SETTINGS)
     geo.reset()
-    wiki.reset()
     _forget_bi()
     engine.dispose()
 

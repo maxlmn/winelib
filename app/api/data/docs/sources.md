@@ -12,6 +12,8 @@ The regions, appellations, grapes and vineyards every installation starts with.
 | Wine regions and their colours | WineLib's own, each appellation filed by its outline | |
 | Grape varieties, their names and aliases | [Wikidata](https://www.wikidata.org) (grape varieties with an English Wikipedia article) | CC0 |
 | Grapes' berry colour, origin, parents, synonyms | [VIVC](https://www.vivc.de), the Vitis International Variety Catalogue (Julius Kühn-Institut) | facts, cited |
+| Grape descriptions (origin, ripening, growing, wines) | [Pl@ntGrape](https://plantgrape.plantnet-project.org), Catalogue of Vines Cultivated in France, IFV – INRAE – Institut Agro \| Montpellier, 2009-2020 | CC BY-NC-SA 4.0, not the code's MIT: `app/api/data/grapes/` |
+| Grapes' planted areas (hectares by country, 2000 to 2023) | Anderson, Nelgen and Puga, [Database of Regional, National and Global Winegrape Bearing Areas by Variety, 2000 to 2023](https://doi.org/10.25909/32870405.v1), University of Adelaide | CC BY 4.0, in the same file, so under its licence |
 | Grape tasting profiles (climate, acidity, tannin, aromas, classic regions) | WineLib's own notes; the classic regions follow the WSET Level 2 syllabus | |
 | French premier crus (vineyards) | INAO's parcel delimitation (above) | Licence Ouverte 2.0 |
 | French lieux-dits (the named places among the vines) | Etalab's cadastre (DGFiP), the *lieux-dits* layer on [cadastre.data.gouv.fr](https://cadastre.data.gouv.fr); their appellations from INAO's parcel delimitation, Champagne's from INAO's geographic areas and its vines from [OpenStreetMap](https://www.openstreetmap.org/copyright)'s vineyards and IGN's RPG (the farmers' declared parcels) | Licence Ouverte 2.0; Champagne's vines ODbL (© OpenStreetMap contributors) |
@@ -29,7 +31,6 @@ lieux-dits, and their limits*.
 
 ## Looked up while you use the app
 
-- **Wikipedia**: a grape's summary and photo on its page (text under CC BY-SA 4.0; each links to its article).
 - **OpenStreetMap Nominatim**: a place's coordinates from its address or a Google Maps link (© OpenStreetMap
   contributors, ODbL).
 - **OpenFreeMap**: the Plain base map's vector tiles (© OpenMapTiles, data © OpenStreetMap contributors, ODbL);
