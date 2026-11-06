@@ -46,13 +46,24 @@ def _data():
         return _loaded
 
 
+def _find(grape):
+    if _fold(grape.name) in FAMILIES:
+        return None
+    by_vivc, by_name, _ = _data()
+    return by_vivc.get(grape.vivc) or by_name.get(_fold(grape.name))
+
+
+def tells_origin(grape):
+    """Whether its sheet has an Origin section."""
+    found = _find(grape) or {}
+    return any(s["title"] == "Origin" for s in (found.get("sheet") or {}).get("sections", []))
+
+
 def about(grape):
     """What's known of a grape, found by its VIVC number, else its name: {"found": True, "name", "sheet", "planted",
     "credits"} (the credits of the sources it has), or {"found": False}."""
-    if _fold(grape.name) in FAMILIES:
-        return {"found": False}
-    by_vivc, by_name, sources = _data()
-    found = by_vivc.get(grape.vivc) or by_name.get(_fold(grape.name))
+    found = _find(grape)
+    sources = _data()[2]
     if not found:
         return {"found": False}
     return {"found": True, "name": found.get("name") or grape.name, "sheet": found.get("sheet"),

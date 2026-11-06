@@ -17,7 +17,7 @@ DATA = {"sources": [{"key": "sheet", "name": "Pl@ntGrape", "licence": "CC BY-NC-
 
 
 def seed(s):
-    s.add_all([Varietal(id=1, name="Heida", vivc=10), Varietal(id=2, name="Bága", vivc=99),
+    s.add_all([Varietal(id=1, name="Heida", vivc=10, origin="France"), Varietal(id=2, name="Bága", vivc=99, origin="Portugal"),
                Varietal(id=3, name="Nothing Known"), Varietal(id=4, name="Muscat", vivc=10)])
 
 
@@ -39,6 +39,12 @@ def test_found_by_vivc_then_name(client, data):
     assert about["sheet"] is None and [c["name"] for c in about["credits"]] == ["Adelaide"]  # only its sources' credits
     assert client.get("/api/grapes/3/about").json() == {"found": False}
     assert client.get("/api/grapes/4/about").json() == {"found": False}  # a family: not its one member's sheet
+
+
+def test_its_origin_said_once(client, data):
+    data.write_text(json.dumps(DATA), encoding="utf-8")
+    assert client.get("/api/grapes/1").json()["origin"] is None  # its sheet's Origin says it
+    assert client.get("/api/grapes/2").json()["origin"] == "Portugal"  # no sheet
 
 
 def test_without_the_file(client, data):

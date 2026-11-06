@@ -3,12 +3,12 @@
 	import { regionLabel } from '#lib/regions.svelte.ts';
 	import Icon from '#lib/components/Icon.svelte';
 	import { FALLBACK_REGION, TYPE_COLORS } from '#lib/colors.ts';
-	import AboutCard from '#lib/components/details/AboutCard.svelte';
 	import CellarSection from '#lib/components/details/CellarSection.svelte';
 	import RegionStrip from '#lib/components/RegionStrip.svelte';
 	import { bottlePips, sortedByRegion, tastingPips } from '#lib/pips.ts';
 	import DetailHeader from '#lib/components/details/DetailHeader.svelte';
 	import Facts from '#lib/components/details/Facts.svelte';
+	import GrapeAbout from '#lib/components/details/GrapeAbout.svelte';
 	import GrapeFamily from '#lib/components/details/GrapeFamily.svelte';
 	import { BERRY_COLORS } from '#lib/api/grapes.ts';
 	import Tabs from '#lib/components/details/Tabs.svelte';
@@ -53,13 +53,19 @@
 	{#if x.bottles}<span class="badge num" title="{plural(x.bottles, 'bottle')} in the cellar">{x.bottles}</span>{/if}
 {/snippet}
 
+{#snippet about()}
+	<GrapeAbout src={`/api/grapes/${encodeURIComponent(String(g.id))}/about`} />
+{/snippet}
+
 {#key g.id}
+	<div class="layout">
 	<DetailHeader
 		kind={colour ? `Grape · ${colour}` : 'Grape'}
 		icon="grape"
 		title={g.name}
 		regionColor={colour ? (TYPE_COLORS[colour] ?? BERRY_COLORS[colour] ?? null) : null}
 		aside={g.regions.length ? regions : undefined}
+		below={about}
 	>
 		{#if g.tastings.length || g.cellar.length}
 			<!-- Where yours come from: a pip per bottle and per tasting, in its region's color -->
@@ -76,19 +82,12 @@
 			<div class="profile">
 				<Facts items={[...(otherNames.length ? [{ label: 'Also known as', value: otherNames.join(', ') }] : []), ...p.facts]} />
 				{#if p.notes}<p class="notes">{p.notes}</p>{/if}
-				{#if p.regions.length}
-					<details class="fold">
-						<summary>Classic regions ({p.regions.length})</summary>
-						<ul class="classic">{#each p.regions as r (r)}<li>{r}</li>{/each}</ul>
-					</details>
-				{/if}
 			</div>
 		{/if}
 	</DetailHeader>
 
+	<div class="side">
 	{#if hasFamily}<GrapeFamily name={g.name} family={g.family} vivc={g.vivc} />{/if}
-
-	<AboutCard src={`/api/grapes/${encodeURIComponent(String(g.id))}/about`} />
 
 	<Tabs
 		tabs={[
@@ -122,9 +121,26 @@
 			{/if}
 		{/snippet}
 	</Tabs>
+	</div>
+	</div>
 {/key}
 
 <style>
+	/* the grape's card, and beside it its family and your wines, half each; one under the other when the page is narrow */
+	.layout {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: 0 14px;
+		align-items: start;
+	}
+	.side {
+		min-width: 0;
+	}
+	@media (max-width: 1000px) {
+		.layout {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
 	.palette {
 		margin-top: 14px;
 	}
@@ -149,19 +165,6 @@
 		margin: 10px 0 0;
 		font-size: 13px;
 		line-height: 1.5;
-	}
-	.fold {
-		margin-top: 10px;
-	}
-	.fold summary {
-		cursor: pointer;
-		color: var(--accent);
-		font-size: 13px;
-	}
-	.classic {
-		margin: 6px 0 0;
-		padding-left: 18px;
-		font-size: 13px;
 	}
 	.only {
 		display: inline-flex;

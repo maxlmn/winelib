@@ -460,7 +460,8 @@ def grape_detail(key: str, session: Session = Depends(get_session)):
     import grape_family
     return {
         "id": g.id, "name": g.name, "aliases": g.aliases,
-        "color": g.color, "origin": g.origin,
+        # its sheet says where it's from, and better: not said twice on its page
+        "color": g.color, "origin": None if grape_about.tells_origin(g) else g.origin,
         "vivc": {"number": g.vivc, "url": grape_family.VIVC_PAGE.format(g.vivc)} if g.vivc else None,
         "family": grape_family.families(session).family(g.id),
         "profile": prof,
