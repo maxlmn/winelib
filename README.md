@@ -219,4 +219,5 @@ in [`app/api/data/docs/sources.md`](app/api/data/docs/sources.md).
 
 ## Licence
 
-[MIT](LICENSE). The data keeps its own licences (see above).
+[MIT](LICENSE). The data keeps its own licences (see above); the grapes' descriptions (`app/api/data/grapes/`) are
+CC BY-NC-SA 4.0, so not for commercial use: anyone selling WineLib must remove that folder (the app works without it).

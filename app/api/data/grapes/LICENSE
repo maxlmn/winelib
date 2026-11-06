@@ -1,0 +1,11 @@
+grapes.json, in this folder, is licensed under CC BY-NC-SA 4.0, not under WineLib's MIT licence:
+https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+It may not be used commercially. Anyone selling WineLib must remove it: the app works without it,
+its grapes' pages then show their profile only.
+
+Adapted from the sources below (sections selected, areas summarised):
+
+Pl@ntGrape (CC BY-NC-SA 4.0): Pl@ntGrape, Catalogue of Vines Cultivated in France, IFV – INRAE – Institut Agro | Montpellier, 2009-2020. https://plantgrape.plantnet-project.org
+
+University of Adelaide (CC BY 4.0): Anderson, Nelgen and Puga, Database of Regional, National and Global Winegrape Bearing Areas by Variety, 2000 to 2023, Wine Economics Research Centre, University of Adelaide. https://doi.org/10.25909/32870405.v1

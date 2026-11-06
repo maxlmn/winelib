@@ -239,3 +239,17 @@ test('a phone, the map full size: the cards over it scroll', async ({ page }) =>
 	await page.mouse.wheel(0, 300);
 	await expect.poll(() => page.evaluate(() => document.querySelector('main')!.scrollTop)).toBeGreaterThan(0);
 });
+
+test("a grape's page: its description, where it's planted, the sources' credits", async ({ page }) => {
+	const errors = errorsOf(page);
+	await page.goto('/grapes/Cabernet%20Franc');
+	const card = page.locator('section.about');
+	await expect(card.getByRole('heading', { name: 'Origin' })).toBeVisible();
+	await expect(card.getByRole('heading', { name: 'Ripening' })).toHaveCount(0); // the vine's sections wait for "More"
+	await card.getByRole('button', { name: 'More' }).click();
+	await expect(card.getByRole('heading', { name: 'Ripening' })).toBeVisible();
+	await expect(card.getByText("Where it's planted")).toBeVisible();
+	await expect(card.getByText(/Pl@ntGrape, Catalogue of Vines/)).toBeVisible();
+	if (process.env.SHOT) await card.screenshot({ path: process.env.SHOT });
+	expect(errors).toEqual([]);
+});

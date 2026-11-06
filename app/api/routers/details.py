@@ -19,7 +19,7 @@ import plugins
 import lieux_dits
 import scores
 import style_tags
-import wiki
+import grape_about
 from db import same, Appellation, Bottle, Place, Producer, Region, RestaurantVisit, TastingNote, Varietal, Vineyard, Wine, WineGrape, get_session, same_cuvee
 
 router = APIRouter()
@@ -560,12 +560,12 @@ def vintage_detail(year: str, session: Session = Depends(get_session)):
     }
 
 
-# --- About (Wikipedia) -----------------------------------------------------------------------------------
+# --- About (data/grapes/) ---------------------------------------------------------------------------------
 
 @router.get("/api/grapes/{key}/about")
-def grape_about(key: str, session: Session = Depends(get_session)):
-    """A description and a photo of the grape, from Wikipedia (cached; separate so pages don't wait)."""
-    return wiki.about("grape", _grape_by_key(session, key).name)
+def about_grape(key: str, session: Session = Depends(get_session)):
+    """Its description and where it's planted (grape_about.py)."""
+    return grape_about.about(_grape_by_key(session, key))
 
 
 # --- Map shapes ------------------------------------------------------------------------------------------

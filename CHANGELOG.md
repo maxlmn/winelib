@@ -20,6 +20,10 @@
   another appellation (Les Greffieux, Hermitage), or a distinctive one with other words around it (La Peyanne Cuvée
   Lou). A colour in a cuvée's name is the wine's own: a lieu-dit named only with one (Rosé, Les Blanches) is offered
   for a still wine of another colour only, and one named only with wine's words (Vieilles Vignes, La Côte) never.
+- **Grape descriptions shipped with the app, no more Wikipedia**: a grape's page shows Pl@ntGrape's sheet (origin, its
+  wines, ripening, growing, diseases) and where it's planted (the University of Adelaide's hectares to 2023: world
+  rank, top countries and regions). Nothing is looked up while you use the app, and the grapes' photos are gone. That
+  data has its own licence (CC BY-NC-SA 4.0: not for commercial use, `app/api/data/grapes/LICENSE`), not the code's MIT.
 
 ## v0.4.0
 
