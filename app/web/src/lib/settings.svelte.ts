@@ -61,10 +61,12 @@ export interface MapCredit {
 	credit: string | null;
 	url: string | null;
 }
-export const integrations = $state<{ list: Integration[]; plugins: PluginInfo[]; mapCredits: MapCredit[] }>({
+export const integrations = $state<{ list: Integration[]; plugins: PluginInfo[]; mapCredits: MapCredit[]; esriKey: string | null }>({
 	list: [],
 	plugins: [],
-	mapCredits: []
+	mapCredits: [],
+	/** ESRI_API_KEY: Esri's World Imagery outside France on the satellite view (without it, the map stays plain there) */
+	esriKey: null
 });
 /** Whether an integration is set up (its parts of the pages show only then) */
 export const configured = (id: string) => integrations.list.some((i) => i.id === id && i.configured);
@@ -78,6 +80,7 @@ export async function loadSettings(fetch: typeof globalThis.fetch) {
 			integrations.list = body.integrations;
 			integrations.plugins = body.plugins;
 			integrations.mapCredits = body.map_credits ?? [];
+			integrations.esriKey = body.esri_key ?? null;
 		}
 	} catch {
 		// keep the defaults: a settings hiccup shouldn't take the whole app down
