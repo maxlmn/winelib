@@ -42,6 +42,12 @@ def integrations():
              "what": "Fill from photos in the bottle form: the labels' photos (front and back) read by Claude. The "
                      "photos are sent to Anthropic; billed to your key (about a cent or two a bottle).",
              "needs": "An API key from console.anthropic.com: ANTHROPIC_API_KEY in .secrets.env."},
+            {"id": "esri", "name": "Esri World Imagery", "configured": bool(esri_key()),
+             "what": "The satellite view outside France (IGN's photos cover France without a key; elsewhere the map "
+                     "stays plain). Your browser asks Esri for the photos with the key: on Esri's site, limit it to "
+                     "World Imagery and your WineLib's address. Esri's free tier is about 2 million tiles a month.",
+             "needs": "An ArcGIS Location Platform API key (location.arcgis.com, free account): ESRI_API_KEY in "
+                      ".secrets.env."},
             {"id": "lwin", "name": "LWIN list", "configured": os.path.exists(match_lwin.LWIN_DB),
              "what": "LWIN suggestions in the wine form and Maintenance › LWIN codes (needed for market prices).",
              "needs": "Liv-ex's LWIN file, indexed on a PC (python app/api/tasks/match_lwin.py --build-index) and "
@@ -49,7 +55,14 @@ def integrations():
         ],
         "plugins": plugins.loaded,
         "map_credits": map_pack.credits(),  # the installed map outlines' licences and credits
+        # Esri's terms want a key for World Imagery; the browser fetches the tiles, so it gets the key (only this one)
+        "esri_key": esri_key() or None,
     }
+
+
+def esri_key():
+    import os
+    return os.environ.get("ESRI_API_KEY", "").strip()
 
 
 @router.get("/api/settings/defaults")

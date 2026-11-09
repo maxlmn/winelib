@@ -37,7 +37,9 @@ lieux-dits, and their limits*.
   OpenStreetMap France's tiles when it can't be reached.
 - **IGN's aerial photos** (BD ORTHO, through the Géoplateforme, Licence Ouverte 2.0): the satellite base map in
   France.
-- **Esri World Imagery**: the satellite base map elsewhere (© Esri and its data providers).
+- **Esri World Imagery** (with your own key, `ESRI_API_KEY`: Esri's terms ask for one): the satellite base map
+  elsewhere (Powered by Esri; © Esri, Maxar, Earthstar Geographics and the GIS User Community). Without a key the
+  satellite view is IGN's photos in France and the plain map elsewhere.
 - **WineLabs** and **Bordeaux Index** (with your keys): market prices. Critics' scores are the ones you add or
   import yourself.
 - **CellarTracker** and **Vivino**: only your own exports, when you import them.

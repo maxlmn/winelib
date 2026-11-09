@@ -98,9 +98,13 @@ def test_new_installation(client):
 
 def test_integrations(client, monkeypatch):
     for key in ("BI_EMAIL", "BI_PASSWORD", "BI_SALES_LEDGER", "BI_PURCHASE_LEDGER", "WINELABS_API_KEY",
-                "ANTHROPIC_API_KEY"):
+                "ANTHROPIC_API_KEY", "ESRI_API_KEY"):
         monkeypatch.delenv(key, raising=False)
-    found = {i["id"]: i for i in client.get("/api/integrations").json()["integrations"]}
-    assert set(found) == {"bordeaux_index", "winelabs", "anthropic", "lwin"} and not found["bordeaux_index"]["configured"]
+    body = client.get("/api/integrations").json()
+    found = {i["id"]: i for i in body["integrations"]}
+    assert body["esri_key"] is None and not found["esri"]["configured"]  # no key: no Esri photos
+    assert set(found) == {"bordeaux_index", "winelabs", "anthropic", "esri", "lwin"} and not found["bordeaux_index"]["configured"]
+    monkeypatch.setenv("ESRI_API_KEY", " e ")
+    assert client.get("/api/integrations").json()["esri_key"] == "e"
     monkeypatch.setenv("WINELABS_API_KEY", "k")
     assert {i["id"]: i["configured"] for i in client.get("/api/integrations").json()["integrations"]}["winelabs"]

@@ -6,7 +6,9 @@ The world's appellations, down to the vineyard, with your wines on them.
 
 It opens on one outline per wine region, in the region's colour. Click a region (or pick it in the list) to see its
 appellations and vineyards; tick the ones to draw. **My cellar** and **My tastings** keep only where your wines come
-from. **Plain** and **Satellite** change the background.
+from. **Plain** and **Satellite** change the background. Satellite is IGN's aerial photos in France; elsewhere it
+needs a free Esri key (`ESRI_API_KEY` in `.secrets.env`, see Settings › Integrations), else the map stays plain
+there.
 
 ## On every map
 

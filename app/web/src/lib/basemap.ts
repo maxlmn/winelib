@@ -1,27 +1,29 @@
-import type { LayerSpecification, Map as MlMap, RasterLayerSpecification, RasterTileSource } from 'maplibre-gl';
+import type { LayerSpecification, Map as MlMap, RasterLayerSpecification } from 'maplibre-gl';
 import { GLYPHS, VECTOR_IDS, VECTOR_SOURCE, vectorLayers, vectorPaint } from '#lib/vectorBase.ts';
 // MapLibre resolves its worker next to its own module, which bundling breaks: point it at Vite's copy
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+import { integrations } from './settings.svelte.ts';
 
 export type Basemap = 'plain' | 'satellite';
 
-/** The raster basemaps' tiles. Plain is drawn from vector tiles (vectorBase.ts); OpenStreetMap France's raster tiles
- * are its fallback when OpenFreeMap can't be reached. */
-function basemapTiles(kind: Basemap): { tiles: string[]; attribution: string } {
-	if (kind === 'satellite')
-		return { tiles: ['sat://{z}/{x}/{y}'], attribution: '© IGN — BD ORTHO (France) · © Esri, Maxar, Earthstar Geographics' };
-	return {
-		tiles: ['a', 'b', 'c'].map((s) => `https://${s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png`),
-		attribution: '© OpenStreetMap France · © OpenStreetMap contributors'
-	};
-}
+/** Esri's World Imagery needs a key (its terms): ESRI_API_KEY, from GET /api/integrations. Without one, the
+ * satellite view is IGN's photos in France over the plain map, which shows elsewhere. */
+const esriKey = () => integrations.esriKey;
+
+/** Plain is drawn from vector tiles (vectorBase.ts); OpenStreetMap France's raster tiles (the `base` source) are its
+ * fallback when OpenFreeMap can't be reached. Satellite is its own raster source (`sat`), over the vector layers. */
+const OSM_TILES = ['a', 'b', 'c'].map((s) => `https://${s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png`);
+const OSM_CREDIT = '© OpenStreetMap France · © OpenStreetMap contributors';
+const satCredit = () =>
+	esriKey()
+		? '© IGN — BD ORTHO (France) · Powered by Esri · Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+		: '© IGN — BD ORTHO (France)';
 
 type RasterPaint = NonNullable<RasterLayerSpecification['paint']>;
 
 /** The raster fallback for Plain is a muted OpenStreetMap: mostly grey in light mode, inverted (min > max) and
  * hue-turned back in dark mode. */
-function basemapPaint(kind: Basemap, dark: boolean): RasterPaint {
-	if (kind !== 'plain') return { 'raster-saturation': 0, 'raster-brightness-min': 0, 'raster-brightness-max': 1, 'raster-hue-rotate': 0, 'raster-contrast': 0 };
+function osmPaint(dark: boolean): RasterPaint {
 	return dark
 		? { 'raster-saturation': -0.75, 'raster-brightness-min': 0.85, 'raster-brightness-max': 0.08, 'raster-hue-rotate': 180, 'raster-contrast': 0.1 }
 		: { 'raster-saturation': -0.8, 'raster-brightness-min': 0.12, 'raster-brightness-max': 1, 'raster-hue-rotate': 0, 'raster-contrast': -0.1 };
@@ -29,13 +31,20 @@ function basemapPaint(kind: Basemap, dark: boolean): RasterPaint {
 
 // Satellite: IGN's aerial photos in France (BD ORTHO, sharper and newer than Esri's), Esri's elsewhere, through one
 // `sat://` source that asks for one tile per place: IGN's where it covers (as it comes: most tiles), Esri's outside
-// its box, and at a border (IGN's tile partly blank white) Esri's under IGN's, the white made see-through.
+// its box, and at a border (IGN's tile partly blank white) Esri's under IGN's, the white made see-through. Without an
+// Esri key, "Esri's" is a see-through tile: the plain map, kept on under the photos then, shows there.
 const IGN_BOUNDS: [number, number, number, number] = [-5.3, 41.3, 9.7, 51.2];
 const IGN_URL = (z: string, x: string, y: string) =>
 	'https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal' +
 	`&TILEMATRIXSET=PM&FORMAT=image/jpeg&TILEMATRIX=${z}&TILECOL=${x}&TILEROW=${y}`;
-const ESRI_URL = (z: string, x: string, y: string) =>
-	`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`;
+const ESRI_URL = (z: string, x: string, y: string, key: string) =>
+	`https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}?token=${encodeURIComponent(key)}`;
+
+/** A see-through tile (PNG), made once; each tile gets its own copy (MapLibre hands the bytes to its worker, which
+ * empties them) */
+let blankPng: Promise<ArrayBuffer> | null = null;
+const blank = async () =>
+	(await (blankPng ??= new OffscreenCanvas(256, 256).convertToBlob({ type: 'image/png' }).then((b) => b.arrayBuffer()))).slice(0);
 
 /** A tile's box (west, south, east, north) */
 function tileBox(z: number, x: number, y: number): [number, number, number, number] {
@@ -66,7 +75,8 @@ async function satTile(params: { url: string }, abort: AbortController) {
 	const [z, x, y] = params.url.replace('sat://', '').split('/');
 	const [w, s, e, n] = tileBox(+z, +x, +y);
 	const [bw, bs, be, bn] = IGN_BOUNDS;
-	const esri = () => bytesOf(ESRI_URL(z, x, y), abort);
+	const key = esriKey();
+	const esri = () => (key ? bytesOf(ESRI_URL(z, x, y, key), abort) : blank());
 	if (e < bw || w > be || n < bs || s > bn) return { data: await esri() };
 	let res: Response;
 	try {
@@ -110,6 +120,13 @@ async function satTile(params: { url: string }, abort: AbortController) {
 }
 let satRegistered = false;
 
+/** Which layers show: the vector map on Plain, and under the photos when there's no Esri key (where they stop);
+ * OpenStreetMap's raster tiles in its place when OpenFreeMap is down; the photos on Satellite */
+function shownLayers(kind: Basemap, vectorDown: boolean) {
+	const vector = (kind === 'plain' || !esriKey()) && !vectorDown;
+	return { vector, osm: kind === 'plain' && vectorDown, sat: kind === 'satellite' };
+}
+
 // Per map: the basemap shown, and whether OpenFreeMap failed (Plain then falls back to raster tiles)
 const state = new WeakMap<MlMap, { kind: Basemap; dark: boolean; vectorDown: boolean }>();
 
@@ -119,14 +136,13 @@ export function setBasemap(map: MlMap, kind: Basemap, dark: boolean) {
 	st.kind = kind;
 	st.dark = dark;
 	state.set(map, st);
-	const vector = kind === 'plain' && !st.vectorDown;
-	for (const id of VECTOR_IDS) map.setLayoutProperty(id, 'visibility', vector ? 'visible' : 'none');
-	if (vector) for (const [id, k, v] of vectorPaint(dark)) map.setPaintProperty(id, k as keyof RasterPaint, v as number);
-	map.setLayoutProperty('base', 'visibility', vector ? 'none' : 'visible');
-	if (!vector) {
-		(map.getSource('base') as RasterTileSource).setTiles(basemapTiles(kind).tiles);
-		for (const [k, v] of Object.entries(basemapPaint(kind, dark))) map.setPaintProperty('base', k as keyof RasterPaint, v);
-	}
+	const on = shownLayers(kind, st.vectorDown);
+	const show = (id: string, yes: boolean) => map.setLayoutProperty(id, 'visibility', yes ? 'visible' : 'none');
+	for (const id of VECTOR_IDS) show(id, on.vector);
+	if (on.vector) for (const [id, k, v] of vectorPaint(dark)) map.setPaintProperty(id, k as keyof RasterPaint, v as number);
+	show('base', on.osm);
+	if (on.osm) for (const [k, v] of Object.entries(osmPaint(dark))) map.setPaintProperty('base', k as keyof RasterPaint, v);
+	show('sat', on.sat);
 }
 
 /** The resolved app theme (see theme.svelte.ts), not just the OS preference. */
@@ -150,7 +166,7 @@ export async function createMap(
 		satRegistered = true;
 	}
 	const dark = isDark();
-	const vector = basemap === 'plain';
+	const on = shownLayers(basemap, false);
 	const shown = (on: boolean) => ({ visibility: on ? ('visible' as const) : ('none' as const) });
 	const map = new maplibre.Map({
 		container,
@@ -159,11 +175,18 @@ export async function createMap(
 			glyphs: GLYPHS,
 			sources: {
 				ofm: { type: 'vector', url: VECTOR_SOURCE },
-				base: { type: 'raster', tileSize: 256, maxzoom: 19, ...basemapTiles(basemap) }
+				base: { type: 'raster', tileSize: 256, maxzoom: 19, tiles: OSM_TILES, attribution: OSM_CREDIT },
+				// No Esri key: no tile asked for outside IGN's box, so the plain map shows there (a see-through tile
+				// would leave MapLibre drawing the zoom above it, stretched)
+				sat: {
+					type: 'raster', tileSize: 256, maxzoom: 19, tiles: ['sat://{z}/{x}/{y}'], attribution: satCredit(),
+					...(esriKey() ? {} : { bounds: IGN_BOUNDS })
+				}
 			},
 			layers: [
-				...vectorLayers(dark).map((l) => ({ ...l, layout: { ...l.layout, ...shown(vector) } }) as LayerSpecification),
-				{ id: 'base', type: 'raster', source: 'base', paint: basemapPaint(basemap, dark), layout: shown(!vector) }
+				...vectorLayers(dark).map((l) => ({ ...l, layout: { ...l.layout, ...shown(on.vector) } }) as LayerSpecification),
+				{ id: 'base', type: 'raster', source: 'base', paint: osmPaint(dark), layout: shown(on.osm) },
+				{ id: 'sat', type: 'raster', source: 'sat', layout: shown(on.sat) }
 			]
 		},
 		...view,

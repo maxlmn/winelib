@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **The satellite view outside France needs your own Esri key** (`ESRI_API_KEY` in `.secrets.env`, a free ArcGIS
+  Location Platform account): Esri's terms don't allow its World Imagery without one, which WineLib used. Without
+  a key, Satellite is IGN's photos in France over the plain map, which shows elsewhere. Settings › Integrations
+  says how to get one.
 - **Fill from photos**: a new bottle from photos of its labels, the front and (optional) the back, taken or picked on
   the bottle form; Claude reads the producer, cuvée, vintage, appellation, colour, size and a sparkling wine's
   disgorgement, and the reading is matched against your cellar as *Fill from text*'s is (the wine you have, a new
