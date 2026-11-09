@@ -1,7 +1,7 @@
 // The static demo's data: opens every page of a running WineLib (a demo cellar's) in Chromium, following its links,
 // and saves each answer the pages get from the API, with an index the demo build reads (src/lib/demo.ts).
 //
-//     node scripts/crawl-demo.mjs --url http://127.0.0.1:8124 --out ../../demo-data [--max 4000]
+//     node scripts/crawl-demo.mjs --url http://127.0.0.1:8124 --out ../../demo-data [--max 4000] [--tabs 6]
 //
 // Forms (new, edit) and Settings' Maintenance are left out: the demo saves nothing. Search isn't crawled (its
 // answers depend on what's typed): the palette's own pages are, through the links.
@@ -29,8 +29,8 @@ const index = {};
 let bytes = 0;
 
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-page.on('response', async (res) => {
+const tabs = +arg('tabs', '6'); // pages open at once
+const record = async (res) => {
 	const req = res.request();
 	const url = new URL(res.url());
 	if (req.method() !== 'GET' || url.origin !== root || !url.pathname.startsWith('/api/') || res.status() !== 200) return;
@@ -48,30 +48,45 @@ page.on('response', async (res) => {
 	} catch {
 		delete index[key]; // the page moved on before its body came: asked again later
 	}
-});
+};
 
 const seen = new Set(START);
 const queue = [...START];
 let opened = 0;
-while (queue.length && opened < max) {
-	const path = queue.shift();
-	opened++;
-	try {
-		await page.goto(root + path, { waitUntil: 'networkidle', timeout: 30_000 });
-	} catch {
-		console.warn('slow or failed:', path);
+let busy = 0; // tabs on a page: the queue may still grow while any is
+async function worker() {
+	const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+	page.on('response', record);
+	for (;;) {
+		if (opened >= max) break;
+		const path = queue.shift();
+		if (path === undefined) {
+			if (!busy) break;
+			await new Promise((r) => setTimeout(r, 200));
+			continue;
+		}
+		opened++;
+		busy++;
+		try {
+			await page.goto(root + path, { waitUntil: 'networkidle', timeout: 30_000 });
+		} catch {
+			console.warn('slow or failed:', path);
+		}
+		const hrefs = await page.$$eval('a[href]', (as) => as.map((a) => a.getAttribute('href'))).catch(() => []);
+		for (const href of hrefs) {
+			if (!href || !href.startsWith('/') || href.startsWith('//')) continue;
+			const u = new URL(href, root);
+			const p = u.pathname + u.search;
+			if (SKIP.test(p) || seen.has(p)) continue;
+			seen.add(p);
+			queue.push(p);
+		}
+		busy--;
+		if (opened % 100 === 0) console.log(`${opened} pages, ${queue.length} to go, ${Object.keys(index).length} answers`);
 	}
-	const hrefs = await page.$$eval('a[href]', (as) => as.map((a) => a.getAttribute('href')));
-	for (const href of hrefs) {
-		if (!href || !href.startsWith('/') || href.startsWith('//')) continue;
-		const u = new URL(href, root);
-		const p = u.pathname + u.search;
-		if (SKIP.test(p) || seen.has(p)) continue;
-		seen.add(p);
-		queue.push(p);
-	}
-	if (opened % 50 === 0) console.log(`${opened} pages, ${queue.length} to go, ${Object.keys(index).length} answers`);
+	await page.close();
 }
+await Promise.all(Array.from({ length: tabs }, worker));
 await browser.close();
 
 for (const k of Object.keys(index)) if (index[k] === null) delete index[k];
