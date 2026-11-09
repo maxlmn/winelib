@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 const dist = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist');
 const base = (process.env.BASE_PATH || '/winelib').replace(/\/$/, '');
 const port = +(process.env.PORT || 4321);
-const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
+const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript','.css': 'text/css', '.json': 'application/json',
 	'.png': 'image/png', '.gif': 'image/gif', '.svg': 'image/svg+xml', '.webmanifest': 'application/manifest+json',
 	'.xml': 'application/xml', '.txt': 'text/plain', '.woff2': 'font/woff2', '.wasm': 'application/wasm' };
 
