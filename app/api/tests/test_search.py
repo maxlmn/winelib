@@ -64,3 +64,15 @@ def test_accents_case_and_punctuation_are_ignored(client):
     assert titles(client, "chateau l evangile", "producer") == ["Château L'Évangile"]
     assert titles(client, "CHACE", "producer") == []  # the village (Chacé) is shown, not searched
     assert titles(client, "saumur champigny 2016", "wine") == ["Clos Rougeard Le Bourg 2016"]
+
+
+def test_all_lists_what_search_finds_with_its_fields(client):
+    """/api/search/all: every entry and the texts a query matches, for the static demo's search in the browser."""
+    entries = client.get("/api/search/all").json()["entries"]
+    by = {(e["kind"], e["title"]): e for e in entries}
+    wine = by[("wine", "Clos Rougeard Le Bourg 2016")]
+    assert wine["fields"] == ["Clos Rougeard", "Le Bourg", "2016", "Saumur-Champigny"]
+    assert wine["sub"] == "Saumur-Champigny · Loire, France" and wine["region"] == "Loire"
+    assert by[("grape", "Cabernet Franc")]["fields"] == ["Cabernet Franc", "Breton"]
+    found = client.get("/api/search", params={"q": "rougeard", "limit": 50}).json()["results"]
+    assert all({k: e[k] for k in r} == r for r in found for e in [by[(r["kind"], r["title"])]])  # the same entries
