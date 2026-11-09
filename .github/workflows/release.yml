@@ -12,6 +12,7 @@ on:
 permissions:
   contents: write
   packages: write
+  actions: write # the website's demo, rebuilt with this version
 
 jobs:
   test:
@@ -96,3 +97,9 @@ jobs:
           if [ -s notes.md ]; then notes=(--notes-file notes.md); else notes=(--generate-notes); fi
           prerelease=(); [[ "$GITHUB_REF_NAME" == *-* ]] && prerelease=(--prerelease)
           gh release create "$GITHUB_REF_NAME" "$ZIP" --title "WineLib $GITHUB_REF_NAME" "${notes[@]}" "${prerelease[@]}"
+      # A release made with this workflow's token starts no other workflow: the demo is started here
+      - name: The website's demo
+        if: ${{ !contains(github.ref_name, '-') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run demo.yml --ref "$GITHUB_REF_NAME"

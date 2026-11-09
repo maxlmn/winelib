@@ -1,7 +1,10 @@
 # Changelog
 
-## Unreleased
+## v0.5.0
 
+- **A website, with a demo**: [maxlmn.github.io/winelib](https://maxlmn.github.io/winelib/) shows what WineLib does,
+  how to install it and the guide; its [demo](https://maxlmn.github.io/winelib/demo/) is the app on a sample cellar,
+  read-only, maps, lists and search included. Both are rebuilt at each release.
 - **The satellite view outside France needs your own Esri key** (`ESRI_API_KEY` in `.secrets.env`, a free ArcGIS
   Location Platform account): Esri's terms don't allow its World Imagery without one, which WineLib used. Without
   a key, Satellite is IGN's photos in France over the plain map, which shows elsewhere. Settings › Integrations
