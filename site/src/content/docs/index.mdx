@@ -1,0 +1,111 @@
+---
+title: WineLib
+description: Your wine cellar and tasting journal, on maps. Self-hosted and open source.
+template: splash
+editUrl: false
+hero:
+  title: Your cellar and tasting journal, on maps
+  tagline: WineLib keeps your bottles and every wine you've tasted, and puts them on the map of the world's appellations, down to the vineyard. It runs on your own computer, so your data stays yours.
+  actions:
+    - text: Install
+      link: install/
+      icon: right-arrow
+    - text: Read the guide
+      link: guide/first-steps/
+      variant: secondary
+    - text: GitHub
+      link: https://github.com/maxlmn/winelib
+      icon: github
+      variant: minimal
+---
+
+import Shot from '../../components/Shot.astro';
+
+<Shot name="demo" ext="gif" alt="A walk through WineLib: the lists, a search, a wine's vineyard on the map, full size, the cellar's racks" />
+
+<div class="feature">
+<div>
+## Every appellation, on the map
+
+Every appellation of France, the EU, the US and Australia, outlined from the official registers, with Burgundy's
+premiers crus. Regions in their colours, and your cellar and tastings on them. A wine's page shows its appellation
+and its vineyard; a region's page shows where what you drink comes from. IGN's aerial photos in France.
+</div>
+<Shot name="worldmap" alt="The world map, wine regions in their colours" />
+</div>
+
+<div class="feature flip">
+<div>
+## Down to the lieu-dit
+
+Les Poyeux, Clos des Noëls, Les Gravières: the names on the labels are the lieux-dits of France's land register.
+WineLib draws 91,000 of them across the Loire, Burgundy, Champagne, Beaujolais, Jura, Alsace, Bordeaux and the
+Rhône, each with the appellations it can claim. Click one to make it your wine's vineyard.
+</div>
+<Shot name="lieux-dits" alt="Lieux-dits on the map, with their appellations" />
+</div>
+
+<div class="feature">
+<div>
+## Your cellar, rack by rack
+
+Each place you keep bottles, drawn as a wine rack: a bottle end per bottle in its region's colour, the wine's colour
+as the cork, magnums bigger. Then a shelf map bin by bin, a vintage chart, and what your bottles are worth.
+</div>
+<Shot name="cellar" alt="The cellar as wine racks, bottle ends in their region's colours" />
+</div>
+
+<div class="feature flip">
+<div>
+## Lists, a treasure hunt
+
+A critic's top 100, Noble Rot's wines of the decade, the 1855 classification, your wishlist. Each entry ticks
+itself once you've tasted it, and each list is a mosaic of bottle ends that fills in as you go.
+</div>
+<Shot name="lists" alt="Your lists as mosaics of bottle ends, filled in as you taste" />
+</div>
+
+<div class="feature">
+<div>
+## A tasting journal
+
+Tastings by occasion (a dinner, a restaurant, a trip), with your notes, ratings and photos, and the places on a
+map. Share any tasting, or a whole evening's wines, as a sticker for your Instagram story.
+</div>
+<Shot name="tastings" alt="The tasting journal, by occasion" />
+</div>
+
+<div class="feature flip">
+<div>
+## The grapes' family
+
+635 grapes with their colour, origin and parents (from VIVC), a description of each, and where it's planted. A
+network of every known parent and offspring, with your wines on it.
+</div>
+<Shot name="grape" alt="A grape's page: its description, its family tree and your wines" />
+</div>
+
+<div class="feature">
+<div>
+## On your phone
+
+The same app in a phone layout, installable with its own icon. Reach it from anywhere through your own private
+network (Tailscale, for instance).
+</div>
+<Shot name="mobile" alt="WineLib on a phone" narrow />
+</div>
+
+## And more
+
+- **A wine list to print**: your cellar or a selection, laid out like a restaurant's, saved as a PDF.
+- **Ask your AI assistant**: an [MCP server](mcp/) lets Claude read your cellar and journal (*what should I open
+  from home tonight?*).
+- **A bottle from photos of its labels**, read by Claude with your own key.
+- **Imports** from CellarTracker, Vivino or any spreadsheet; **export** of everything as JSON or CSV.
+- **Critics' scores** from any critic, **market prices** by LWIN, **style tags**, **blends**, **vintage pages**.
+- **Light or dark**, in nine colour palettes.
+
+## Free, and yours
+
+WineLib is open source (MIT). It runs on your computer or your home server, with Docker or Python: no account, no
+cloud, no subscription. [Install it](install/) in a few minutes.

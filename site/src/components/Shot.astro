@@ -1,0 +1,41 @@
+---
+// A screenshot in the site's theme: the app's light and dark versions (screenshots/<name>.png, <name>-dark.png),
+// one shown by Starlight's theme switch (data-theme on <html>)
+interface Props {
+	name: string;
+	alt: string;
+	ext?: string;
+	/** no dark version */
+	single?: boolean;
+	narrow?: boolean;
+}
+const { name, alt, ext = 'png', single = false, narrow = false } = Astro.props;
+const src = (n: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/screenshots/${n}.${ext}`;
+---
+
+<figure class:list={['shot', { narrow }]}>
+	<img class:list={{ light: !single }} src={src(name)} alt={alt} loading="lazy" decoding="async" />
+	{!single && <img class="dark" src={src(`${name}-dark`)} alt={alt} loading="lazy" decoding="async" />}
+</figure>
+
+<style>
+	.shot {
+		margin: 1.5rem 0;
+	}
+	.shot img {
+		display: block;
+		width: 100%;
+		height: auto;
+		border-radius: 0.75rem;
+		border: 1px solid var(--sl-color-hairline);
+		box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 0.12);
+	}
+	.narrow img {
+		max-width: 22rem;
+		margin-inline: auto;
+	}
+	:global([data-theme='dark']) .light,
+	:global([data-theme='light']) .dark {
+		display: none;
+	}
+</style>

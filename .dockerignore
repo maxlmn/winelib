@@ -13,3 +13,4 @@ dist
 screenshots
 .secrets.env
 .env
+site

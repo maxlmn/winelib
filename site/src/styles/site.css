@@ -1,0 +1,57 @@
+/* The app's colours: its rosé accent on warm paper (light) and plum night (dark) */
+:root {
+	--sl-color-accent-low: #3c2533;
+	--sl-color-accent: #c27ba0;
+	--sl-color-accent-high: #ecc6da;
+	--sl-color-white: #ece8ef;
+	--sl-color-gray-1: #dcd6e0;
+	--sl-color-gray-2: #b9b1bf;
+	--sl-color-gray-3: #8d8494;
+	--sl-color-gray-4: #5a5260;
+	--sl-color-gray-5: #3a343f;
+	--sl-color-gray-6: #241f28;
+	--sl-color-black: #141216;
+}
+:root[data-theme='light'] {
+	--sl-color-accent-low: #f3dfe9;
+	--sl-color-accent: #a85c84;
+	--sl-color-accent-high: #6b3253;
+	--sl-color-white: #2a2522;
+	--sl-color-gray-1: #3b3531;
+	--sl-color-gray-2: #554e49;
+	--sl-color-gray-3: #7a726c;
+	--sl-color-gray-4: #a8a09a;
+	--sl-color-gray-5: #d6d0ca;
+	--sl-color-gray-6: #eeebe7;
+	--sl-color-gray-7: #f4f2ef;
+	--sl-color-black: #f7f6f4;
+}
+
+/* The home page: features as alternating text and picture */
+.feature {
+	display: grid;
+	gap: 1rem 2.5rem;
+	align-items: center;
+	margin-block: 3.5rem;
+}
+@media (min-width: 60rem) {
+	.feature {
+		grid-template-columns: 2fr 3fr;
+	}
+	.feature.flip > :first-child {
+		order: 2;
+	}
+}
+.feature h2 {
+	margin-top: 0;
+}
+.feature .shot {
+	margin: 0;
+}
+.lead {
+	font-size: var(--sl-text-lg);
+	color: var(--sl-color-gray-2);
+}
+.hero .tagline {
+	max-width: 36rem;
+}
