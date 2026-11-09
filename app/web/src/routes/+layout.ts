@@ -1,6 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import { loadSettings } from '#lib/settings.svelte.ts';
 import { loadRegionCountries } from '#lib/regions.svelte.ts';
+import { base } from '#lib/base.ts';
 import type { LayoutLoad } from './$types';
 
 // Client-rendered SPA: data comes from the FastAPI backend
@@ -16,9 +17,9 @@ export const load: LayoutLoad = async ({ fetch, url, untrack }) => {
 	loaded ??= Promise.all([loadSettings(fetch), loadRegionCountries(fetch)]);
 	await loaded;
 	// A new installation: the first-start page until its settings are saved once
-	if (!setUp && untrack(() => url.pathname) !== '/welcome') {
+	if (!setUp && untrack(() => url.pathname) !== `${base}/welcome`) {
 		const setup = await fetch('/api/settings/setup').then((r) => (r.ok ? r.json() : null)).catch(() => null);
-		if (setup?.needed) redirect(307, '/welcome');
+		if (setup?.needed) redirect(307, `${base}/welcome`);
 		setUp = true;
 	}
 	return {};

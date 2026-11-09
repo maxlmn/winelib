@@ -1,0 +1,48 @@
+# The website's read-only demo, rebuilt for each release (a v* tag) or by hand: the demo database (winelib-demo.db,
+# on the release tagged `demo`) run by this version of the app, every page crawled, the demo built
+# (scripts/build_demo.py), winelib-demo.zip uploaded to the same release, then the website rebuilt with it.
+# A fresher demo cellar: upload a new winelib-demo.db to the `demo` release, then run this workflow.
+name: demo
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write # the demo release's zip
+  actions: write # the website's workflow run
+
+concurrency:
+  group: demo
+  cancel-in-progress: true
+
+jobs:
+  demo:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.release.tag_name, 'v')
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: app/api/requirements.txt
+      - run: pip install -r app/api/requirements.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app/web/package-lock.json
+      - run: npm ci && npx playwright install --with-deps chromium
+        working-directory: app/web
+      - name: The demo database
+        run: gh release download demo --pattern winelib-demo.db --dir "$RUNNER_TEMP"
+      - name: Build the demo
+        run: python scripts/build_demo.py --db "$RUNNER_TEMP/winelib-demo.db" --out dist/winelib-demo.zip
+      - name: Publish it
+        run: |
+          gh release upload demo dist/winelib-demo.zip --clobber
+          gh workflow run site.yml --ref main
