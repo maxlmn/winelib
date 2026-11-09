@@ -5,9 +5,10 @@
   "scripts": {
     "sync": "node scripts/sync.mjs",
     "dev": "node scripts/sync.mjs && astro dev",
-    "build": "node scripts/sync.mjs && astro build",
+    "build": "node scripts/sync.mjs && astro build && node scripts/pages-404.mjs",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "serve": "node scripts/serve.mjs"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.42.10",
