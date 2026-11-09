@@ -3,8 +3,9 @@
 //
 //     node scripts/crawl-demo.mjs --url http://127.0.0.1:8124 --out ../../demo-data [--max 20000] [--tabs 6]
 //
-// Forms (new, edit) and Settings' Maintenance are left out: the demo saves nothing. Search isn't crawled (its
-// answers depend on what's typed): the palette's own pages are, through the links.
+// Forms (new, edit) and Settings' Maintenance are left out: the demo saves nothing. Search can't be crawled (its
+// answers depend on what's typed): /api/search/all is saved instead, cut to the pages opened, and searched in the
+// browser.
 import { chromium } from '@playwright/test';
 import { createHash } from 'node:crypto';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -51,6 +52,7 @@ const record = async (res) => {
 };
 
 const seen = new Set(START);
+const visited = new Set(); // the pages opened
 const queue = [...START];
 let opened = 0;
 let busy = 0; // tabs on a page: the queue may still grow while any is
@@ -67,6 +69,7 @@ async function worker() {
 		}
 		opened++;
 		busy++;
+		visited.add(path);
 		try {
 			await page.goto(root + path, { waitUntil: 'networkidle', timeout: 30_000 });
 		} catch {
@@ -90,6 +93,21 @@ await Promise.all(Array.from({ length: tabs }, worker));
 await browser.close();
 
 for (const k of Object.keys(index)) if (index[k] === null) delete index[k];
+
+// Search (⌘K): what it can find, only where the demo has the page. A region or a grape opened by its name keeps
+// that name as its id (links.region and links.grape take either).
+const PAGE = { region: 'regions', grape: 'grapes', producer: 'producers', wine: 'wines', place: 'places',
+	appellation: 'appellations', vineyard: 'vineyards' };
+const all = await (await fetch(`${root}/api/search/all`)).json();
+const entries = [];
+for (const e of all.entries) {
+	const at = (id) => `/${PAGE[e.kind]}/${encodeURIComponent(String(id))}`;
+	if (visited.has(at(e.id))) entries.push(e);
+	else if ((e.kind === 'region' || e.kind === 'grape') && visited.has(at(e.title))) entries.push({ ...e, id: e.title });
+}
+writeFileSync(join(out, 'search.json'), JSON.stringify({ entries }));
+index['/api/search/all'] = 'search.json';
+console.log(`search: ${entries.length} of ${all.entries.length} entries`);
 writeFileSync(join(out, 'index.json'), JSON.stringify(index));
 console.log(`${opened} pages opened (${queue.length} left over --max), ${Object.keys(index).length} answers, ` +
 	`${(bytes / 1e6).toFixed(1)} MB in ${out}`);
