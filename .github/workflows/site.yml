@@ -44,6 +44,15 @@ jobs:
         env:
           SITE_URL: ${{ vars.SITE_URL }}
           BASE_PATH: ${{ vars.BASE_PATH }}
+      # The read-only demo at /demo/: built on a PC from a demo cellar (the private repository's
+      # scripts/build_demo_site.py), published as a release tagged `demo`; none yet, no demo
+      - name: The demo
+        run: |
+          if curl -fsSL -o demo.zip https://github.com/${{ github.repository }}/releases/download/demo/winelib-demo.zip; then
+            unzip -q demo.zip -d site/dist/demo && echo "demo: $(du -sh site/dist/demo | cut -f1)"
+          else
+            echo "no demo release yet"
+          fi
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site/dist
