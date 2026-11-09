@@ -1,0 +1,48 @@
+{
+  "name": "tinyclip",
+  "packageManager": "pnpm@12.3.4",
+  "version": "1.0.3",
+  "description": "A tiny utility to interact with the system clipboard.",
+  "keywords": [
+    "clipboard",
+    "copy",
+    "paste"
+  ],
+  "files": [
+    "dist"
+  ],
+  "homepage": "https://github.com/tinylibs/tinyclip#readme",
+  "bugs": {
+    "url": "https://github.com/tinylibs/tinyclip/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tinylibs/tinyclip.git"
+  },
+  "license": "MIT",
+  "author": "Tinylibs Maintainers (https://github.com/tinylibs)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "default": "./dist/index.js"
+    }
+  },
+  "engines": {
+    "node": "^16.14.0 || >= 17.3.0"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "test": "vitest run",
+    "format": "prettier --write .",
+    "lint": "pnpm lint:format",
+    "lint:format": "prettier --check ."
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.0",
+    "@vitest/coverage-v8": "^5.0.0",
+    "prettier": "^3.9.6",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.0"
+  }
+}

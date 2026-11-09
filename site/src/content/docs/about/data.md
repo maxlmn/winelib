@@ -1,0 +1,72 @@
+---
+title: "About the data"
+description: "Where WineLib's reference data and maps come from, and their licences."
+editUrl: false
+---
+
+## Reference data
+
+The regions, appellations, grapes and vineyards every installation starts with.
+
+| Data | Source | Licence |
+|---|---|---|
+| French appellations, complementary geographic names, IGPs | INAO, on [data.gouv.fr](https://www.data.gouv.fr): *Délimitation parcellaire des AOC viticoles* and *Délimitation des aires géographiques des SIQO* | Licence Ouverte 2.0 |
+| EU wine PDOs and PGIs (names, types, ids) | [eAmbrosia](https://ec.europa.eu/agriculture/eambrosia/geographical-indications-register/), the EU register of geographical indications | EU reuse (Commission Decision 2011/833/EU) |
+| US AVAs | UC Davis Library, [the AVA project](https://github.com/UCDavisLibrary/ava) | CC0 1.0 |
+| Australian GIs | Wine Australia Open Data Hub, *Wine Geographical Indications Australia* | CC BY 4.0 |
+| Other countries' appellations: Argentina, Canada, Chile, Georgia, Japan, New Zealand, South Africa, Switzerland | each country's official register: INV, VQA Ontario and British Columbia, LeyChile Decree 464, Sakpatenti, the National Tax Agency, IPONZ, the Wine of Origin scheme, the Swiss AOC directory | official texts |
+| Wine regions and their colours | WineLib's own, each appellation filed by its outline | |
+| Grape varieties, their names and aliases | [Wikidata](https://www.wikidata.org) (grape varieties with an English Wikipedia article) | CC0 |
+| Grapes' berry colour, origin, parents, synonyms | [VIVC](https://www.vivc.de), the Vitis International Variety Catalogue (Julius Kühn-Institut) | facts, cited |
+| Grape descriptions (origin, ripening, growing, wines) | [Pl@ntGrape](https://plantgrape.plantnet-project.org), Catalogue of Vines Cultivated in France, IFV – INRAE – Institut Agro \| Montpellier, 2009-2020 | CC BY-NC-SA 4.0, not the code's MIT: `app/api/data/grapes/` |
+| Grapes' planted areas (hectares by country, 2000 to 2023) | Anderson, Nelgen and Puga, [Database of Regional, National and Global Winegrape Bearing Areas by Variety, 2000 to 2023](https://doi.org/10.25909/32870405.v1), University of Adelaide | CC BY 4.0, in the same file, so under its licence |
+| Grape tasting profiles (climate, acidity, tannin, aromas, classic regions) | WineLib's own notes; the classic regions follow the WSET Level 2 syllabus | |
+| French premier crus (vineyards) | INAO's parcel delimitation (above) | Licence Ouverte 2.0 |
+| French lieux-dits (the named places among the vines) | Etalab's cadastre (DGFiP), the *lieux-dits* layer on [cadastre.data.gouv.fr](https://cadastre.data.gouv.fr); their appellations from INAO's parcel delimitation, Champagne's from INAO's geographic areas and its vines from [OpenStreetMap](https://www.openstreetmap.org/copyright)'s vineyards and IGN's RPG (the farmers' declared parcels) | Licence Ouverte 2.0; Champagne's vines ODbL (© OpenStreetMap contributors) |
+| German vineyards (Einzellagen) | [Weinlagen-info](https://www.weinlagen-info.de) | not shipped: built on your own computer only |
+
+## Map outlines
+
+INAO (Licence Ouverte 2.0); the EU PDO geopackage (Candiago et al. 2022, figshare, CC0 1.0); UC Davis's AVAs
+(CC0 1.0); Wine Australia (CC BY 4.0); [Natural Earth](https://www.naturalearthdata.com) (public domain) for the
+regions' overview outlines and the appellations that are an administrative area.
+
+The lieux-dits are the cadastre's as published: its coverage is uneven (some villages named plot by plot, others
+in a few broad places with large unnamed areas), and its unnamed places are left out. See the Maps guide's *The
+lieux-dits, and their limits*.
+
+## Looked up while you use the app
+
+- **OpenStreetMap Nominatim**: a place's coordinates from its address or a Google Maps link (© OpenStreetMap
+  contributors, ODbL).
+- **OpenFreeMap**: the Plain base map's vector tiles (© OpenMapTiles, data © OpenStreetMap contributors, ODbL);
+  OpenStreetMap France's tiles when it can't be reached.
+- **IGN's aerial photos** (BD ORTHO, through the Géoplateforme, Licence Ouverte 2.0): the satellite base map in
+  France.
+- **Esri World Imagery** (with your own key, `ESRI_API_KEY`: Esri's terms ask for one): the satellite base map
+  elsewhere (Powered by Esri; © Esri, Maxar, Earthstar Geographics and the GIS User Community). Without a key the
+  satellite view is IGN's photos in France and the plain map elsewhere.
+- **WineLabs** and **Bordeaux Index** (with your keys): market prices. Critics' scores are the ones you add or
+  import yourself.
+- **CellarTracker** and **Vivino**: only your own exports, when you import them.
+
+
+## How it was built
+
+The reference data started as one cellar's database, completed from the official sources above (October 2026):
+
+- **Regions**: one level of wine regions in every main country (Italy's 20 regions, Spain's classic wine zones,
+  Germany's 13 Anbaugebiete, Portugal's wine regions, Austria's states, Australia's states, the US states with the
+  most AVAs), each appellation filed under the region that holds its outline. A national appellation (Vin de France,
+  Vino d'Italia, Deutscher Wein...) is filed under its country, and its wines keep their own region.
+- **Appellations**: every name INAO delimits, every AVA in force, every wine PDO and PGI in the EU register, and
+  eight other countries' official registers, each one's details starting with what it is (AOP, DOCG, AVA,
+  complementary geographic name...).
+- **Grapes**: the notable varieties, named as wine people name them, with their common synonyms only (VIVC lists
+  hundreds that would match the wrong grape); each one's berry colour, origin and parents from VIVC, whose
+  DNA-confirmed parents are preferred to any other.
+- **A wine's grapes**: a list (the first the main grape, shares optional) and a blend style (Bordeaux, Rhône,
+  Champagne, Field or Other blend).
+
+New installations get it all; an update fills what's empty and never moves your rows. The full record, every
+decision and how to refresh it, is in the repository: `docs/reference-data.md`.

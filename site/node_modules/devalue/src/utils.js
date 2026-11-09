@@ -1,0 +1,260 @@
+import { MAX_ARRAY_INDEX, MAX_ARRAY_LEN } from './constants.js';
+
+const name_chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_$';
+const reserved_names =
+	/^(?:do|if|in|for|int|let|new|try|var|byte|case|char|else|enum|goto|long|this|void|with|await|break|catch|class|const|final|float|short|super|throw|while|yield|delete|double|export|import|native|return|switch|throws|typeof|boolean|default|extends|finally|package|private|abstract|continue|debugger|function|volatile|interface|protected|transient|implements|instanceof|synchronized)$/;
+
+/** @type {Record<string, string>} */
+export const escaped = {
+	'<': '\\u003C',
+	'\\': '\\\\',
+	'\b': '\\b',
+	'\f': '\\f',
+	'\n': '\\n',
+	'\r': '\\r',
+	'\t': '\\t',
+	'\u2028': '\\u2028',
+	'\u2029': '\\u2029'
+};
+
+export class DevalueError extends Error {
+	/**
+	 * @param {string} message
+	 * @param {string[]} keys
+	 * @param {any} [value] - The value that failed to be serialized
+	 * @param {any} [root] - The root value being serialized
+	 */
+	constructor(message, keys, value, root) {
+		super(message);
+		this.name = 'DevalueError';
+		this.path = keys.join('');
+		this.value = value;
+		this.root = root;
+	}
+}
+
+/**
+ * Marks a Map key on the path being serialized. The key itself is recorded
+ * right after the marker, so nothing is formatted or allocated per entry.
+ */
+export const MAP_KEY = Symbol();
+
+/**
+ * Formats the path recorded on the way to the value being serialized — a
+ * property key, an array index, or `MAP_KEY` followed by a Map key — into
+ * the segments a `DevalueError` joins. Only runs when an error is raised.
+ * @param {any[]} keys
+ * @param {(key: any) => string} format_map_key
+ * @returns {string[]}
+ */
+export function format_path(keys, format_map_key) {
+	/** @type {string[]} */
+	const path = [];
+
+	for (let i = 0; i < keys.length; i += 1) {
+		const segment = keys[i];
+
+		if (segment === MAP_KEY) {
+			path.push(`.get(${format_map_key(keys[++i])})`);
+		} else if (typeof segment === 'number') {
+			path.push(`[${segment}]`);
+		} else {
+			path.push(stringify_key(segment));
+		}
+	}
+
+	return path;
+}
+
+/** @param {any} thing */
+export function is_primitive(thing) {
+	return thing === null || (typeof thing !== 'object' && typeof thing !== 'function');
+}
+
+const object_proto_names = /* @__PURE__ */ Object.getOwnPropertyNames(Object.prototype)
+	.sort()
+	.join('\0');
+
+/** @param {any} thing */
+export function is_plain_object(thing) {
+	const proto = Object.getPrototypeOf(thing);
+
+	return (
+		proto === Object.prototype ||
+		proto === null ||
+		Object.getPrototypeOf(proto) === null ||
+		Object.getOwnPropertyNames(proto).sort().join('\0') === object_proto_names
+	);
+}
+
+/** @param {any} thing */
+export function get_type(thing) {
+	return Object.prototype.toString.call(thing).slice(8, -1);
+}
+
+/** @param {any} thing */
+export function is_buffer(thing) {
+	return typeof Buffer !== 'undefined' && Buffer.isBuffer(thing);
+}
+
+/**
+ * Emit an array whose storage is not proportional to its declared length.
+ * Touching and deleting the largest valid index forces dictionary elements
+ * before setting the length; assigning .length on [] can still eagerly allocate.
+ * @param {number} length
+ */
+export function stringify_sparse_array(length) {
+	return `(function(a){a[${MAX_ARRAY_INDEX}]=0;delete a[${MAX_ARRAY_INDEX}];a.length=${length};return a}([]))`;
+}
+
+/** Returns the compact JavaScript identifier at `index`. @param {number} index */
+export function get_name(index) {
+	let name = '';
+
+	do {
+		name = name_chars[index % name_chars.length] + name;
+		index = ~~(index / name_chars.length) - 1;
+	} while (index >= 0);
+
+	return reserved_names.test(name) ? `${name}0` : name;
+}
+
+// characters `stringify_string` always escapes: quote, backslash, `<`, control
+// characters and the line/paragraph separators. Surrogates are only escaped
+// when unpaired, which `isWellFormed` detects natively, so well-formed pairs
+// such as emoji stay on the fast path
+const needs_escape = /["<\\\u0000-\u001f\u2028\u2029]/;
+
+// `JSON.stringify` already emits every escape we need except these three,
+// which it leaves raw: `<` (so output is safe inside a `<script>` tag) and
+// the line/paragraph separators (kept escaped for engines predating ES2019,
+// which rejected them in string literals). It also escapes unpaired
+// surrogates as `\\udXXX`, so the result survives UTF-8 transport
+const json_leaves_raw = /[<\u2028\u2029]/g;
+
+/** @type {Record<string, string>} */
+const raw_escapes = { '<': '\\u003C', '\u2028': '\\u2028', '\u2029': '\\u2029' };
+
+/** @param {string} char */
+function escape_raw(char) {
+	return raw_escapes[char];
+}
+
+/** @param {string} str */
+export function stringify_string(str) {
+	// the common case: nothing to escape, no per-character work
+	if (!needs_escape.test(str) && str.isWellFormed()) return `"${str}"`;
+
+	return JSON.stringify(str).replace(json_leaves_raw, escape_raw);
+}
+
+// Property names repeat across the values of one call and across calls, so
+// their quoted form is cached. Names come from the data being serialized, so
+// the cache is bounded in both directions: only short names are kept, and the
+// cache is emptied once it holds 1024 of them. Longer names are quoted on
+// every visit, like every other string.
+const MAX_CACHED_KEY_LENGTH = 64;
+
+/** @type {Map<string, string>} */
+const quoted_keys = new Map();
+
+/** @param {string} key */
+export function quote_key(key) {
+	if (key.length > MAX_CACHED_KEY_LENGTH) return stringify_string(key);
+
+	let quoted = quoted_keys.get(key);
+
+	if (quoted === undefined) {
+		if (quoted_keys.size >= 1024) quoted_keys.clear();
+		quoted = stringify_string(key);
+		quoted_keys.set(key, quoted);
+	}
+
+	return quoted;
+}
+
+/** @param {Record<string | symbol, any>} object */
+export function enumerable_symbols(object) {
+	const symbols = Object.getOwnPropertySymbols(object);
+	// Own symbols always have a descriptor; the optional chain only satisfies the lib's
+	// `PropertyDescriptor | undefined` return type.
+	return symbols.length === 0
+		? symbols
+		: symbols.filter((symbol) => Object.getOwnPropertyDescriptor(object, symbol)?.enumerable);
+}
+
+const is_identifier = /^[a-zA-Z_$][a-zA-Z_$0-9]*$/;
+
+/** @param {string} key */
+function stringify_key(key) {
+	return is_identifier.test(key) ? '.' + key : '[' + JSON.stringify(key) + ']';
+}
+
+/** @param {number} n */
+export function is_valid_array_index(n) {
+	if (!Number.isInteger(n)) return false;
+	if (n < 0) return false;
+	if (n > MAX_ARRAY_INDEX) return false;
+	return true;
+}
+
+/** @param {number} n */
+export function is_valid_array_len(n) {
+	if (!Number.isInteger(n)) return false;
+	if (n < 0) return false;
+	if (n > MAX_ARRAY_LEN) return false;
+	return true;
+}
+
+/** @param {string} s */
+function is_valid_array_index_string(s) {
+	if (s.length === 0) return false;
+	if (s.length > 1 && s.charCodeAt(0) === 48) return false; // leading zero
+	for (let i = 0; i < s.length; i++) {
+		const c = s.charCodeAt(i);
+		if (c < 48 || c > 57) return false;
+	}
+	// by this point we know it's a string of digits, but it has to be within
+	// the range of valid array indices
+	return is_valid_array_index(+s);
+}
+
+/**
+ * Returns the length of the leading run of valid array indices in `keys`.
+ * @param {readonly string[]} keys
+ */
+function array_index_cut(keys) {
+	for (var i = keys.length - 1; i >= 0; i--) {
+		if (is_valid_array_index_string(keys[i])) {
+			break;
+		}
+	}
+	return i + 1;
+}
+
+/**
+ * Finds the populated indices of an array.
+ * @param {unknown[]} array
+ */
+export function valid_array_indices(array) {
+	const keys = Object.keys(array);
+	keys.length = array_index_cut(keys);
+	return keys;
+}
+
+/**
+ * Given the own enumerable string keys of an array-like value, in property
+ * order, returns the leading run of them that are valid array indices.
+ *
+ * This is the filtering half of the `indicesOf` stringify operation,
+ * exposed so that custom operations — which typically already have the keys
+ * in hand, e.g. from a foreign runtime — don't have to reimplement it.
+ *
+ * Does not modify `keys`.
+ *
+ * @param {readonly string[]} keys
+ * @returns {string[]}
+ */
+export function filter_array_indices(keys) {
+	return keys.slice(0, array_index_cut(keys));
+}
