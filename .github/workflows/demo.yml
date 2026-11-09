@@ -1,4 +1,5 @@
-# The website's read-only demo, rebuilt for each release (a v* tag) or by hand: the demo database (winelib-demo.db,
+# The website's read-only demo, rebuilt for each release (started by release.yml; a v* release published by hand
+# starts it too) or by hand: the demo database (winelib-demo.db,
 # on the release tagged `demo`) run by this version of the app, every page crawled, the demo built
 # (scripts/build_demo.py), winelib-demo.zip uploaded to the same release, then the website rebuilt with it.
 # A fresher demo cellar: upload a new winelib-demo.db to the `demo` release, then run this workflow.
