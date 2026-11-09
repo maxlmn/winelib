@@ -1,0 +1,19 @@
+{
+  "name": "winelib-site",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "sync": "node scripts/sync.mjs",
+    "dev": "node scripts/sync.mjs && astro dev",
+    "build": "node scripts/sync.mjs && astro build && node scripts/pages-404.mjs",
+    "preview": "astro preview",
+    "astro": "astro",
+    "serve": "node scripts/serve.mjs"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.42.10",
+    "astro": "^7.3.6",
+    "sharp": "^0.35.3"
+  },
+  "private": true
+}

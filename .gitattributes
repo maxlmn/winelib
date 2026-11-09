@@ -1,2 +1,5 @@
 # Shell scripts: always LF
 *.sh text eol=lf
+
+# The website: not in the release zip (git archive)
+site/ export-ignore

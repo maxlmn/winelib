@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.astro/
+# copied from the app by scripts/sync.mjs
+src/content/docs/guide/
+src/content/docs/about/
+src/content/docs/mcp.md
+public/screenshots/
