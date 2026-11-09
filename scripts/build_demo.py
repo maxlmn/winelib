@@ -112,7 +112,7 @@ def main():
     parser.add_argument("--out", default=os.path.join(ROOT, "dist", "winelib-demo.zip"))
     parser.add_argument("--base", default="/winelib/demo", help="the demo's address on the website")
     parser.add_argument("--pack", default=PACK_URL, help="the map pack (an https address or a file)")
-    parser.add_argument("--max", type=int, default=6000, help="pages to open at most")
+    parser.add_argument("--max", type=int, default=20000, help="pages to open at most (every page: about 8,500 for the demo cellar)")
     parser.add_argument("--tabs", type=int, default=6, help="pages open at once")
     parser.add_argument("--keep", action="store_true", help="keep the work folder")
     a = parser.parse_args()

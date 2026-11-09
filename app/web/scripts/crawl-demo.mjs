@@ -1,7 +1,7 @@
 // The static demo's data: opens every page of a running WineLib (a demo cellar's) in Chromium, following its links,
 // and saves each answer the pages get from the API, with an index the demo build reads (src/lib/demo.ts).
 //
-//     node scripts/crawl-demo.mjs --url http://127.0.0.1:8124 --out ../../demo-data [--max 4000] [--tabs 6]
+//     node scripts/crawl-demo.mjs --url http://127.0.0.1:8124 --out ../../demo-data [--max 20000] [--tabs 6]
 //
 // Forms (new, edit) and Settings' Maintenance are left out: the demo saves nothing. Search isn't crawled (its
 // answers depend on what's typed): the palette's own pages are, through the links.
@@ -16,7 +16,7 @@ const arg = (name, fallback) => {
 };
 const root = arg('url', 'http://127.0.0.1:8124').replace(/\/$/, '');
 const out = arg('out', 'demo-data');
-const max = +arg('max', '4000');
+const max = +arg('max', '20000');
 
 /** Pages worth opening: the app's own, not its forms or the API */
 const SKIP = /^\/api\/|\/(new|edit)$|^\/visits\/|^\/welcome|tab=maintenance|[?&]task=/;
