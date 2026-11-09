@@ -8,6 +8,7 @@
 	import { warmJournal } from '#lib/api/tastings.ts';
 	import { onMount } from 'svelte';
 	import Icon, { isIcon } from '#lib/components/Icon.svelte';
+	import { DEMO } from '#lib/demo.ts';
 
 	let { children } = $props();
 
@@ -66,7 +67,7 @@
 		</button>
 		<div class="items" class:open={menuOpen}>
 		{#each nav as item}
-			<a class="item" class:active={item.href === '/' ? page.url.pathname === '/' : page.url.pathname.startsWith(item.href)} href={item.href}>
+			<a class="item" class:active={item.href === links.home() ? page.url.pathname === links.home() : page.url.pathname.startsWith(item.href)} href={item.href}>
 				<span class="icon">{#if isIcon(item.icon)}<Icon name={item.icon} size={15} />{:else}{item.icon}{/if}</span><span>{item.label}</span>
 			</a>
 		{/each}
@@ -83,7 +84,15 @@
 			</button>
 		</div>
 	</nav>
-	<main>{@render children()}</main>
+	<main>
+		{#if DEMO}
+			<p class="demo">
+				The demo: a sample cellar, read-only (nothing you change is kept).
+				<a href="https://maxlmn.github.io/winelib/install/">Install WineLib</a> for your own.
+			</p>
+		{/if}
+		{@render children()}
+	</main>
 </div>
 
 <CommandPalette bind:open={searchOpen} />
@@ -188,6 +197,13 @@
 	main {
 		padding: 24px 28px 60px;
 		min-width: 0;
+	}
+	.demo {
+		margin: -8px 0 16px;
+		padding: 8px 12px;
+		border-radius: 8px;
+		background: var(--accent-soft);
+		font-size: 0.85rem;
 	}
 	@media (max-width: 760px) {
 		.shell {

@@ -1,4 +1,6 @@
-/** Every page's URL in one place, so pages link to each other the same way. */
+/** Every page's URL in one place, so pages link to each other the same way. Under a sub-path (BASE_PATH: the static
+ * demo), each one starts with it. */
+import { base } from '#lib/base.ts';
 
 type Id = number | string;
 type Query = Record<string, string | number | null | undefined>;
@@ -9,7 +11,7 @@ function withQuery(path: string, query?: Query) {
 	return p.size ? `${path}?${p}` : path;
 }
 
-export const links = {
+const paths = {
 	// Lists and dashboards
 	home: () => '/',
 	cellar: (query?: Query) => withQuery('/cellar', query),
@@ -72,3 +74,10 @@ export const links = {
 	newVisit: (query?: { place_id?: Id }) => withQuery('/visits/new', query),
 	editVisit: (id: Id) => `/visits/${id}/edit`
 };
+
+/** A page's path under the app's base ('' at the root); outside links as they are */
+const at = (path: string) => (path.startsWith('/') ? (path === '/' ? base || '/' : base + path) : path);
+
+export const links = Object.fromEntries(
+	Object.entries(paths).map(([k, f]) => [k, (...a: unknown[]) => at((f as (...x: unknown[]) => string)(...a))])
+) as typeof paths;
