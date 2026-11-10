@@ -559,9 +559,13 @@ def _keys_params(body, commit):
 def _backup(session, job):
     """Every main table to CSV; with SQLite, a copy of the database too (SQLite's own backup: consistent while the
     app runs). A Postgres database is dumped with Postgres's own tools (pg_dump), into the backups folder."""
-    from tasks.backup import backup_csv
+    from tasks.backup import BackupIncomplete, backup_csv
     engine = session.get_bind()
-    folder = backup_csv(engine, BACKUP_DIR, log=job.log)
+    incomplete = None
+    try:
+        folder = backup_csv(engine, BACKUP_DIR, log=job.log)
+    except BackupIncomplete as e:  # the database copy is still made; the job then fails, naming the tables
+        incomplete, folder = e, e.folder
     saved = [f"backups/{os.path.basename(folder)}"]
     if engine.dialect.name == "sqlite":
         import sqlite3
@@ -575,6 +579,8 @@ def _backup(session, job):
             source.close()
         job.log(f"Database copied to {target}")
         saved.append(f"backups/{os.path.basename(target)}")
+    if incomplete:
+        raise RuntimeError(f"{incomplete} (what could be saved is in {' and '.join(saved)})")
     return {"summary": f"Saved in {' and '.join(saved)}.", "items": []}
 
 

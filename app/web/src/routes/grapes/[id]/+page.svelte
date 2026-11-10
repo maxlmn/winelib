@@ -14,7 +14,7 @@
 	import Tabs from '#lib/components/details/Tabs.svelte';
 	import TastingHistory from '#lib/components/details/TastingHistory.svelte';
 	import BarList from '#lib/components/summary/BarList.svelte';
-	import { links } from '#lib/links.ts';
+	import { links, regionLink } from '#lib/links.ts';
 	import { plural, money } from '#lib/format.ts';
 
 	let { data } = $props();
@@ -32,7 +32,7 @@
 			label: regionLabel(r.name),
 			count: r.bottles + r.tastings || r.wines,
 			color: r.color ?? FALLBACK_REGION,
-			href: links.region(r.name)
+			href: regionLink(r.name)
 		}))
 	);
 	const mine = $derived(g.regions.some((r) => r.bottles + r.tastings > 0));

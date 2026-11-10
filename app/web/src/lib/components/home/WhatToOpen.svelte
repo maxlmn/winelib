@@ -164,6 +164,8 @@
 				</li>
 			{/each}
 		</ul>
+	{:else if bottles.length === 0}
+		<p class="muted">Your cellar is empty: <a href={links.newBottle()}>add a bottle</a></p>
 	{:else}
 		<p class="muted">Nothing in the cellar matches: loosen the filters.</p>
 	{/if}

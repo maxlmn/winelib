@@ -10,7 +10,7 @@
 	import TastingHistory from '#lib/components/details/TastingHistory.svelte';
 	import WineCatalog from '#lib/components/details/WineCatalog.svelte';
 	import BarList from '#lib/components/summary/BarList.svelte';
-	import { links } from '#lib/links.ts';
+	import { links, regionLink } from '#lib/links.ts';
 	import { plural, money } from '#lib/format.ts';
 
 	let { data } = $props();
@@ -25,7 +25,7 @@
 				label: regionLabel(r.name),
 				count: mine ? r.bottles + r.tastings : r.wines,
 				color: r.color ?? FALLBACK_REGION,
-				href: r.name === 'Unknown' ? undefined : links.region(r.name)
+				href: regionLink(r.name)
 			}))
 			.filter((b) => b.count > 0)
 	);

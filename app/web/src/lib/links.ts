@@ -81,3 +81,11 @@ const at = (path: string) => (path.startsWith('/') ? (path === '/' ? base || '/'
 export const links = Object.fromEntries(
 	Object.entries(paths).map(([k, f]) => [k, (...a: unknown[]) => at((f as (...x: unknown[]) => string)(...a))])
 ) as typeof paths;
+
+/** What the API calls a wine without a region: it has no page */
+export const UNKNOWN_REGION = 'Unknown';
+
+/** A region's page by its name, or none (undefined) when there's no region: no name, or "Unknown" */
+export function regionLink(name: string | null | undefined): string | undefined {
+	return name && name !== UNKNOWN_REGION ? links.region(name) : undefined;
+}

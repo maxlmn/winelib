@@ -28,8 +28,10 @@ you say yes. It never changes or deletes anything; what it added can be deleted 
 | `add_wine` | **add**: a wine alone, no bottle or tasting |
 
 Your yes comes through the assistant's own confirmation dialog when it has one (Claude Desktop, Claude Code); with
-one that hasn't, the assistant shows you the preview and asks, and the tool acts only when called again with the
-preview's token.
+one that hasn't, the assistant shows you the preview and asks: the preview ends with "To go ahead, reply: yes" and a
+short code. The tool acts only when called again with the preview's token and your reply (`user_confirmed`) holding
+that code. The assistant passes both on, so this relies on it asking you rather than answering for itself (its
+instructions say so); an assistant with its own confirmation dialog is the safer way.
 
 ## Setting it up
 
