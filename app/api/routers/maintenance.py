@@ -57,12 +57,23 @@ def _copy(session, wine_id, keep):
 
 
 def _duplicates(session, job):
+    """The wines entered more than once: a preview to tick (every group ticked), then a run merges the ticked groups
+    (params "keys": "<kept id>:<duplicate ids>", a group merged only if it is still those wines). A run without
+    keys (the task's Run button) merges every group."""
     from tasks import consolidate_duplicate_wines as dup
     groups = dup.find_duplicate_groups(session)
-    # each group: the wine, then each of its copies (the one kept, the ones merged into it) with what it holds
-    items = [_item(g["label"], href=f"/wines/{g['primary']}",
-                   copies=[_copy(session, g["primary"], True)] + [_copy(session, d, False) for d in g["duplicates"]])
-             for g in groups[:MAX_ITEMS]]
+    keys = job.params.get("keys")
+    if job.commit and keys is not None:
+        keys = set(keys)
+        groups = [g for g in groups if g["key"] in keys]
+
+    def item(g):
+        # the wine, then each of its copies (the one kept, the ones merged into it) with what it holds
+        copies = [_copy(session, g["primary"], True)] + [_copy(session, d, False) for d in g["duplicates"]]
+        detail = " · ".join(f"{'kept' if c['keep'] else 'merged'}: {c['facts']}" for c in copies)
+        return _item(g["label"], detail, f"/wines/{g['primary']}", copies=copies,
+                     pick={"key": g["key"], "group": g["producer"], "on": True})
+    items = [item(g) for g in groups[:MAX_ITEMS]]
     dropped = sum(len(g["duplicates"]) for g in groups)
     if not job.commit:
         dup.describe(groups, log=job.log)
@@ -77,6 +88,11 @@ def _duplicates(session, job):
         raise RuntimeError(str(e))
     return {"summary": f"{_n(moved, 'cellar line')} moved into {_n(len(groups), 'wine')}, "
                        f"{_n(dropped, 'duplicate')} deleted.", "items": items}
+
+
+def _duplicates_params(body, commit):
+    """The groups ticked in the preview; none sent (the task's Run button): every group."""
+    return {"keys": body.keys if commit and body.keys else None}
 
 
 def _orphans(session, job):
@@ -625,7 +641,9 @@ def _no_map_pack():
 
 TASKS = {
     "duplicates": {"group": "Clean up", "title": "Duplicate wines", "fn": _duplicates, "preview": True, "writes": True,
-                   "description": "Same producer, cuvée, color, appellation, grape and vintage: move the cellar lines to one wine and delete the others."},
+                   "params": _duplicates_params,
+                   "description": "Same producer, cuvée, color, appellation, grape, vintage, region and vineyard: move "
+                                  "the cellar lines to one wine and delete the others. A preview to tick first."},
     "appellations_apart": {"group": "Clean up", "title": "Cuvées under several appellations", "fn": _appellations_apart,
                            "preview": False, "writes": False,
                            "description": "A cuvée filed under more than one appellation: a vintage entered twice, "
