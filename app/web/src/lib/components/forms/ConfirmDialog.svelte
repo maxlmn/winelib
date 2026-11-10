@@ -7,11 +7,13 @@
 		busy?: boolean;
 		/** only explain why it can't be done */
 		blocked?: boolean;
+		/** the confirm button in the accent (a question that deletes nothing), not in red */
+		plain?: boolean;
 		onconfirm: () => void;
 		oncancel: () => void;
 	}
 
-	let { open, title, message, confirmLabel = 'Delete', busy = false, blocked = false, onconfirm, oncancel }: Props = $props();
+	let { open, title, message, confirmLabel = 'Delete', busy = false, blocked = false, plain = false, onconfirm, oncancel }: Props = $props();
 
 	let dialog = $state<HTMLDialogElement>();
 
@@ -28,7 +30,7 @@
 	<div class="actions">
 		<button type="button" class="btn" onclick={oncancel}>{blocked ? 'OK' : 'Cancel'}</button>
 		{#if !blocked}
-			<button type="button" class="btn danger-fill" disabled={busy} onclick={onconfirm}>{busy ? 'Deleting…' : confirmLabel}</button>
+			<button type="button" class="btn" class:danger-fill={!plain} class:primary={plain} disabled={busy} onclick={onconfirm}>{busy ? 'Deleting…' : confirmLabel}</button>
 		{/if}
 	</div>
 </dialog>

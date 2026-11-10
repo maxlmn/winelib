@@ -118,3 +118,24 @@ def test_grapes_of():
     assert grapes_of("Mueller-Thurgau") == (None, [("Mueller-Thurgau", None)])
     assert grapes_of("Pinot Noir and Chardonnay") == (None, [("Pinot Noir", None), ("Chardonnay", None)])
     assert grapes_of("") == (None, [])
+
+
+def test_a_plain_wine_named_after_its_appellation_is_yours(client):
+    """"Jamet, Côte-Rôtie": the producer's plain wine (no cuvée), already in the cellar, not a new wine named after
+    its appellation; and in a whole name ("Wine") a hyphenated appellation is cut off too."""
+    import db
+    session = next(client.app.dependency_overrides[db.get_session]())
+    rhone = Region(name="Rhone", country="France")
+    cr = Appellation(name="Côte-Rôtie", region_obj=rhone)
+    session.add(Wine(producer=Producer(name="Domaine Jamet", region_obj=rhone), cuvee="", vintage="2019",
+                     appellation=cr, region_obj=rhone))
+    session.commit()
+    for csv in ("Producer,Cuvee,Vintage,Appellation,Quantity\nJamet,Côte-Rôtie,2019,Côte-Rôtie,2\n",
+                "Producer,Wine,Vintage,Appellation,Quantity\nDomaine Jamet,Domaine Jamet Côte-Rôtie,2019,Côte-Rôtie,2\n",
+                "Producer,Wine,Vintage,Appellation,Quantity\nDomaine Jamet,Côte-Rôtie Côte Brune,2019,Côte-Rôtie,1\n"):
+        (item,) = run(client, csv)["result"]["items"]
+        assert "new wine" not in item["detail"] or "Côte Brune" in csv, (csv, item)
+        if "Côte Brune" in csv:
+            assert item["label"].startswith("Côte Brune"), item["label"]  # the appellation cut off its whole name
+        else:
+            assert item["pick"]["flag"], item  # your wine

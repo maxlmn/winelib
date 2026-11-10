@@ -114,6 +114,28 @@ select {
 	color: inherit;
 }
 
+/* Every control the app's way by default (the forms' look, lib/components/forms/forms.css): a page's own styles
+   still win (:where adds nothing to their weight); without this, a bare select or field showed the browser's own */
+:where(input:not([type]), input[type='text'], input[type='search'], input[type='url'], input[type='number'],
+	input[type='date'], input[type='email'], select, textarea) {
+	padding: 6px 10px;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--surface-2);
+	outline: none;
+	transition: border-color 0.12s, background 0.12s;
+}
+
+:where(input:not([type]), input[type='text'], input[type='search'], input[type='url'], input[type='number'],
+	input[type='date'], input[type='email'], select, textarea):focus {
+	border-color: var(--accent);
+	background: var(--surface);
+}
+
+:where(input[type='checkbox'], input[type='radio'], input[type='range']) {
+	accent-color: var(--accent);
+}
+
 h1 {
 	font-size: 22px;
 	margin: 0;

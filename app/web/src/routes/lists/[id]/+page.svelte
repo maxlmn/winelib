@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ask } from '#lib/ask.svelte.ts';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { aborted, messageOf, request } from '#lib/api/http.ts';
 	import { onMount } from 'svelte';
@@ -167,7 +168,7 @@
 		}
 	}
 	async function drop() {
-		if (!confirm(`Delete the list “${list.name}”? Its wines stay in WineLib.`)) return;
+		if (!(await ask(`Delete the list “${list.name}”? Its wines stay in WineLib.`, { confirmLabel: 'Delete', danger: true }))) return;
 		try {
 			await deleteList(list.id);
 			goto(links.lists());

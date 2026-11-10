@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ask } from '#lib/ask.svelte.ts';
 	/** Maintenance scripts (app/api/tasks/) run on the server as background jobs: see app/api/routers/maintenance.py */
 	import { onMount, tick } from 'svelte';
 	import { page } from '$app/state';
@@ -185,7 +186,7 @@
 	});
 
 	async function start(t: Task, commit: boolean) {
-		if (commit && t.writes && !confirm(`${t.title}: this changes your data. Run it?`)) return;
+		if (commit && t.writes && !(await ask('This changes your data. Run it?', { title: t.title, confirmLabel: 'Run' }))) return;
 		if (t.upload) {
 			if (!uploads[t.id]) return (error = 'Choose a CSV file');
 			if (t.critic && !critic.trim()) return (error = 'Which critic are these reviews by?');
@@ -198,7 +199,7 @@
 	let acted = $state<Record<number, { busy: boolean; text: string; done: boolean }>>({});
 	const acting = $derived(Object.values(acted).some((x) => x.busy));
 	async function act(i: number, a: ItemAction) {
-		if (a.confirm && !confirm(a.confirm)) return;
+		if (a.confirm && !(await ask(a.confirm))) return;
 		acted[i] = { busy: true, text: a.busy ?? '…', done: false };
 		try {
 			const body = await request<{ message?: string; ok?: boolean }>(a.endpoint, { method: 'POST' });
@@ -210,7 +211,7 @@
 
 	// A report's button for all its lines at once: another task, run straight away
 	async function bulk(b: NonNullable<Result['bulk']>) {
-		if (b.confirm && !confirm(b.confirm)) return;
+		if (b.confirm && !(await ask(b.confirm))) return;
 		await post(b.task, { commit: true });
 	}
 
@@ -220,7 +221,7 @@
 		const what = mergeTask === 'merge_producers'
 			? `${n} producer${n > 1 ? 's' : ''}? Their wines move to the one kept (or merge into the same wine there), then they're deleted.`
 			: `${n} cuvée name${n > 1 ? 's' : ''}? Wines are renamed, or merged into their twin.`;
-		if (commit && !confirm(`Merge ${what}`)) return;
+		if (commit && !(await ask(`Merge ${what}`, { confirmLabel: 'Merge' }))) return;
 		await post(mergeTask, { commit, pairs: picked });
 		keep = {};
 	}

@@ -219,8 +219,8 @@ test('Needs attention checks again after a task fixed what it found', async ({ p
 	const panel = page.getByRole('region', { name: 'Needs attention' });
 	await expect(panel).toContainText('entered twice');
 	await page.getByRole('tab', { name: 'Maintenance' }).click();
-	page.on('dialog', (d) => d.accept());
 	await page.locator('#task-duplicates').getByRole('button', { name: 'Run' }).click();
+	await page.getByRole('dialog').getByRole('button', { name: 'Run' }).click(); // the app's own question
 	await expect(page.getByText(/duplicate deleted/).first()).toBeVisible({ timeout: 15_000 });
 	await page.getByRole('tab', { name: /Needs attention/ }).click();
 	await expect(panel).not.toContainText('entered twice');
