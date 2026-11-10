@@ -107,10 +107,31 @@ def test_the_lyonnais_in_france(tmp_path):
         c.execute(text("INSERT INTO appellations (id, name, region_id, subregion) VALUES "
                        "(1, 'Coteaux-Du-Lyonnais', 45, 'The Lyonnais'), (2, 'Côte-Rôtie', 45, NULL)"))
         c.execute(text("INSERT INTO vineyards (id, name, region_id) VALUES (1, 'Le Clos', 45), (2, 'La Landonne', 45)"))
-        c.execute(text("INSERT INTO wines (id, region_id, appellation_id, vineyard_id) VALUES (1, 45, 1, 1), (2, 45, 2, 2)"))
+        c.execute(text("INSERT INTO wines (id, producer_id, region_id, appellation_id, vineyard_id) VALUES (1, 1, 45, 1, 1), (2, 2, 45, 2, 2)"))
         c.execute(text("INSERT INTO producers (id, name, region_id, subregion) VALUES "
                        "(1, 'Baptiste Nayrand', 45, 'The Lyonnais'), (2, 'Jamet', 45, 'Northern Rhône')"))
     migrate.upgrade(engine)
     with engine.connect() as c:
         region = lambda table: dict(c.execute(text(f"SELECT id, region_id FROM {table} ORDER BY id")).all())  # noqa: E731
         assert region("appellations") == region("wines") == region("vineyards") == region("producers") == {1: 130, 2: 45}
+
+
+def test_a_wine_without_producer_gets_one(tmp_path):
+    """0010: a wine left without a producer (an earlier import) gets "Unknown producer", so its pages open."""
+    from alembic import command
+    engine = create_engine(f"sqlite:///{tmp_path / 'orphan.db'}")
+    with engine.begin() as c:
+        command.upgrade(migrate.config(c), "0009")
+        c.execute(text("INSERT INTO producers (id, name) VALUES (1, 'Clos Rougeard')"))
+        c.execute(text("INSERT INTO wines (id, producer_id, cuvee) VALUES (1, 1, 'Le Bourg'), (2, NULL, 'VO'), (3, 99, 'X')"))
+    migrate.upgrade(engine)
+    with engine.connect() as c:
+        rows = c.execute(text("SELECT w.id, p.name FROM wines w JOIN producers p ON p.id = w.producer_id ORDER BY w.id"))
+        assert [tuple(r) for r in rows] == [(1, "Clos Rougeard"), (2, "Unknown producer"), (3, "Unknown producer")]
+
+
+def test_every_wine_with_its_producer_adds_none(tmp_path):
+    engine = create_engine(f"sqlite:///{tmp_path / 'fine.db'}")
+    migrate.upgrade(engine)
+    with engine.connect() as c:
+        assert c.execute(text("SELECT count(*) FROM producers")).scalar() == 0

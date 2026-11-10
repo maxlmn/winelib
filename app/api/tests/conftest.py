@@ -76,6 +76,7 @@ def client(module_store, tmp_path):
     template, _ = module_store
     shutil.copy(template, tmp_path / "test.db")
     engine = create_engine(f"sqlite:///{tmp_path / 'test.db'}", connect_args={"check_same_thread": False})
+    db.sqlite_pragmas(engine)  # as the app's
     Session = sessionmaker(bind=engine)
     geo.reset()
     _forget_bi()

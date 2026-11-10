@@ -259,3 +259,14 @@ def test_shapes_report_missing_boundaries(client):
 ])
 def test_missing_ids_are_404(client, path):
     assert client.get(f"/api/{path}").status_code == 404
+
+
+def test_a_grape_by_a_name_with_accented_capitals(client):
+    """SQLite's own lower() lowers A-Z only: "Muscat Blanc À Petits Grains" by its name was "Grape not found"."""
+    import db
+    from db import Varietal
+    session = next(client.app.dependency_overrides[db.get_session]())
+    session.add(Varietal(name="Muscat Blanc À Petits Grains"))
+    session.commit()
+    for key in ("Muscat Blanc À Petits Grains", "muscat blanc à petits grains", "MUSCAT BLANC À PETITS GRAINS"):
+        assert client.get(f"/api/grapes/{key}").status_code == 200, key

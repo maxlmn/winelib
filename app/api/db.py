@@ -16,8 +16,9 @@ Session = sessionmaker(bind=engine)
 
 
 def sqlite_pragmas(engine):
-    """SQLite as a server's database: WAL (pages read while a Maintenance job writes) and a few seconds' wait for
-    another writer instead of "database is locked"."""
+    """SQLite as a server's database: WAL (pages read while a Maintenance job writes), a few seconds' wait for
+    another writer instead of "database is locked", and lower() for every letter as Postgres's (SQLite's own lowers
+    A-Z only: a grape named "Muscat Blanc À Petits Grains" wasn't found by its name)."""
     if engine.dialect.name != "sqlite":
         return
 
@@ -27,6 +28,7 @@ def sqlite_pragmas(engine):
         cur.execute("PRAGMA journal_mode=WAL")
         cur.execute("PRAGMA busy_timeout=5000")
         cur.close()
+        conn.create_function("lower", 1, lambda s: s.lower() if isinstance(s, str) else s, deterministic=True)
 
 
 sqlite_pragmas(engine)
