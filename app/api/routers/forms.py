@@ -386,7 +386,8 @@ def delete_producer(producer_id: int, session: Session = Depends(get_session)):
     p = _get(session, Producer, producer_id, "Producer")
     n = session.query(Wine).filter_by(producer_id=p.id).count()
     _refuse_if(n, f"{p.name} still has {n} wine{'s' * (n != 1)}: delete or move them first")
-    session.query(ListItem).filter_by(producer_id=p.id).delete()  # off the lists it was on
+    # off the lists it was on (its wines' and cuvées' entries went with them when they moved to another producer)
+    session.query(ListItem).filter_by(producer_id=p.id, kind="producer").delete()
     session.delete(p)
     session.commit()
     return {"deleted": producer_id}
@@ -548,7 +549,12 @@ def update_wine(wine_id: int, data: WineIn, session: Session = Depends(get_sessi
     vintages = (_vintages(session, w)
                 .filter((Wine.vineyard_id.is_(None)) | (Wine.vineyard_id == before) if before else Wine.vineyard_id.is_(None))
                 .all())
+    producer_before = w.producer_id
     _fill_wine(session, w, data)
+    session.flush()
+    if w.producer_id != producer_before:  # its list entries (the wine, its cuvée) follow it to its new producer
+        session.query(ListItem).filter(ListItem.wine_id == w.id, ListItem.kind != "producer").update(
+            {ListItem.producer_id: w.producer_id})
     changed = (w.vineyard.id if w.vineyard else None) != before
     for other in vintages if changed else []:
         other.vineyard = w.vineyard
@@ -758,7 +764,9 @@ def create_tasting(data: TastingCreate, session: Session = Depends(get_session))
         if not data.bottle_id:
             raise HTTPException(422, "Pick the bottle from the cellar")
         bottle = _get(session, Bottle, data.bottle_id, "Bottle")
-        if data.consume and (bottle.qty or 0) > 0:
+        if data.consume:
+            if (bottle.qty or 0) < 1:
+                raise HTTPException(409, "No bottle left in the cellar")
             bottle.qty -= 1
     else:
         if data.wine is None:
@@ -770,6 +778,8 @@ def create_tasting(data: TastingCreate, session: Session = Depends(get_session))
     tn = TastingNote()
     _fill_tasting(session, tn, data)
     tn.bottle = bottle
+    if data.source == "cellar":
+        tn.took_bottle = data.consume
     session.add(tn)
     return {"id": _commit(session, tn), "bottle_id": bottle.id, "wine_id": bottle.wine_id}
 
@@ -778,8 +788,14 @@ def create_tasting(data: TastingCreate, session: Session = Depends(get_session))
 def update_tasting(tasting_id: int, data: TastingIn, session: Session = Depends(get_session)):
     tn = _get(session, TastingNote, tasting_id, "Tasting note")
     _fill_tasting(session, tn, data)
-    if data.bottle:
-        _fill_bottle_details(tn.bottle, data.bottle)
+    # A bottle bought for the tasting alone takes the details; a cellar line's are its other bottles' too: left as
+    # they are (edited from the bottle). Only the fields sent: one left out keeps its value
+    if data.bottle and _is_adhoc(tn.bottle):
+        given = data.bottle.model_dump(exclude_unset=True)
+        if "currency" in given and not given["currency"]:
+            given["currency"] = settings.current.currency
+        for field, value in given.items():
+            setattr(tn.bottle, field, value)
     return {"id": _commit(session, tn), "bottle_id": tn.bottle_id, "wine_id": tn.bottle.wine_id}
 
 
@@ -790,17 +806,22 @@ def _is_adhoc(b):
 
 
 @router.delete("/api/tastings/{tasting_id}")
-def delete_tasting(tasting_id: int, session: Session = Depends(get_session)):
+def delete_tasting(tasting_id: int, restore: bool = False, session: Session = Depends(get_session)):
+    """The note gone. The ad-hoc bottle existed only for it: gone too. A cellar bottle keeps its quantity unless
+    ?restore=true puts the bottle back (the form asks, ticked when the note took one out: took_bottle)."""
     tn = _get(session, TastingNote, tasting_id, "Tasting note")
     b = tn.bottle
     session.delete(tn)
     session.flush()
-    # The ad-hoc bottle existed only for this note. A cellar bottle keeps its quantity: we can't tell if it was drunk.
     adhoc = b is not None and _is_adhoc(b) and not b.qty and not session.query(TastingNote).filter_by(bottle_id=b.id).count()
+    restored = bool(restore and b is not None and not _is_adhoc(b))
     if adhoc:
         session.delete(b)
+    elif restored:
+        b.qty = (b.qty or 0) + 1
     session.commit()
-    return {"deleted": tasting_id, "bottle_deleted": adhoc, "wine_id": b.wine_id if b else None}
+    return {"deleted": tasting_id, "bottle_deleted": adhoc, "bottle_restored": restored,
+            "wine_id": b.wine_id if b else None}
 
 
 # --- Places and visits ------------------------------------------------------------------------
@@ -972,6 +993,7 @@ def tasting_form(tasting_id: int, session: Session = Depends(get_session)):
         "tags": tn.tags, "notes": tn.notes, "place": _place_out(tn.place), "styles": [s.tag for s in tn.styles],
         "source": "other" if _is_adhoc(b) else "cellar",
         "bottle_id": b.id, "bottle": _bottle_details(b), "wine": wine_summary(b.wine),
+        "took_bottle": tn.took_bottle,  # took one out of the cellar: True, False, or None (not known)
     }
 
 

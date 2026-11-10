@@ -74,6 +74,15 @@ test("a tasting without a note opens from its \"No note\"; the page says it's a 
 	await expect(page.locator('.kind').first()).toHaveText(/Tasting/i);
 });
 
+test("deleting a tasting of a cellar bottle offers to put it back, ticked when it took one out", async ({ page }) => {
+	await page.goto(`/tastings/${ids().tasting}/edit`);
+	await page.getByRole('button', { name: 'Delete' }).click();
+	const dialog = page.getByRole('dialog');
+	await expect(dialog.getByRole('checkbox', { name: /Put the bottle back in the cellar/ })).toBeChecked();
+	await dialog.getByRole('button', { name: 'Cancel' }).click();
+	await expect(dialog).toBeHidden();
+});
+
 test("a tasting card's date opens the occasion in the journal", async ({ page }) => {
 	await page.goto(`/wines/${ids().wine}`);
 	await page.getByRole('tab', { name: /History/ }).click();

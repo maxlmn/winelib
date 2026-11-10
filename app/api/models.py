@@ -329,6 +329,8 @@ class TastingNote(Base):
     location = Column(String) ## will be set to place name automatically.
     sequence = Column(Integer) # Sequence in the tasting day (Seq)
     glasses = Column(Float)    # Amount drank in glasses (Gls)
+    # a cellar bottle's: whether noting it took one out of the cellar (None: not known, an older or imported note)
+    took_bottle = Column(Boolean)
     # Relationships
     bottle = relationship("Bottle", back_populates="tastings")
     place_id = Column(Integer, ForeignKey('places.id'))

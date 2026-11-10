@@ -181,6 +181,8 @@ export interface TastingForm {
 	bottle_id: number;
 	bottle: BottleDetails;
 	wine: WineSummary;
+	/** a cellar bottle's: whether noting it took one out (null: not known, an older note) */
+	took_bottle?: boolean | null;
 }
 
 export interface PlaceForm {
@@ -245,7 +247,8 @@ export async function send<T = { id: number }>(method: 'POST' | 'PUT' | 'DELETE'
 export const save = <T = { id: number }>(kind: string, id: number | null, body: unknown) =>
 	send<T>(id ? 'PUT' : 'POST', id ? `/api/${kind}/${id}` : `/api/${kind}`, body);
 
-export const remove = <T = { deleted: number }>(kind: string, id: number) => send<T>('DELETE', `/api/${kind}/${id}`);
+export const remove = <T = { deleted: number }>(kind: string, id: number, query = '') =>
+	send<T>('DELETE', `/api/${kind}/${id}${query ? `?${query}` : ''}`);
 
 export const today = () => {
 	const d = new Date();
