@@ -14,6 +14,20 @@
 - **The app's own questions** (Maintenance's runs, an import, a list or an outline deleted) in its dialog, not the
   browser's; and every field, menu and checkbox in the app's style, the lists' too (they were the browser's own,
   light in dark mode).
+- **Deleting a tasting asks whether to put the bottle back** in the cellar (ticked when that tasting took one out;
+  tastings logged before this version don't record it). A tasting can't take a bottle from an empty line.
+- **Edits keep what they should**: a wine moved to another producer keeps its list entries; deleting a producer
+  only removes its own list entries; editing a tasting no longer changes the cellar bottle it came from.
+- **Merges keep the duplicate's details**: its grapes and shares, region, vineyard and other filled-in fields; a list
+  that held both wines keeps one entry, with both notes. *Duplicate wines* only pairs wines with the same region,
+  vineyard and LWIN, and its preview lets you pick the groups to merge.
+- **CSV imports**: identical rows add up (importing a file twice still adds nothing); notes-only tastings are all
+  kept; a close match arrives unticked, with what it's close to; "12,50" and "93-95" read right; Excel's CSV keeps
+  its accents; the preview says how ambiguous dates were read and can switch day and month; line numbers match the
+  spreadsheet.
+- **Safer**: *Fill from a link* only reads public internet pages; a Backup that misses a table fails; the MCP
+  server's writes aren't marked safe to repeat, and ask for a code when the client can't confirm.
+- **The Unknown region is plain text**, not a dead link; an empty cellar says so on the home page.
 
 ## v0.5.0
 
