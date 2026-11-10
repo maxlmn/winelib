@@ -254,13 +254,14 @@ def _scores_csv(session, job):
         if it["outcome"] not in saving:
             continue
         row, p = it["row"], it["producer"]
-        doubt = it["matched_by"].endswith("distinctive words")  # not its name or an alias: to check
+        doubt = it["matched_by"].endswith("distinctive words") or it.get("close")  # not its name or cuvée: to check
         what = {sc.ADD: "new wine", sc.FILL: "your wine, no score yet",
                 sc.REPLACE: f"your wine, {critic} {it.get('current')} now"}[it["outcome"]]
         detail = " · ".join(x for x in (
             what, it["appellation"].name if it["appellation"] else None, it["colour"], it["grape"].name if it["grape"] else None,
             f"→ {row['score']}" if row["score"] else "note only", f"line {it['line']}",
-            "check: producer found by its distinctive words" if doubt else None) if x)
+            "check: producer found by its distinctive words" if it["matched_by"].endswith("distinctive words") else None,
+            f"check: close to your {it['close']} {it['vintage']}, not the same name" if it.get("close") else None) if x)
         items.append(_item(sc.label(it), detail, row["link"] or None,
                            pick={"key": str(it["line"]), "group": p.name, "on": it["outcome"] != sc.REPLACE and not doubt,
                                  "flag": it["outcome"] == sc.FILL}))
@@ -290,7 +291,11 @@ def _cellar_csv(session, job):
     if "producer" not in mapping:
         return {"summary": f"{_n(len(rows), 'row')}: pick the column for producer below, then Preview again.",
                 "items": [], "columns": columns}
-    results = ic.plan(session, rows, mapping)
+    order, example, sure = ic.date_order(rows, mapping, job.params.get("date_order"))
+    read = ic.day(example, order == "mdy") if example else None  # its example, as read
+    if example:  # dates like 3/4/2024: which way they're read, to pick on the card
+        columns["dates"] = order
+    results = ic.plan(session, rows, mapping, order)
     outcomes = _outcomes(job, rows, mapping, results)
     if job.commit:
         keys = set(job.params.get("keys") or [])
@@ -324,7 +329,10 @@ def _cellar_csv(session, job):
                        f"{_n(sum(1 for it in adds if it.get('tasting')), 'tasting')}."
                        + (f" Left out: {', '.join(f'{o}: {n}' for o, n in skipped.most_common())}." if skipped else "")
                        + (f" Appellations not recognised (left empty): "
-                          f"{', '.join(f'{a} ({n})' for a, n in unknown_apps.most_common(12))}." if unknown_apps else ""),
+                          f"{', '.join(f'{a} ({n})' for a, n in unknown_apps.most_common(12))}." if unknown_apps else "")
+                       + (f" Dates read as {ic.DATE_ORDERS[order]}: {example} = {read.day} {read:%B %Y}"
+                          + ("" if sure else " (the file doesn't say: pick the other order below if it's that)") + "."
+                          if read else ""),
             "items": items, "flag": "your wines", "unknown": sorted(unknown, key=lambda g: -g["reviews"]),
             "columns": columns}
 
@@ -589,7 +597,8 @@ def _cellar_csv_params(body, commit):
         raise HTTPException(422, "Choose a CSV file")
     if commit and not body.keys:
         raise HTTPException(422, "Preview first, then tick the rows to import")
-    return {"_text": body.text, "mapping": body.mapping, "keys": body.keys if commit else []}
+    return {"_text": body.text, "mapping": body.mapping, "keys": body.keys if commit else [],
+            "date_order": body.date_order if body.date_order in ("dmy", "mdy") else None}
 
 
 def _scores_csv_params(body, commit):
@@ -730,6 +739,7 @@ class RunBody(BaseModel):
     text: str | None = Field(None, max_length=20_000_000)
     critic: str | None = None
     mapping: dict[str, str] | None = None
+    date_order: str | None = None  # import a cellar: dates like 3/4/2024 read "dmy" or "mdy" (as picked in the preview)
 
 
 @router.post("/api/maintenance/{task}", status_code=202)

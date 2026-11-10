@@ -92,3 +92,26 @@ def test_columns_picked_by_hand(client):
     assert r.status_code == 202
     job = wait(client)
     assert [i["pick"]["key"] for i in job["result"]["items"]] == ["2"]
+
+
+def test_a_close_cuvee_is_to_check(client):
+    """A score for "Saumur-Champigny Le Bourg Réserve" isn't silently given to your "Saumur-Champigny Le Bourg"
+    (three words in four the same): offered unticked, to check."""
+    import db
+    s = next(client.app.dependency_overrides[db.get_session]())
+    s.add(Wine(producer_id=1, cuvee="Saumur-Champigny Le Bourg", vintage="2015", type="Red"))
+    s.commit()
+    s.close()
+    text = ("Producer;Wine;Vintage;Score\nClos Rougeard;Saumur-Champigny Le Bourg Réserve;2015;95\n"
+            "Clos Rougeard;Saumur-Champigny Le Bourg;2015;96\n")
+    assert client.post("/api/maintenance/scores_csv", json={"text": text, "critic": "Vinous"}).status_code == 202
+    items = {i["pick"]["key"]: i for i in wait(client)["result"]["items"]}
+    assert items["2"]["pick"]["on"] is False
+    assert "check: close to your Saumur-Champigny Le Bourg 2015" in items["2"]["detail"]
+    assert items["3"]["pick"]["on"] is True and "close to" not in items["3"]["detail"]  # the wine's own row
+
+
+def test_line_numbers_are_the_spreadsheets():
+    from tasks.import_scores import read
+    headers, rows = read("Producer;Vintage\nA;2019\n;\n\nB;2020\n")
+    assert headers == ["Producer", "Vintage"] and [(r["Producer"], r.line) for r in rows] == [("A", 2), ("B", 5)]

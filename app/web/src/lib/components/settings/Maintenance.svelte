@@ -30,11 +30,12 @@
 		/** a button that starts another task (a plug-in's: search every wine again, one login for the lot) */
 		bulk?: { task: string; label: string; confirm: string | null } | null;
 		/** an import's file: its columns, and which one each field was read from */
-		columns?: { headers: string[]; mapping: Record<string, string>; fields: string[]; required: string[] };
+		columns?: { headers: string[]; mapping: Record<string, string>; fields: string[]; required: string[]; dates?: DateOrder };
 		/** a line each; `action`: a button posting to its endpoint (a plug-in's: Clear and search again), whose answer's
 		 * message is shown (`ok: false` keeps the button); `pick`: a suggestion to tick before the run (PickList) */
 		items?: { label: string; detail: string | null; href: string | null; copies?: Copy[]; merge?: MergeOffer; action?: ItemAction; pick?: PickItem['pick'] }[];
 	}
+	type DateOrder = 'dmy' | 'mdy';
 	interface ItemAction {
 		label: string;
 		endpoint: string;
@@ -108,15 +109,32 @@
 	let critic = $state('');
 	let critics = $state<string[]>([]);
 	let columns = $state<Record<string, string>>({});
+	// Import a cellar: how its dates like 3/4/2024 are read (as the preview says, or picked to preview again)
+	let dates = $state<DateOrder | undefined>();
 	$effect(() => {
 		columns = { ...(job?.result?.columns?.mapping ?? {}) };
+		dates = job?.result?.columns?.dates;
 	});
 	const FIELD_LABELS: Record<string, string> = { cuvee: 'cuvée' };
+	// The file's text: UTF-8, else Windows' Western encoding (Excel's plain CSV: "Côte-Rôtie" kept)
+	async function decode(file: File) {
+		const bytes = await file.arrayBuffer();
+		try {
+			return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+		} catch {
+			return new TextDecoder('windows-1252').decode(bytes);
+		}
+	}
 	async function choose(task: string, e: Event & { currentTarget: HTMLInputElement }) {
 		const file = e.currentTarget.files?.[0];
-		uploads[task] = file ? { name: file.name, text: await file.text() } : undefined;
+		uploads[task] = file ? { name: file.name, text: await decode(file) } : undefined;
 	}
-	const uploadBody = (task: string, mapping: Record<string, string> | null) => ({ text: uploads[task]?.text ?? '', critic, mapping });
+	const uploadBody = (task: string, mapping: Record<string, string> | null, date_order?: DateOrder) => ({
+		text: uploads[task]?.text ?? '',
+		critic,
+		mapping,
+		date_order
+	});
 
 	async function load() {
 		let m, b;
@@ -279,8 +297,17 @@
 						</select>
 					</label>
 				{/each}
+				{#if cols.dates}
+					<label class="small">
+						dates
+						<select bind:value={dates}>
+							<option value="dmy">day/month</option>
+							<option value="mdy">month/day</option>
+						</select>
+					</label>
+				{/if}
 				<button class="btn" disabled={!uploads[job.task]} title={uploads[job.task] ? '' : 'Choose the file again'}
-					onclick={() => post(job!.task, uploadBody(job!.task, Object.fromEntries(Object.entries(columns).filter(([, h]) => h))))}>Preview again</button>
+					onclick={() => post(job!.task, uploadBody(job!.task, Object.fromEntries(Object.entries(columns).filter(([, h]) => h)), dates))}>Preview again</button>
 			</div>
 		{/if}
 		{#if job.result?.items?.length && job.result.items[0].pick}
@@ -288,7 +315,7 @@
 			<PickList bind:ticked row={job.result.items[0].pick.wine ? cardRow : undefined} peek={LINKS.includes(job.task) ? lieuPeek : undefined} items={job.result.items as PickItem[]} verb={LINKS.includes(job.task) ? 'Link' : 'Import'}
 				disabled={running} flag={job.result.flag}
 				onrun={(keys) => tasks.find((t) => t.id === job!.task)?.upload
-					? post(job!.task, { commit: true, keys, ...uploadBody(job!.task, columns) })
+					? post(job!.task, { commit: true, keys, ...uploadBody(job!.task, columns, job!.result?.columns?.dates) })
 					: post(job!.task, { commit: true, keys, targets: Object.fromEntries(keys.filter((k) => edits[k]).map((k) => [k, editBody(edits[k]!)])) })} />
 		{:else if job.result?.items?.length}
 			{@const left = job.result.items.filter((it, i) => it.action && !acted[i]?.done).length}
