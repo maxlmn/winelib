@@ -6,7 +6,7 @@
 	import type { RegionColors } from '#lib/types.ts';
 	import { FALLBACK_REGION } from '#lib/colors.ts';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
-	import { links } from '#lib/links.ts';
+	import { links, regionLink } from '#lib/links.ts';
 	import ShowMore from './ShowMore.svelte';
 
 	let { tastings, places, regionColors }: { tastings: Tasting[]; places: Record<string, Place>; regionColors: RegionColors } = $props();
@@ -79,7 +79,7 @@
 							title="{regionLabel(t.region)} · {t.color ?? ''}{t.format ? ` · ${t.format}` : ''}"
 						/>
 					</td>
-					<td>{#if t.region}<a class="region" href={links.region(t.region)}>{regionLabel(t.region)}</a>{/if}</td>
+					<td>{#if regionLink(t.region)}<a class="region" href={regionLink(t.region)}>{regionLabel(t.region)}</a>{:else if t.region}<span class="region">{regionLabel(t.region)}</span>{/if}</td>
 					<td class="strong"><a href={links.producer(t.producer_id)}>{t.producer}</a></td>
 					<td><a href={links.wine(t.wine_id)}>{t.cuvee || '—'}</a></td>
 					<td class="muted">

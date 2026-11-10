@@ -96,3 +96,80 @@ def test_local_addresses_refused(monkeypatch):
     monkeypatch.setattr(socket, "getaddrinfo", lambda host, *a, **k: [(0, 0, 0, "", (answers.get(host, "93.184.216.34"), 0))])
     with pytest.raises(from_link.LinkError):
         from_link._PublicOnly().redirect_request(None, None, 302, "Found", {}, "http://nas.local/admin")
+
+
+def _answers(monkeypatch, *answers):
+    """socket.getaddrinfo answering each lookup with the next list of addresses (the last one repeated)"""
+    import socket
+    calls = []
+
+    def getaddrinfo(host, port=None, *a, **k):
+        ips = answers[min(len(calls), len(answers) - 1)]
+        calls.append(host)
+        if ips is None:
+            raise socket.gaierror("not found")
+        return [(socket.AF_INET6 if ":" in ip else socket.AF_INET, socket.SOCK_STREAM, 6, "", (ip, port or 0))
+                for ip in ips]
+    monkeypatch.setattr(socket, "getaddrinfo", getaddrinfo)
+    return calls
+
+
+def test_only_global_addresses(monkeypatch):
+    """Tailscale / CGNAT, a host that doesn't resolve, and a host with one local address among public ones: refused."""
+    from tasks import from_link
+    for ips in (["100.100.1.2"], ["100.64.0.1"], ["93.184.216.34", "10.0.0.5"], ["::ffff:127.0.0.1"], ["fd7a:115c::1"],
+                ["192.0.2.1"], None, []):
+        _answers(monkeypatch, ips)
+        assert not from_link.public("https://shop.example/wine"), ips
+    _answers(monkeypatch, ["93.184.216.34", "2606:2800:220:1::1"])
+    assert from_link.public("https://shop.example/wine")
+
+
+def test_connects_to_the_checked_address(monkeypatch):
+    """The socket goes to the address checked at connection time: a second DNS answer pointing to the local network
+    (DNS rebinding) is refused before anything connects there."""
+    import socket
+    import pytest
+    from tasks import from_link
+    connected = []
+
+    def create_connection(address, *a, **k):
+        connected.append(address)
+        raise OSError("no network in tests")
+    monkeypatch.setattr(socket, "create_connection", create_connection)
+
+    # public at the check, local at the connection: refused, never connected
+    _answers(monkeypatch, ["93.184.216.34"], ["192.168.1.2"])
+    with pytest.raises(from_link.LinkError, match="local address"):
+        from_link.fetch("http://shop.example/wine")
+    assert connected == []
+
+    # public both times: connected to that IP (not the hostname, which would be looked up again)
+    _answers(monkeypatch, ["93.184.216.34"])
+    with pytest.raises(from_link.LinkError, match="couldn't be reached"):
+        from_link.fetch("https://shop.example:8443/wine")
+    assert connected == [("93.184.216.34", 8443)]
+
+
+def test_https_keeps_the_hostname(monkeypatch):
+    """Pinned to the IP, a TLS connection still sends the hostname (SNI) and verifies the certificate against it."""
+    import socket
+    import ssl
+    from tasks import from_link
+    _answers(monkeypatch, ["93.184.216.34"])
+
+    class Sock:
+        def __init__(self, address):
+            self.address = address
+
+        def setsockopt(self, *a):
+            pass
+    monkeypatch.setattr(socket, "create_connection", lambda address, *a, **k: Sock(address))
+    handler = from_link._PinnedHTTPS()
+    assert handler._context.verify_mode == ssl.CERT_REQUIRED and handler._context.check_hostname
+    conn = from_link._PinnedHTTPSConnection("shop.example", 443, context=handler._context)
+    wrapped = {}
+    monkeypatch.setattr(conn._context, "wrap_socket", lambda sock, server_hostname=None: wrapped.update(
+        sock=sock, server_hostname=server_hostname) or sock, raising=False)
+    conn.connect()
+    assert wrapped["sock"].address == ("93.184.216.34", 443) and wrapped["server_hostname"] == "shop.example"

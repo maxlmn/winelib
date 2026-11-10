@@ -2,7 +2,7 @@
 	import { regionLabel } from '#lib/regions.svelte.ts';
 	import type { Breakdown } from '#lib/api/summary.ts';
 	import { FALLBACK_REGION, TYPE_COLORS } from '#lib/colors.ts';
-	import { links } from '#lib/links.ts';
+	import { links, regionLink } from '#lib/links.ts';
 	import BarList from './BarList.svelte';
 	import ColumnChart from './ColumnChart.svelte';
 	import PaletteBand from './PaletteBand.svelte';
@@ -21,7 +21,7 @@
 		data.colors.map((c) => ({ label: c.name, count: c.count, color: TYPE_COLORS[c.name], href: filterHref?.('color', c.name) }))
 	);
 	const regions = $derived(
-		data.regions.map((r) => ({ key: r.name, label: regionLabel(r.name), count: r.count, color: r.color, href: links.region(r.name) }))
+		data.regions.map((r) => ({ key: r.name, label: regionLabel(r.name), count: r.count, color: r.color, href: regionLink(r.name) }))
 	);
 	const producers = $derived(
 		data.producers.map((p) => ({ key: p.id, label: p.name, count: p.count, color: p.color, href: links.producer(p.id) }))

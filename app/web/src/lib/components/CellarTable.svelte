@@ -5,7 +5,7 @@
 	import type { Bottle, RegionColors } from '#lib/types.ts';
 	import { FALLBACK_REGION } from '#lib/colors.ts';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
-	import { links } from '#lib/links.ts';
+	import { links, regionLink } from '#lib/links.ts';
 	import { money } from '#lib/format.ts';
 
 	let { bottles, regionColors }: { bottles: Bottle[]; regionColors: RegionColors } = $props();
@@ -79,7 +79,7 @@
 							title="{regionLabel(b.region)} · {b.color ?? ''}{b.format ? ` · ${b.format}` : ''}"
 						/></a>
 					</td>
-					<td><a class="region quiet" href={links.region(b.region)}>{regionLabel(b.region)}</a></td>
+					<td>{#if regionLink(b.region)}<a class="region quiet" href={regionLink(b.region)}>{regionLabel(b.region)}</a>{:else}<span class="region">{regionLabel(b.region)}</span>{/if}</td>
 					<td class="strong"><a href={links.producer(b.producer_id)}>{b.producer}</a></td>
 					<td><a href={links.bottle(b.bottle_id)} title="Open this bottle">{b.cuvee || '—'}</a></td>
 					<td class="muted">

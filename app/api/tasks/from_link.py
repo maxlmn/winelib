@@ -3,12 +3,17 @@ read into producer, cuvée, vintage, appellation and colour against the database
 link": a draft to check, nothing saved.
 """
 import html
+import http.client
+import ipaddress
 import json
 import re
+import socket
+import ssl
 import urllib.error
 import urllib.request
 from datetime import date
 from html.parser import HTMLParser
+from urllib.parse import urlsplit
 
 from tasks import USER_AGENT
 from tasks.import_cellar import SIZES, Lookup
@@ -60,24 +65,86 @@ class _Page(HTMLParser):
             self._in = None
 
 
-def public(url):
-    """Whether the address is on the internet: not this machine, the local network or a link-local / reserved range
-    (the NAS's own admin page, a router), as its host resolves now"""
-    import ipaddress
-    import socket
-    from urllib.parse import urlsplit
-    host = urlsplit(url).hostname
+def _allowed(address):
+    """Whether one resolved address is on the internet: globally routable (not this machine, the local network,
+    CGNAT / Tailscale's 100.64.0.0/10, link-local, reserved, multicast…)"""
+    ip = ipaddress.ip_address(address.split("%")[0])
+    if ip.version == 6 and ip.ipv4_mapped:
+        ip = ip.ipv4_mapped
+    return ip.is_global and not (ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved
+                                 or ip.is_multicast or ip.is_unspecified)
+
+
+def _resolve(host, port=None):
+    """The host's addresses, once, all checked: LinkError when it doesn't resolve (fail closed) or when any of them
+    isn't on the internet."""
     if not host:
-        return False
+        raise LinkError("Paste a web address (https://…)")
     try:
-        addrs = {info[4][0] for info in socket.getaddrinfo(host, None)}
-    except (socket.gaierror, UnicodeError):
-        return True  # unknown here: the request fails as unreachable, as it would anyway
-    for a in addrs:
-        ip = ipaddress.ip_address(a.split("%")[0])
-        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast or ip.is_unspecified:
-            return False
-    return True
+        addrs = list(dict.fromkeys(info[4][0] for info in socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)))
+    except (socket.gaierror, UnicodeError, OSError) as e:
+        raise LinkError(f"The page couldn't be reached ({host} not found)") from e
+    if not addrs:
+        raise LinkError(f"The page couldn't be reached ({host} not found)")
+    try:
+        ok = all(_allowed(a) for a in addrs)
+    except ValueError:
+        ok = False
+    if not ok:
+        raise LinkError("That's a local address: only shops' pages on the internet can be read")
+    return addrs
+
+
+def public(url):
+    """Whether the address is on the internet: every address its host resolves to now is globally routable (not this
+    machine, the local network, the tailnet, a link-local / reserved range). A host that doesn't resolve isn't."""
+    try:
+        _resolve(urlsplit(url).hostname)
+        return True
+    except (LinkError, ValueError):
+        return False
+
+
+def _pinned_connect(conn):
+    """The connection's socket goes to the address checked when it's made (resolved once: no second lookup that a
+    DNS answer could turn to the local network). The Host header, the TLS SNI and the certificate check keep the
+    hostname (http.client uses conn.host for them)."""
+    def create(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, source_address=None):
+        host, port = address
+        last = None
+        for ip in _resolve(host, port):
+            try:
+                return socket.create_connection((ip, port), timeout, source_address)
+            except OSError as e:
+                last = e
+        raise last
+    conn._create_connection = create
+    return conn
+
+
+class _PinnedHTTPConnection(http.client.HTTPConnection):
+    def __init__(self, *a, **k):
+        super().__init__(*a, **k)
+        _pinned_connect(self)
+
+
+class _PinnedHTTPSConnection(http.client.HTTPSConnection):
+    def __init__(self, *a, **k):
+        super().__init__(*a, **k)
+        _pinned_connect(self)
+
+
+class _PinnedHTTP(urllib.request.HTTPHandler):
+    def http_open(self, req):
+        return self.do_open(_PinnedHTTPConnection, req)
+
+
+class _PinnedHTTPS(urllib.request.HTTPSHandler):
+    def __init__(self):
+        super().__init__(context=ssl.create_default_context())  # verified against the hostname
+
+    def https_open(self, req):
+        return self.do_open(_PinnedHTTPSConnection, req, context=self._context)
 
 
 class _PublicOnly(urllib.request.HTTPRedirectHandler):
@@ -86,6 +153,11 @@ class _PublicOnly(urllib.request.HTTPRedirectHandler):
         if not public(newurl):
             raise LinkError("That link leads to a local address")
         return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def _opener():
+    """No proxy (the address checked is the one connected to), pinned connections, redirects checked"""
+    return urllib.request.build_opener(urllib.request.ProxyHandler({}), _PinnedHTTP, _PinnedHTTPS(), _PublicOnly)
 
 
 def fetch(url):
@@ -98,14 +170,18 @@ def fetch(url):
     req = urllib.request.Request(url, headers={"User-Agent": f"Mozilla/5.0 (compatible; {USER_AGENT})",
                                                "Accept": "text/html,application/xhtml+xml", "Accept-Language": "en,fr"})
     try:
-        with urllib.request.build_opener(_PublicOnly).open(req, timeout=15) as r:
+        with _opener().open(req, timeout=15) as r:
             if "html" not in (r.headers.get("Content-Type") or "html"):
                 raise LinkError("That address isn't a web page")
             raw = r.read(MAX_BYTES)
             charset = r.headers.get_content_charset() or "utf-8"
     except urllib.error.HTTPError as e:
         raise LinkError(f"The shop answered with an error ({e.code}): it may not let apps read its pages") from e
-    except (urllib.error.URLError, TimeoutError, OSError) as e:
+    except urllib.error.URLError as e:
+        if isinstance(e.reason, LinkError):
+            raise e.reason from e
+        raise LinkError(f"The page couldn't be reached ({getattr(e, 'reason', e)})") from e
+    except (TimeoutError, OSError) as e:
         raise LinkError(f"The page couldn't be reached ({getattr(e, 'reason', e)})") from e
     return raw.decode(charset, errors="replace")
 
