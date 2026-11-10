@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- **A wine left without a producer** (by an import of an earlier version) gets *Unknown producer*, so its pages
+  open: the vintage page it was on failed. Fix or delete it from there.
+- **Names with an accented capital are found** on SQLite (the default install): a grape's page by its name
+  ("Muscat Blanc À Petits Grains") said it didn't exist, and so did other look-ups by name. Postgres wasn't affected.
+
 ## v0.5.0
 
 - **A website, with a demo**: [maxlmn.github.io/winelib](https://maxlmn.github.io/winelib/) shows what WineLib does,
