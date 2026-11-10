@@ -11,8 +11,12 @@ What isn't there is created: producers (by name or alias, else new) and grapes. 
 by name or alias; shares when given), set on a new wine only. Appellations are the reference
 list's (by name or alias, the region's column tried too); one that isn't there is left empty and named in the summary.
 A wine is the producer's wine of that vintage with the same cuvée (and colour, appellation when given), else a new
-one. A bottle line or tasting already there (same wine, location, quantity, purchase date; same date and rating) is
-left out, so importing the same file twice adds nothing. Ratings out of 5 (Vivino's stars) or 20 become out of 100.
+one; a wine whose cuvée is only close to yours ("Napa Valley Reserve" / "Napa Valley") is offered unticked, to check.
+Identical bottle rows add up (each row its bottles); bottles already there (that wine's lines of the same location,
+size, purchase date and price, counting the ones drunk or gone since) are left out, as a tasting already there (same
+date, rating and note), so importing the same file twice adds nothing. Ratings out of 5 (Vivino's stars) or 20 become
+out of 100; a range ("93-95") its middle. Dates like 3/4/2024 are read day first unless a date in the file says
+otherwise or it's CellarTracker's (American, month first): the preview says which, and can be told.
 """
 import re
 from collections import defaultdict
@@ -42,7 +46,7 @@ HEADERS = {
     "location": ["location", "storage", "cellar", "rack", "emplacement"],
     "bin": ["bin", "slot", "shelf", "position"],
     "size": ["size", "bottle size", "format", "volume"],
-    "price": ["price", "cost", "purchase price", "prix", "price per bottle", "bottle price"],
+    "price": ["price", "cost", "purchase price", "prix", "price per bottle", "bottle price", "wine price"],
     "currency": ["currency", "devise"],
     "purchase_date": ["purchase date", "purchasedate", "purchased", "date purchased", "acquired", "date d achat"],
     "vendor": ["store", "vendor", "merchant", "shop", "purchased from", "seller", "caviste"],
@@ -112,7 +116,8 @@ def size_of(text):
 
 def month_first(values):
     """Whether the file's dates are month/day/year (CellarTracker's, American): yes when one can only be read so
-    (3/25/2024), no when one can only be read day first (25/3/2024), else no."""
+    (3/25/2024), no when one can only be read day first (25/3/2024), None when every one could be read both ways (or
+    there's none of that form)."""
     for v in values:
         m = re.match(r"\s*(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})", v or "")
         if m:
@@ -121,7 +126,28 @@ def month_first(values):
                 return False
             if b > 12:
                 return True
-    return False
+    return None
+
+
+DATE_ORDERS = {"dmy": "day/month", "mdy": "month/day"}
+
+
+def date_order(rows, mapping, given=None):
+    """(order, example, sure) for the file's dates like 3/4/2024: "dmy" or "mdy" as `given` (picked on the card), else
+    as a date of the file says (25/3: day first), else month first for CellarTracker's export (its iWine column,
+    American) and day first for the others; `example` one of its dates of that form (None when there's none: the
+    order doesn't matter), `sure` whether a date said it."""
+    values = [r.get(mapping.get(f, ""), "") for r in rows for f in ("purchase_date", "tasting_date") if mapping.get(f)]
+    forms = [(v.strip(), m) for v in values if (m := re.match(r"\s*(\d{1,2})[/.-](\d{1,2})[/.-]\d{2,4}", v or ""))]
+    # (one that reads both ways, to show how it's read)
+    example = next((v for v, m in forms if max(int(m.group(1)), int(m.group(2))) <= 12), forms[0][0] if forms else None)
+    found = month_first(values)
+    if given in DATE_ORDERS:
+        return given, example, found is not None
+    if found is not None:
+        return ("mdy" if found else "dmy"), example, True
+    cellartracker = bool(rows) and "iwine" in {norm(h) for h in rows[0]}
+    return ("mdy" if cellartracker else "dmy"), example, False
 
 
 def day(text, us=False):
@@ -147,17 +173,59 @@ def day(text, us=False):
     return date_of(t)
 
 
-def number(text):
-    """"1,250.00", "€45", "45,5" -> a float, else None."""
-    t = re.sub(r"[^\d.,]", "", text or "")
-    if not t:
+NUMBER = re.compile(r"\d[\d.,]*")
+
+
+def decimal_comma(values):
+    """Whether a column's numbers are written 1.250,00 (a decimal comma, "." between thousands): True when one is
+    ("1.250,00", "12,50"), False when one is written 1,250.00 ("1,250.00", "12.50"), None when none tells."""
+    comma = dot = False
+    for v in values:
+        m = NUMBER.search(v or "")
+        t = m.group(0) if m else ""
+        if re.search(r"\.\d{3},\d+$|,\d{1,2}$", t):
+            comma = True
+        if re.search(r",\d{3}\.\d+$|\.\d{1,2}$", t):
+            dot = True
+    return comma if comma != dot else None
+
+
+def number(text, comma=None):
+    """"1,250.00", "1.250,00", "€45", "45,5" -> a float, else None. `comma`: the column writes a decimal comma
+    (decimal_comma), so "1.500" is 1500 (else 1.5) and "1,500" 1.5 (else 1500)."""
+    m = NUMBER.search(text or "")
+    if not m:
         return None
-    if "," in t and "." not in t and len(t.rsplit(",", 1)[1]) != 3:
-        t = t.replace(",", ".")  # 45,5: a decimal comma
+    t = m.group(0).rstrip(".,")
+    if "," in t and "." in t:  # the last one is the decimal point
+        t = t.replace(".", "").replace(",", ".") if t.rfind(",") > t.rfind(".") else t.replace(",", "")
+    elif "," in t:
+        last = t.rsplit(",", 1)[1]
+        if t.count(",") > 1 or (len(last) == 3 and not comma):  # 1,250 / 1,250,000: thousands
+            t = t.replace(",", "")
+        else:  # 45,5: a decimal comma
+            t = t.replace(",", ".")
+    elif t.count(".") > 1 or (comma and "." in t and len(t.rsplit(".", 1)[1]) == 3):  # 1.250.000, or 1.500 by a decimal comma
+        t = t.replace(".", "")
     try:
-        return float(t.replace(",", ""))
+        return float(t)
     except ValueError:
         return None
+
+
+def rating_of(text, comma=None):
+    """A rating: a number ("93", "4,5"), the middle of a range ("93-95", "93/95": 94); "16/20", "4.5/5" their first
+    number (out of 20, of 5). None when it's none, or above 100."""
+    nums = [x for x in (number(t, comma) for t in NUMBER.findall(text or "")) if x is not None]
+    if not nums:
+        return None
+    x = nums[0]
+    if len(nums) >= 2 and re.search(r"\d\s*[-/–]\s*\d", text):
+        a, b = nums[:2]
+        out_of = "/" in text and b in (5, 10, 20, 100)
+        if a <= b and not out_of:
+            x = (a + b) / 2  # a range: its middle
+    return x if x <= 100 else None
 
 
 class Lookup:
@@ -194,20 +262,28 @@ class Lookup:
         return found[0] if found else None
 
 
-def plan(session, rows, mapping):
+def held(b):
+    """The bottles a line has had: those left, those drunk (its tastings) and those gone (gifted, sold...)."""
+    return (b.qty or 0) + len(b.tastings) + sum(e.qty or 0 for e in b.events)
+
+
+def plan(session, rows, mapping, order=None):
     """[{"line", "row", "outcome", "actions", ...}] per row: outcome "add" (a wine to create or find, bottles and a
-    tasting to add) or why it's left out."""
+    tasting to add) or why it's left out. `order`: how to read dates like 3/4/2024 ("dmy", "mdy"; date_order)."""
     look = Lookup(session)
-    ratings = [number(r.get(mapping.get("rating", ""), "")) for r in rows] if mapping.get("rating") else []
+    column = lambda f: [r.get(mapping[f], "") for r in rows] if mapping.get(f) else []  # noqa: E731
+    commas = {f: decimal_comma(column(f)) for f in ("quantity", "price", "rating")}
+    ratings = [rating_of(v, commas["rating"]) for v in column("rating")]
     top = max([x for x in ratings if x is not None] or [0])
     scale = 20 if 0 < top <= 5 else 5 if 5 < top <= 20 else 1  # stars, /20, /100
     wines = {}  # producer id -> its wines
     new_producers, new_wines = {}, {}  # name key -> line; wine key -> line
-    seen_bottles, seen_tastings = set(), set()
-    us = month_first([r.get(mapping.get(f, ""), "") for r in rows for f in ("purchase_date", "tasting_date")
-                      if mapping.get(f)])
+    left = {}  # bottle group (wine, location, size, purchase date, price) -> your bottles not yet matched to a row
+    seen_tastings = set()
+    us = date_order(rows, mapping, order)[0] == "mdy"
     out = []
     for n, raw in enumerate(rows, start=2):
+        n = getattr(raw, "line", n)  # the spreadsheet's row (blank ones counted)
         row = {f: (raw.get(mapping[f]) or "").strip() if mapping.get(f) else "" for f in FIELDS}
         item = {"line": n, "row": row, "actions": [], "doubts": []}
         out.append(item)
@@ -267,11 +343,16 @@ def plan(session, rows, mapping):
                     if (w.vintage or "NV") == vintage and same_wine(cuvee_key(w.cuvee, None), key)
                     and (colour is None or w.type == colour)
                     and (appellation is None or w.appellation_id == appellation.id)]
+            # The same cuvée (its words, generic ones aside) is sure; only a close one ("Reserve" more) is to check
+            fits = [w for w in fits if cuvee_key(w.cuvee, None) == key] or fits
             if len(fits) > 1:
                 fits = [w for w in fits if norm(w.cuvee or "") == norm(cuvee)] or fits
             if len(fits) > 1:
                 item["doubts"].append(f"{len(fits)} of your wines fit: the first is used")
             wine = fits[0] if fits else None
+            if wine is not None and cuvee_key(wine.cuvee, None) != key:
+                item["doubts"].append(f"close to your {wine.cuvee or '(plain)'} {wine.vintage or 'NV'}, not the same "
+                                      "name: check it's that wine")
         item["wine"] = wine
         wkey = (norm(item["producer_name"]), vintage, key, colour, appellation and appellation.id)
         item["wine_key"] = wkey
@@ -279,29 +360,40 @@ def plan(session, rows, mapping):
             item["actions"].append(NEW_WINE if wkey not in new_wines else "new wine (above)")
             new_wines.setdefault(wkey, n)
         # Its bottles
-        qty = number(row["quantity"])
+        qty = number(row["quantity"], commas["quantity"])
         location = " ".join(x for x in (row["location"], row["bin"]) if x)
         if (qty or location) and (qty is None or qty > 0):
             qty = int(qty) if qty else 1
-            price, purchased = number(row["price"]), day(row["purchase_date"], us)
-            bkey = (wkey, location, qty, purchased, price)
-            have = wine is not None and any(b.location == (location or None) and b.qty == qty
-                                            and b.purchase_date == purchased for b in wine.inventory)
-            if have or bkey in seen_bottles:
+            price, purchased = number(row["price"], commas["price"]), day(row["purchase_date"], us)
+            size = size_of(row["size"])
+            # Identical rows add up: each takes its bottles from your lines of that group, then adds the rest
+            group = (wkey, location or None, size, purchased, price)
+            if group not in left:
+                left[group] = sum(held(b) for b in wine.inventory
+                                  if b.location == (location or None) and (b.bottle_size or "75cl") == size
+                                  and b.purchase_date == purchased
+                                  and (b.price == price if b.price is None or price is None
+                                       else abs(b.price - price) < 0.005)) if wine is not None else 0
+            have = min(left[group], qty)
+            left[group] -= have
+            if have == qty:
                 item["actions"].append("bottles already there")
             else:
-                seen_bottles.add(bkey)
-                item["bottle"] = {"qty": qty, "location": location or None, "bottle_size": size_of(row["size"]),
+                qty -= have
+                item["bottle"] = {"qty": qty, "location": location or None, "bottle_size": size,
                                   "price": price, "currency": (row["currency"] or "").upper() or None,
                                   "purchase_date": purchased, "vendor": row["vendor"] or None}
-                item["actions"].append(f"{qty} bottle{'s' if qty > 1 else ''}" + (f" at {location}" if location else ""))
+                item["actions"].append(f"{qty} bottle{'s' if qty > 1 else ''}" + (f" at {location}" if location else "")
+                                       + (f" ({have} already there)" if have else ""))
         # Its tasting
-        rating = number(row["rating"])
+        rating = rating_of(row["rating"], commas["rating"])
         tasted = day(row["tasting_date"], us)
         if tasted or rating or row["note"]:
             rating = round(rating * scale) if rating else None
-            tkey = (wkey, tasted, rating)
+            note = " ".join(row["note"].split())
+            tkey = (wkey, tasted, rating, note)
             have = wine is not None and any(t.date == tasted and t.rating == rating
+                                            and " ".join((t.notes or "").split()) == note
                                             for b in wine.inventory for t in b.tastings)
             if have or tkey in seen_tastings:
                 item["actions"].append("tasting already there")
@@ -309,7 +401,8 @@ def plan(session, rows, mapping):
                 seen_tastings.add(tkey)
                 item["tasting"] = {"date": tasted, "rating": rating, "notes": row["note"] or None}
                 item["actions"].append("tasting" + (f" {tasted:%d %b %Y}" if tasted else "") + (f" ({rating})" if rating else ""))
-        if wine is not None and not item.get("bottle") and not item.get("tasting"):
+        # Nothing of its own to add: your wine, or the new wine a row above adds
+        if (wine is not None or new_wines[wkey] != n) and not item.get("bottle") and not item.get("tasting"):
             item["outcome"] = "already there"
             continue
         item["outcome"] = "add"

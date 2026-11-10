@@ -139,3 +139,120 @@ def test_a_plain_wine_named_after_its_appellation_is_yours(client):
             assert item["label"].startswith("Côte Brune"), item["label"]  # the appellation cut off its whole name
         else:
             assert item["pick"]["flag"], item  # your wine
+
+
+def session_of(client):
+    import db
+    return next(client.app.dependency_overrides[db.get_session]())
+
+
+def test_identical_rows_add_up(client):
+    """Two identical bottle rows are two bottles; against the cellar, a line is already there only with the same
+    location, size, purchase date and price, and as many bottles (those drunk since counted)."""
+    s = session_of(client)
+    wine = Wine(producer=Producer(name="Domaine Dupont"), cuvee="Les Vignes", vintage="2019", type="Red")
+    drunk = Bottle(wine=wine, qty=0, location="Cave", price=30, currency="EUR")
+    s.add_all([drunk, TastingNote(bottle=drunk, date=date(2024, 5, 1), rating=90),
+               Bottle(wine=wine, qty=1, location="Cave", price=None, currency="EUR")])
+    s.commit()
+    s.close()
+    text = ("Producer,Wine,Vintage,Colour,Quantity,Location,Price\n"
+            "Domaine X,Cuvee A,2019,Red,1,Cave,20\n"
+            "Domaine X,Cuvee A,2019,Red,1,Cave,20\n"
+            "Domaine Dupont,Les Vignes,2019,Red,2,Cave,30\n"  # one of the two drunk already
+            "Domaine Dupont,Les Vignes,2019,Red,1,Cave,25\n")  # not your price-less line
+    items = {i["pick"]["key"]: i for i in run(client, text)["result"]["items"]}
+    assert set(items) == {"2", "3", "4", "5"}
+    assert "1 bottle at Cave" in items["2"]["detail"] and "1 bottle at Cave" in items["3"]["detail"]
+    assert "1 bottle at Cave (1 already there)" in items["4"]["detail"]
+    assert "1 bottle at Cave" in items["5"]["detail"]
+    run(client, text, commit=True, keys=list(items))
+    s = session_of(client)
+    x = s.query(Wine).filter_by(cuvee="Cuvee A").one()
+    assert sum(b.qty for b in x.inventory) == 2
+    s.close()
+    assert run(client, text)["result"]["items"] == []  # imported twice: nothing new
+
+
+def test_tastings_with_only_a_note(client):
+    text = ('Producer,Wine,Vintage,Tasting notes\nDomaine Y,Cuvee B,2019,"Lovely, first bottle"\n'
+            'Domaine Y,Cuvee B,2019,"Tired, second bottle"\nDomaine Y,Cuvee B,2019,"Tired,  second bottle"\n')
+    items = run(client, text)["result"]["items"]
+    assert [i["pick"]["key"] for i in items] == ["2", "3"]  # line 4: the same note again
+    run(client, text, commit=True, keys=["2", "3"])
+    s = session_of(client)
+    assert sorted(t.notes for t in s.query(TastingNote).all()) == ["Lovely, first bottle", "Tired, second bottle"]
+    s.close()
+    assert run(client, text)["result"]["items"] == []
+
+
+def test_a_close_cuvee_is_to_check(client):
+    """"Cabernet Sauvignon Napa Valley Reserve" isn't your "Cabernet Sauvignon Napa Valley": offered, unticked."""
+    s = session_of(client)
+    s.add_all([Wine(producer=Producer(name="Robert Mondavi"), cuvee="Cabernet Sauvignon Napa Valley", vintage="2018",
+                    type="Red"),
+               Wine(producer=Producer(name="Domaine Fourrier"), cuvee="Gevrey-Chambertin 1er Cru Clos Saint-Jacques",
+                    vintage="2019", type="Red")])
+    s.commit()
+    s.close()
+    text = ("Producer,Cuvee,Vintage,Quantity\nRobert Mondavi,Cabernet Sauvignon Napa Valley Reserve,2018,3\n"
+            "Robert Mondavi,Cabernet Sauvignon Napa Valley,2018,1\n"
+            "Domaine Fourrier,Gevrey-Chambertin 1er Cru Lavaux Saint-Jacques,2019,1\n")
+    items = {i["pick"]["key"]: i for i in run(client, text)["result"]["items"]}
+    assert items["2"]["pick"]["on"] is False
+    assert "check: close to your Cabernet Sauvignon Napa Valley 2018" in items["2"]["detail"]
+    assert items["3"]["pick"]["on"] is True and "close to" not in items["3"]["detail"]
+    assert items["4"]["pick"]["on"] is False and "close to your Gevrey" in items["4"]["detail"]
+
+
+def test_numbers():
+    from tasks.import_cellar import decimal_comma, number, rating_of
+    assert number("1.250,00") == 1250 and number("1,500.50") == 1500.5 and number("12,50") == 12.5
+    assert number("1.5") == 1.5 and number("1.500") == 1.5 and number("€45") == 45 and number("1,500") == 1500
+    comma = decimal_comma(["1.500", "12,50", ""])
+    assert comma is True and number("1.500", comma) == 1500 and number("1,5", comma) == 1.5
+    assert decimal_comma(["12.50", "1,250.00"]) is False and decimal_comma(["20", "1.500"]) is None
+    assert rating_of("93-95") == 94 and rating_of("93/95") == 94 and rating_of("16/20") == 16
+    assert rating_of("4,5") == 4.5 and rating_of("9395") is None and rating_of("") is None
+
+
+def test_prices_and_rating_ranges(client):
+    """A decimal-comma price column ("1.500" is 1500), and a rating range doesn't change the file's scale."""
+    text = ("Producer;Wine;Vintage;Quantity;Location;Price;Rating;Tasting date\n"
+            "Domaine Z;A;2019;1;Cave;1.500;93-95;2024-01-02\nDomaine Z;B;2019;1;Cave;12,50;90;2024-01-03\n")
+    items = {i["pick"]["key"]: i for i in run(client, text)["result"]["items"]}
+    assert "(94)" in items["2"]["detail"] and "(90)" in items["3"]["detail"]
+    run(client, text, commit=True, keys=["2", "3"])
+    s = session_of(client)
+    assert sorted(b.price for b in s.query(Bottle).filter(Bottle.location == "Cave")) == [12.5, 1500]
+    s.close()
+
+
+def test_dates_order(client):
+    """Dates every one of which reads both ways: day first (said in the summary, to pick otherwise), month first for
+    CellarTracker's export."""
+    text = "Producer,Wine,Vintage,Tasting date,Rating\nDomaine D,A,2019,3/4/2024,90\n"
+    r = run(client, text)["result"]
+    assert r["columns"]["dates"] == "dmy" and "Dates read as day/month: 3/4/2024 = 3 April 2024" in r["summary"]
+    assert "the file doesn't say" in r["summary"] and "tasting 03 Apr 2024" in r["items"][0]["detail"]
+    r = run(client, text, date_order="mdy")["result"]
+    assert r["columns"]["dates"] == "mdy" and "tasting 04 Mar 2024" in r["items"][0]["detail"]
+    run(client, text, commit=True, keys=["2"], date_order="mdy")
+    s = session_of(client)
+    assert s.query(TastingNote).one().date == date(2024, 3, 4)
+    s.close()
+    r = run(client, "iWine,Producer,Wine,Vintage,PurchaseDate,Quantity\n1,Domaine E,A,2019,3/4/2024,1\n")["result"]
+    assert r["columns"]["dates"] == "mdy" and "= 4 March 2024" in r["summary"]
+    r = run(client, "Producer,Wine,Vintage,Quantity\nDomaine E,A,2019,1\n")["result"]
+    assert "dates" not in r["columns"] and "Dates read" not in r["summary"]
+
+
+def test_line_numbers_are_the_spreadsheets(client):
+    text = "Producer,Wine,Vintage,Quantity\nDomaine F,A,2019,1\n,,,\n\nDomaine F,B,2019,1\n"
+    items = run(client, text)["result"]["items"]
+    assert [i["pick"]["key"] for i in items] == ["2", "5"] and "line 5" in items[1]["detail"]
+
+
+def test_vivino_price():
+    from tasks.import_cellar import columns
+    assert columns(["Winery", "Wine name", "Wine price"])["price"] == "Wine price"

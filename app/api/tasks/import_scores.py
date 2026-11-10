@@ -51,17 +51,32 @@ FILL = "score for a wine you have"
 REPLACE = "replaces this critic's other score"
 
 
+class Row(dict):
+    """A row as {header: value}, with `line`: its row in the spreadsheet (the header is 1, blank rows counted)."""
+    line = 0
+
+
 def read(text):
-    """(headers, rows) from the CSV's text: comma, semicolon or tab separated; rows as {header: value}."""
+    """(headers, rows) from the CSV's text: comma, semicolon or tab separated; rows as Row {header: value}, the blank
+    ones left out (their line numbers kept: the spreadsheet's)."""
     text = text.lstrip("﻿")
     try:
         dialect = csv.Sniffer().sniff(text[:4096], delimiters=",;\t")
     except csv.Error:
         dialect = csv.excel
-    reader = csv.DictReader(io.StringIO(text), dialect=dialect)
-    headers = [h for h in (reader.fieldnames or []) if h and h.strip()]
-    rows = [{h: (r.get(h) or "").strip() for h in headers} for r in reader]
-    return headers, [r for r in rows if any(r.values())]
+    records = list(csv.reader(io.StringIO(text), dialect=dialect))
+    if not records:
+        return [], []
+    names = records[0]
+    headers = [h for h in names if h and h.strip()]
+    rows = []
+    for n, record in enumerate(records[1:], start=2):
+        r = dict(zip(names, record))  # as csv.DictReader: a header twice, its last column
+        row = Row({h: (r.get(h) or "").strip() for h in headers})
+        row.line = n
+        if any(row.values()):
+            rows.append(row)
+    return headers, rows
 
 
 def columns(headers):
@@ -123,6 +138,7 @@ def plan(session, critic, rows, mapping):
     given = set()  # wine ids a row already scores
     out = []
     for n, raw in enumerate(rows, start=2):  # line 1 is the header
+        n = getattr(raw, "line", n)  # the spreadsheet's row (blank ones counted)
         row = {f: (raw.get(mapping[f]) or "").strip() if mapping.get(f) else "" for f in FIELDS}
         item = {"line": n, "row": row, "wine": None}
         out.append(item)
@@ -169,6 +185,8 @@ def plan(session, critic, rows, mapping):
                 if (w.vintage or "NV") == vintage and same_wine(cuvee_key(w.cuvee, None), key)
                 and (appellation is None or w.appellation_id == appellation.id)
                 and (grape is None or w.varietal_id == grape.id) and (colour is None or w.type == colour)]
+        # The same cuvée (its words, generic ones aside) is sure; only a close one ("Reserve" more) is to check
+        fits = [w for w in fits if cuvee_key(w.cuvee, None) == key] or fits
         if len(fits) > 1:  # the one named exactly, if any
             fits = [w for w in fits if norm(w.cuvee or "") == norm(row["cuvee"])] or fits
         if len(fits) > 1:
@@ -183,10 +201,13 @@ def plan(session, critic, rows, mapping):
             item["outcome"] = ADD
             continue
         wine = item["wine"] = fits[0]
+        if cuvee_key(wine.cuvee, None) != key:
+            item["close"] = wine.cuvee or "(plain)"  # not its cuvée, only close to it: the preview asks to check
         if wine.id in given:
             skip("twice in the file")
             continue
-        given.add(wine.id)
+        if not item.get("close"):  # (a close one doesn't claim it: the wine's own row may follow)
+            given.add(wine.id)
         s = wine.score_of(critic)
         item["current"] = s.score if has_score(s) else None
         if not has_score(s):
