@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ask } from '#lib/ask.svelte.ts';
 	import { invalidateAll } from '$app/navigation';
 	import type { WineAction } from '#lib/api/details.ts';
 	import Icon from '#lib/components/Icon.svelte';
@@ -18,7 +19,7 @@
 	});
 
 	async function act(a: WineAction) {
-		if (a.confirm && !confirm(a.confirm)) return;
+		if (a.confirm && !(await ask(a.confirm))) return;
 		said = { busy: true, text: a.busy ?? '…' };
 		try {
 			const res = await fetch(a.endpoint, { method: 'POST' });

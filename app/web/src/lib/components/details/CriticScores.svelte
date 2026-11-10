@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ask } from '#lib/ask.svelte.ts';
 	import { invalidateAll } from '$app/navigation';
 	import type { CriticScore } from '#lib/api/details.ts';
 	import { fmtDate } from './wine.ts';
@@ -52,7 +53,7 @@
 	}
 
 	async function remove(critic: string) {
-		if (!confirm(`Remove ${critic}’s score?`)) return;
+		if (!(await ask(`Remove ${critic}’s score?`, { confirmLabel: 'Remove', danger: true }))) return;
 		const res = await fetch(`/api/wines/${wineId}/scores?critic=${encodeURIComponent(critic)}`, { method: 'DELETE' });
 		if (res.ok) await invalidateAll();
 	}

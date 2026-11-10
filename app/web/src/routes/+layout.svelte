@@ -4,6 +4,7 @@
 	import { links } from '#lib/links.ts';
 	import { initTheme, setTheme, theme } from '#lib/theme.svelte.ts';
 	import type { Mode } from '#lib/theme.svelte.ts';
+	import AskDialog from '#lib/components/AskDialog.svelte';
 	import CommandPalette from '#lib/components/CommandPalette.svelte';
 	import { warmJournal } from '#lib/api/tastings.ts';
 	import { onMount } from 'svelte';
@@ -96,6 +97,7 @@
 </div>
 
 <CommandPalette bind:open={searchOpen} />
+<AskDialog />
 
 <style>
 	.shell {

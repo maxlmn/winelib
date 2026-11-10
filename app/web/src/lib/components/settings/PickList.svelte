@@ -1,4 +1,5 @@
 <script lang="ts" module>
+	import { ask } from '#lib/ask.svelte.ts';
 	export interface PickItem {
 		label: string;
 		detail: string | null;
@@ -70,9 +71,10 @@
 	const suggested = () => (ticked = Object.fromEntries(items.map((it) => [it.pick.key, it.pick.on])));
 	const visible = () => groups.flatMap(([, g]) => g);
 
-	function run() {
+	async function run() {
 		const keys = items.filter((it) => ticked[it.pick.key]).map((it) => it.pick.key);
-		if (keys.length && confirm(`${verb} ${keys.length} wine${keys.length > 1 ? 's' : ''}?`)) onrun(keys);
+		const what = `${keys.length} wine${keys.length > 1 ? 's' : ''}`;
+		if (keys.length && (await ask(`${verb} ${what}?`, { confirmLabel: `${verb} ${what}` }))) onrun(keys);
 	}
 </script>
 

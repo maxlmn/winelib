@@ -6,6 +6,14 @@
   open: the vintage page it was on failed. Fix or delete it from there.
 - **Names with an accented capital are found** on SQLite (the default install): a grape's page by its name
   ("Muscat Blanc À Petits Grains") said it didn't exist, and so did other look-ups by name. Postgres wasn't affected.
+- **A cellar import finds your plain wines**: a row naming the appellation as its cuvée ("Jamet, Côte-Rôtie") is the
+  producer's wine without one, the one you have, not a new wine named after its appellation; and a whole name
+  (CellarTracker's Wine) has a hyphenated appellation cut off too.
+- **A tasting note of a wine you hold** says so ("2 in your cellar") and offers to take one from the cellar; the
+  form opens on the cellar or another wine as you last chose. An empty score shows no knob.
+- **The app's own questions** (Maintenance's runs, an import, a list or an outline deleted) in its dialog, not the
+  browser's; and every field, menu and checkbox in the app's style, the lists' too (they were the browser's own,
+  light in dark mode).
 
 ## v0.5.0
 

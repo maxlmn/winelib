@@ -1,4 +1,5 @@
 <script lang="ts" module>
+	import { ask } from '#lib/ask.svelte.ts';
 	/** What to draw: an appellation's or a vineyard's own outline, or a new vineyard for a wine (`wine`) */
 	export interface DrawSpec {
 		kind: 'appellations' | 'vineyards';
@@ -145,8 +146,8 @@
 		count();
 	}
 
-	function clearAll() {
-		if (draw && shapes && confirm('Remove every shape drawn here (nothing is saved until you click Save)?')) {
+	async function clearAll() {
+		if (draw && shapes && (await ask('Remove every shape drawn here? Nothing is saved until you click Save.', { confirmLabel: 'Remove', danger: true }))) {
 			draw.clear();
 			count();
 			setMode('polygon');
@@ -209,7 +210,7 @@
 
 	async function useLieu(l: Lieu) {
 		if (!draw) return;
-		if (shapes && !lieu && !confirm(`Replace what's drawn here with the lieu-dit ${l.name}?`)) return;
+		if (shapes && !lieu && !(await ask(`Replace what's drawn here with the lieu-dit ${l.name}?`, { confirmLabel: 'Replace', danger: true }))) return;
 		message = '';
 		const res = await fetch(`/api/lookups/lieu-dit?ref=${encodeURIComponent(l.ref)}`);
 		if (!res.ok) return (message = 'That lieu-dit’s outline couldn’t be loaded');
@@ -227,7 +228,7 @@
 	}
 
 	async function linkLieu(ref: string) {
-		if (spec.wine === undefined && reply?.custom && !confirm(`Use the lieu-dit as ${spec.name}'s outline? Your drawn one goes.`)) return;
+		if (spec.wine === undefined && reply?.custom && !(await ask(`Use the lieu-dit as ${spec.name}'s outline? Your drawn one goes.`, { confirmLabel: 'Use the lieu-dit', danger: true }))) return;
 		busy = true;
 		message = '';
 		const res = await fetch(spec.wine !== undefined ? `/api/wines/${spec.wine}/lieu-dit` : `/api/vineyards/${spec.id}/lieu-dit`, {
@@ -242,7 +243,7 @@
 	}
 
 	async function remove() {
-		if (!confirm(`Remove your outline for ${spec.name}?${reply?.official ? ' The official one is drawn again.' : ''}`)) return;
+		if (!(await ask(`Remove your outline for ${spec.name}?${reply?.official ? ' The official one is drawn again.' : ''}`, { confirmLabel: 'Remove', danger: true }))) return;
 		busy = true;
 		const res = await fetch(`/api/${spec.kind}/${spec.id}/outline`, { method: 'DELETE' });
 		busy = false;

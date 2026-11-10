@@ -237,14 +237,16 @@ def plan(session, rows, mapping):
         cuvee = row["cuvee"]
         if colour == "Bubbles" and is_rose(cuvee):  # "Brut Rosé": a sparkling rosé
             colour = "Bubbles Rose"
+        appellation_name = appellation.name if appellation else row["appellation"]
         if mapping.get("cuvee") and norm(mapping["cuvee"]) == "wine":  # CellarTracker's whole name: the rest
             words = cuvee.split()
-            for part in (row["producer"], appellation.name if appellation else row["appellation"]):
-                pw = norm(part).split()
-                ws = [norm(w) for w in words]
-                if pw and ws[:len(pw)] == pw:
-                    words = words[len(pw):]
+            for part in (row["producer"], appellation_name):
+                # its first words, compared as a whole ("Côte-Rôtie" is two words once normalised)
+                cut = next((k for k in range(len(words), 0, -1) if norm(part) and norm(" ".join(words[:k])) == norm(part)), 0)
+                words = words[cut:]
             cuvee = " ".join(words)
+        if appellation_name and norm(cuvee) == norm(appellation_name):  # "Jamet, Côte-Rôtie": the plain wine
+            cuvee = ""
         item.update(producer=producer, producer_name=producer.name if producer else " ".join(row["producer"].split()),
                     vintage=vintage, appellation=appellation, region=region, grapes=grapes, blend=blend,
                     colour=colour, cuvee=cuvee)

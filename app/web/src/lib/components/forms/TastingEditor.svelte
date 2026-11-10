@@ -39,8 +39,25 @@
 	type BottleRow = BottleOption & { name: string };
 	const asChoice = (b: BottleOption): Choice => ({ id: b.id, name: b.label, hint: `${b.qty} left` });
 
-	// "Other wine" by default, or the cellar when drinking one of its bottles
-	let source = $state<'cellar' | 'other'>(pre.bottle ? 'cellar' : 'other');
+	// The cellar when drinking one of its bottles, the wine's own when started from a wine; else as last time (on
+	// this device), "Other wine" the first time
+	const SOURCE_KEY = 'winelib-tasting-source';
+	const lastSource = (): 'cellar' | 'other' => {
+		try {
+			return localStorage.getItem(SOURCE_KEY) === 'cellar' ? 'cellar' : 'other';
+		} catch {
+			return 'other';
+		}
+	};
+	let source = $state<'cellar' | 'other'>(pre.bottle ? 'cellar' : pre.wine ? 'other' : lastSource());
+	$effect(() => {
+		if (t) return;
+		try {
+			localStorage.setItem(SOURCE_KEY, source);
+		} catch {
+			/* not kept: private browsing */
+		}
+	});
 	let bottle = $state<Choice | null>(pre.bottle ? asChoice(pre.bottle) : null);
 	let consume = $state(true);
 	let wine = $state<WineSummary | null>(pre.wine ?? pre.bottle?.wine ?? null);
@@ -102,6 +119,14 @@
 
 	const searchBottles = async (q: string): Promise<BottleRow[]> =>
 		(await lookup<BottleOption>('bottles', { q })).map((b) => ({ ...b, name: b.label }));
+
+	// "Other wine" picked a wine you hold: its bottle from the cellar instead (picked when it's in one place)
+	async function fromCellar() {
+		if (!wine) return;
+		const bottles = await lookup<BottleOption>('bottles', { wine_id: wine.id });
+		source = 'cellar';
+		bottle = bottles.length === 1 ? asChoice(bottles[0]) : null;
+	}
 
 	async function onsave() {
 		check({
@@ -178,6 +203,12 @@
 			</div>
 		{:else}
 			<WinePicker bind:wine bind:draft {options} prefix="t" errors={{ ...scoped(errors, 'wine'), wine: errors.wine }} />
+			{#if wine && wine.stock > 0}
+				<p class="stock">
+					{wine.stock} in your cellar: this note won’t take one out.
+					<button type="button" class="link" onclick={fromCellar}>Take one from the cellar</button>
+				</p>
+			{/if}
 		{/if}
 	</Section>
 
@@ -194,9 +225,9 @@
 			</Field>
 			<Field label="Your score" for="t-rating" span hint="Leave it empty for no score">
 				<div class="score">
-					<input id="t-rating" type="range" min="70" max="100" step="1" value={rating ?? 90}
+					<input id="t-rating" type="range" min="70" max="100" step="1" value={rating ?? 70}
 						class:unset={rating === null} oninput={(e) => (rating = +e.currentTarget.value)} />
-					<span class="score-value num">{rating ?? '–'}</span>
+					<span class="score-value num" class:none={rating === null}>{rating ?? 'No score'}</span>
 					{#if rating !== null}<button type="button" class="link" onclick={() => (rating = null)}>Clear</button>{/if}
 				</div>
 			</Field>
@@ -289,8 +320,16 @@
 		flex: 1;
 		accent-color: var(--accent);
 	}
+	/* no score yet: a bare track, no knob or fill reading as a value; a click or a drag sets one */
 	.score input.unset {
 		opacity: 0.45;
+		accent-color: var(--muted);
+	}
+	.score input.unset::-webkit-slider-thumb {
+		opacity: 0;
+	}
+	.score input.unset::-moz-range-thumb {
+		opacity: 0;
 	}
 	.score-value {
 		min-width: 2.5em;
@@ -298,5 +337,16 @@
 		font-weight: 700;
 		color: var(--accent);
 		text-align: right;
+	}
+	.stock {
+		margin: 10px 0 0;
+		font-size: 13px;
+		color: var(--muted);
+	}
+	.score-value.none {
+		font-size: 13px;
+		font-weight: 400;
+		color: var(--muted);
+		white-space: nowrap;
 	}
 </style>

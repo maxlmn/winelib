@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ask } from '#lib/ask.svelte.ts';
 	import ActionMenu from '#lib/components/ActionMenu.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import { shapesUrl } from '#lib/api/details.ts';
@@ -32,7 +33,7 @@
 	const lieuAction = $derived({
 		label: v.lieu_dit || v.drawn ? 'Make it this vineyard’s outline instead' : 'Make it this vineyard’s outline',
 		run: async (id: string) => {
-			if (v.drawn && !confirm(`Replace the outline drawn for ${v.name} with this lieu-dit's?`)) return;
+			if (v.drawn && !(await ask(`Replace the outline drawn for ${v.name} with this lieu-dit's?`, { confirmLabel: 'Replace', danger: true }))) return;
 			await request(`/api/vineyards/${v.id}/lieu-dit`, { method: 'POST', body: { lieu_dit: id } });
 			mapRev++;
 			await invalidateAll();
