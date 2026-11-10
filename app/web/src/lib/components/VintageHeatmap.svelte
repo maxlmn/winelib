@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { regionLabel } from '#lib/regions.svelte.ts';
 	import type { Bottle, RegionColors } from '#lib/types.ts';
-	import { links } from '#lib/links.ts';
+	import { links, regionLink } from '#lib/links.ts';
 	import { FALLBACK_REGION, ramp } from '#lib/colors.ts';
 	import { compact, money } from '#lib/format.ts';
 
@@ -58,7 +58,7 @@
 		<div></div>
 		{#each grid.cols as v}<div class="vh num">{v}</div>{/each}
 		{#each grid.rows as r (r)}
-			<a class="rh" href={links.region(r)}><span class="swatch" style:background={regionColors[r] ?? FALLBACK_REGION}></span>{regionLabel(r)}</a>
+			<a class="rh" href={regionLink(r)}><span class="swatch" style:background={regionColors[r] ?? FALLBACK_REGION}></span>{regionLabel(r)}</a>
 			{#each grid.cols as v}
 				{@const c = grid.cells.get(`${r}|${v}`)}
 				{#if c}

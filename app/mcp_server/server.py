@@ -27,8 +27,11 @@ from pydantic import BaseModel, Field
 URL = os.environ.get("WINELIB_URL", "http://localhost:8000").rstrip("/")
 logging.getLogger("httpx").setLevel(logging.WARNING)  # not a line per request
 READ = ToolAnnotations(readOnlyHint=True, openWorldHint=False)
-# Tools that add to WineLib (never remove or change what's there): each asks the user first, then adds
-WRITE = ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+# Tools that add to WineLib (never remove or change what's there): each asks the user first, then adds. Called
+# twice, most add twice (a second tasting, more bottles): not idempotent. Adding entries to a list is (an entry
+# already there is kept, not doubled).
+WRITE = ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
+WRITE_IDEMPOTENT = ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 
 mcp = MCPServer(
     name="WineLib",
@@ -40,7 +43,8 @@ mcp = MCPServer(
         "'RP 95' are critics' (RP: Robert Parker); a tasting's rating is the user's own, out of 100. Everything here is "
         "read-only, except create_list, add_to_list, add_wine, add_tasting and add_bottle: they show the user what "
         "they'll do and wait for the user's yes, then add (never remove or change anything; what they add can be "
-        "removed in the app). Find the wines first (tastings, cellar, search), then pass their ids. From a photo of a "
+        "removed in the app). When one returns needs_confirmation, show the user its preview and wait for their own "
+        "reply: never confirm for them. Find the wines first (tastings, cellar, search), then pass their ids. From a photo of a "
         "label: read the producer, cuvée, vintage, appellation and colour off it, search WineLib for the wine (an "
         "existing wine, or the cuvée in another vintage, is better than a new one), then add_tasting or add_bottle "
         "with its wine_id, or with new_wine when it isn't there yet. Tastings are dated today unless the user says "
@@ -283,17 +287,38 @@ def _token(*parts):
     return hashlib.sha256(json.dumps(parts, sort_keys=True, default=str).encode()).hexdigest()[:12]
 
 
-async def _confirmed(ctx, message, token, given):
-    """The user's yes: through the client's own confirmation (MCP elicitation) when it has one; else a token the
-    tool returns with the preview, accepted only when called again with it (after the user said yes)."""
+def _code(token):
+    """The short code the user types to say yes (in the preview's text only, not a field of its own)"""
+    return _token("code", token)[:4].upper()
+
+
+def _ask_user(message, token, why=""):
+    """The preview for the user to answer in the conversation (a client without its own confirmation)"""
+    return {"needs_confirmation": True, "done": False,
+            "preview": f"{message}\n\nTo go ahead, reply: yes {_code(token)}",
+            "confirm_token": token,
+            "how": (why + " " if why else "") +
+                   "Nothing was changed. Show the user this preview exactly as it is and stop: ask them, don't answer "
+                   "for them. Only after the user themselves replies with the code in the preview, call the tool "
+                   "again with the same arguments, confirm_token, and user_confirmed set to the user's reply, word "
+                   "for word. Never fill in user_confirmed yourself."}
+
+
+async def _confirmed(ctx, message, token, given, user_confirmed=""):
+    """The user's yes: through the client's own confirmation (MCP elicitation) when it has one. Else the preview goes
+    back with a token (the same request) and a short code shown for the user; the call is repeated with the token
+    and the user's reply, which must hold the code. The assistant relays both, so this rests on it asking the user
+    (the preview and its instructions tell it to); a client with its own confirmation is the safe way."""
     if given:
-        return given == token
+        if given != token:
+            return False
+        if _code(token).lower() not in fold(user_confirmed).split():
+            return _ask_user(message, token, "The user's reply (user_confirmed) with the preview's code is missing.")
+        return True
     try:
         result = await ctx.elicit(message, Confirm)
     except Exception:  # the client can't ask: the preview goes back, the user answers in the conversation
-        return {"needs_confirmation": True, "preview": message, "confirm_token": token,
-                "how": "Show the user this preview. Only if they say yes, call the tool again with the same arguments "
-                       "and confirm_token."}
+        return _ask_user(message, token)
     return result.action == "accept" and bool(getattr(result.data, "confirm", False))
 
 
@@ -319,7 +344,8 @@ def find_wines(criteria: Criteria) -> dict:
 
 @mcp.tool(annotations=WRITE)
 async def create_list(name: str, ctx: Context, entries: list[Entry] | None = None, criteria: Criteria | None = None,
-                      live: bool = False, description: str = "", source: str = "", confirm_token: str = "") -> dict:
+                      live: bool = False, description: str = "", source: str = "", confirm_token: str = "",
+                      user_confirmed: str = "") -> dict:
     """Creates a list in WineLib. From entries ("all the wines I drank on 3 October at Claude's", "every wine whose
     note says wow": find them first with tastings / cellar / search, then pass their wine_ids), or from criteria
     ("my fresh, mineral whites", "the Loire reds I rated 93+"): made once (the matching wines become its entries) or
@@ -339,8 +365,10 @@ async def create_list(name: str, ctx: Context, entries: list[Entry] | None = Non
     else:
         lines = _describe(entries)
         message = f"Create the list “{name}” with {_plural(len(lines))}:\n" + "\n".join(f"  • {x}" for x in lines)
-    token = _token("create_list", name, [e.model_dump() for e in entries], criteria.model_dump() if criteria else None, live)
-    ok = await _confirmed(ctx, message, token, confirm_token)
+    message += "".join(f"\n{k}: “{v}”" for k, v in (("Description", description), ("Source", source)) if v)
+    token = _token("create_list", name, [e.model_dump() for e in entries], criteria.model_dump() if criteria else None, live,
+                   description, source)
+    ok = await _confirmed(ctx, message, token, confirm_token, user_confirmed)
     if ok is not True:
         return ok if isinstance(ok, dict) else {"done": False, "why": "Not confirmed: nothing was changed"}
     body = {"name": name.strip(), "description": description or None, "source": source or None}
@@ -353,8 +381,9 @@ async def create_list(name: str, ctx: Context, entries: list[Entry] | None = Non
             "undo": "Delete the list in WineLib (its page › Edit › Delete the list)"}
 
 
-@mcp.tool(annotations=WRITE)
-async def add_to_list(list_name: str, entries: list[Entry], ctx: Context, confirm_token: str = "") -> dict:
+@mcp.tool(annotations=WRITE_IDEMPOTENT)
+async def add_to_list(list_name: str, entries: list[Entry], ctx: Context, confirm_token: str = "",
+                      user_confirmed: str = "") -> dict:
     """Adds entries to one of the user's lists (by its name, or part of it). The user sees what will be added and
     must say yes. An entry already on the list is kept, not doubled. Only adds (each can be removed on the list)."""
     lists_ = get("/api/lists")
@@ -365,7 +394,8 @@ async def add_to_list(list_name: str, entries: list[Entry], ctx: Context, confir
     lst = found[0]
     lines = _describe(entries)
     message = f"Add {_plural(len(lines))} to “{lst['name']}”:\n" + "\n".join(f"  • {x}" for x in lines)
-    ok = await _confirmed(ctx, message, _token("add_to_list", lst["id"], [e.model_dump() for e in entries]), confirm_token)
+    ok = await _confirmed(ctx, message, _token("add_to_list", lst["id"], [e.model_dump() for e in entries]), confirm_token,
+                          user_confirmed)
     if ok is not True:
         return ok if isinstance(ok, dict) else {"done": False, "why": "Not confirmed: nothing was changed"}
     return {"done": True, "added": _add(lst["id"], entries), "see": f"{URL}/lists/{lst['id']}",
@@ -460,15 +490,15 @@ def _which_wine(wine_id, new_wine):
     return body, f"a new wine: {label}"
 
 
-async def _ask_and_do(ctx, message, token_parts, confirm_token, do):
-    ok = await _confirmed(ctx, message, _token(*token_parts), confirm_token)
+async def _ask_and_do(ctx, message, token_parts, confirm_token, user_confirmed, do):
+    ok = await _confirmed(ctx, message, _token(*token_parts), confirm_token, user_confirmed)
     if ok is not True:
         return ok if isinstance(ok, dict) else {"done": False, "why": "Not confirmed: nothing was changed"}
     return do()
 
 
 @mcp.tool(annotations=WRITE)
-async def add_wine(new_wine: NewWine, ctx: Context, confirm_token: str = "") -> dict:
+async def add_wine(new_wine: NewWine, ctx: Context, confirm_token: str = "", user_confirmed: str = "") -> dict:
     """Adds a wine to WineLib (no bottle, no tasting): from a label's photo, or the user's words. Search first: a
     wine already there is returned, not doubled. The user sees it and must say yes."""
     there = _existing(new_wine)
@@ -476,7 +506,7 @@ async def add_wine(new_wine: NewWine, ctx: Context, confirm_token: str = "") -> 
         return {"done": False, "already": True, "wine_id": there["id"], "see": f"{URL}/wines/{there['id']}"}
     body, label = _wine_body(new_wine)
     return await _ask_and_do(
-        ctx, f"Add to WineLib: {label}", ("add_wine", new_wine.model_dump()), confirm_token,
+        ctx, f"Add to WineLib: {label}", ("add_wine", new_wine.model_dump()), confirm_token, user_confirmed,
         lambda: (lambda wid: {"done": True, "wine_id": wid, "see": f"{URL}/wines/{wid}",
                               "undo": "Delete the wine on its page (Edit wine › Delete)"})(post("/api/wines", body)["id"]))
 
@@ -497,7 +527,7 @@ def _place(name):
 @mcp.tool(annotations=WRITE)
 async def add_tasting(ctx: Context, wine_id: int = 0, new_wine: NewWine | None = None, notes: str = "",
                       rating: int = 0, on: str = "", place: str = "", from_cellar: bool = False,
-                      styles: list[str] | None = None, confirm_token: str = "") -> dict:
+                      styles: list[str] | None = None, confirm_token: str = "", user_confirmed: str = "") -> dict:
     """Logs a tasting: a wine in WineLib (wine_id, from search) or one that isn't yet (new_wine, read off its label:
     it's added with the tasting). Dated today unless `on` (YYYY-MM-DD) says otherwise; the user's notes in their words;
     rating out of 100 only if they gave one; place by name (a restaurant, "Home", "@Mia" for a friend's home).
@@ -538,13 +568,13 @@ async def add_tasting(ctx: Context, wine_id: int = 0, new_wine: NewWine | None =
         r = post("/api/tastings", body)
         return {"done": True, "tasting_id": r["id"], "wine_id": r["wine_id"], "see": f"{URL}/tastings/{r['id']}",
                 "undo": "Delete the tasting on its page (Edit tasting › Delete)"}
-    return await _ask_and_do(ctx, message, ("add_tasting", body), confirm_token, do)
+    return await _ask_and_do(ctx, message, ("add_tasting", body), confirm_token, user_confirmed, do)
 
 
 @mcp.tool(annotations=WRITE)
 async def add_bottle(ctx: Context, wine_id: int = 0, new_wine: NewWine | None = None, qty: int = 1, location: str = "",
                      price: float = 0, currency: str = "", vendor: str = "", bought: str = "",
-                     confirm_token: str = "") -> dict:
+                     confirm_token: str = "", user_confirmed: str = "") -> dict:
     """Adds bottles to the cellar (a purchase): a wine in WineLib (wine_id) or a new one (new_wine, read off its
     label). qty, where they're kept (a bin like "H3", or a storage place), the price a bottle and its currency, the
     vendor, the day bought (YYYY-MM-DD, today if not said). The user sees it and must say yes."""
@@ -564,7 +594,7 @@ async def add_bottle(ctx: Context, wine_id: int = 0, new_wine: NewWine | None = 
         r = post("/api/bottles", body)
         return {"done": True, "bottle_id": r["id"], "wine_id": r["wine_id"], "see": f"{URL}/bottles/{r['id']}",
                 "undo": "Delete the bottle on its page (Edit bottle › Delete)"}
-    return await _ask_and_do(ctx, message, ("add_bottle", body), confirm_token, do)
+    return await _ask_and_do(ctx, message, ("add_bottle", body), confirm_token, user_confirmed, do)
 
 
 @mcp.tool(annotations=READ)

@@ -71,6 +71,8 @@ def test_two_tools_add_the_rest_read():
     writes = {t.name for t in listed if not t.annotations.read_only_hint}
     assert writes == {"create_list", "add_to_list", "add_wine", "add_tasting", "add_bottle"}  # the others only read
     assert not any(t.annotations.destructive_hint for t in listed if t.name in writes)  # they only add
+    # called twice, they add twice; but an entry already on a list isn't doubled
+    assert {t.name for t in listed if t.name in writes and t.annotations.idempotent_hint} == {"add_to_list"}
 
 
 def test_lists_and_the_wishlist(tools, client):
@@ -116,13 +118,33 @@ def test_writing_asks_first(tools, client, monkeypatch):
     r = asyncio.run(tools.create_list("Wow wines", FakeCtx(True), entries=entries))
     assert r["done"] is True and r["added"] == 1 and "Delete the list" in r["undo"]
 
-    # A client that can't ask: a preview and a token; only that token (same request) writes
+    # A client that can't ask: a preview with a code for the user, and a token; only that token (same request) with
+    # the user's reply holding the code writes
     more = [tools.Entry(kind="cuvee", wine_id=wine_id)]
     r = asyncio.run(tools.add_to_list("wow", more, FakeCtx("cannot")))
-    assert r["needs_confirmation"] is True and "any vintage" in r["preview"]
-    assert asyncio.run(tools.add_to_list("wow", more, FakeCtx("cannot"), confirm_token="wrong"))["done"] is False
-    r = asyncio.run(tools.add_to_list("wow", more, FakeCtx("cannot"), confirm_token=r["confirm_token"]))
+    assert r["needs_confirmation"] is True and "any vintage" in r["preview"] and "user_confirmed" in r["how"]
+    code = r["preview"].rsplit("yes ", 1)[1]
+    assert len(code) == 4
+    assert asyncio.run(tools.add_to_list("wow", more, FakeCtx("cannot"), confirm_token="wrong",
+                                         user_confirmed=f"yes {code}"))["done"] is False
+    # the token alone (the assistant confirming for itself) isn't enough: the preview again
+    again = asyncio.run(tools.add_to_list("wow", more, FakeCtx("cannot"), confirm_token=r["confirm_token"]))
+    assert again["done"] is False and again["needs_confirmation"] is True
+    assert asyncio.run(tools.add_to_list("wow", more, FakeCtx("cannot"), confirm_token=r["confirm_token"],
+                                         user_confirmed="yes"))["done"] is False
+    r = asyncio.run(tools.add_to_list("wow", more, FakeCtx("cannot"), confirm_token=r["confirm_token"],
+                                      user_confirmed=f"Yes {code.lower()}"))
     assert r["done"] is True and r["added"] == 1
+
+    # create_list's preview shows its description and source, and its token covers them
+    ctx = FakeCtx("cannot")
+    r = asyncio.run(tools.create_list("Picks", ctx, entries=entries, description="For the summer", source="RVF"))
+    assert "For the summer" in r["preview"] and "RVF" in r["preview"]
+    code = r["preview"].rsplit("yes ", 1)[1]
+    other = asyncio.run(tools.create_list("Picks", ctx, entries=entries, description="Something else", source="RVF",
+                                          confirm_token=r["confirm_token"], user_confirmed=f"yes {code}"))
+    assert other["done"] is False
+    assert all(lst["name"] != "Picks" for lst in client.get("/api/lists").json())
 
 
 def test_tastings_by_day_place_and_words(tools):

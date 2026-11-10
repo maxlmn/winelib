@@ -92,7 +92,18 @@ def merge_producer(session, keep_id, drop_id, log=print):
             filled.append(field)
     session.flush()
     # its list entries follow it (its own, and its wines': moved or merged above, their producer is now keep)
+    # a list holding both producers keeps one entry, the kept producer's, with the dropped one's note
     from models import ListItem
+    from tasks.merge_cuvees import _join
+    kept = {i.list_id: i for i in session.query(ListItem).filter(ListItem.producer_id == keep.id,
+                                                                  ListItem.kind == "producer")}
+    for item in session.query(ListItem).filter(ListItem.producer_id == drop.id, ListItem.kind == "producer").all():
+        if item.list_id in kept:
+            kept[item.list_id].note = _join(kept[item.list_id].note, item.note) or None
+            session.delete(item)
+        else:
+            kept[item.list_id] = item
+    session.flush()
     session.query(ListItem).filter(ListItem.producer_id == drop.id).update({ListItem.producer_id: keep.id})
     session.expire(drop, ["wines"])
     session.delete(drop)

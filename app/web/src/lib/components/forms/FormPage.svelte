@@ -13,8 +13,15 @@
 		fallback: string;
 		/** saves and returns the URL to open next; a FormError shows in the form */
 		onsave: () => Promise<string>;
-		/** for edit pages: what deleting means, and the delete itself (returns the URL to open next) */
-		remove?: { what: string; message: string; blocked?: boolean; run: () => Promise<string> };
+		/** for edit pages: what deleting means, and the delete itself (returns the URL to open next); option: a
+		 * checkbox in the question, its answer passed to run */
+		remove?: {
+			what: string;
+			message: string;
+			blocked?: boolean;
+			option?: { label: string; checked: boolean };
+			run: (option: boolean) => Promise<string>;
+		};
 		/** per-field messages from the last failed save */
 		fieldErrors?: Record<string, string>;
 		children: Snippet;
@@ -25,6 +32,7 @@
 	let error = $state('');
 	let busy = $state(false);
 	let confirming = $state(false);
+	let optionChecked = $state(false);
 	let formEl = $state<HTMLFormElement>();
 	// Any edit marks the form dirty, so leaving asks first; saving or deleting clears it
 	let dirty = $state(false);
@@ -106,7 +114,7 @@
 
 	<div class="actions">
 		{#if remove}
-			<button type="button" class="btn danger" disabled={busy} onclick={() => (confirming = true)}>Delete</button>
+			<button type="button" class="btn danger" disabled={busy} onclick={() => ((optionChecked = remove.option?.checked ?? false), (confirming = true))}>Delete</button>
 		{/if}
 		<span class="grow"></span>
 		<button type="button" class="btn" onclick={cancel}>Cancel</button>
@@ -121,9 +129,16 @@
 		message={remove.message}
 		blocked={remove.blocked}
 		{busy}
-		onconfirm={() => run(remove.run)}
+		onconfirm={() => run(() => remove.run(optionChecked))}
 		oncancel={() => (confirming = false)}
-	/>
+	>
+		{#if remove.option}
+			<label class="check">
+				<input type="checkbox" bind:checked={optionChecked} />
+				{remove.option.label}
+			</label>
+		{/if}
+	</ConfirmDialog>
 {/if}
 
 <style>
@@ -162,6 +177,12 @@
 	}
 	.grow {
 		flex: 1;
+	}
+	.check {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		cursor: pointer;
 	}
 	.actions .btn {
 		padding: 8px 16px;

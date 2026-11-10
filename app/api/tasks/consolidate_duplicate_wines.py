@@ -1,7 +1,7 @@
-"""Duplicate wines: same producer, cuvée, color, appellation, grape, vintage and disgorgement. Their cellar lines (and
-so their tasting notes, which point at the lines) move to the oldest wine of the group, which takes over what it
-lacks (critics' scores, LWIN, drinking window...); each emptied duplicate is then deleted. The orphan check runs
-before committing and undoes everything if it finds one.
+"""Duplicate wines: same producer, cuvée, color, appellation, grape, vintage, disgorgement, region, vineyard and
+LWIN. Their cellar lines (and so their tasting notes, which point at the lines) move to the oldest wine of the
+group, which takes over what it lacks (critics' scores, grapes, region, LWIN, drinking window...); each emptied
+duplicate is then deleted. The orphan check runs before committing and undoes everything if it finds one.
 
     python app/api/tasks/consolidate_duplicate_wines.py            # dry run
     python app/api/tasks/consolidate_duplicate_wines.py --commit
@@ -24,7 +24,8 @@ from models import Bottle, Wine  # noqa: E402
 
 
 def find_duplicate_groups(session):
-    """[{"label", "primary": wine id, "duplicates": [wine ids], "bottles": {wine id: [bottles]}}], biggest first."""
+    """[{"label", "primary": wine id, "duplicates": [wine ids], "bottles": {wine id: [bottles]}, "key", "producer"}],
+    biggest first."""
     groups = defaultdict(list)
     # every wine, its critics' scores loaded only if asked (merging carries them): most of the time on a large cellar
     wines = session.query(Wine).options(joinedload(Wine.producer), joinedload(Wine.appellation),
@@ -32,8 +33,11 @@ def find_duplicate_groups(session):
     for w in wines:
         # Color too: a red and a white of one cuvée name are two wines
         # an empty text and none are the same (older imports left "" where the form leaves nothing)
+        # and the region, vineyard and LWIN: two unnamed whites of one vintage from two regions are two wines, and
+        # so are a wine with one and a wine without (it can't tell them apart)
         groups[(w.producer_id, (w.cuvee or "").strip(), w.type, w.appellation_id, w.varietal_id,
-                (w.vintage or "").strip(), (w.disgorgement_date or "").strip())].append(w)
+                (w.vintage or "").strip(), (w.disgorgement_date or "").strip(), w.region_id, w.vineyard_id,
+                (w.lwin or "").strip())].append(w)
     out = []
     for ws in groups.values():
         if len(ws) < 2:
@@ -46,7 +50,10 @@ def find_duplicate_groups(session):
             f" ({first.appellation.name})" if first.appellation else "")
         dups = [w.id for w in ws[1:]]
         bottles = {i: session.query(Bottle).filter(Bottle.wine_id == i).all() for i in dups}
-        out.append({"label": label, "primary": first.id, "duplicates": dups, "bottles": bottles})
+        # "12:30,31": the group as picked in a preview (merged only if it is still those wines)
+        out.append({"label": label, "primary": first.id, "duplicates": dups, "bottles": bottles,
+                    "key": f"{first.id}:{','.join(map(str, dups))}",
+                    "producer": first.producer.name if first.producer else "N/A"})
     return sorted(out, key=lambda g: (-len(g["duplicates"]), g["label"].lower()))
 
 

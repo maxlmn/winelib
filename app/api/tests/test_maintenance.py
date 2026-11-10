@@ -101,6 +101,21 @@ def test_backup_and_download(client, tmp_path, monkeypatch):
     assert client.get("/api/maintenance/backups/..%2Fconfig.py").status_code == 404
 
 
+def test_backup_fails_when_a_table_does(client, tmp_path, monkeypatch):
+    """A table that can't be saved fails the job, naming it: never a "done" over an incomplete backup."""
+    import sqlalchemy
+    import routers.maintenance as m
+    from tasks import backup
+    monkeypatch.setattr(m, "BACKUP_DIR", str(tmp_path))
+    monkeypatch.setattr(backup, "text", lambda q: sqlalchemy.text(q.replace('"wines"', '"no_such_table"')))
+    client.post("/api/maintenance/backup", json={})
+    job = wait(client)
+    assert job["status"] == "failed"
+    assert any("❌ wines" in line for line in job["log"])
+    assert any("Backup incomplete: wines" in line for line in job["log"])
+    assert any("producers:" in line and "rows" in line for line in job["log"])  # the others still saved
+
+
 def test_one_job_at_a_time(client):
     import threading
     gate = threading.Event()
