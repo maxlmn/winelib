@@ -137,7 +137,8 @@
 		});
 		const note = { date, place: toPlaceRef(place), rating, glasses, sequence, tags, notes, styles };
 		if (t) {
-			await save('tastings', t.id, { ...note, bottle: toBottleDetails(details) });
+			// a cellar bottle's details are its line's (its other bottles'): edited from the bottle, not here
+			await save('tastings', t.id, t.source === 'other' ? { ...note, bottle: toBottleDetails(details) } : note);
 			await applyPhotoChange(place?.name, date, photo);
 			return links.tasting(t.id);
 		}
@@ -165,8 +166,16 @@
 	remove={t
 		? {
 				what: 'this tasting note',
-				message: 'The note is deleted. A bottle created just for it goes too; a cellar bottle keeps its quantity.',
-				run: async () => (await remove('tastings', t.id), links.tastings())
+				message:
+					t.source === 'other'
+						? 'The note is deleted, and the bottle recorded just for it.'
+						: t.took_bottle
+							? 'The note is deleted. It took this bottle out of the cellar.'
+							: t.took_bottle === false
+								? 'The note is deleted. It didn’t take this bottle out of the cellar.'
+								: 'The note is deleted. Whether it took this bottle out of the cellar isn’t known.',
+				option: t.source === 'cellar' ? { label: 'Put the bottle back in the cellar (quantity + 1)', checked: !!t.took_bottle } : undefined,
+				run: async (restore) => (await remove('tastings', t.id, restore ? 'restore=true' : ''), links.tastings())
 			}
 		: undefined}
 >
@@ -256,7 +265,7 @@
 		</div>
 	</Section>
 
-	{#if t || source === 'other'}
+	{#if t ? t.source === 'other' : source === 'other'}
 		<Section title="Bottle details" collapsible bind:open={detailsOpen} summary={detailsSummary || 'Size, price, vendor, provenance'}>
 			<BottleFields bind:value={details} {options} prefix="t-b" errors={bottleErrors} />
 		</Section>

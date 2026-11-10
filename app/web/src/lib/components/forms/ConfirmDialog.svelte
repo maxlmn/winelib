@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
+
 	interface Props {
 		open: boolean;
 		title: string;
@@ -11,9 +13,11 @@
 		plain?: boolean;
 		onconfirm: () => void;
 		oncancel: () => void;
+		/** under the message: a choice that goes with it (a checkbox) */
+		children?: Snippet;
 	}
 
-	let { open, title, message, confirmLabel = 'Delete', busy = false, blocked = false, plain = false, onconfirm, oncancel }: Props = $props();
+	let { open, title, message, confirmLabel = 'Delete', busy = false, blocked = false, plain = false, onconfirm, oncancel, children }: Props = $props();
 
 	let dialog = $state<HTMLDialogElement>();
 
@@ -27,6 +31,7 @@
 <dialog bind:this={dialog} class="card" aria-labelledby="confirm-title" oncancel={(e) => (e.preventDefault(), oncancel())}>
 	<h2 id="confirm-title">{title}</h2>
 	<p class="muted">{message}</p>
+	{#if children && !blocked}<div class="extra">{@render children()}</div>{/if}
 	<div class="actions">
 		<button type="button" class="btn" onclick={oncancel}>{blocked ? 'OK' : 'Cancel'}</button>
 		{#if !blocked}
@@ -50,6 +55,9 @@
 	}
 	p {
 		margin: 0 0 18px;
+	}
+	.extra {
+		margin: -6px 0 18px;
 	}
 	.actions {
 		display: flex;

@@ -208,9 +208,14 @@ def test_tasting_from_cellar_consumes_a_bottle(client):
 
 
 def test_tasting_from_cellar_never_goes_below_zero(client):
-    client.post("/api/tastings", json={"source": "cellar", "bottle_id": IDS["gone"], "date": "2025-02-01"})
+    r = client.post("/api/tastings", json={"source": "cellar", "bottle_id": IDS["gone"], "date": "2025-02-01"})
+    assert r.status_code == 409 and detail(r) == "No bottle left in the cellar"
     _, b = get(Bottle, IDS["gone"])
-    assert b.qty == 0
+    assert b.qty == 0 and len(query(TastingNote, bottle_id=IDS["gone"])) == 1  # the seeded one only
+    # not taking one out: noted as before
+    r = client.post("/api/tastings", json={"source": "cellar", "bottle_id": IDS["gone"], "date": "2025-02-01", "consume": False})
+    assert r.status_code == 201
+    assert client.get(f"/api/forms/tastings/{r.json()['id']}").json()["took_bottle"] is False
 
 
 def test_tasting_other_wine_creates_an_ad_hoc_bottle(client):
@@ -284,6 +289,61 @@ def test_tasting_delete(client):
     _, b = get(Bottle, IDS["stocked"])
     assert b is not None
     assert client.delete(f"/api/tastings/{r['id']}").status_code == 404
+
+
+
+def test_tasting_edit_leaves_a_cellar_bottle_as_it_is(client):
+    """The cellar line holds other bottles: a tasting's edit doesn't rewrite their price, vendor..."""
+    tid = client.post("/api/tastings", json={"source": "cellar", "bottle_id": IDS["stocked"], "date": "2025-05-01"}).json()["id"]
+    r = client.put(f"/api/tastings/{tid}", json={"date": "2025-05-02", "bottle": {"price": 99, "vendor": "Other"}})
+    assert r.status_code == 200
+    _, b = get(Bottle, IDS["stocked"])
+    assert (b.price, b.currency, b.vendor, b.qty) == (40, "SGD", None, 2)
+
+
+def test_tasting_edit_changes_only_the_bottle_details_sent(client):
+    tid = client.post("/api/tastings", json={"source": "other", "wine": IDS["red"], "date": "2025-05-01", "bottle": {
+        "price": 30, "currency": "EUR", "vendor": "Shop", "provenance": "Gift", "purchase_date": "2025-04-01"}}).json()["id"]
+    client.put(f"/api/tastings/{tid}", json={"date": "2025-05-01", "bottle": {"price": 35}})
+    _, tn = get(TastingNote, tid)
+    b = tn.bottle
+    assert (b.price, b.currency, b.vendor, b.provenance, b.purchase_date) == (35, "EUR", "Shop", "Gift", date(2025, 4, 1))
+
+
+def test_tasting_delete_puts_the_bottle_back_when_asked(client):
+    r = client.post("/api/tastings", json={"source": "cellar", "bottle_id": IDS["stocked"], "date": "2025-06-02"}).json()
+    assert client.get(f"/api/forms/tastings/{r['id']}").json()["took_bottle"] is True
+    _, b = get(Bottle, IDS["stocked"])
+    assert b.qty == 2
+    out = client.delete(f"/api/tastings/{r['id']}", params={"restore": "true"}).json()
+    assert (out["bottle_deleted"], out["bottle_restored"]) == (False, True)
+    _, b = get(Bottle, IDS["stocked"])
+    assert b.qty == 3
+    # an older note (not known if it took one): the seeded one; and an ad-hoc bottle isn't "put back"
+    seeded = query(TastingNote, bottle_id=IDS["gone"])[0]
+    assert client.get(f"/api/forms/tastings/{seeded.id}").json()["took_bottle"] is None
+    r = client.post("/api/tastings", json={"source": "other", "wine": IDS["red"], "date": "2025-06-01"}).json()
+    out = client.delete(f"/api/tastings/{r['id']}", params={"restore": "true"}).json()
+    assert (out["bottle_deleted"], out["bottle_restored"]) == (True, False)
+
+
+def test_wine_moved_to_another_producer_keeps_its_list_entries(client):
+    lst = client.post("/api/lists", json={"name": "Moves"}).json()["id"]
+    for body in ({"kind": "wine", "wine_id": IDS["rotie"]}, {"kind": "cuvee", "wine_id": IDS["rotie"]}):
+        assert client.post(f"/api/lists/{lst}/items", json=body).status_code in (200, 201)
+    old = get(Wine, IDS["rotie"])[1].producer_id
+    assert client.post(f"/api/lists/{lst}/items", json={"kind": "producer", "producer_id": old}).status_code in (200, 201)
+    before = len(client.get("/api/lists-of", params={"wine_id": IDS["rotie"]}).json())
+    r = client.put(f"/api/wines/{IDS['rotie']}", json={"producer": IDS["empty"], "cuvee": "", "vintage": "2017", "type": "Red",
+                                                       "region": IDS["rhone"], "appellation": IDS["cote_rotie"]})
+    assert r.status_code == 200
+    assert len(client.get("/api/lists-of", params={"wine_id": IDS["rotie"]}).json()) == before > 0
+    from db import ListItem
+    assert {(i.kind, i.producer_id) for i in query(ListItem, list_id=lst)} == {
+        ("wine", IDS["empty"]), ("cuvee", IDS["empty"]), ("producer", old)}
+    # the old producer, now without wines, deleted: only its own entry goes
+    assert client.delete(f"/api/producers/{old}").status_code == 200
+    assert {i.kind for i in query(ListItem, list_id=lst)} == {"wine", "cuvee"}
 
 
 # --- Places and visits ------------------------------------------------------------------------
