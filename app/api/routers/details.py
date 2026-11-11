@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from routers.lists import family as list_family, marks as list_marks
 from routers.map import MAPPABLE_VINE, lieu_shapes_response, map_stats, shapes_response
-from cellar import load_cellar, location_group, maturity, to_base
+from cellar import cellar_lines, location_group, maturity, to_base
 from display import iso, vineyard_label, vintage_label
 from photos import photo_index, photo_url
 import geo
@@ -35,13 +35,6 @@ def _get(session, model, id_, what, *options):
     if obj is None:
         raise HTTPException(404, f"{what} not found")
     return obj
-
-
-def cellar_lines(session, key, ids):
-    """Stocked bottle lines (same rows as GET /api/cellar) whose `key` is in ids."""
-    bottles, _ = load_cellar(session)
-    ids = set(ids)
-    return [b for b in bottles if b[key] in ids]
 
 
 def _cellar_totals(lines):
@@ -365,7 +358,7 @@ def _region_by_key(session, key):
 def region_detail(key: str, session: Session = Depends(get_session)):
     """A wine region: its appellations and producers with your bottles and tastings, the cellar, the history."""
     r = _region_by_key(session, key)
-    lines = [b for b in load_cellar(session)[0] if b["region"] == r.name]
+    lines = cellar_lines(session, "region_id", [r.id])
     history = tastings(session, Wine.region_id == r.id)
     app_stats, _ = map_stats(session)
 
@@ -428,7 +421,7 @@ def grape_detail(key: str, session: Session = Depends(get_session)):
     (climate, acidity, tannin, aromas...) and its family."""
     g = _grape_by_key(session, key)
     with_grape = {i for (i,) in session.execute(_wines_with(g.id))}
-    lines = [b for b in load_cellar(session)[0] if b["wine_id"] in with_grape]
+    lines = cellar_lines(session, "wine_id", with_grape)
     history = tastings(session, Wine.id.in_(_wines_with(g.id)))
 
     def tally(rows, key, n):
@@ -518,7 +511,7 @@ def vintage_detail(year: str, session: Session = Depends(get_session)):
     if not wines:
         raise HTTPException(404, "Vintage not found")
     ids = {w.id for w in wines}
-    lines = [b for b in load_cellar(session)[0] if b["wine_id"] in ids]
+    lines = cellar_lines(session, "wine_id", ids)
     history = tastings(session, _vintage_filter(year))
     bottles, tasted = _wine_counts(session, list(ids))
 

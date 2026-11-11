@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session, joinedload
 
 import geo
 from crus import cru_case
-from cellar import load_cellar
+from cellar import figures
 from db import Appellation, Bottle, Region, TastingNote, Vineyard, Wine, get_session
 
 router = APIRouter()
@@ -51,13 +51,8 @@ def cached_json(request: Request, data):
 
 def map_stats(session):
     """({appellation id: figures}, {vineyard id: figures}), figures being bottles, value and tastings.
-    One pass over the cellar for both."""
-    apps, vines = defaultdict(lambda: {"bottles": 0, "value": 0.0}), defaultdict(lambda: {"bottles": 0, "value": 0.0})
-    for b in load_cellar(session)[0]:
-        for key, stats in (("appellation_id", apps), ("vineyard_id", vines)):
-            if b[key]:
-                stats[b[key]]["bottles"] += b["qty"]
-                stats[b[key]]["value"] += b["qty"] * b["market_base"]
+    Summed by the database (cellar.figures): a page's map no longer reads the whole cellar."""
+    apps, vines = figures(session, "w.appellation_id"), figures(session, "w.vineyard_id")
     rows = (session.query(Wine.appellation_id, Wine.vineyard_id, func.count(TastingNote.id))
             .select_from(TastingNote).join(Bottle, TastingNote.bottle_id == Bottle.id).join(Wine, Bottle.wine_id == Wine.id)
             .group_by(Wine.appellation_id, Wine.vineyard_id).all())
@@ -71,12 +66,8 @@ def map_stats(session):
 def region_stats(session):
     """{region id: figures}: bottles and value from the cellar, tastings, by the wine's region."""
     stats = defaultdict(lambda: {"bottles": 0, "value": 0.0, "tastings": 0})
-    ids = dict(session.query(Region.name, Region.id).all())
-    for b in load_cellar(session)[0]:
-        rid = ids.get(b["region"])
-        if rid:
-            stats[rid]["bottles"] += b["qty"]
-            stats[rid]["value"] += b["qty"] * b["market_base"]
+    for rid, f in figures(session, "w.region_id").items():
+        stats[rid].update(f)
     rows = (session.query(Wine.region_id, func.count(TastingNote.id)).select_from(TastingNote)
             .join(Bottle, TastingNote.bottle_id == Bottle.id).join(Wine, Bottle.wine_id == Wine.id)
             .group_by(Wine.region_id).all())
