@@ -48,6 +48,10 @@
 - **Tasting cards, lighter**: an occasion's place and day on one plain card (no band, no box in a box), each wine
   with its appellation under it and its note in full colour; a wine without a note offers *Add a note*. On the
   Tasting Notes page the cards sit on the page itself.
+- **Detail pages, fewer boxes**: a wine's, producer's, appellation's (and the others') Cellar and History tabs show
+  their cards on the page itself, not boxed in the tabs' card; a tasting there reads as in the journal (its
+  appellation under the wine, *Add a note* for one without); one wine's bottles sit under a plain heading.
+- **A phone's top bar** keeps the brand, the theme and the menu: search is in the bar at the bottom.
 
 ## v0.5.0
 

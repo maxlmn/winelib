@@ -5,7 +5,6 @@
 	import type { RegionColors } from '#lib/types.ts';
 	import { FALLBACK_REGION } from '#lib/colors.ts';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
-	import Icon from '#lib/components/Icon.svelte';
 	import { regionLabel } from '#lib/regions.svelte.ts';
 	import { links } from '#lib/links.ts';
 	import { photoSrc } from '#lib/api/photos.ts';
@@ -113,12 +112,13 @@
 										<a href={links.wine(t.wine_id)}>
 											<b>{t.producer}</b>{t.cuvee ? ` – ${t.cuvee}` : ''}
 										</a>
-										{#if t.appellation}<span class="muted">({t.appellation})</span>{/if}
-										<span class="vintage num">[{t.vintage}]</span><CriticPills scores={t.scores} />{#if t.rating}<span class="mine num" title="Your score">{t.rating}</span>{/if}
-										<!-- the note (or its absence) opens the tasting -->
-										<a class="note" class:empty={!t.notes} href={links.tasting(t.id)} title="Open the tasting">
-											{#if t.notes}{t.notes}{:else}<Icon name="glass" size={11} />No note{/if}
-										</a>
+										<span class="vintage num">{t.vintage}</span><CriticPills scores={t.scores} />{#if t.rating}<span class="mine num" title="Your score">{t.rating}</span>{/if}
+										<!-- under the wine: its appellation, and the note (or the offer to write one), which opens the tasting -->
+										<div class="under">
+											{#if t.appellation}<span class="muted">{t.appellation}</span>{/if}
+											{#if !t.notes}<a class="add-note" href={links.tasting(t.id)} title="Open the tasting">Add a note</a>{/if}
+										</div>
+										{#if t.notes}<a class="note" href={links.tasting(t.id)} title="Open the tasting">{t.notes}</a>{/if}
 									</div>
 								</li>
 							{/each}
@@ -144,25 +144,26 @@
 		border: 1px solid var(--border);
 		border-radius: var(--radius);
 		overflow: hidden;
+		background: var(--surface);
 	}
 	header {
 		display: flex;
 		justify-content: space-between;
 		align-items: baseline;
 		gap: 10px;
-		padding: 9px 14px;
-		background: var(--surface-2);
-		border-bottom: 1px solid var(--border);
+		padding: 12px 16px 0;
 	}
 	.where {
-		font-weight: 600;
+		font-family: var(--heading-font);
+		font-size: 15px;
+		font-weight: 650;
 		min-width: 0;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 	a.where {
-		color: var(--link);
+		color: var(--text);
 		text-decoration: var(--link-decoration, none);
 	}
 	a.where:hover {
@@ -177,7 +178,7 @@
 		color: var(--accent);
 	}
 	.content {
-		padding: 10px 14px 6px;
+		padding: 6px 16px 10px;
 	}
 	.meta {
 		font-size: 12px;
@@ -220,8 +221,11 @@
 	li {
 		display: flex;
 		gap: 8px;
-		padding: 3px 0 5px;
+		padding: 5px 0;
 		font-size: 13px;
+	}
+	li + li {
+		border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
 	}
 	.end {
 		display: flex;
@@ -229,11 +233,26 @@
 		margin-top: 3px;
 	}
 	.line {
+		flex: 1;
 		min-width: 0;
 	}
 	.vintage {
 		color: var(--muted);
+		margin-left: 2px;
+	}
+	.under {
+		display: flex;
+		justify-content: space-between;
+		gap: 10px;
 		font-size: 12px;
+	}
+	.add-note {
+		margin-left: auto;
+		color: var(--muted);
+		white-space: nowrap;
+	}
+	.add-note:hover {
+		color: var(--accent);
 	}
 	/* the note opens the tasting: three lines at most here, the whole on its page */
 	.note {
@@ -243,26 +262,13 @@
 		line-clamp: 3;
 		overflow: hidden;
 		margin: 3px 0 2px;
-		font-size: 12.5px;
-		padding-left: 10px;
-		border-left: 2px solid var(--border);
-		color: var(--muted);
+		color: var(--text);
 		font-style: italic;
 		white-space: pre-line;
 		text-decoration: none;
 	}
-	.note.empty {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		font-style: normal;
-		font-size: 11px;
-		opacity: 0.7;
-	}
 	.note:hover {
 		color: var(--accent);
-		border-left-color: var(--accent);
-		opacity: 1;
 	}
 	.more {
 		margin-top: 12px;
