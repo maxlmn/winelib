@@ -22,7 +22,7 @@ export type Palette = string;
 
 const KEY = 'winelib-theme';
 
-export const theme = $state({ mode: 'auto' as Mode, palette: 'rose' as Palette, font: 'sans' as Font, dark: false });
+export const theme = $state({ mode: 'auto' as Mode, palette: 'bordeaux' as Palette, font: 'serif' as Font, dark: false });
 
 const media = () => matchMedia('(prefers-color-scheme: dark)');
 

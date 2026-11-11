@@ -25,6 +25,14 @@
 		void page.url.pathname;
 		menuOpen = false;
 	});
+	// A phone's bar at the bottom, within the thumb's reach: the pages opened most, a bottle or a tasting added,
+	// search. Not on a form (its own Save and Cancel sit there)
+	let addOpen = $state(false);
+	const onForm = $derived(/\/(new|edit)$/.test(page.url.pathname) || page.url.pathname === '/welcome');
+	$effect(() => {
+		void page.url.pathname;
+		addOpen = false;
+	});
 	const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 
 	initTheme();
@@ -99,6 +107,25 @@
 		{@render children()}
 	</main>
 </div>
+
+{#if !onForm}
+	<div class="tabbar" role="navigation" aria-label="Shortcuts">
+		<a class="tab" class:active={page.url.pathname === links.home()} href={links.home()}><Icon name="grid" size={20} /><span>Home</span></a>
+		<a class="tab" class:active={page.url.pathname.startsWith(links.cellar())} href={links.cellar()}><Icon name="bottle" size={20} /><span>Cellar</span></a>
+		<div class="add">
+			{#if addOpen}
+				<div class="add-menu">
+					<a href={links.newBottle()}><Icon name="bottle" size={16} />Add a bottle</a>
+					<a href={links.newTasting()}><Icon name="glass" size={16} />Add a tasting</a>
+					<a href={links.newVisit()}><Icon name="pin" size={16} />Add a restaurant visit</a>
+				</div>
+			{/if}
+			<button class="plus" class:open={addOpen} onclick={() => (addOpen = !addOpen)} aria-expanded={addOpen} aria-label="Add">+</button>
+		</div>
+		<a class="tab" class:active={page.url.pathname.startsWith(links.tastings())} href={links.tastings()}><Icon name="glass" size={20} /><span>Tastings</span></a>
+		<button class="tab" onclick={() => (searchOpen = true)}><Icon name="search" size={20} /><span>Search</span></button>
+	</div>
+{/if}
 
 <CommandPalette bind:open={searchOpen} />
 <AskDialog />
@@ -223,6 +250,9 @@
 	.menu-btn {
 		display: none;
 	}
+	.tabbar {
+		display: none;
+	}
 	main {
 		padding: 24px 28px 60px;
 		min-width: 0;
@@ -293,7 +323,85 @@
 			margin-top: 0;
 		}
 		main {
-			padding: 16px;
+			padding: 16px 16px calc(16px + var(--tab-h));
+		}
+		/* The bar at the bottom: above a page's full-size map and its cards, under the dialogs */
+		.tabbar {
+			position: fixed;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			z-index: 46;
+			display: grid;
+			grid-template-columns: repeat(5, 1fr);
+			align-items: center;
+			height: calc(56px + env(safe-area-inset-bottom, 0px));
+			padding: 0 4px env(safe-area-inset-bottom, 0px);
+			background: var(--surface);
+			border-top: 1px solid var(--border);
+		}
+		.tab {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: 2px;
+			height: 100%;
+			border: 0;
+			background: none;
+			color: var(--muted);
+			font: inherit;
+			font-size: 11px;
+			cursor: pointer;
+		}
+		.tab.active {
+			color: var(--accent);
+			font-weight: 600;
+		}
+		.add {
+			position: relative;
+			display: grid;
+			place-items: center;
+		}
+		.plus {
+			width: 44px;
+			height: 44px;
+			border: 0;
+			border-radius: 50%;
+			background: var(--accent);
+			color: var(--on-accent, #fff);
+			font-size: 26px;
+			line-height: 1;
+			cursor: pointer;
+			transition: transform 0.15s;
+		}
+		.plus.open {
+			transform: rotate(45deg);
+		}
+		.add-menu {
+			position: absolute;
+			bottom: 54px;
+			left: 50%;
+			transform: translateX(-50%);
+			display: flex;
+			flex-direction: column;
+			min-width: 210px;
+			padding: 6px;
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 12px;
+			box-shadow: var(--shadow);
+		}
+		.add-menu a {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			padding: 11px 12px;
+			border-radius: 8px;
+			color: var(--text);
+		}
+		.add-menu a:active {
+			background: var(--surface-2);
 		}
 	}
 </style>

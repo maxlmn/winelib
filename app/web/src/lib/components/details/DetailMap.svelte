@@ -313,7 +313,7 @@
 	}
 	@media (max-width: 760px) {
 		.fullmap.on {
-			inset: var(--nav-h, 52px) 0 0 0;
+			inset: var(--nav-h, 52px) 0 var(--tab-h, 0px) 0;
 		}
 	}
 	figure.big {
