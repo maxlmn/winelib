@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **A photo straight from a tasting's page**: *Add a photo of the evening* (or drop one on it), and *Replace* or
+  *Remove* under it, without opening the tasting's form. It's the evening's photo: every wine of it shows it.
 - **Getting started knows your maps have outlines** when they came from a shape store you built yourself (or drew),
   not the map pack: it asked to download them on such an installation.
 - **The app's own dialogs everywhere**: leaving a form or Settings with changes asks in the app's dialog (Leave, or
