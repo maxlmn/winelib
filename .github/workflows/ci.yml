@@ -101,7 +101,7 @@ jobs:
           cache-dependency-path: app/web/package-lock.json
       - run: npm ci
       - run: npm run build
-      - run: npx playwright install --with-deps chromium
+      - run: (npx playwright install --with-deps chromium || npx playwright install chromium)
       - run: npm run e2e
       - if: failure()
         uses: actions/upload-artifact@v4

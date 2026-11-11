@@ -37,7 +37,7 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: app/web/package-lock.json
-      - run: npm ci && npx playwright install --with-deps chromium
+      - run: npm ci && (npx playwright install --with-deps chromium || npx playwright install chromium)
         working-directory: app/web
       - name: The demo database
         run: gh release download demo --pattern winelib-demo.db --dir "$RUNNER_TEMP"
