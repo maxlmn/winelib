@@ -406,6 +406,16 @@
 	{/snippet}
 </Tabs>
 
+{#await data.version then version}
+	{#if version}
+		<p class="version muted">
+			WineLib <span class="num">{version}</span> ·
+			<a href="https://github.com/maxlmn/winelib/blob/main/CHANGELOG.md" target="_blank" rel="noopener">what changed</a> ·
+			<a href={links.about()}>About the data</a>
+		</p>
+	{/if}
+{/await}
+
 <div class="bar card" class:show={dirty || saved || error}>
 	{#if error}
 		<span class="error">{error}</span>
@@ -421,6 +431,11 @@
 </div>
 
 <style>
+	.version {
+		margin: 18px 0 0;
+		font-size: 12px;
+		text-align: center;
+	}
 	.page-head {
 		align-items: baseline;
 		justify-content: flex-start;

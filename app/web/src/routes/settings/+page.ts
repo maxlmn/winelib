@@ -12,5 +12,10 @@ export const load: PageLoad = async ({ fetch }) => {
 		fetch('/api/lookups/options').then((r) => r.json() as Promise<{ locations: string[] }>),
 		fetch('/api/lookups/critics').then((r) => (r.ok ? (r.json() as Promise<string[]>) : []))
 	]);
-	return { locations: options.locations, critics, attention };
+	// the version it runs (not awaited either; nothing shown when it isn't said: the demo)
+	const version = fetch('/api/health')
+		.then((r) => (r.ok ? (r.json() as Promise<{ version?: string }>) : {}))
+		.then((h: { version?: string }) => h.version ?? null)
+		.catch(() => null);
+	return { locations: options.locations, critics, attention, version };
 };

@@ -1,0 +1,9 @@
+---
+// The version the site describes: the app's own (app/api/version.py), the last release's when the code is past it
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+const source = readFileSync(join(process.cwd(), '..', 'app', 'api', 'version.py'), 'utf8');
+const version = (source.match(/VERSION\s*=\s*"([^"]+)"/)?.[1] ?? '').replace(/\+.*$/, '');
+---
+
+{version && <a class="version" href={`https://github.com/maxlmn/winelib/releases/tag/v${version}`}>v{version}</a>}

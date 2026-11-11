@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **The version is said where you look for it**: at the bottom of Settings in the app, and on the website (its
+  home page and every page's foot), linked to the release.
+
 ## v0.6.0
 
 - **Safer updates and access**: the database is copied before an update changes it (SQLite:
