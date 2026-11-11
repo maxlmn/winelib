@@ -90,11 +90,24 @@ def build_file(build, path):
 # Serve the built SvelteKit app (app/web/build) with SPA fallback, so one container serves everything
 WEB_BUILD = os.getenv("WEB_BUILD", os.path.join(os.path.dirname(__file__), "..", "web", "build"))
 if os.path.isdir(WEB_BUILD):
-    app.mount("/_app", StaticFiles(directory=os.path.join(WEB_BUILD, "_app")), name="assets")
+    class Assets(StaticFiles):
+        """The build's files under _app/immutable carry a hash of their content in their name: kept by the browser
+        for good, not asked again at each page (on plain http there's no service worker to keep them)."""
+
+        async def get_response(self, path, scope):
+            response = await super().get_response(path, scope)
+            if response.status_code == 200 and path.replace(os.sep, "/").startswith("immutable/"):
+                response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+            return response
+
+    app.mount("/_app", Assets(directory=os.path.join(WEB_BUILD, "_app")), name="assets")
 
     @app.get("/{path:path}", include_in_schema=False)
     def spa(path: str):
         if path.startswith("api/"):
             raise HTTPException(404, "Not found")
         file = build_file(WEB_BUILD, path)
-        return FileResponse(file or os.path.join(WEB_BUILD, "index.html"))
+        if file:
+            return FileResponse(file)
+        # the page itself names the build's files: asked again each time, so an update shows at once
+        return FileResponse(os.path.join(WEB_BUILD, "index.html"), headers={"Cache-Control": "no-cache"})

@@ -18,8 +18,21 @@ def appellations_apart(session):
     """[{"wine": a wine of the cuvée, "by": [(appellation name, [vintages])], "both": [vintages under two]}]: the
     cuvées filed under more than one appellation; `both` the vintages found under several (likely entered twice)."""
     groups = defaultdict(list)
-    # its critics' scores loaded only if asked: most of the time on a large cellar
-    for w in session.query(Wine).options(joinedload(Wine.producer), joinedload(Wine.appellation), lazyload(Wine.scores)):
+    # Plain columns first, to find the cuvées under more than one appellation; only their wines are loaded whole
+    # (the home page asks at each visit, and loading every wine was most of its wait on a large cellar)
+    under = defaultdict(lambda: (set(), []))
+    for i, producer_id, cuvee, colour, appellation_id in session.query(
+            Wine.id, Wine.producer_id, Wine.cuvee, Wine.type, Wine.appellation_id):
+        if producer_id and (cuvee or "").strip():
+            appellations, ids = under[(producer_id, cuvee.strip().lower(), colour)]
+            appellations.add(appellation_id)
+            ids.append(i)
+    apart = [i for appellations, ids in under.values() if len(appellations) > 1 for i in ids]
+    if not apart:
+        return []
+    # its critics' scores loaded only if asked
+    for w in session.query(Wine).filter(Wine.id.in_(apart)).options(
+            joinedload(Wine.producer), joinedload(Wine.appellation), lazyload(Wine.scores)):
         if w.producer_id and _cuvee(w):  # a wine without a cuvée name is its appellation's: two are two wines
             groups[(w.producer_id, _cuvee(w), w.type)].append(w)
     out = []

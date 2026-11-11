@@ -27,9 +27,19 @@ def find_duplicate_groups(session):
     """[{"label", "primary": wine id, "duplicates": [wine ids], "bottles": {wine id: [bottles]}, "key", "producer"}],
     biggest first."""
     groups = defaultdict(list)
-    # every wine, its critics' scores loaded only if asked (merging carries them): most of the time on a large cellar
-    wines = session.query(Wine).options(joinedload(Wine.producer), joinedload(Wine.appellation),
-                                        joinedload(Wine.varietal), lazyload(Wine.scores)).all()
+    # Plain columns first, to find the wines that share a key; only those are loaded whole (the home page asks at
+    # each visit, and loading every wine was most of its wait on a large cellar)
+    keys = defaultdict(list)
+    for row in session.query(Wine.id, Wine.producer_id, Wine.cuvee, Wine.type, Wine.appellation_id, Wine.varietal_id,
+                             Wine.vintage, Wine.disgorgement_date, Wine.region_id, Wine.vineyard_id, Wine.lwin):
+        keys[(row[1], (row[2] or "").strip(), row[3], row[4], row[5], (row[6] or "").strip(), (row[7] or "").strip(),
+              row[8], row[9], (row[10] or "").strip())].append(row[0])
+    twice = [i for ids in keys.values() if len(ids) > 1 for i in ids]
+    if not twice:
+        return []
+    # its critics' scores loaded only if asked (merging carries them)
+    wines = session.query(Wine).filter(Wine.id.in_(twice)).options(
+        joinedload(Wine.producer), joinedload(Wine.appellation), joinedload(Wine.varietal), lazyload(Wine.scores)).all()
     for w in wines:
         # Color too: a red and a white of one cuvée name are two wines
         # an empty text and none are the same (older imports left "" where the form leaves nothing)

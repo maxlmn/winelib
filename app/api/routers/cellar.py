@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from cellar import load_cellar
 from db import Region, get_session
+from fastjson import fast_json
 
 router = APIRouter()
 
@@ -22,4 +23,4 @@ def region_countries(session: Session = Depends(get_session)):
 @router.get("/api/cellar")
 def cellar(session: Session = Depends(get_session)):
     bottles, locations = load_cellar(session)
-    return {"bottles": bottles, "locations": locations}
+    return fast_json({"bottles": bottles, "locations": locations})
