@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css';
-	import { page } from '$app/state';
+	import { navigating, page } from '$app/state';
 	import { links } from '#lib/links.ts';
 	import { initTheme, setTheme, theme } from '#lib/theme.svelte.ts';
 	import type { Mode } from '#lib/theme.svelte.ts';
@@ -31,6 +31,7 @@
 
 	// The tasting notes are the app's largest page: fetched once the app has settled, so they open at once
 	onMount(() => {
+		document.getElementById('boot')?.remove(); // app.html's first screen
 		const t = setTimeout(() => ('requestIdleCallback' in window ? requestIdleCallback(warmJournal) : warmJournal()), 1500);
 		return () => clearTimeout(t);
 	});
@@ -56,6 +57,9 @@
 		{ href: links.map(), label: 'Map', icon: 'map' }
 	];
 </script>
+
+<!-- A page that waits for its data: the bar says it's coming (a click showed nothing until it did) -->
+{#if navigating.to}<div class="progress" role="progressbar" aria-label="Loading the page"></div>{/if}
 
 <div class="shell">
 	<nav bind:offsetHeight={navHeight}>
@@ -100,6 +104,29 @@
 <AskDialog />
 
 <style>
+	.progress {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 3px;
+		z-index: 200;
+		background: var(--accent);
+		transform-origin: left;
+		opacity: 0;
+		/* after a moment (a quick page shows none), then towards the end without reaching it */
+		animation: progress 8s 0.15s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+	}
+	@keyframes progress {
+		0% {
+			opacity: 1;
+			transform: scaleX(0);
+		}
+		100% {
+			opacity: 1;
+			transform: scaleX(0.95);
+		}
+	}
 	.shell {
 		display: grid;
 		grid-template-columns: 200px 1fr;
