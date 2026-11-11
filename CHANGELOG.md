@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Getting started**: a new installation's home page says what to do first (the map outlines, your cellar from a
+  file or a first bottle, the help), each step ticked when it's done; it can be put away.
+- **The Producers page shows yours first**: those you have wines of, tasted, hold or listed; the whole directory
+  (the thousands of producers WineLib ships with) is a click away, and shown on a new installation.
 - **Backups hold your photos**: Maintenance › Backup also saves the tasting photos in a zip (when they changed), and
   keeps the last ten backups of each kind (two of the photos'), removing the older ones it wrote. Settings › Your
   data downloads the photos too. The restore script puts them back (`--photos`), uses the app's own database by

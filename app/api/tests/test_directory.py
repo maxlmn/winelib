@@ -50,6 +50,8 @@ def test_producers(client):
     assert b["bottles"] == 3  # only stocked lines
     assert by_name["Unplaced"]["region"] is None and by_name["Unplaced"]["lists"] == []
     assert by_name["Domaine Roulot"]["tastings"] == 0
+    # its wines in WineLib: the Producers page's "Yours" (the shipped directory's producers have none)
+    assert b["wines"] > 0 and by_name["Unplaced"]["wines"] == 0
     named = [r["name"] for r in rows if r["region"]]
     assert named == ["Domaine Roulot", "Domaine Belargus"]  # Bourgogne before Loire
 

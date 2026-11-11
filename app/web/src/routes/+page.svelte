@@ -7,6 +7,9 @@
 	import WhatToOpen from '#lib/components/home/WhatToOpen.svelte';
 	import CellarSection from '#lib/components/details/CellarSection.svelte';
 	import HomeMap from '#lib/components/home/HomeMap.svelte';
+	import GettingStarted from '#lib/components/home/GettingStarted.svelte';
+	import { DEMO } from '#lib/demo.ts';
+	import { integrations } from '#lib/settings.svelte.ts';
 	import OccasionCard from '#lib/components/tastings/OccasionCard.svelte';
 	import TastingRibbon from '#lib/components/tastings/TastingRibbon.svelte';
 	import { occasions } from '#lib/components/tastings/journal.ts';
@@ -70,6 +73,12 @@
 		{/if}
 	</div>
 </div>
+
+<!-- A new installation: what to do first, while the cellar and the journal are empty or the maps have no outlines
+     (not in the demo) -->
+{#if !DEMO && ((!data.cellar.bottles.length && !data.journal.tastings.length) || !integrations.mapCredits.length)}
+	<GettingStarted bottles={data.cellar.bottles.length} tastings={data.journal.tastings.length} />
+{/if}
 
 <div class="kpis">
 	<a class="kpi card" href={links.cellar()}>

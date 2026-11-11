@@ -39,6 +39,7 @@ def producers(session: Session = Depends(get_session)):
     tastings = dict(session.query(Wine.producer_id, func.count(TastingNote.id))
                     .join(Bottle, Bottle.wine_id == Wine.id).join(TastingNote, TastingNote.bottle_id == Bottle.id)
                     .group_by(Wine.producer_id).all())
+    wines = dict(session.query(Wine.producer_id, func.count(Wine.id)).group_by(Wine.producer_id).all())
     bottles = dict(session.query(Wine.producer_id, func.sum(Bottle.qty))
                    .join(Bottle, Bottle.wine_id == Wine.id).filter(Bottle.qty > 0)
                    .group_by(Wine.producer_id).all())
@@ -54,7 +55,8 @@ def producers(session: Session = Depends(get_session)):
     return [
         {"id": pid, "name": name, "region": region, "color": color, "subregion": subregion, "village": village,
          "winemaker": winemaker, "lists": [x["name"] for x in on_lists.get(pid, [])], "list_refs": on_lists.get(pid, []),
-         "notes": notes, "tastings": tastings.get(pid, 0), "bottles": int(bottles.get(pid) or 0)}
+         "notes": notes, "tastings": tastings.get(pid, 0), "bottles": int(bottles.get(pid) or 0),
+         "wines": wines.get(pid, 0)}
         for pid, name, region, color, subregion, village, winemaker, notes in rows
     ]
 

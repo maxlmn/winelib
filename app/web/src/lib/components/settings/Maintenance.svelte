@@ -168,7 +168,7 @@
 		openedFor = id;
 		const t = tasks.find((x) => x.id === id);
 		if (!t) return;
-		if (!job || job.status !== 'running') {
+		if (!t.upload && (!job || job.status !== 'running')) { // a task reading a file waits for its file
 			if (t.preview) await start(t, false);
 			else if (!t.writes) await start(t, true);
 		}
