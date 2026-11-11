@@ -18,15 +18,19 @@
 	color: inherit;
 }
 
-.form input:focus,
+/* As specific as the rule above, which otherwise wins: a field in focus, or refused, looked like any other */
+.form input:not([type='checkbox']):not([type='radio']):not([type='range']):focus,
 .form select:focus,
 .form textarea:focus {
 	border-color: var(--accent);
 	background: var(--surface);
+	outline: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
+	outline-offset: 1px;
 }
 
-.form input[aria-invalid='true'],
-.form select[aria-invalid='true'] {
+.form input:not([type='checkbox']):not([type='radio']):not([type='range'])[aria-invalid='true'],
+.form select[aria-invalid='true'],
+.form textarea[aria-invalid='true'] {
 	border-color: var(--down);
 }
 

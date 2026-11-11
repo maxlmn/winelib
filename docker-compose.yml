@@ -11,10 +11,13 @@ services:
       - "127.0.0.1:8000:8000"
     volumes:
       - winelib-data:/data  # the database, photos, map outlines, backups, plug-ins
-    # Optional, for market prices (Settings › Integrations says what each needs):
+    # Optional keys (Settings › Integrations says what each needs; .secrets.env.example lists them all), here or
+    # in a .secrets.env file in the data volume:
     # environment:
-    #   - WINELABS_API_KEY=...
-    #   - BI_EMAIL=...
+    #   - ANTHROPIC_API_KEY=...   # Fill from photos
+    #   - ESRI_API_KEY=...        # the satellite view outside France
+    #   - WINELABS_API_KEY=...    # market prices
+    #   - BI_EMAIL=...            # Bordeaux Index
     #   - BI_PASSWORD=...
 
 volumes:
