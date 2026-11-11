@@ -92,7 +92,7 @@
 		margin-bottom: 14px;
 	}
 	.gold {
-		color: var(--gold);
+		color: var(--gold-text);
 	}
 	.empty {
 		padding: 16px;

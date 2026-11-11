@@ -81,7 +81,7 @@
 
 <style>
 	.stars {
-		color: var(--gold);
+		color: var(--gold-text);
 		margin-left: 8px;
 		font-size: 18px;
 		vertical-align: middle;

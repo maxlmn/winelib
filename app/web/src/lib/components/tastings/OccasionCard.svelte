@@ -143,7 +143,7 @@
 		color: var(--accent);
 	}
 	.stars {
-		color: var(--gold);
+		color: var(--gold-text);
 		letter-spacing: 1px;
 		font-size: 12px;
 	}

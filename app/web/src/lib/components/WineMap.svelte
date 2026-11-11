@@ -525,7 +525,7 @@
 		border: none;
 		border-radius: 7px;
 		background: var(--accent);
-		color: #fff;
+		color: var(--on-accent);
 		font: inherit;
 		font-size: 12px;
 		cursor: pointer;
@@ -555,7 +555,7 @@
 		color: var(--muted);
 	}
 	.owned {
-		color: var(--gold);
+		color: var(--gold-text);
 		font-weight: 600;
 	}
 </style>

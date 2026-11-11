@@ -200,7 +200,7 @@
 		gap: 8px;
 	}
 	.btn.primary:hover {
-		color: white;
+		color: var(--on-accent);
 		filter: brightness(1.05);
 	}
 	.btn:disabled {
@@ -227,7 +227,7 @@
 		margin: 2px 0;
 	}
 	.value.gold {
-		color: var(--gold);
+		color: var(--gold-text);
 	}
 	.sub {
 		font-size: 12px;

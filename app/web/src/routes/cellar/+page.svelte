@@ -257,7 +257,7 @@
 	}
 	.currency button.on {
 		background: var(--accent);
-		color: #fff;
+		color: var(--on-accent);
 	}
 	.kpis {
 		display: grid;

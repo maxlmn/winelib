@@ -564,7 +564,7 @@
 	}
 	.filters button.on {
 		background: var(--accent);
-		color: #fff;
+		color: var(--on-accent);
 	}
 	.entries {
 		list-style: none;

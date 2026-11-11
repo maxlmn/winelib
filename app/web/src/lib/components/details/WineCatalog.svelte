@@ -168,11 +168,11 @@
 	}
 	.chip.owned {
 		color: var(--text);
-		border-color: var(--gold);
+		border-color: var(--gold-text);
 	}
 	.n {
 		font-weight: 650;
-		color: var(--gold);
+		color: var(--gold-text);
 	}
 	.tick {
 		color: var(--accent);

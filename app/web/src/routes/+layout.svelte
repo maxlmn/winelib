@@ -69,8 +69,9 @@
 <!-- A page that waits for its data: the bar says it's coming (a click showed nothing until it did) -->
 {#if navigating.to}<div class="progress" role="progressbar" aria-label="Loading the page"></div>{/if}
 
+<a class="skip" href="#main">Skip to the page</a>
 <div class="shell">
-	<nav bind:offsetHeight={navHeight}>
+	<nav bind:offsetHeight={navHeight} aria-label="Pages">
 		<a class="brand" href={links.home()}>🍷 <span>WineLib</span></a>
 		<button class="search-btn" onclick={() => (searchOpen = true)}>
 			<span>⌕ Search…</span><kbd>{isMac ? '⌘' : 'Ctrl'} K</kbd>
@@ -80,7 +81,8 @@
 		</button>
 		<div class="items" class:open={menuOpen}>
 		{#each nav as item}
-			<a class="item" class:active={item.href === links.home() ? page.url.pathname === links.home() : page.url.pathname.startsWith(item.href)} href={item.href}>
+			{@const here = item.href === links.home() ? page.url.pathname === links.home() : page.url.pathname.startsWith(item.href)}
+			<a class="item" class:active={here} aria-current={here ? 'page' : undefined} href={item.href}>
 				<span class="icon">{#if isIcon(item.icon)}<Icon name={item.icon} size={15} />{:else}{item.icon}{/if}</span><span>{item.label}</span>
 			</a>
 		{/each}
@@ -97,7 +99,7 @@
 			</button>
 		</div>
 	</nav>
-	<main>
+	<main id="main" tabindex="-1">
 		{#if DEMO}
 			<p class="demo">
 				The demo: a sample cellar, read-only (nothing you change is kept).
@@ -256,6 +258,7 @@
 	main {
 		padding: 24px 28px 60px;
 		min-width: 0;
+		outline: none;
 	}
 	.demo {
 		margin: -8px 0 16px;
@@ -303,11 +306,15 @@
 		:global(:root:has(.tabbar)) .brand {
 			margin-right: auto;
 		}
+		.mode {
+			width: 40px;
+			height: 40px;
+		}
 		.menu-btn {
 			display: block;
 			order: 1;
-			width: 34px;
-			height: 30px;
+			width: 40px;
+			height: 40px;
 			border: 1px solid var(--border);
 			border-radius: 8px;
 			background: var(--surface);
@@ -376,7 +383,7 @@
 			border: 0;
 			border-radius: 50%;
 			background: var(--accent);
-			color: var(--on-accent, #fff);
+			color: var(--on-accent);
 			font-size: 26px;
 			line-height: 1;
 			cursor: pointer;

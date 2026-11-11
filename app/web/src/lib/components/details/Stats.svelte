@@ -43,7 +43,7 @@
 		letter-spacing: -0.01em;
 	}
 	.value.gold {
-		color: var(--gold);
+		color: var(--gold-text);
 	}
 	.sub {
 		font-size: 12px;

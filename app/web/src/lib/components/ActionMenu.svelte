@@ -8,6 +8,26 @@
 
 	let open = $state(false);
 	let root = $state<HTMLElement>();
+	let button = $state<HTMLButtonElement>();
+	let panel = $state<HTMLElement>();
+
+	const items = () => [...(panel?.querySelectorAll<HTMLElement>('a, button:not(:disabled)') ?? [])].filter((e) => e.offsetParent !== null);
+	$effect(() => {
+		if (open) queueMicrotask(() => items()[0]?.focus());
+	});
+	function onkey(e: KeyboardEvent) {
+		if (!open) return;
+		if (e.key === 'Escape') {
+			open = false;
+			button?.focus();
+		} else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+			const list = items();
+			if (!list.length) return;
+			e.preventDefault();
+			const i = list.indexOf(document.activeElement as HTMLElement);
+			list[(i + (e.key === 'ArrowDown' ? 1 : -1) + list.length) % list.length].focus();
+		}
+	}
 
 	function onwindow(e: MouseEvent) {
 		if (open && root && !root.contains(e.target as Node)) open = false;
@@ -17,12 +37,12 @@
 	}
 </script>
 
-<svelte:window onclick={onwindow} onkeydown={(e) => e.key === 'Escape' && (open = false)} />
+<svelte:window onclick={onwindow} onkeydown={onkey} />
 
 <div class="action-menu" bind:this={root}>
-	<button class="btn more" aria-haspopup="menu" aria-expanded={open} title={label} aria-label={label} onclick={() => (open = !open)}>⋯</button>
+	<button class="btn more" bind:this={button} aria-haspopup="menu" aria-expanded={open} title={label} aria-label={label} onclick={() => (open = !open)}>⋯</button>
 	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions: the items are links and buttons -->
-	<div class="panel card" role="menu" tabindex="-1" hidden={!open} onclick={onpanel}>
+	<div class="panel card" role="menu" tabindex="-1" hidden={!open} onclick={onpanel} bind:this={panel}>
 		{@render children()}
 	</div>
 </div>

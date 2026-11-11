@@ -156,7 +156,7 @@
 		color: var(--accent);
 	}
 	.stars {
-		color: var(--gold);
+		color: var(--gold-text);
 		margin-left: 4px;
 	}
 	.what {

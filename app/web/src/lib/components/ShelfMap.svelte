@@ -162,7 +162,7 @@
 		z-index: 5;
 	}
 	.tile.selected {
-		border-color: var(--gold);
+		border-color: var(--gold-text);
 		box-shadow: 0 0 0 2px var(--gold);
 	}
 	.tile.dim {

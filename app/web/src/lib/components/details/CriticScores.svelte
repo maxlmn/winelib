@@ -106,6 +106,9 @@
 {/if}
 
 <style>
+	p {
+		overflow-wrap: anywhere;
+	}
 	.critics {
 		padding: 14px 16px;
 	}

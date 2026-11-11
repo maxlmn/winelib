@@ -81,7 +81,7 @@
 	}
 	.badge {
 		background: var(--accent);
-		color: white;
+		color: var(--on-accent);
 		border-radius: 10px;
 		padding: 0 6px;
 		font-size: 11px;

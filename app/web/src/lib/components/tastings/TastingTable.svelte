@@ -8,6 +8,7 @@
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
 	import { links, regionLink } from '#lib/links.ts';
 	import ShowMore from './ShowMore.svelte';
+	import { fmtDate } from '#lib/components/details/wine.ts';
 
 	let { tastings, places, regionColors }: { tastings: Tasting[]; places: Record<string, Place>; regionColors: RegionColors } = $props();
 
@@ -68,7 +69,7 @@
 		<tbody>
 			{#each sorted.slice(0, limit) as t (t.id)}
 				<tr>
-					<td class="tabular"><a href={links.tasting(t.id)} title={t.notes || 'Open the tasting'}>{t.date}</a></td>
+					<td class="tabular"><a href={links.tasting(t.id)} title={t.notes || 'Open the tasting'}>{fmtDate(t.date)}</a></td>
 					<td class="num muted">{t.seq ?? ''}</td>
 					<td class="end">
 						<BottleEnd

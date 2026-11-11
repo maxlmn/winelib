@@ -459,7 +459,7 @@
 		font-size: 10px;
 		font-weight: 600;
 		line-height: 1.4;
-		color: var(--gold);
+		color: var(--gold-text);
 		box-shadow: inset 0 0 0 1px var(--gold);
 		border-radius: 8px;
 		padding: 0 5px;

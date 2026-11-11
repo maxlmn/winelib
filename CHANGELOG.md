@@ -55,6 +55,13 @@
 - **A phone's top bar** keeps the brand, the theme and the menu: search is in the bar at the bottom.
 - **The home page's latest tastings and recent purchases** are plain rows too: a tasting's day and place small on
   a line over its wines; a purchase with its price, how many, its day and where it was bought.
+- **Easier to read and to reach**: the text on a coloured button follows the palette (dark on a light accent, in
+  dark mode too), greys and gold stars darker on white, the paler palettes' links darker; on a phone, fields
+  that no longer make iOS zoom and buttons a finger finds; less motion when the system asks for it.
+- **By keyboard**: *Skip to the page* first, the current page said to a screen reader; the search keeps Tab in its
+  field, names the shortcut as your computer does (Ctrl K, ⌘K) and gives the focus back when it closes; the ⋯ menu
+  takes the focus, moves with the arrows and gives it back on Escape.
+- **One date format**: a tasting's page title, its other tastings and the tasting list wrote 2026-09-09.
 
 ## v0.5.0
 

@@ -6,7 +6,7 @@
 
 <style>
 	.stars {
-		color: var(--gold);
+		color: var(--gold-text);
 		letter-spacing: 1px;
 	}
 </style>
