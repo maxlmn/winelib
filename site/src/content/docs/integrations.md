@@ -4,7 +4,7 @@ description: The optional services WineLib can use with your own keys.
 ---
 
 Everything here is optional: WineLib works fully without any of it. Each service needs your own key, set in
-`.secrets.env` next to `run.py` (copy
+`.secrets.env` next to `run.py` or in the data folder (copy
 [`.secrets.env.example`](https://github.com/maxlmn/winelib/blob/main/.secrets.env.example)), or as an `environment:`
 entry in `docker-compose.yml`. **Settings › Integrations** shows which are set up.
 

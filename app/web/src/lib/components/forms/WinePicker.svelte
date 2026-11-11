@@ -7,7 +7,7 @@
 	import { TYPE_COLORS } from '#lib/colors.ts';
 	import { emptyWine, lookup, newVintageDraft, vintageLabel } from '#lib/api/forms.ts';
 	import { request } from '#lib/api/http.ts';
-	import type { Options, WineDraft, WineForm, WineSummary } from '#lib/api/forms.ts';
+	import type { Choice, Options, WineDraft, WineForm, WineSummary } from '#lib/api/forms.ts';
 
 	interface Props {
 		/** the picked wine, or */
@@ -34,11 +34,40 @@
 		return last;
 	}
 
-	function newWine() {
+	/** What the text typed says of a wine (POST /api/lookups/from-text, as Fill from text reads a line) */
+	interface Read {
+		producer: Choice | null;
+		cuvee: string;
+		vintage: string;
+		type: string | null;
+		appellation: Choice | null;
+		region: Choice | null;
+		like_id: number | null;
+	}
+
+	async function newWine(q = '') {
 		// Searching one producer's wines? Start the new wine there.
 		const producers = new Map(last.map((w) => [w.producer_id, w]));
 		const only = producers.size === 1 ? [...producers.values()][0] : null;
-		draft = emptyWine(only && { id: only.producer_id, name: only.producer });
+		let d = emptyWine(only && { id: only.producer_id, name: only.producer });
+		if (q.trim()) {
+			// What was typed ("chateau margaux 2015") starts the new wine: it was lost, to type again
+			try {
+				const f = await request<Read>('/api/lookups/from-text', { method: 'POST', body: { text: q } });
+				if (f.like_id) d = newVintageDraft(await request<WineForm>(`/api/forms/wines/${f.like_id}`));
+				else {
+					if (f.producer) d.producer = f.producer;
+					if (f.cuvee) d.cuvee = f.cuvee;
+					if (f.type) d.type = f.type;
+					if (f.appellation) d.appellation = f.appellation;
+					if (f.region) d.region = f.region;
+				}
+				if (f.vintage) d.vintage = f.vintage;
+			} catch {
+				// not read: the empty form
+			}
+		}
+		draft = d;
 		wine = null;
 	}
 

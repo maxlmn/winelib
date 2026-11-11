@@ -28,6 +28,13 @@
 - **Safer**: *Fill from a link* only reads public internet pages; a Backup that misses a table fails; the MCP
   server's writes aren't marked safe to repeat, and ask for a code when the client can't confirm.
 - **The Unknown region is plain text**, not a dead link; an empty cellar says so on the home page.
+- **Keys in `.secrets.env` are read**: the file next to `run.py` (or one in the data folder) was ignored when the
+  app ran outside Docker, though the app and the docs point to it; the environment still wins.
+- **The field you're in shows it**: a form's text, number and date fields had no focus mark (nor a refused one its
+  red border).
+- **A CellarTracker import** no longer names a wine "Unknown" (its word for nothing), takes the vineyard for a wine
+  without a designation, and reads its vintage 1001 as non-vintage; the result counts the bottles, not their lines.
+- **＋ New wine… keeps what you typed**: "chateau margaux 2015" starts the new wine with its producer and vintage.
 
 ## v0.5.0
 

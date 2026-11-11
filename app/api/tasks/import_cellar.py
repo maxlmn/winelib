@@ -65,6 +65,8 @@ REGION_NAMES = {"burgundy": "Bourgogne", "rhone valley": "Rhone", "loire valley"
                 "tuscany": "Toscana", "south west france": "Sud-Ouest", "southwest": "Sud-Ouest", "south west": "Sud-Ouest",
                 "languedoc roussillon": "Languedoc", "corse": "Corsica", "usa": "United States"}
 NEW_WINE, YOURS = "new wine", "your wine"
+EMPTY_WORDS_IN = ["cuvee", "colour", "category", "grape", "appellation", "region", "country", "location", "bin",
+                  "vendor"]
 SHARE = re.compile(r"\s*\(?(\d{1,3})(?:[.,]\d+)?\s*%\)?\s*")
 
 
@@ -285,6 +287,13 @@ def plan(session, rows, mapping, order=None):
     for n, raw in enumerate(rows, start=2):
         n = getattr(raw, "line", n)  # the spreadsheet's row (blank ones counted)
         row = {f: (raw.get(mapping[f]) or "").strip() if mapping.get(f) else "" for f in FIELDS}
+        for f in EMPTY_WORDS_IN:  # CellarTracker writes "Unknown" where it has nothing
+            if norm(row[f]) in ("unknown", "n a"):
+                row[f] = ""
+        if not row["cuvee"] and mapping.get("cuvee") and norm(mapping["cuvee"]) == "designation":
+            # CellarTracker: no designation, but a vineyard ("Monte Bello"): the wine's name
+            row["cuvee"] = next(((raw.get(h) or "").strip() for h in raw if norm(h) == "vineyard"
+                                 and norm(raw.get(h) or "") not in ("unknown", "n a")), "")
         item = {"line": n, "row": row, "actions": [], "doubts": []}
         out.append(item)
         if not row["producer"]:
@@ -449,7 +458,7 @@ def apply(session, items, main_currency="EUR", consumed="Consumed", ad_hoc="Ad-H
             b["currency"] = b["currency"] or main_currency
             bottle = Bottle(wine=wine, **b)
             session.add(bottle)
-            counts["bottles"] += 1
+            counts["bottles"] += b.get("qty") or 1  # the bottles, not their lines
         if it.get("tasting"):
             if bottle is None:
                 bottle = Bottle(wine=wine, qty=0, location=consumed, provenance=ad_hoc, currency=main_currency)

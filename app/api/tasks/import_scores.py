@@ -91,10 +91,10 @@ def columns(headers):
 
 
 def vintage_of(text):
-    """"2019" (or "2019.0" from a spreadsheet), "NV" (NV, MV, empty "n.v."), or None when it's neither."""
+    """"2019" (or "2019.0" from a spreadsheet), "NV" (NV, MV, empty "n.v.", CellarTracker's 1001), or None when it's neither."""
     t = (text or "").strip()
     if m := re.fullmatch(r"(\d{4})(\.0)?", t):
-        return m.group(1)
+        return "NV" if m.group(1) == "1001" else m.group(1)  # 1001: CellarTracker's non-vintage
     if norm(t).replace(" ", "") in ("nv", "mv", "sa", "nonvintage"):
         return "NV"
     return None

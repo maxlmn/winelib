@@ -55,7 +55,7 @@ def test_cellartracker(client):
     assert "already there: 1" in r["summary"] and "Vouvray (1)" in r["summary"]  # not in the reference list
 
     job = run(client, CT, commit=True, keys=["3", "4", "5", "6"])
-    assert job["result"]["summary"] == "Added 2 producers, 3 wines, 3 bottles, 2 grapes.", job["result"]  # Chenin, Pinot Noir
+    assert job["result"]["summary"] == "Added 2 producers, 3 wines, 10 bottles, 2 grapes.", job["result"]  # Chenin, Pinot Noir
     poyeux = client.get("/api/lookups/wines", params={"producer_id": 1, "q": "Poyeux"}).json()[0]
     assert (poyeux["vintage"], poyeux["appellation"], poyeux["varietal"]) == ("2018", "Saumur-Champigny", "Cabernet Franc")
     cellar = {(b["cuvee"], b["location"]): b for b in client.get("/api/cellar").json()["bottles"]}
@@ -256,3 +256,21 @@ def test_line_numbers_are_the_spreadsheets(client):
 def test_vivino_price():
     from tasks.import_cellar import columns
     assert columns(["Winery", "Wine name", "Wine price"])["price"] == "Wine price"
+
+
+def test_cellartracker_unknowns_and_non_vintage():
+    """CellarTracker's "Unknown" isn't a name (a cuvée "Unknown"), its vineyard names the wine that has no
+    designation, and its vintage 1001 is a non-vintage wine."""
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import Session
+    from db import Base
+    from tasks import import_cellar as ic
+    engine = create_engine("sqlite://")
+    Base.metadata.create_all(engine)
+    rows = [{"Producer": "Domaine Jamet", "Designation": "Unknown", "Vineyard": "Unknown", "Vintage": "2019", "Quantity": "3"},
+            {"Producer": "Ridge Vineyards", "Designation": "Unknown", "Vineyard": "Monte Bello", "Vintage": "2016", "Quantity": "6"},
+            {"Producer": "Pierre Péters", "Designation": "Cuvée de Réserve", "Vineyard": "Unknown", "Vintage": "1001", "Quantity": "3"}]
+    with Session(engine) as s:
+        items = ic.plan(s, rows, ic.columns(list(rows[0])))
+        assert [(it["cuvee"], it["vintage"]) for it in items] == [("", "2019"), ("Monte Bello", "2016"), ("Cuvée de Réserve", "NV")]
+        assert ic.apply(s, items)["bottles"] == 12  # the bottles, not their 3 lines

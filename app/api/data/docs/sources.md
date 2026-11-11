@@ -17,7 +17,6 @@ The regions, appellations, grapes and vineyards every installation starts with.
 | Grape tasting profiles (climate, acidity, tannin, aromas, classic regions) | WineLib's own notes; the classic regions follow the WSET Level 2 syllabus | |
 | French premier crus (vineyards) | INAO's parcel delimitation (above) | Licence Ouverte 2.0 |
 | French lieux-dits (the named places among the vines) | Etalab's cadastre (DGFiP), the *lieux-dits* layer on [cadastre.data.gouv.fr](https://cadastre.data.gouv.fr); their appellations from INAO's parcel delimitation, Champagne's from INAO's geographic areas and its vines from [OpenStreetMap](https://www.openstreetmap.org/copyright)'s vineyards and IGN's RPG (the farmers' declared parcels) | Licence Ouverte 2.0; Champagne's vines ODbL (© OpenStreetMap contributors) |
-| German vineyards (Einzellagen) | [Weinlagen-info](https://www.weinlagen-info.de) | not shipped: built on your own computer only |
 
 ## Map outlines
 

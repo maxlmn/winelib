@@ -8,6 +8,9 @@
 
 Each path can still be set on its own (DB_URL, GEO_DIR, PHOTOS_DIR, GEO_CACHE_DIR, THUMBS_DIR, BACKUP_DIR,
 PLUGINS_DIR, LWIN_DB), as a docker-compose file can. Reference data and the region outlines ship with the code.
+
+Keys and settings (.secrets.env.example) are read from the environment, and from a .secrets.env next to run.py and
+one in the data folder: what the environment already has wins, then the file next to run.py.
 """
 import os
 import sys
@@ -26,10 +29,27 @@ def user_data_dir(name="winelib"):
     return os.path.join(os.getenv("XDG_DATA_HOME") or os.path.join(os.path.expanduser("~"), ".local", "share"), name)
 
 
+def load_secrets(path):
+    """KEY=value lines into the environment; a variable already set is kept, a line left empty says nothing."""
+    try:
+        with open(path, encoding="utf-8-sig") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, value = line.split("=", 1)
+                    value = value.strip().strip('"').strip("'")
+                    if value:
+                        os.environ.setdefault(key.strip(), value)
+    except OSError:
+        pass
+
+
+load_secrets(os.path.join(ROOT_DIR, ".secrets.env"))  # before the paths below: it may set WINELIB_DATA, DB_URL
 CHOSEN = os.getenv("WINELIB_DATA")
 IN_CHECKOUT = FROM_SOURCE and not CHOSEN  # today's layout
 DATA_DIR = os.path.abspath(CHOSEN or (os.path.join(ROOT_DIR, "data") if FROM_SOURCE else user_data_dir()))
 HOME = ROOT_DIR if IN_CHECKOUT else DATA_DIR  # where backups/ and plugins/ are
+load_secrets(os.path.join(DATA_DIR, ".secrets.env"))  # an installation whose program folder is replaced by updates
 
 
 def _path(env, *default):
