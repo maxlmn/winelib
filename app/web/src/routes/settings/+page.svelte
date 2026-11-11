@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { beforeNavigate } from '$app/navigation';
+	import { beforeNavigate, goto } from '$app/navigation';
+	import { ask } from '#lib/ask.svelte.ts';
 	import { messageOf, request } from '#lib/api/http.ts';
 	import Maintenance from '#lib/components/settings/Maintenance.svelte';
 	import Attention, { type AttentionItem } from '#lib/components/settings/Attention.svelte';
@@ -64,10 +65,18 @@
 		JSON.stringify(canon(payload)) !== JSON.stringify(canon({ ...appSettings, exchange_rates: { [appSettings.currency]: 1, ...appSettings.exchange_rates } }))
 	);
 
+	// another tab of this page keeps the draft: only leaving Settings asks, in the app's dialog
+	let leaving = false;
 	beforeNavigate((nav) => {
-		// another tab of this page keeps the draft: only leaving Settings asks
-		if (nav.to?.url.pathname === page.url.pathname) return;
-		if (dirty && !saving && !confirm('Discard unsaved settings?')) nav.cancel();
+		if (!nav.to || nav.to.url.pathname === page.url.pathname) return;
+		if (!dirty || saving || leaving || nav.willUnload) return;
+		const to = nav.to.url;
+		nav.cancel();
+		ask('Your changes to the settings will be lost.', { title: 'Leave without saving?', confirmLabel: 'Leave', danger: true }).then((ok) => {
+			if (!ok) return;
+			leaving = true;
+			goto(to.pathname + to.search + to.hash);
+		});
 	});
 
 	// Live preview: which group each cellar location falls in with the draft rules (same logic as the API)

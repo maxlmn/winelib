@@ -81,6 +81,7 @@
 		this={pip.href ? 'a' : 'span'}
 		class="pip"
 		href={pip.href}
+		tabindex={pip.href ? -1 : undefined}
 		style:--d={d ? `${d}px` : null}
 		style:--w={Math.min(2, barWidth(pip.format ?? null) / 4)}
 		style:--region={regionColor(pip.region) ?? FALLBACK_REGION}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ask } from '#lib/ask.svelte.ts';
 	import './forms.css';
 	import type { Snippet } from 'svelte';
 	import { beforeNavigate, goto } from '$app/navigation';
@@ -37,9 +38,18 @@
 	// Any edit marks the form dirty, so leaving asks first; saving or deleting clears it
 	let dirty = $state(false);
 
+	// Leaving with changes asks in the app's dialog: the navigation held, then made again on Leave. Leaving the page
+	// entirely (tab close, typed URL) gets the browser's own prompt via beforeunload
+	let leaving = false;
 	beforeNavigate((nav) => {
-		// Leaving the page entirely (tab close, typed URL) gets the browser's own prompt via beforeunload
-		if (dirty && !nav.willUnload && !confirm('Leave without saving? Your changes will be lost.')) nav.cancel();
+		if (!dirty || leaving || nav.willUnload || !nav.to) return;
+		const to = nav.to.url;
+		nav.cancel();
+		ask('Your changes will be lost.', { title: 'Leave without saving?', confirmLabel: 'Leave', danger: true }).then((ok) => {
+			if (!ok) return;
+			leaving = true;
+			goto(to.pathname + to.search + to.hash);
+		});
 	});
 
 	function onBeforeUnload(e: BeforeUnloadEvent) {

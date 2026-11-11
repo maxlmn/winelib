@@ -76,7 +76,7 @@
 
 <!-- A new installation: what to do first, while the cellar and the journal are empty or the maps have no outlines
      (not in the demo) -->
-{#if !DEMO && ((!data.cellar.bottles.length && !data.journal.tastings.length) || !integrations.mapCredits.length)}
+{#if !DEMO && ((!data.cellar.bottles.length && !data.journal.tastings.length) || !integrations.outlines)}
 	<GettingStarted bottles={data.cellar.bottles.length} tastings={data.journal.tastings.length} />
 {/if}
 

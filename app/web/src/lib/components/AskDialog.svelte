@@ -10,6 +10,7 @@
 	message={question.current?.message ?? ''}
 	confirmLabel={question.current?.confirmLabel ?? 'OK'}
 	plain={!question.current?.danger}
+	blocked={question.current?.notice ?? false}
 	onconfirm={() => answer(true)}
 	oncancel={() => answer(false)}
 />
