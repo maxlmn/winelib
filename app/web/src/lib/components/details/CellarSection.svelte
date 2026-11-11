@@ -9,6 +9,8 @@
 	import { FALLBACK_REGION } from '#lib/colors.ts';
 	import { links } from '#lib/links.ts';
 	import { appSettings } from '#lib/settings.svelte.ts';
+	import { symbol } from '#lib/format.ts';
+	import { fmtDate } from './wine.ts';
 
 	interface Props {
 		bottles: Bottle[];
@@ -18,15 +20,19 @@
 		plain?: boolean;
 		/** the bottle whose page this is: its line marked */
 		current?: number | null;
+		/** purchases (the home page's recent ones): in the order given, each with its price paid a bottle, its day
+		 * and where it was bought, in place of where it's kept */
+		prices?: boolean;
 	}
 
-	let { bottles, regionColors, empty = 'Nothing in the cellar.', current = null }: Props = $props();
+	let { bottles, regionColors, empty = 'Nothing in the cellar.', current = null, prices = false }: Props = $props();
+	const paid = (b: Bottle) => (b.price ? `${symbol(b.currency ?? appSettings.currency)}${Math.round(b.price).toLocaleString()}` : null);
 
 	const PAGE = 60;
 	let limit = $state(PAGE);
 
 	const lines = $derived(
-		[...bottles].sort(
+		prices ? bottles : [...bottles].sort(
 			(a, b) =>
 				a.producer.localeCompare(b.producer) ||
 				a.cuvee.localeCompare(b.cuvee) ||
@@ -62,8 +68,13 @@
 					{#if b.appellation}<div class="under muted">{b.appellation}</div>{/if}
 				</div>
 				<div class="where muted">
-					<span class="num">{b.qty} {b.qty === 1 ? 'bottle' : 'bottles'}</span>
-					<span>{where(b)}</span>
+					{#if prices}
+						<span class="num">{#if paid(b)}<b class="paid" title="Paid a bottle">{paid(b)}</b>{' · '}{/if}{b.qty} {b.qty === 1 ? 'bottle' : 'bottles'}</span>
+						<span>{[b.purchase_date && fmtDate(b.purchase_date), b.vendor].filter(Boolean).join(' · ')}</span>
+					{:else}
+						<span class="num">{b.qty} {b.qty === 1 ? 'bottle' : 'bottles'}</span>
+						<span>{where(b)}</span>
+					{/if}
 				</div>
 			</li>
 		{/each}
@@ -139,6 +150,9 @@
 		max-width: 40%;
 		font-size: 12px;
 		text-align: right;
+	}
+	.paid {
+		color: var(--text);
 	}
 	.more {
 		margin-top: 12px;
