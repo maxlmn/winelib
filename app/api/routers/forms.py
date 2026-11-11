@@ -1165,11 +1165,16 @@ def lookup_wines(q: str = "", producer_id: int | None = None, limit: int = Query
 def lookup_bottles(q: str = "", wine_id: int | None = None, limit: int = Query(LOOKUP_LIMIT, le=100),
                    session: Session = Depends(get_session)):
     """Bottles in stock, to pick the one a tasting note is about."""
-    query = session.query(Bottle).join(Wine).join(Producer).filter(Bottle.qty > 0) \
-        .options(joinedload(Bottle.wine).joinedload(Wine.producer), joinedload(Bottle.wine).joinedload(Wine.appellation),
-                 joinedload(Bottle.wine).joinedload(Wine.varietal), joinedload(Bottle.wine).joinedload(Wine.region_obj))
+    # Plain columns to search, then only the bottles found loaded whole (as lookup_wines): every bottle in stock
+    # loaded with its wine at each keystroke was most of the wait on a large cellar
+    query = (session.query(Bottle.id, Producer.name, Wine.cuvee, Appellation.name, Wine.vintage, Bottle.location)
+             .join(Wine, Bottle.wine_id == Wine.id).join(Producer, Wine.producer_id == Producer.id)
+             .outerjoin(Appellation, Wine.appellation_id == Appellation.id).filter(Bottle.qty > 0))
     if wine_id:
         query = query.filter(Bottle.wine_id == wine_id)
     rows = query.order_by(Producer.name, Wine.cuvee, Wine.vintage).all()
-    return [bottle_option(b) for b in search(rows, q, lambda b: (
-        b.wine.producer.name, b.wine.cuvee, b.wine.appellation.name if b.wine.appellation else "", b.wine.vintage, b.location), limit)]
+    ids = [r[0] for r in search(rows, q, lambda r: (r[1], r[2], r[3] or "", r[4], r[5]), limit)]
+    bottles = {b.id: b for b in session.query(Bottle).filter(Bottle.id.in_(ids)).options(
+        joinedload(Bottle.wine).joinedload(Wine.producer), joinedload(Bottle.wine).joinedload(Wine.appellation),
+        joinedload(Bottle.wine).joinedload(Wine.varietal), joinedload(Bottle.wine).joinedload(Wine.region_obj))}
+    return [bottle_option(bottles[i]) for i in ids]

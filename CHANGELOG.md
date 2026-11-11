@@ -35,6 +35,9 @@
 - **A CellarTracker import** no longer names a wine "Unknown" (its word for nothing), takes the vineyard for a wine
   without a designation, and reads its vintage 1001 as non-vintage; the result counts the bottles, not their lines.
 - **＋ New wine… keeps what you typed**: "chateau margaux 2015" starts the new wine with its producer and vintage.
+- **Faster on a large cellar** (measured with 5,000 wines): the cellar's data in under half the time, the tasting
+  form's bottle search and the home page's checks about ten times quicker; the app's own files are kept by the
+  browser, not asked again at each page.
 
 ## v0.5.0
 
