@@ -24,7 +24,7 @@
 
 	const steps = $derived([
 		{
-			done: integrations.mapCredits.length > 0,
+			done: integrations.outlines,
 			title: 'Download the map outlines',
 			what: 'The appellations, vineyards and lieux-dits on the maps: a download of about 75 MB, once.',
 			href: links.maintenance('map_pack'),

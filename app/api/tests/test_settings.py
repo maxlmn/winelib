@@ -108,3 +108,17 @@ def test_integrations(client, monkeypatch):
     assert client.get("/api/integrations").json()["esri_key"] == "e"
     monkeypatch.setenv("WINELABS_API_KEY", "k")
     assert {i["id"]: i["configured"] for i in client.get("/api/integrations").json()["integrations"]}["winelabs"]
+
+
+def test_outlines_are_known_without_the_map_packs_credits(client):
+    """A shape store built by hand (or outlines drawn) has no credits: the maps still have outlines, so a new
+    installation's Getting started doesn't ask to download them (it did on such an installation)."""
+    import db
+    from main import app
+    assert client.get("/api/integrations").json()["outlines"] is False  # this test's database: none linked
+    sessions = app.dependency_overrides[db.get_session]()  # the test's own database
+    s = next(sessions)
+    s.add(db.Appellation(name="Chinon", boundary="inao:291"))
+    s.commit()
+    sessions.close()
+    assert client.get("/api/integrations").json()["outlines"] is True

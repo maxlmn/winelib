@@ -90,7 +90,7 @@
 			<ul>
 				{#each list as b (b.bottle_id)}
 					<li class:hot={b.bottle_id === hot} class:current={b.bottle_id === current}>
-						<a class="line-ends" href={links.bottle(b.bottle_id)} title="Open this bottle">{@render ends(b)}</a>
+						<a class="line-ends" href={links.bottle(b.bottle_id)} title="Open this bottle" tabindex="-1" aria-hidden="true">{@render ends(b)}</a>
 						<span class="label">
 							<a href={links.bottle(b.bottle_id)}>
 								<b>{b.producer}</b>{b.cuvee ? ` – ${b.cuvee}` : ''}

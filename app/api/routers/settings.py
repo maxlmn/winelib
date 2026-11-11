@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 import settings
-from db import get_session
+from db import Appellation, get_session
 
 router = APIRouter()
 
@@ -20,7 +20,7 @@ def setup(session: Session = Depends(get_session)):
 
 
 @router.get("/api/integrations")
-def integrations():
+def integrations(session: Session = Depends(get_session)):
     """The optional connections and what each needs: the page shows those configured (Bordeaux Index's tab and
     settings) and explains the others. Keys are read from the environment (.secrets.env)."""
     import os
@@ -55,6 +55,9 @@ def integrations():
         ],
         "plugins": plugins.loaded,
         "map_credits": map_pack.credits(),  # the installed map outlines' licences and credits
+        # whether the maps have outlines at all: from the map pack, or a shape store built by hand (which has no
+        # credits) or drawn: an appellation linked to one
+        "outlines": session.query(Appellation.id).filter(Appellation.boundary.isnot(None), Appellation.boundary != "").first() is not None,
         # Esri's terms want a key for World Imagery; the browser fetches the tiles, so it gets the key (only this one)
         "esri_key": esri_key() or None,
     }

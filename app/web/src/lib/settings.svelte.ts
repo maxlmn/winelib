@@ -61,10 +61,12 @@ export interface MapCredit {
 	credit: string | null;
 	url: string | null;
 }
-export const integrations = $state<{ list: Integration[]; plugins: PluginInfo[]; mapCredits: MapCredit[]; esriKey: string | null }>({
+export const integrations = $state<{ list: Integration[]; plugins: PluginInfo[]; mapCredits: MapCredit[]; outlines: boolean; esriKey: string | null }>({
 	list: [],
 	plugins: [],
 	mapCredits: [],
+	/** the maps have outlines (the map pack's, or a shape store built by hand, which has no credits): Getting started */
+	outlines: true,
 	/** ESRI_API_KEY: Esri's World Imagery outside France on the satellite view (without it, the map stays plain there) */
 	esriKey: null
 });
@@ -80,6 +82,7 @@ export async function loadSettings(fetch: typeof globalThis.fetch) {
 			integrations.list = body.integrations;
 			integrations.plugins = body.plugins;
 			integrations.mapCredits = body.map_credits ?? [];
+			integrations.outlines = body.outlines ?? body.map_credits?.length > 0;
 			integrations.esriKey = body.esri_key ?? null;
 		}
 	} catch {

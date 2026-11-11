@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Getting started knows your maps have outlines** when they came from a shape store you built yourself (or drew),
+  not the map pack: it asked to download them on such an installation.
+- **The app's own dialogs everywhere**: leaving a form or Settings with changes asks in the app's dialog (Leave, or
+  stay), and a photo or a Bordeaux Index update that failed says so there, not in the browser's box.
+- **By keyboard**: a cellar's bottle pips are no longer each a tab stop (the bottle's line is the link); on a
+  phone, the Producers and Places tables keep the name in view while the other columns scroll sideways.
 - **A smaller install**: geopandas (and pandas with it) is no longer needed: the app reads its maps with pyarrow and
   shapely alone. About 380 MB less to install, and a lighter Docker image.
 - **Faster pages on a large cellar**: a wine's, producer's, appellation's, region's, grape's or vintage's page reads

@@ -1,3 +1,4 @@
+import { tell } from '#lib/ask.svelte.ts';
 /** Occasion photos: one per place and day (see app/api/photos.py). */
 import { forgetJournal } from './tastings.ts';
 
@@ -40,6 +41,6 @@ export async function applyPhotoChange(place: string | null | undefined, date: s
 		if (change.file) await uploadPhoto(place, date, change.file);
 		else await deletePhoto(place, date);
 	} catch (e) {
-		alert(`Saved, but the photo couldn’t be ${change.file ? 'uploaded' : 'removed'}: ${e instanceof Error ? e.message : e}`);
+		await tell(`Saved, but the photo couldn’t be ${change.file ? 'uploaded' : 'removed'}: ${e instanceof Error ? e.message : e}`, 'The photo wasn’t saved');
 	}
 }

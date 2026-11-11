@@ -7,6 +7,8 @@ export interface Question {
 	confirmLabel: string;
 	/** deleting or replacing something: the button in red */
 	danger: boolean;
+	/** a message to read, not a question: OK alone (tell) */
+	notice: boolean;
 }
 
 let open = $state<(Question & { resolve: (ok: boolean) => void }) | null>(null);
@@ -20,9 +22,13 @@ export const question = {
 export function ask(message: string, opts: Partial<Omit<Question, 'message'>> = {}): Promise<boolean> {
 	open?.resolve(false);
 	return new Promise((resolve) => {
-		open = { message, title: opts.title ?? 'Are you sure?', confirmLabel: opts.confirmLabel ?? 'OK', danger: opts.danger ?? false, resolve };
+		open = { message, title: opts.title ?? 'Are you sure?', confirmLabel: opts.confirmLabel ?? 'OK', danger: opts.danger ?? false,
+			notice: opts.notice ?? false, resolve };
 	});
 }
+
+/** A message in the app's dialog, in place of the browser's alert(): resolved once read */
+export const tell = (message: string, title = 'Something went wrong') => ask(message, { title, notice: true }).then(() => undefined);
 
 export function answer(ok: boolean) {
 	open?.resolve(ok);

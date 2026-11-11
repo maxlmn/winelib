@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tell } from '#lib/ask.svelte.ts';
 	import Change from '#lib/components/Change.svelte';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
 	import { regionColor, regionLabel } from '#lib/regions.svelte.ts';
@@ -63,7 +64,7 @@
 			if (!res.ok) throw new Error(`Error ${res.status}`);
 			await load();
 		} catch (e) {
-			alert(`Couldn’t update the LWIN: ${e instanceof Error ? e.message : e}`);
+			await tell(`Couldn’t update the LWIN: ${e instanceof Error ? e.message : e}`);
 		} finally {
 			fixing = null;
 		}
@@ -93,7 +94,7 @@
 			changes = commit ? null : body.changes;
 			if (commit) await load();
 		} catch (e) {
-			alert(`Couldn’t use BI's values: ${e instanceof Error ? e.message : e}`);
+			await tell(`Couldn’t use BI's values: ${e instanceof Error ? e.message : e}`);
 		} finally {
 			applying = false;
 		}

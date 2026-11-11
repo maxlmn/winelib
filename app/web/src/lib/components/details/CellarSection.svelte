@@ -49,7 +49,7 @@
 	<ul>
 		{#each lines.slice(0, limit) as b (b.bottle_id)}
 			<li class:current={b.bottle_id === current}>
-				<a class="ends" href={links.bottle(b.bottle_id)} title="Open this bottle" aria-label="Open this bottle">
+				<a class="ends" href={links.bottle(b.bottle_id)} title="Open this bottle" tabindex="-1" aria-hidden="true">
 					{#each { length: Math.min(b.qty, 12) }}
 						<BottleEnd
 							region={regionColors[b.region] ?? FALLBACK_REGION}

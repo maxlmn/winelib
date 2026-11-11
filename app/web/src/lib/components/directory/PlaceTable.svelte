@@ -148,4 +148,23 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
+	/* a phone: the name stays in view while the other columns scroll sideways under it */
+	@media (max-width: 760px) {
+		th:first-child,
+		td:first-child {
+			position: sticky;
+			left: 0;
+			max-width: 46vw;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			background: var(--surface);
+			box-shadow: 1px 0 0 var(--border);
+		}
+		th:first-child {
+			z-index: 2;
+		}
+		td:first-child {
+			z-index: 1;
+		}
+	}
 </style>
