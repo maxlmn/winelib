@@ -1,7 +1,12 @@
 # Changelog
 
-## Unreleased
+## v0.6.0
 
+- **Safer updates and access**: the database is copied before an update changes it (SQLite:
+  `backups/before-<revision>.sqlite`, and a failed migration says where it is); the app shows its version (About,
+  `/api/health`). **If you reach WineLib through a domain of your own** (not an IP address, a local or a Tailscale
+  name), list it in `WINELIB_HOSTS`: it now refuses a name it doesn't know, so that a web page elsewhere can't
+  reach it through your browser.
 - **A wine left without a producer** (by an import of an earlier version) gets *Unknown producer*, so its pages
   open: the vintage page it was on failed. Fix or delete it from there.
 - **Names with an accented capital are found** on SQLite (the default install): a grape's page by its name
@@ -63,11 +68,6 @@
   takes the focus, moves with the arrows and gives it back on Escape.
 - **One date format**: a tasting's page title, its other tastings and the tasting list wrote 2026-09-09.
 - **The Cellar page's storage cards** sit on the page itself, as the tasting cards do: not cards in a card.
-- **Safer updates and access**: the database is copied before an update changes it (SQLite:
-  `backups/before-<revision>.sqlite`, and a failed migration says where it is); the app shows its version (About,
-  `/api/health`). **If you reach WineLib through a domain of your own** (not an IP address, a local or a Tailscale
-  name), list it in `WINELIB_HOSTS`: it now refuses a name it doesn't know, so that a web page elsewhere can't
-  reach it through your browser.
 
 ## v0.5.0
 
