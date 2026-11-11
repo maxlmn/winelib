@@ -1,19 +1,7 @@
 # Changelog
 
-## Unreleased
+## v0.7.0
 
-- **Getting started knows your maps have outlines** when they came from a shape store you built yourself (or drew),
-  not the map pack: it asked to download them on such an installation.
-- **The app's own dialogs everywhere**: leaving a form or Settings with changes asks in the app's dialog (Leave, or
-  stay), and a photo or a Bordeaux Index update that failed says so there, not in the browser's box.
-- **By keyboard**: a cellar's bottle pips are no longer each a tab stop (the bottle's line is the link); on a
-  phone, the Producers and Places tables keep the name in view while the other columns scroll sideways.
-- **A smaller install**: geopandas (and pandas with it) is no longer needed: the app reads its maps with pyarrow and
-  shapely alone. About 380 MB less to install, and a lighter Docker image.
-- **Faster pages on a large cellar**: a wine's, producer's, appellation's, region's, grape's or vintage's page reads
-  its own bottles, not the whole cellar, and the maps' figures are summed by the database (on 5,000 wines: a wine's
-  page 170 ms to 11, a region's 220 to 77, the world map's 210 to 45); and the tables are indexed where pages join
-  them (a database migration).
 - **Getting started**: a new installation's home page says what to do first (the map outlines, your cellar from a
   file or a first bottle, the help), each step ticked when it's done; it can be put away.
 - **The Producers page shows yours first**: those you have wines of, tasted, hold or listed; the whole directory
@@ -26,12 +14,22 @@
   price refresh: the app has no schedule of its own.)
 - **Tasting Notes in one column**: an occasion's day, place and photo at the side, its wines beside, each note at
   the right of its wine; read down, not across two columns.
+- **Faster pages on a large cellar**: a wine's, producer's, appellation's, region's, grape's or vintage's page reads
+  its own bottles, not the whole cellar, and the maps' figures are summed by the database (on 5,000 wines: a wine's
+  page 170 ms to 11, a region's 220 to 77, the world map's 210 to 45); and the tables are indexed where pages join
+  them (a database migration).
+- **A smaller install**: geopandas (and pandas with it) is no longer needed: the app reads its maps with pyarrow and
+  shapely alone. About 380 MB less to install, and a lighter Docker image.
+- **The app's own dialogs everywhere**: leaving a form or Settings with changes asks in the app's dialog (Leave, or
+  stay), and a photo or a Bordeaux Index update that failed says so there, not in the browser's box.
+- **By keyboard**: a cellar's bottle pips are no longer each a tab stop (the bottle's line is the link); on a
+  phone, the Producers and Places tables keep the name in view while the other columns scroll sideways.
 - **A tasting history's photos** at a size to see (they had shrunk to a thumbnail), opened whole on a click.
+- **The version is said where you look for it**: at the bottom of Settings in the app, and on the website (its
+  home page and every page's foot), linked to the release.
 - **New screenshots** in the README and on the website, of the app as it looks now, taken from the demo cellar by a
   script (`app/web/scripts/screenshots.mjs`, then `scripts/screenshots_compose.py`), so they can be retaken.
 - **The outline's drawing tools are in a row again** (they had stacked one under the other, the card's width).
-- **The version is said where you look for it**: at the bottom of Settings in the app, and on the website (its
-  home page and every page's foot), linked to the release.
 
 ## v0.6.0
 
