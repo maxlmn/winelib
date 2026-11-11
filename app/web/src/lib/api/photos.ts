@@ -21,14 +21,14 @@ export async function photoFor(place: string, date: string): Promise<string | nu
 	return res.ok ? (await res.json()).url : null;
 }
 
-async function uploadPhoto(place: string, date: string, file: File): Promise<string> {
+export async function uploadPhoto(place: string, date: string, file: File): Promise<string> {
 	const res = await fetch(`/api/photos?${query(place, date)}`, { method: 'PUT', headers: { 'content-type': file.type }, body: file });
 	if (!res.ok) throw new Error(await detail(res));
 	forgetJournal();
 	return (await res.json()).url;
 }
 
-async function deletePhoto(place: string, date: string) {
+export async function deletePhoto(place: string, date: string) {
 	const res = await fetch(`/api/photos?${query(place, date)}`, { method: 'DELETE' });
 	if (!res.ok) throw new Error(await detail(res));
 	forgetJournal();
