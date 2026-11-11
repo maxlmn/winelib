@@ -66,17 +66,10 @@
 		font-size: 12px;
 		font-weight: 400;
 	}
-	/* A month's occasions in two columns, newest first, left to right (each card says its day). One column on
-	   narrow screens */
+	/* A month's occasions one under the other, newest first: read down, each note beside its wine */
 	.cards {
 		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-template-columns: minmax(0, 1fr);
 		gap: 12px;
-		align-items: start;
-	}
-	@media (max-width: 900px) {
-		.cards {
-			grid-template-columns: minmax(0, 1fr);
-		}
 	}
 </style>

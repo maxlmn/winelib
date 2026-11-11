@@ -43,6 +43,8 @@
 		</header>
 	</article>
 {:else}
+<!-- An occasion: when and where at the side, then its wines, each with its note beside it (under it on a phone, and
+     in a list: plain) -->
 <article class="occ" class:plain>
 	<!-- The evening's palette: one segment per wine, in its region's color, in the order they were poured -->
 	<div class="palette" aria-hidden="true">
@@ -60,13 +62,19 @@
 		<span class="date num">{fmtDay(o.date)}</span>
 		<span class="muted meta">{meta}</span>
 		<a class="action" href={links.newTasting({ place_id: o.place?.id, date: o.date })} title="Add a wine to this occasion">+ Wine</a>
+		{#if o.photo && !plain}
+			<a class="photo" href={photoSrc(o.photo, 'large')} target="_blank" rel="noopener" title="Open the photo">
+				<img src={photoSrc(o.photo, 'thumb')} alt="{o.name}, {o.date}" loading="lazy" decoding="async" />
+			</a>
+		{/if}
 	</header>
 	<div class="body">
-		{#if o.photo}<img src={photoSrc(o.photo, 'thumb')} alt="{o.name}, {o.date}" loading="lazy" decoding="async" />{/if}
+		{#if o.photo && plain}<img src={photoSrc(o.photo, 'thumb')} alt="{o.name}, {o.date}" loading="lazy" decoding="async" />{/if}
 		<div class="content">
-				<ul>
-					{#each o.wines as w (w.id)}
-						<li>
+			<ul>
+				{#each o.wines as w (w.id)}
+					<li>
+						<div class="wine">
 							<div class="line">
 								<span class="end">
 									<BottleEnd
@@ -78,35 +86,40 @@
 									/>
 								</span>
 								<span class="label">
-									<a href={links.wine(w.wine_id)}>
-										<b>{w.producer}</b>{w.cuvee ? ` – ${w.cuvee}` : ''}
-									</a>
+									<a href={links.wine(w.wine_id)}><b>{w.producer}</b>{w.cuvee ? ` – ${w.cuvee}` : ''}</a>
 									<span class="vintage num">{w.vintage}</span><CriticPills scores={w.scores} />{#if w.rating}<span class="mine num" title="Your score">{w.rating}</span>{/if}
 								</span>
 							</div>
-							<!-- under the wine: its appellation, and the note (or the offer to write one), which opens the tasting -->
-							<div class="under">
-								{#if w.appellation}<span class="muted">{w.appellation}</span>{/if}
-								{#if !w.notes}<a class="add-note" href={links.tasting(w.id)} title="Open the tasting">Add a note</a>{/if}
-							</div>
-							{#if w.notes}<a class="note" href={links.tasting(w.id)} title="Open the tasting">{w.notes}</a>{/if}
-						</li>
-					{/each}
-				</ul>
+							{#if w.appellation}<div class="under muted">{w.appellation}</div>{/if}
+						</div>
+						<!-- the note (or the offer to write one) opens the tasting -->
+						<div class="said">
+							{#if w.notes}
+								<a class="note" href={links.tasting(w.id)} title="Open the tasting">{w.notes}</a>
+							{:else}
+								<a class="add-note" href={links.tasting(w.id)} title="Open the tasting">Add a note</a>
+							{/if}
+						</div>
+					</li>
+				{/each}
+			</ul>
 		</div>
 	</div>
 </article>
 {/if}
 
 <style>
-	/* An occasion: a plain card, its place and day on top, then its wines; no band, nothing boxed inside */
+	/* An occasion: a card, when and where in a column at its side, its wines beside, each with its note at the right */
 	.occ {
+		display: grid;
+		grid-template-columns: 200px minmax(0, 1fr);
 		border: 1px solid var(--border);
 		border-radius: var(--radius);
 		overflow: hidden;
 		background: var(--surface);
 	}
 	.palette {
+		grid-column: 1 / -1;
 		display: flex;
 		gap: 1px;
 		height: 3px;
@@ -115,25 +128,27 @@
 		flex: 1;
 	}
 	header {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto;
-		align-items: baseline;
-		gap: 1px 10px;
-		padding: 12px 16px 0;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 2px;
+		min-width: 0;
+		padding: 14px 0 14px 16px;
 	}
 	.where {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
-		gap: 8px;
+		gap: 2px 8px;
 		min-width: 0;
+		max-width: 100%;
 	}
 	.name {
 		font-family: var(--heading-font);
 		font-weight: 650;
-		font-size: 16px;
+		font-size: 15px;
 		overflow: hidden;
 		text-overflow: ellipsis;
-		white-space: nowrap;
 	}
 	a.name {
 		color: var(--text);
@@ -155,39 +170,42 @@
 		color: var(--accent);
 	}
 	.date {
-		color: var(--muted);
+		order: -1;
 		font-size: 12px;
 		white-space: nowrap;
 	}
 	.meta {
 		font-size: 12px;
-		min-height: 1em;
 	}
-	.body {
-		display: flex;
-		flex-wrap: wrap-reverse;
-		gap: 14px;
-		padding: 10px 16px 14px;
-	}
-	.content {
-		flex: 1 1 300px;
-		min-width: 0;
-	}
-	img {
-		flex: 0 1 180px;
-		max-width: 100%;
-		max-height: 240px;
-		object-fit: cover;
-		border-radius: 6px;
+	.meta:empty {
+		display: none;
 	}
 	.action {
+		margin-top: 4px;
 		color: var(--muted);
 		font-size: 12px;
 		white-space: nowrap;
-		justify-self: end;
 	}
 	.action:hover {
 		color: var(--accent);
+	}
+	.photo {
+		display: block;
+		margin-top: 8px;
+		line-height: 0;
+	}
+	.photo img {
+		width: 100%;
+		max-height: 170px;
+		object-fit: cover;
+		border-radius: 6px;
+	}
+	.body {
+		min-width: 0;
+		padding: 8px 16px 10px 20px;
+	}
+	.content {
+		min-width: 0;
 	}
 	ul {
 		list-style: none;
@@ -195,11 +213,18 @@
 		margin: 0;
 	}
 	li {
-		padding: 5px 0;
+		display: grid;
+		grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+		gap: 4px 24px;
+		padding: 7px 0;
 		font-size: 13px;
 	}
 	li + li {
 		border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+	}
+	.wine,
+	.said {
+		min-width: 0;
 	}
 	.line {
 		display: flex;
@@ -221,28 +246,24 @@
 	}
 	/* under the wine's name, in line with it (past the bottle end) */
 	.under {
-		display: flex;
-		justify-content: space-between;
-		gap: 10px;
 		margin-left: 19px;
 		font-size: 12px;
 	}
 	.add-note {
-		margin-left: auto;
+		font-size: 12px;
 		color: var(--muted);
 		white-space: nowrap;
 	}
 	.add-note:hover {
 		color: var(--accent);
 	}
-	/* the note opens the tasting: three lines at most here, the whole on its page */
+	/* the note opens the tasting: a few lines here, the whole on its page */
 	.note {
 		display: -webkit-box;
 		-webkit-box-orient: vertical;
-		-webkit-line-clamp: 3;
-		line-clamp: 3;
+		-webkit-line-clamp: 6;
+		line-clamp: 6;
 		overflow: hidden;
-		margin: 3px 0 2px 19px;
 		color: var(--text);
 		font-style: italic;
 		white-space: pre-line;
@@ -251,8 +272,31 @@
 	.note:hover {
 		color: var(--accent);
 	}
-	/* A row in a list: no card, the day first, the place small beside it */
+	/* A phone: when and where on top, each note under its wine */
+	@media (max-width: 760px) {
+		.occ {
+			display: block;
+		}
+		header {
+			padding: 12px 16px 0;
+		}
+		.photo img {
+			max-height: 220px;
+		}
+		.body {
+			padding: 6px 16px 10px;
+		}
+		li {
+			display: block;
+		}
+		.said {
+			margin: 3px 0 0 19px;
+		}
+	}
+	/* A row in a list (the home page's latest tastings): no card, the day and the place small on a line, each note
+	   under its wine */
 	.occ.plain {
+		display: block;
 		border: 0;
 		border-radius: 0;
 		background: none;
@@ -262,16 +306,12 @@
 		display: none;
 	}
 	.plain header {
-		display: flex;
+		flex-direction: row;
 		flex-wrap: wrap;
 		align-items: baseline;
 		gap: 2px 8px;
 		padding: 0;
 		font-size: 12px;
-	}
-	.plain .date {
-		order: -1;
-		color: var(--text);
 	}
 	.plain .where {
 		flex: 0 1 auto;
@@ -282,26 +322,55 @@
 		font-weight: 400;
 		color: var(--muted);
 	}
-	.plain .meta:empty {
-		display: none;
-	}
 	.plain .action {
-		margin-left: auto;
+		margin: 0 0 0 auto;
 	}
 	.plain .body {
+		display: flex;
+		flex-wrap: wrap-reverse;
+		gap: 14px;
 		padding: 6px 0 0;
+	}
+	.plain .content {
+		flex: 1 1 300px;
+	}
+	.plain .body > img {
+		flex: 0 1 180px;
+		max-width: 100%;
+		max-height: 240px;
+		object-fit: cover;
+		border-radius: 6px;
+	}
+	.plain li {
+		display: block;
+		padding: 5px 0;
+	}
+	.plain .said {
+		margin: 3px 0 0 19px;
+	}
+	.plain .note {
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
 	}
 	/* Restaurant visits: a tinted one-line card, so they read apart from tastings */
 	.visit {
 		border-color: color-mix(in srgb, var(--gold) 45%, var(--border));
 	}
+	.occ.visit {
+		display: block;
+	}
 	.visit header {
 		display: flex;
+		flex-direction: row;
 		align-items: center;
 		justify-content: space-between;
 		gap: 10px;
 		background: color-mix(in srgb, var(--gold) 14%, var(--surface));
 		padding: 7px 14px;
+	}
+	.visit .date {
+		order: 0;
+		color: var(--muted);
 	}
 	.visit .where {
 		flex: 1;
