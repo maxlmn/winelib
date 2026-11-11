@@ -192,7 +192,8 @@
 	{/if}
 </div>
 
-<div class="panel card">
+<!-- The storage cards sit on the page itself: not cards in a card -->
+<div class="panel card" class:flat={view === 'cards' && shown.length > 0}>
 	<div class="tabs">
 		{#each VIEWS as v}
 			<button class:on={view === v.id} onclick={() => setView(v.id)} use:intoView={view === v.id}>{v.label}</button>
@@ -385,6 +386,18 @@
 	}
 	.body {
 		padding: 16px;
+	}
+	.panel.flat {
+		background: none;
+		border-color: transparent;
+		box-shadow: none;
+	}
+	.panel.flat .tabs {
+		padding-left: 0;
+		padding-right: 0;
+	}
+	.panel.flat .body {
+		padding: 16px 0 0;
 	}
 	.sub-h {
 		margin: 24px 0 8px;
