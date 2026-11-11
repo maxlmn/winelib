@@ -4,7 +4,7 @@ import re
 from collections import defaultdict
 from datetime import date
 
-from sqlalchemy import event, text
+from sqlalchemy import bindparam, event, text
 from sqlalchemy.orm import Session
 
 import scores
@@ -16,14 +16,14 @@ EXCHANGE_RATES = dict(settings.current.exchange_rates)
 # Locations containing these are outside the "local" totals (Settings)
 NON_LOCAL_KEYWORDS = list(settings.current.non_local_keywords)
 
-CELLAR_SQL = text("""
+CELLAR_SELECT = """
     SELECT b.id AS bottle_id, b.location, b.qty, b.bottle_size, b.price, b.currency,
            b.last_price, b.purchase_date, b.vendor,
            w.id AS wine_id, w.vineyard_id, w.type AS color, w.cuvee, w.vintage, w.disgorgement_date, pc.score AS score,
            w.lwin,
            w.drink_window_start, w.drink_window_end,
            p.id AS producer_id, p.name AS producer,
-           r.name AS region, a.id AS appellation_id, a.name AS appellation, v.name AS varietal
+           w.region_id, r.name AS region, a.id AS appellation_id, a.name AS appellation, v.name AS varietal
     FROM cellar b
     JOIN wines w ON b.wine_id = w.id
     JOIN producers p ON w.producer_id = p.id
@@ -31,9 +31,13 @@ CELLAR_SQL = text("""
     LEFT JOIN appellations a ON w.appellation_id = a.id
     LEFT JOIN varietals v ON w.varietal_id = v.id
     LEFT JOIN critic_scores pc ON pc.wine_id = w.id AND LOWER(pc.critic) = LOWER(:critic)
-    WHERE b.qty > 0
+    WHERE b.qty > 0 {where}
     ORDER BY r.name, p.name, w.vintage DESC
-""")
+"""
+CELLAR_SQL = text(CELLAR_SELECT.format(where=""))
+# A detail page's lines: the wines', a producer's, an appellation's, a vineyard's, a region's (cellar_lines)
+COLUMNS = {"wine_id": "w.id", "producer_id": "p.id", "appellation_id": "a.id", "vineyard_id": "w.vineyard_id",
+           "region_id": "w.region_id"}
 
 
 def _storage_group(loc):
@@ -82,11 +86,18 @@ GRAPES_SQL = """
 IN_STOCK = "WHERE wg.wine_id IN (SELECT wine_id FROM cellar WHERE qty > 0)"
 
 
-def grapes_by_wine(session, in_stock=False):
+def grapes_by_wine(session, in_stock=False, wine_ids=None):
     """{wine_id: [its grapes' names, main grape first]}: what the cellar and tastings filter by grape on (in_stock:
-    only the wines with bottles)."""
+    only the wines with bottles; wine_ids: only those)."""
     out = defaultdict(list)
-    for wine_id, name in session.execute(text(GRAPES_SQL.format(where=IN_STOCK if in_stock else ""))):
+    if wine_ids is not None:
+        if not wine_ids:
+            return out
+        query = text(GRAPES_SQL.format(where="WHERE wg.wine_id IN :ids")).bindparams(bindparam("ids", expanding=True))
+        rows = session.execute(query, {"ids": list(wine_ids)})
+    else:
+        rows = session.execute(text(GRAPES_SQL.format(where=IN_STOCK if in_stock else "")))
+    for wine_id, name in rows:
         out[wine_id].append(name)
     return out
 
@@ -103,13 +114,26 @@ def load_cellar(session):
     return session.info["cellar"]
 
 
-def _load_cellar(session):
+def cellar_lines(session, key, ids):
+    """The stocked bottle lines (rows of GET /api/cellar) whose `key` (COLUMNS: wine_id, producer_id...) is one of
+    ids: read for them alone (a detail page's few), or taken from the whole cellar when this request already read it."""
+    ids = {i for i in ids if i is not None}
+    if not ids:
+        return []
+    if "cellar" in session.info:
+        return [b for b in session.info["cellar"][0] if b[key] in ids]
+    query = text(CELLAR_SELECT.format(where=f"AND {COLUMNS[key]} IN :ids")).bindparams(bindparam("ids", expanding=True))
+    return _load_cellar(session, query, {"ids": list(ids)})[0]
+
+
+def _load_cellar(session, query=CELLAR_SQL, params=None):
     bottles = []
-    rows = session.execute(CELLAR_SQL, {"critic": scores.preferred()}).mappings().all()
+    rows = session.execute(query, {"critic": scores.preferred(), **(params or {})}).mappings().all()
     labels = scores.labels(session, [r["wine_id"] for r in rows])
     import style_tags
     styles = style_tags.of_wines(session, [r["wine_id"] for r in rows])
-    grapes = grapes_by_wine(session, in_stock=True)
+    grapes = (grapes_by_wine(session, in_stock=True) if query is CELLAR_SQL
+              else grapes_by_wine(session, wine_ids={r["wine_id"] for r in rows}))
     for r in rows:
         loc = r["location"] or "Unknown"
         vintage = vintage_label(r["vintage"], r["disgorgement_date"])
@@ -118,7 +142,7 @@ def _load_cellar(session):
         market_base = to_base(r["last_price"] if r["last_price"] else r["price"], r["currency"])
         bottles.append({
             "bottle_id": r["bottle_id"], "wine_id": r["wine_id"], "producer_id": r["producer_id"],
-            "appellation_id": r["appellation_id"], "vineyard_id": r["vineyard_id"],
+            "appellation_id": r["appellation_id"], "vineyard_id": r["vineyard_id"], "region_id": r["region_id"],
             "location": loc, "location_group": location_group(loc),
             "local": not any(k in loc for k in NON_LOCAL_KEYWORDS),  # counted in the local totals (Settings)
             "qty": r["qty"], "format": r["bottle_size"], "color": r["color"], "region": r["region"] or "Unknown",
@@ -143,3 +167,22 @@ def _load_cellar(session):
         for loc in sorted({b["location"] for b in bottles}, key=location_sort_key)
     ]
     return bottles, locations
+
+
+# The map's figures: bottles and value by appellation, vineyard or region, summed by the database (a line's value: its
+# market price, else its price paid, in the main currency), not by reading the whole cellar
+FIGURES_SQL = """
+    SELECT {key} AS id, b.currency, SUM(b.qty) AS bottles, SUM(b.qty * COALESCE(NULLIF(b.last_price, 0), b.price, 0)) AS amount
+    FROM cellar b JOIN wines w ON b.wine_id = w.id
+    WHERE b.qty > 0 AND {key} IS NOT NULL
+    GROUP BY {key}, b.currency
+"""
+
+
+def figures(session, key):
+    """{id: {"bottles", "value"}} of the stocked bottles by w.appellation_id, w.vineyard_id or w.region_id."""
+    out = defaultdict(lambda: {"bottles": 0, "value": 0.0})
+    for id_, currency, bottles, amount in session.execute(text(FIGURES_SQL.format(key=key))):
+        out[id_]["bottles"] += int(bottles or 0)
+        out[id_]["value"] += to_base(float(amount or 0), currency)
+    return out

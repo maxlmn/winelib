@@ -120,15 +120,15 @@ class Wine(Base):
     
     id = Column(Integer, primary_key=True)
     producer_id = Column(Integer, ForeignKey('producers.id'))
-    vineyard_id = Column(Integer, ForeignKey('vineyards.id'))
+    vineyard_id = Column(Integer, ForeignKey('vineyards.id'), index=True)
     
     cuvee = Column(String) # e.g. "Les Pucelles" (Raw)
     vintage = Column(String) # "2010" or "NV"
     disgorgement_date = Column(String) # e.g. "Oct 2024"
     type = Column(String)  # Red, White, Rose, Bubbles, Bubbles Rose, Sweet, Orange, Fortified
-    region_id = Column(Integer, ForeignKey('regions.id'))
-    appellation_id = Column(Integer, ForeignKey('appellations.id'))
-    varietal_id = Column(Integer, ForeignKey('varietals.id'))
+    region_id = Column(Integer, ForeignKey('regions.id'), index=True)
+    appellation_id = Column(Integer, ForeignKey('appellations.id'), index=True)
+    varietal_id = Column(Integer, ForeignKey('varietals.id'), index=True)
     appellation = relationship("Appellation", back_populates="wines")
     varietal = relationship("Varietal", back_populates="wines")
     vineyard = relationship("Vineyard", back_populates="wines")
@@ -265,7 +265,7 @@ class Bottle(Base):
     __tablename__ = 'cellar'
     
     id = Column(Integer, primary_key=True)
-    wine_id = Column(Integer, ForeignKey('wines.id'))
+    wine_id = Column(Integer, ForeignKey('wines.id'), index=True)
     location = Column(String) # e.g. "Rack A-12", "Offsite"
     bottle_size = Column(String, default="75cl")
     qty = Column(Integer, default=1)
@@ -321,8 +321,8 @@ class TastingNote(Base):
     __tablename__ = 'tasting_notes'
     
     id = Column(Integer, primary_key=True)
-    bottle_id = Column(Integer, ForeignKey('cellar.id'), nullable=False)
-    date = Column(Date)
+    bottle_id = Column(Integer, ForeignKey('cellar.id'), nullable=False, index=True)
+    date = Column(Date, index=True)
     rating = Column(Integer) # Your 100pt score
     notes = Column(Text)     # "Explosive nose of..."
     tags = Column(String)    # "Dinner, Gift, corked"
@@ -333,7 +333,7 @@ class TastingNote(Base):
     took_bottle = Column(Boolean)
     # Relationships
     bottle = relationship("Bottle", back_populates="tastings")
-    place_id = Column(Integer, ForeignKey('places.id'))
+    place_id = Column(Integer, ForeignKey('places.id'), index=True)
     place = relationship("Place", back_populates="tastings")
     # the wine's style as found in this tasting ("fresh", "mineral"): style_tags.py
     styles = relationship("TastingTag", cascade="all, delete-orphan", order_by="TastingTag.id")

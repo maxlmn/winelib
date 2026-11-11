@@ -125,15 +125,14 @@ def test_unchanged_index_is_a_304(client):
     assert client.get("/api/map/overview", headers={"if-none-match": etag}).status_code == 200
 
 
-def test_cellar_is_read_once_for_both_kinds(client, monkeypatch):
+def test_a_regions_map_doesnt_read_the_whole_cellar(client, monkeypatch):
+    """Its figures (bottles, value) are summed by the database for both kinds, appellations and vineyards."""
     import cellar
-    import routers.map as map_router
     calls = []
-    real = cellar.load_cellar
-    url = f"/api/map/regions/{loire_id(client)}"
-    monkeypatch.setattr(map_router, "load_cellar", lambda s: calls.append(1) or real(s))
-    client.get(url)
-    assert len(calls) == 1
+    real = cellar._load_cellar
+    monkeypatch.setattr(cellar, "_load_cellar", lambda *a, **k: calls.append(1) or real(*a, **k))
+    assert client.get(f"/api/map/regions/{loire_id(client)}").status_code == 200
+    assert calls == []
 
 
 def test_map_region_is_an_index_without_geometry(client):

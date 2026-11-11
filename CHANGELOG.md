@@ -4,6 +4,10 @@
 
 - **A smaller install**: geopandas (and pandas with it) is no longer needed: the app reads its maps with pyarrow and
   shapely alone. About 380 MB less to install, and a lighter Docker image.
+- **Faster pages on a large cellar**: a wine's, producer's, appellation's, region's, grape's or vintage's page reads
+  its own bottles, not the whole cellar, and the maps' figures are summed by the database (on 5,000 wines: a wine's
+  page 170 ms to 11, a region's 220 to 77, the world map's 210 to 45); and the tables are indexed where pages join
+  them (a database migration).
 - **Getting started**: a new installation's home page says what to do first (the map outlines, your cellar from a
   file or a first bottle, the help), each step ticked when it's done; it can be put away.
 - **The Producers page shows yours first**: those you have wines of, tasted, hold or listed; the whole directory
