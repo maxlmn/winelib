@@ -202,8 +202,20 @@ critic). Then, in Settings › Maintenance:
 - **Map outlines** downloads the appellations', vineyards' and lieux-dits' outlines (the map pack);
 - **Import a cellar** brings your CellarTracker or Vivino export, or your spreadsheet.
 
-WineLib is reachable from your computer only. To reach it from your phone or another machine, put your own sign-in in
-front (Tailscale, a proxy with login): never expose it bare. Postgres works too (`DB_URL`).
+Postgres works too (`DB_URL`).
+
+### Security
+
+**WineLib has no login**: whoever can reach it can read and change everything. It's made for your own computer or
+home network.
+
+- Out of the box it answers on your computer only. To reach it from your phone or another machine, put your own
+  sign-in in front (Tailscale, a proxy with login): never expose it bare to the internet.
+- It answers to an IP address, a local name (`nas`, `wine.local`) or a Tailscale name. Reached through a domain of
+  your own, list it in `WINELIB_HOSTS` (`.secrets.env.example`): a page elsewhere can't then reach your WineLib
+  through your browser under a name of its own.
+- An update that changes the database copies it first (SQLite: `backups/before-<revision>.sqlite`); **About** says
+  which version you run.
 
 From the source: Node.js to build the web app once (`cd app/web && npm install && npm run build`), then
 `python run.py`; or `docker compose up -d --build`.

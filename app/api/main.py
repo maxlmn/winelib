@@ -18,6 +18,8 @@ import plugins
 import reference
 import routers
 from db import engine
+from hosts import HostCheck
+from version import VERSION
 
 # The installable app's manifest (app/web/static): not in every system's list of types
 mimetypes.add_type("application/manifest+json", ".webmanifest")
@@ -55,11 +57,12 @@ class StoreFresh:
 
 
 app.add_middleware(StoreFresh)
+app.add_middleware(HostCheck)  # added last: the first to see a request
 
 
 @app.get("/api/health")
 def health():
-    return {"ok": True}
+    return {"ok": True, "version": VERSION}
 
 
 # Mount every routers/<area>.py that defines `router`
