@@ -62,6 +62,7 @@
   field, names the shortcut as your computer does (Ctrl K, ⌘K) and gives the focus back when it closes; the ⋯ menu
   takes the focus, moves with the arrows and gives it back on Escape.
 - **One date format**: a tasting's page title, its other tastings and the tasting list wrote 2026-09-09.
+- **The Cellar page's storage cards** sit on the page itself, as the tasting cards do: not cards in a card.
 
 ## v0.5.0
 
