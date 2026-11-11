@@ -7,13 +7,19 @@ on:
   pull_request:
 
 jobs:
+  # The oldest Python run.py accepts and the newest: a release zip runs on either
   api:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.13"]
+    name: api (Python ${{ matrix.python }})
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python }}
           cache: pip
           cache-dependency-path: |
             app/api/requirements*.txt
@@ -23,6 +29,29 @@ jobs:
       - name: Tests
         working-directory: app/api
         run: python -m pytest -q tests
+
+  # The Python code's lint (ruff.toml: unused imports, undefined names, syntax errors), and the packages' known
+  # vulnerabilities (pip-audit, npm audit): those are said, not failed on, a fix being up to the package
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install "ruff>=0.8,<1" pip-audit
+      - name: Lint
+        run: ruff check
+      - name: Python packages' known vulnerabilities
+        continue-on-error: true
+        run: pip-audit -r app/api/requirements.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Web packages' known vulnerabilities (shipped ones)
+        continue-on-error: true
+        working-directory: app/web
+        run: npm audit --omit=dev
 
   # The schema on Postgres, as installations run it (the api job's tests use SQLite): migrations up and down, the
   # reference data (tests/test_postgres.py)

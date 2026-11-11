@@ -1,12 +1,9 @@
 """Settings page maintenance: the job runner and its tasks (scripts in app/api/tasks/). No browser, no network."""
-import os
-import time
 
 import pytest
 
 import jobs
 from db import Bottle, Producer, TastingNote, Wine
-from conftest import rp_of
 
 
 def seed(s):

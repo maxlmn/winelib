@@ -1,5 +1,4 @@
 """Settings › Maintenance › Market prices: every cellar bottle with an LWIN, one WineLabs call per wine and vintage."""
-import time
 from datetime import date
 
 import jobs

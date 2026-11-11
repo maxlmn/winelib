@@ -1,5 +1,4 @@
 """Merging two spellings of a cuvée (app/api/tasks/merge_cuvees.py), from the similar cuvée names report."""
-import time
 
 import pytest
 

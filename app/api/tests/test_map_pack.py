@@ -2,7 +2,6 @@
 pack's checksums) and links the rows; Settings lists the credits."""
 import json
 import os
-import time
 import zipfile
 
 from db import Appellation, Region, Vineyard

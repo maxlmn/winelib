@@ -6,7 +6,6 @@ draft to check, nothing saved.
 import re
 from datetime import date
 
-from sqlalchemy import func
 
 from tasks.from_link import known_cuvee, read_name
 from tasks.import_cellar import SIZES, Lookup

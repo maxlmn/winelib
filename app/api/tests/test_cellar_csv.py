@@ -1,9 +1,7 @@
 """Settings › Maintenance › Import a cellar: CellarTracker's and Vivino's exports (as documented), columns recognised,
 a preview by producer to tick, a run adding wines, bottles and tastings; nothing added twice."""
-import time
 from datetime import date
 
-import jobs
 from db import Appellation, Bottle, Producer, Region, TastingNote, Varietal, Wine
 
 # CellarTracker's cellar export: month/day/year dates, a Designation besides the whole name, Color and Category

@@ -1,8 +1,6 @@
 """Settings › Maintenance › Import critic scores: a CSV with a critic named, its columns recognised, a preview to
 tick, a run saving the ticked rows."""
-import time
 
-import jobs
 from db import Appellation, CriticScore, Producer, Region, Varietal, Wine
 
 CSV = """Domaine;Cuvée;Millésime;Couleur;Cépage;Appellation;Points;Tasting note;URL;Date
