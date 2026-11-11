@@ -11,9 +11,18 @@
 	let { minHeight = 440, focus = null }: { minHeight?: number; focus?: string | null } = $props();
 
 	let overview = $state<RegionCollection | null>(null);
-	onMount(async () => {
-		overview = await fetch('/api/map/overview').then((r) => r.json());
-	});
+	let failed = $state(false);
+	async function load() {
+		failed = false;
+		try {
+			const r = await fetch('/api/map/overview');
+			if (!r.ok) throw new Error(String(r.status));
+			overview = await r.json();
+		} catch {
+			failed = true; // it stayed on "Loading the map…" for good
+		}
+	}
+	onMount(load);
 
 	const regions = $derived(
 		overview ? { ...overview, features: overview.features.filter((f) => f.properties.bottles > 0 || f.properties.tastings > 0) } : null
@@ -53,6 +62,8 @@
 			onselect={() => {}}
 			worldCopies={false}
 		/>
+	{:else if failed}
+		<div class="loading muted">The map couldn’t be loaded. <button type="button" class="link" onclick={load}>Try again</button></div>
 	{:else}
 		<div class="loading muted">Loading the map…</div>
 	{/if}
@@ -64,6 +75,14 @@
 		flex: 1;
 		border-radius: calc(var(--radius) - 2px);
 		overflow: hidden;
+	}
+	.link {
+		background: none;
+		border: 0;
+		padding: 0 0 0 6px;
+		color: var(--accent);
+		cursor: pointer;
+		font: inherit;
 	}
 	.loading {
 		display: flex;

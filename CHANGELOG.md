@@ -38,6 +38,9 @@
 - **Faster on a large cellar** (measured with 5,000 wines): the cellar's data in under half the time, the tasting
   form's bottle search and the home page's checks about ten times quicker; the app's own files are kept by the
   browser, not asked again at each page.
+- **A slow or absent server says so**: a first screen while the app loads (it was a blank page), a bar at the top
+  while a page waits for its data (a click showed nothing), and *Can't reach WineLib* with *Try again* when the
+  server doesn't answer (it said "500 Internal Error"). The home page's map and the search say when they failed.
 
 ## v0.5.0
 

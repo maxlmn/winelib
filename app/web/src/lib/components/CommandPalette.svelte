@@ -20,6 +20,7 @@
 	let { open = $bindable(false) }: { open?: boolean } = $props();
 
 	let query = $state('');
+	let failed = $state(false);
 	let results = $state<{ kind: Kind; id: number; title: string; sub: string; region?: string | null }[]>([]);
 	let active = $state(0);
 	let input = $state<HTMLInputElement>();
@@ -82,9 +83,14 @@
 		const ctrl = new AbortController();
 		const t = setTimeout(() => {
 			fetch(`/api/search?q=${encodeURIComponent(q)}`, { signal: ctrl.signal })
-				.then((r) => r.json())
-				.then((d) => (results = d.results))
-				.catch(() => {});
+				.then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+				.then((d) => {
+					results = d.results;
+					failed = false;
+				})
+				.catch((e) => {
+					if (e?.name !== 'AbortError') failed = true; // not "Nothing found": the search didn't answer
+				});
 		}, 120);
 		return () => {
 			clearTimeout(t);
@@ -160,6 +166,7 @@
 			<kbd>esc</kbd>
 		</div>
 		<div class="list" id="palette-list" role="listbox" bind:this={listEl}>
+			{#if failed && query.trim().length >= 2}<div class="empty muted">The search isn’t answering: WineLib is out of reach</div>{/if}
 			{#each items as item, i (item.key)}
 				{#if showGroup(i)}<div class="group">{item.group}</div>{/if}
 				<button
@@ -177,7 +184,7 @@
 					{#if item.sub}<span class="sub muted">{#if item.region}<span class="dot" style:background={regionColor(item.region)}></span>{/if}{item.sub}</span>{/if}
 				</button>
 			{:else}
-				<div class="empty muted">{query.trim().length < 2 ? 'Type at least two letters' : 'Nothing found'}</div>
+				<div class="empty muted">{query.trim().length < 2 ? 'Type at least two letters' : failed ? '' : 'Nothing found'}</div>
 			{/each}
 		</div>
 		<div class="foot muted"><kbd>↑</kbd><kbd>↓</kbd> to move · <kbd>↵</kbd> to open · <kbd>⌘K</kbd> anywhere</div>
