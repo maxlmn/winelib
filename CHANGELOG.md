@@ -53,6 +53,8 @@
   small at the side, the wines and their notes beside (its appellation under the wine, *Add a note* for one
   without).
 - **A phone's top bar** keeps the brand, the theme and the menu: search is in the bar at the bottom.
+- **The home page's latest tastings and recent purchases** are plain rows too: a tasting's day and place small on
+  a line over its wines; a purchase with its price, how many, its day and where it was bought.
 
 ## v0.5.0
 

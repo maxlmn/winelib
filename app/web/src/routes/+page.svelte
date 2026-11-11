@@ -5,7 +5,7 @@
 	import Change from '#lib/components/Change.svelte';
 	import { pct, plural, money } from '#lib/format.ts';
 	import WhatToOpen from '#lib/components/home/WhatToOpen.svelte';
-	import CellarCards from '#lib/components/CellarCards.svelte';
+	import CellarSection from '#lib/components/details/CellarSection.svelte';
 	import HomeMap from '#lib/components/home/HomeMap.svelte';
 	import OccasionCard from '#lib/components/tastings/OccasionCard.svelte';
 	import TastingRibbon from '#lib/components/tastings/TastingRibbon.svelte';
@@ -17,7 +17,7 @@
 	const gain = $derived(pct(d.cellar.cost, d.cellar.market));
 	const year = $derived(d.today.slice(0, 4));
 
-	// The latest evenings, as cards of the tasting journal: the last one, and the ones before while they stay short
+	// The latest evenings, as rows: the last one, and the ones before while they stay short
 	// (about 8 wines in all)
 	const latest = $derived.by(() => {
 		const out = [];
@@ -34,7 +34,7 @@
 	// The past year's wines as one line of region colours
 	const yearAgo = $derived(`${Number(d.today.slice(0, 4)) - 1}${d.today.slice(4)}`);
 	const recentTastings = $derived(data.journal.tastings.filter((t) => t.date >= yearAgo));
-	// The last dozen purchases still in the cellar, as the cellar's cards
+	// The last dozen purchases still in the cellar, as lines
 	const recentBottles = $derived(
 		data.cellar.bottles
 			.filter((b) => b.purchase_date)
@@ -102,15 +102,15 @@
 		<HomeMap focus={latest[0]?.wines[0]?.region ?? null} />
 	</section>
 	<div class="side">
-		<section class="latest">
+		<section class="card latest">
 			<div class="sec-head">
 				<h2>Latest {latest.length > 1 ? 'tastings' : 'tasting'}</h2>
 				<a class="more" href={links.tastings()}>All tasting notes →</a>
 			</div>
 			{#each latest as o (o.key)}
-				<OccasionCard occasion={o} regionColors={data.regionColors} />
+				<OccasionCard occasion={o} regionColors={data.regionColors} plain />
 			{:else}
-				<p class="card muted pad">No tastings yet. <a class="more" href={links.newTasting()}>Add the first one</a></p>
+				<p class="muted">No tastings yet. <a class="more" href={links.newTasting()}>Add the first one</a></p>
 			{/each}
 		</section>
 		{#if recentTastings.length > 1}
@@ -129,7 +129,7 @@
 				<a class="more" href={links.cellar()}>The cellar →</a>
 			</div>
 			{#if recentBottles.length}
-				<CellarCards bottles={recentBottles} regionColors={data.regionColors} prices />
+				<CellarSection bottles={recentBottles} regionColors={data.regionColors} prices />
 			{:else}
 				<p class="muted">No purchases yet. <a class="more" href={links.newBottle()}>Add one</a></p>
 			{/if}
@@ -236,19 +236,15 @@
 		flex-direction: column;
 		padding: 14px 14px 12px;
 	}
-	.latest .sec-head {
-		padding: 4px 4px 0;
-	}
-	.latest {
-		display: flex;
-		flex-direction: column;
-		gap: 10px;
-	}
 	.latest :global(.occ) {
 		margin: 0;
+		padding: 10px 0;
 	}
-	.pad {
-		padding: 16px 18px;
+	.latest :global(.occ + .occ) {
+		border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+	}
+	.latest :global(.occ:last-child) {
+		padding-bottom: 0;
 	}
 	.purchases-card h2 .muted {
 		font-weight: 400;

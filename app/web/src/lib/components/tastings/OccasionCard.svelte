@@ -11,7 +11,9 @@
 	import { fmtDay, stars } from './journal.ts';
 	import type { Occasion } from './journal.ts';
 
-	let { occasion: o, regionColors }: { occasion: Occasion; regionColors: RegionColors } = $props();
+	/** plain: a row in a list (the home page's latest tastings), not a card: its day and place small on a line,
+	 * then its wines */
+	let { occasion: o, regionColors, plain = false }: { occasion: Occasion; regionColors: RegionColors; plain?: boolean } = $props();
 
 	const meta = $derived(o.place ? placeMeta(o.place) : '');
 </script>
@@ -41,7 +43,7 @@
 		</header>
 	</article>
 {:else}
-<article class="occ">
+<article class="occ" class:plain>
 	<!-- The evening's palette: one segment per wine, in its region's color, in the order they were poured -->
 	<div class="palette" aria-hidden="true">
 		{#each o.wines as w (w.id)}<span style:background={regionColors[w.region] ?? FALLBACK_REGION}></span>{/each}
@@ -248,6 +250,46 @@
 	}
 	.note:hover {
 		color: var(--accent);
+	}
+	/* A row in a list: no card, the day first, the place small beside it */
+	.occ.plain {
+		border: 0;
+		border-radius: 0;
+		background: none;
+		overflow: visible;
+	}
+	.plain .palette {
+		display: none;
+	}
+	.plain header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 2px 8px;
+		padding: 0;
+		font-size: 12px;
+	}
+	.plain .date {
+		order: -1;
+		color: var(--text);
+	}
+	.plain .where {
+		flex: 0 1 auto;
+	}
+	.plain .name {
+		font-family: inherit;
+		font-size: 12px;
+		font-weight: 400;
+		color: var(--muted);
+	}
+	.plain .meta:empty {
+		display: none;
+	}
+	.plain .action {
+		margin-left: auto;
+	}
+	.plain .body {
+		padding: 6px 0 0;
 	}
 	/* Restaurant visits: a tinted one-line card, so they read apart from tastings */
 	.visit {
