@@ -356,10 +356,11 @@
 	<section class="card wide">
 		<h2>Your data</h2>
 		<p class="muted">Everything in the database, to keep or take elsewhere: every table, your cellar, tastings, scores,
-			places, outlines and settings, with the reference data.</p>
+			places, outlines and settings, with the reference data; and your tasting photos, apart.</p>
 		<div class="downloads">
 			<a class="btn" href="/api/export.json" download>Download as JSON</a>
 			<a class="btn" href="/api/export.zip" download>Download as CSV (zip)</a>
+			<a class="btn" href="/api/export/photos.zip" download>Download the photos (zip)</a>
 		</div>
 	</section>
 

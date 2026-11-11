@@ -214,6 +214,8 @@ home network.
 - It answers to an IP address, a local name (`nas`, `wine.local`) or a Tailscale name. Reached through a domain of
   your own, list it in `WINELIB_HOSTS` (`.secrets.env.example`): a page elsewhere can't then reach your WineLib
   through your browser under a name of its own.
+- Updating, backing up, restoring and moving to another machine or to Postgres:
+  [Updating, backups and moving](https://maxlmn.github.io/winelib/upkeep/).
 - An update that changes the database copies it first (SQLite: `backups/before-<revision>.sqlite`); **About** says
   which version you run.
 

@@ -1,8 +1,15 @@
 """Rebuilds a database from an export (Settings › Your data › Download as JSON): every table, ids kept, into a new
 or empty database (SQLite or Postgres). To move to another machine, or from Postgres to SQLite and back.
 
-    python scripts/restore_export.py winelib_export_2026-10-25.json                       # data/winelib.db
+    python scripts/restore_export.py winelib_export_2026-10-25.json                       # the app's own database
     python scripts/restore_export.py winelib_export_2026-10-25.json --to postgresql://...
+    python scripts/restore_export.py winelib_export_2026-10-25.json --photos winelib_photos_2026-10-25.zip
+
+In Docker: docker compose cp the files into the container, then
+    docker compose exec winelib python /app/scripts/restore_export.py /data/winelib_export_2026-10-25.json
+
+--photos: the photos' zip (Settings › Your data, or a backup's photos_*.zip), put back in the photos folder; a
+photo already there is kept.
 
 The database gets the app's schema first (its migrations); a column the export has and the schema doesn't is left out,
 one the schema has and the export doesn't gets its default. A database that has any row in these tables is refused.
@@ -13,7 +20,26 @@ import os
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DEFAULT_TO = f"sqlite:///{os.path.join(ROOT, 'data', 'winelib.db')}"
+sys.path.insert(0, os.path.join(ROOT, "app", "api"))
+
+
+def restore_photos(archive, photos_dir):
+    """The zip's photos into photos_dir (flat names only; one already there is kept). How many were added."""
+    import zipfile
+    os.makedirs(photos_dir, exist_ok=True)
+    added = 0
+    with zipfile.ZipFile(archive) as z:
+        for info in z.infolist():
+            name = os.path.basename(info.filename)
+            if info.is_dir() or not name or name != info.filename or name.startswith("."):
+                continue  # no folders, no paths: the photos folder is flat
+            target = os.path.join(photos_dir, name)
+            if os.path.exists(target):
+                continue
+            with z.open(info) as src, open(target, "wb") as out:
+                out.write(src.read())
+            added += 1
+    return added
 
 
 def restore(engine, export):
@@ -59,12 +85,15 @@ def restore(engine, export):
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("export", help="the .json file")
-    parser.add_argument("--to", default=os.getenv("DB_URL") or DEFAULT_TO, help="the database to rebuild")
+    parser.add_argument("--to", help="the database to rebuild (default: the app's own: DB_URL, else its SQLite file)")
+    parser.add_argument("--photos", help="the photos' zip, to put back too")
     args = parser.parse_args()
     with open(args.export, encoding="utf-8") as f:
         export = json.load(f)
-    os.environ["DB_URL"] = args.to
-    sys.path.insert(0, os.path.join(ROOT, "app", "api"))
+    if args.to:
+        os.environ["DB_URL"] = args.to
+    import paths  # where the app keeps its files (WINELIB_DATA, .secrets.env), as the app itself reads them
+    args.to = args.to or paths.DB_URL
     import migrate
     from sqlalchemy import create_engine
     engine = create_engine(args.to)
@@ -72,6 +101,8 @@ def main():
     counts = restore(engine, export)
     print(f"Restored into {engine.url.render_as_string(hide_password=True)} (exported {export.get('exported')}): "
           + ", ".join(f"{n} {t}" for t, n in counts.items() if n))
+    if args.photos:
+        print(f"{restore_photos(args.photos, paths.PHOTOS_DIR)} photos put back in {paths.PHOTOS_DIR}")
 
 
 if __name__ == "__main__":

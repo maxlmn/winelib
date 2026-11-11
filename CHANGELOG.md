@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **Backups hold your photos**: Maintenance › Backup also saves the tasting photos in a zip (when they changed), and
+  keeps the last ten backups of each kind (two of the photos'), removing the older ones it wrote. Settings › Your
+  data downloads the photos too. The restore script puts them back (`--photos`), uses the app's own database by
+  default, and ships in the Docker image. A new page says how to update, back up, restore and move:
+  [Updating, backups and moving](https://maxlmn.github.io/winelib/upkeep/). (The help no longer promises a nightly
+  price refresh: the app has no schedule of its own.)
+- **Tasting Notes in one column**: an occasion's day, place and photo at the side, its wines beside, each note at
+  the right of its wine; read down, not across two columns.
+- **A tasting history's photos** at a size to see (they had shrunk to a thumbnail), opened whole on a click.
 - **New screenshots** in the README and on the website, of the app as it looks now, taken from the demo cellar by a
   script (`app/web/scripts/screenshots.mjs`, then `scripts/screenshots_compose.py`), so they can be retaken.
 - **The outline's drawing tools are in a row again** (they had stacked one under the other, the card's width).
