@@ -18,6 +18,8 @@ WORKDIR /app
 COPY app/api/requirements.txt app/api/requirements.txt
 RUN pip install --no-cache-dir -r app/api/requirements.txt
 COPY app/api/ app/api/
+# to rebuild a database from an export (docker compose exec winelib python /app/scripts/restore_export.py ...)
+COPY scripts/restore_export.py scripts/restore_export.py
 COPY --from=web /web/build app/web/build
 
 # Not root: a user of its own, owning the data folder

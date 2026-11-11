@@ -66,8 +66,8 @@ On the phone, *Add to Home Screen* installs it with its own icon.
 
 ## Your data
 
-- **Back up**: Settings › Maintenance › Backup copies the database; Settings › Your data exports everything as JSON
-  or CSV.
+- **Back up**: Settings › Maintenance › Backup copies the database and your photos; Settings › Your data exports
+  everything. [Updating, backups and moving](../upkeep/) says how to update, restore and move.
 - **Postgres** works too, instead of the built-in SQLite file: set `DB_URL`
   (`postgresql://user:password@host/winelib`).
 - **Optional services** (market prices, labels read from photos, satellite photos outside France) need keys of your

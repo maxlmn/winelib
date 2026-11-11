@@ -582,8 +582,9 @@ def _keys_params(body, commit):
 
 def _backup(session, job):
     """Every main table to CSV; with SQLite, a copy of the database too (SQLite's own backup: consistent while the
-    app runs). A Postgres database is dumped with Postgres's own tools (pg_dump), into the backups folder."""
-    from tasks.backup import BackupIncomplete, backup_csv
+    app runs); the tasting photos in a zip, when they changed since the last one; then the older backups of each
+    kind removed. A Postgres database is dumped with Postgres's own tools (pg_dump), into the backups folder."""
+    from tasks.backup import BackupIncomplete, backup_csv, backup_photos, prune
     engine = session.get_bind()
     incomplete = None
     try:
@@ -603,6 +604,11 @@ def _backup(session, job):
             source.close()
         job.log(f"Database copied to {target}")
         saved.append(f"backups/{os.path.basename(target)}")
+    photos = backup_photos(paths.PHOTOS_DIR, BACKUP_DIR, log=job.log)
+    if photos:
+        saved.append(f"backups/{os.path.basename(photos)}")
+    if not incomplete:  # a backup that failed removes nothing
+        prune(BACKUP_DIR, log=job.log)
     if incomplete:
         raise RuntimeError(f"{incomplete} (what could be saved is in {' and '.join(saved)})")
     return {"summary": f"Saved in {' and '.join(saved)}.", "items": []}
@@ -714,7 +720,8 @@ TASKS = {
                                    "adding some, or a rebuilt store): what changes, and what has no outline."},
     "backup": {"group": "Backup", "title": "Backup", "fn": _backup, "preview": False, "writes": False,
                "description": "Every main table to CSV, in a new folder of backups/; with a SQLite database, a copy "
-                              "of it too (a Postgres database isn't copied: dump it with pg_dump)."},
+                              "of it too (a Postgres database isn't copied: dump it with pg_dump); the tasting "
+                              "photos in a zip when they changed. The last ten of each are kept (two of the photos)."},
     # Started from the similar cuvée names report, not listed
     "merge_cuvees": {"group": "Clean up", "title": "Merge cuvée names", "fn": _merge_cuvees, "preview": True, "writes": True, "params": _pairs,
                      "hidden": True, "description": "Merge picked pairs of cuvée names."},
@@ -838,14 +845,15 @@ def _backups():
         elif name.endswith((".sql", ".sqlite")) and os.path.isfile(path):
             out.append({"name": name, "kind": name.rsplit(".", 1)[1], "size": os.path.getsize(path),
                         "modified": os.path.getmtime(path)})
+        elif name.startswith("photos_") and name.endswith(".zip") and os.path.isfile(path):
+            out.append({"name": name, "kind": "photos", "size": os.path.getsize(path), "modified": os.path.getmtime(path)})
     return sorted(out, key=lambda b: -b["modified"])
 
 
 @router.get("/api/maintenance/backups")
 def backups():
     """Database dumps (.sql, a Postgres dump put in the backups folder; .sqlite, the backup task's copy of a SQLite
-    database) and CSV backups,
-    newest first."""
+    database), CSV backups and the photos' zips, newest first."""
     return _backups()[:50]
 
 
@@ -856,9 +864,9 @@ def download_backup(name: str):
     if entry is None:
         raise HTTPException(404, "No such backup")
     path = os.path.join(BACKUP_DIR, name)
-    if entry["kind"] in ("sql", "sqlite"):
-        return FileResponse(path, media_type="application/sql" if entry["kind"] == "sql" else "application/vnd.sqlite3",
-                            filename=name)
+    if entry["kind"] in ("sql", "sqlite", "photos"):
+        types = {"sql": "application/sql", "sqlite": "application/vnd.sqlite3", "photos": "application/zip"}
+        return FileResponse(path, media_type=types[entry["kind"]], filename=name)
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
         for f in sorted(os.listdir(path)):

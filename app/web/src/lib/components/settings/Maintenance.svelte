@@ -72,7 +72,7 @@
 	}
 	interface Backup {
 		name: string;
-		kind: 'csv' | 'sql' | 'sqlite';
+		kind: 'csv' | 'sql' | 'sqlite' | 'photos';
 		size: number;
 		modified: number;
 	}
@@ -431,7 +431,7 @@
 					{#each backups.slice(0, 12) as b (b.name)}
 						<li>
 							<a href={`/api/maintenance/backups/${encodeURIComponent(b.name)}`} download>{b.name}</a>
-							<span class="muted small">{b.kind === 'sql' ? 'database dump' : b.kind === 'sqlite' ? 'database copy (SQLite)' : 'CSV, zipped'} · {size(b.size)} · {when(b.modified)}</span>
+							<span class="muted small">{b.kind === 'sql' ? 'database dump' : b.kind === 'sqlite' ? 'database copy (SQLite)' : b.kind === 'photos' ? 'tasting photos, zipped' : 'CSV, zipped'} · {size(b.size)} · {when(b.modified)}</span>
 						</li>
 					{/each}
 				</ul>

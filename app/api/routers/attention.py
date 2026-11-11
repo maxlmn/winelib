@@ -48,7 +48,7 @@ def _twice_under_two_appellations(session):
 
 
 def _stale_prices(session):
-    """Bottles in the cellar whose market price is older than twice the refresh age: the nightly refresh failing. (A
+    """Bottles in the cellar whose market price is older than twice the refresh age: no refresh for a while. (A
     wine no source has a price for never had one: not counted, nothing to do.)"""
     from routers.maintenance import _no_price_source
     from tasks.update_market_prices import PRICE_MAX_AGE_DAYS
@@ -60,7 +60,7 @@ def _stale_prices(session):
         {"since": since}).scalar()
     if n:
         return WARN, f"{_n(n, 'market price')} not refreshed", \
-            f"older than {2 * PRICE_MAX_AGE_DAYS} days: is the nightly refresh running?", n, "prices"
+            f"older than {2 * PRICE_MAX_AGE_DAYS} days: Maintenance › Market prices refreshes them", n, "prices"
 
 
 def _no_lwin(session):
