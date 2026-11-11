@@ -409,4 +409,11 @@
 	.kicker-link:hover {
 		color: var(--accent);
 	}
+	/* a phone: the page's buttons in a row under the title, not a column at the left */
+	@media (max-width: 760px) {
+		.head .page-actions {
+			flex-direction: row;
+			align-items: center;
+		}
+	}
 </style>
