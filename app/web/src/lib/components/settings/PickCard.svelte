@@ -230,7 +230,7 @@
 		box-shadow: inset 0 0 0 1px var(--border);
 	}
 	.status.mine {
-		color: var(--gold);
+		color: var(--gold-text);
 		box-shadow: inset 0 0 0 1px var(--gold);
 	}
 	.status.ed {

@@ -350,26 +350,26 @@
 		color: var(--accent);
 	}
 	.chip.owned {
-		border-color: var(--gold);
+		border-color: var(--gold-text);
 	}
 	.chip.current {
 		background: var(--accent);
 		border-color: var(--accent);
-		color: white;
+		color: var(--on-accent);
 	}
 	.chip.current .n,
 	.chip.current .tick,
 	.chip.current .listed {
-		color: white;
+		color: var(--on-accent);
 	}
 	/* the score's pill on the selected vintage: white, as its other marks */
 	.chip.current .score {
-		color: white;
+		color: var(--on-accent);
 		border-color: rgba(255, 255, 255, 0.7);
 	}
 	.n {
 		font-weight: 650;
-		color: var(--gold);
+		color: var(--gold-text);
 	}
 	.score {
 		margin-left: 4px;

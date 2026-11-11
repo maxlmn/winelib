@@ -12,6 +12,7 @@
 	import { photoSrc } from '#lib/api/photos.ts';
 	import { fmtDay, stars, wineName } from '#lib/components/tastings/journal.ts';
 	import ShareSticker from '#lib/components/tastings/ShareSticker.svelte';
+	import { fmtDate } from '#lib/components/details/wine.ts';
 
 	let { data } = $props();
 
@@ -42,7 +43,7 @@
 	});
 </script>
 
-<svelte:head><title>{wineName(w)} · {t.date} · WineLib</title></svelte:head>
+<svelte:head><title>{wineName(w)} · {t.date ? fmtDate(t.date) : 'Undated'} · WineLib</title></svelte:head>
 
 <a class="back muted" href={links.tastings()}>← Tasting notes</a>
 
@@ -146,7 +147,7 @@
 			<ul class="history">
 				{#each t.history as h (h.id)}
 					<li>
-						<a class="h-date num" href={links.tasting(h.id)}>{h.date}</a>
+						<a class="h-date num" href={links.tasting(h.id)}>{fmtDate(h.date)}</a>
 						<span class="h-vintage num">{h.vintage}</span>
 						<span class="h-place muted">{#if h.place_id}<a href={links.place(h.place_id)}>{h.place}</a>{:else}{h.place ?? ''}{/if}</span>
 						<span>{#if h.rating}<span class="mine num" title="Your score">{h.rating}</span>{/if}<CriticPills scores={h.scores} /></span>
@@ -245,12 +246,12 @@
 		color: var(--accent);
 	}
 	.stars {
-		color: var(--gold);
+		color: var(--gold-text);
 		letter-spacing: 1px;
 		font-size: 12px;
 	}
 	.btn.primary:hover {
-		color: white;
+		color: var(--on-accent);
 	}
 	.grid {
 		display: grid;

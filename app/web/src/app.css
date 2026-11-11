@@ -10,8 +10,11 @@
 	--surface-2: color-mix(in srgb, var(--accent) 3%, #f2f0ee);
 	--border: color-mix(in srgb, var(--accent) 6%, #e3e0dc);
 	--text: #2a2522;
-	--muted: #776f69;
+	--muted: #6b635d;
 	--gold: #d4af37;
+	/* gold as text (stars) on a light ground, and the text on an accent fill (theme.svelte.ts sets it per palette) */
+	--gold-text: #8f6f0c;
+	--on-accent: #fff;
 	--up: #2e8b57;
 	--down: #c0392b;
 	--radius: 10px;
@@ -31,6 +34,8 @@
 	--border: color-mix(in srgb, var(--accent) 8%, #36323a);
 	--text: #ece8ef;
 	--muted: #9d96a3;
+	--gold-text: #d4af37;
+	--on-accent: #1a171c;
 	--up: #5cc98a;
 	--down: #ef6f5e;
 	--shadow: 0 1px 2px #0000004d, 0 4px 16px #00000040;
@@ -97,6 +102,58 @@
 
 * {
 	box-sizing: border-box;
+}
+
+/* A phone: iOS zooms the page on a field whose text is under 16px */
+@media (max-width: 760px) {
+	input:not([type='checkbox']):not([type='radio']):not([type='range']),
+	select,
+	textarea {
+		font-size: 16px !important;
+	}
+}
+/* A finger, not a mouse: the app's buttons at a size it finds */
+@media (pointer: coarse) {
+	.btn {
+		min-height: 40px;
+	}
+	.btn.icon {
+		min-width: 40px;
+	}
+	.seg button,
+	.chip {
+		min-height: 34px;
+	}
+	.menu-item {
+		min-height: 42px;
+	}
+}
+/* Less motion asked for (the system's setting): no slides or pulses */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}
+/* Straight to the page for a keyboard: shown when it has the focus */
+.skip {
+	position: fixed;
+	top: 8px;
+	left: 8px;
+	z-index: 300;
+	padding: 8px 12px;
+	border-radius: 8px;
+	background: var(--surface);
+	border: 1px solid var(--accent);
+	color: var(--text);
+	transform: translateY(-200%);
+}
+.skip:focus {
+	transform: none;
 }
 
 html,
@@ -231,7 +288,7 @@ h3 {
 .btn.primary {
 	background: var(--accent);
 	border-color: var(--accent);
-	color: white;
+	color: var(--on-accent);
 }
 
 /* A page's actions, at the top right of its card: the ⋯ menu (ActionMenu), the main action under it as an icon
@@ -305,7 +362,7 @@ h3 {
 }
 .seg button.on {
 	background: var(--accent);
-	color: white;
+	color: var(--on-accent);
 }
 
 /* A sortable table header: the whole cell a button, so keyboards reach it */

@@ -90,7 +90,7 @@
 		background: var(--surface-2);
 	}
 	.gold {
-		color: var(--gold);
+		color: var(--gold-text);
 	}
 	.counts {
 		font-size: 12px;

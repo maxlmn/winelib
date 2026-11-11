@@ -196,7 +196,7 @@
 	}
 	.seg button.on {
 		background: var(--accent);
-		color: #fff;
+		color: var(--on-accent);
 	}
 	.small {
 		font-size: 12px;

@@ -206,7 +206,7 @@
 		color: var(--accent);
 	}
 	.stars {
-		color: var(--gold);
+		color: var(--gold-text);
 		font-size: 11px;
 		letter-spacing: 1px;
 	}

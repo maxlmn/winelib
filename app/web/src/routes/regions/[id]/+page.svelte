@@ -307,7 +307,7 @@
 	.badge {
 		font-size: 11px;
 		font-weight: 600;
-		color: var(--gold);
+		color: var(--gold-text);
 		box-shadow: inset 0 0 0 1px var(--gold);
 		border-radius: 8px;
 		padding: 0 6px;

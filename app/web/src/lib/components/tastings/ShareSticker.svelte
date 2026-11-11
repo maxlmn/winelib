@@ -131,7 +131,7 @@
 	}
 	.seg button.on {
 		background: var(--accent);
-		color: #fff;
+		color: var(--on-accent);
 	}
 	.preview {
 		border-radius: 12px;

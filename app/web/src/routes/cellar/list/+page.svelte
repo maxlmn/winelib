@@ -374,7 +374,7 @@
 	}
 	.seg button.on {
 		background: var(--accent);
-		color: #fff;
+		color: var(--on-accent);
 	}
 	.sep {
 		color: var(--ink-soft);

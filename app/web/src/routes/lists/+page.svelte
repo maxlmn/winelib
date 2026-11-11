@@ -242,7 +242,7 @@
 	}
 	.seg button.on {
 		background: var(--accent);
-		color: #fff;
+		color: var(--on-accent);
 	}
 	.small {
 		margin: 0;

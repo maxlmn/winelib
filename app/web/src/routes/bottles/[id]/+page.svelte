@@ -387,7 +387,7 @@
 	}
 	.seg button.on {
 		background: var(--accent);
-		color: #fff;
+		color: var(--on-accent);
 	}
 	.fields {
 		display: flex;

@@ -103,11 +103,18 @@
 		active = 0;
 	});
 
+	const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
+	// What had the focus when it opened: given back when it closes (it fell to the page's top)
+	let opener: HTMLElement | null = null;
 	$effect(() => {
 		if (open) {
+			opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 			query = '';
 			results = [];
 			queueMicrotask(() => input?.focus());
+		} else if (opener) {
+			if (opener.isConnected) opener.focus();
+			opener = null;
 		}
 	});
 
@@ -127,6 +134,8 @@
 			choose(items[active]);
 		} else if (e.key === 'Escape') {
 			open = false;
+		} else if (e.key === 'Tab') {
+			e.preventDefault(); // the arrows move through the list: Tab stays in the field, not out behind the dialog
 		}
 	}
 
@@ -173,6 +182,7 @@
 					id="palette-{i}"
 					data-index={i}
 					role="option"
+					tabindex="-1"
 					aria-selected={i === active}
 					class="item"
 					class:active={i === active}
@@ -187,11 +197,18 @@
 				<div class="empty muted">{query.trim().length < 2 ? 'Type at least two letters' : failed ? '' : 'Nothing found'}</div>
 			{/each}
 		</div>
-		<div class="foot muted"><kbd>↑</kbd><kbd>↓</kbd> to move · <kbd>↵</kbd> to open · <kbd>⌘K</kbd> anywhere</div>
+		<div class="foot muted"><kbd>↑</kbd><kbd>↓</kbd> to move · <kbd>↵</kbd> to open · <kbd>{isMac ? '⌘K' : 'Ctrl K'}</kbd> anywhere</div>
 	</div>
 {/if}
 
 <style>
+	/* a touch screen has no keys to name */
+	@media (hover: none) {
+		.foot,
+		.search kbd {
+			display: none;
+		}
+	}
 	.backdrop {
 		position: fixed;
 		inset: 0;
