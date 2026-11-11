@@ -1,5 +1,5 @@
-# Each within its major version (the next major may break): tested with fastapi 0.161, uvicorn 0.54, geopandas 1.2,
-# shapely 2.2, pyarrow 22, pillow 12, anthropic 2.3 (November 2026)
+# Each within its major version (the next major may break): tested with fastapi 0.161, uvicorn 0.54, shapely 2.2,
+# pyarrow 22, pillow 12, anthropic 2.3 (November 2026)
 fastapi>=0.115,<1
 uvicorn[standard]>=0.30,<1
 # 2.1 makes postgresql:// use psycopg (v3) instead of psycopg2: stay on 2.0 with psycopg2
@@ -7,8 +7,7 @@ sqlalchemy>=2.0,<2.1
 # Database migrations, run at startup (migrate.py, migrations/)
 alembic>=1.13,<2
 psycopg2-binary>=2.9,<3
-# Map boundaries (optional: without them the map shows no polygons)
-geopandas>=1.0,<2
+# Map boundaries: the shape store is Parquet (pyarrow), its outlines read with shapely
 shapely>=2.0,<3
 pyarrow>=17
 # Photo thumbnails

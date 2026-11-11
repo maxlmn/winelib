@@ -1,5 +1,4 @@
 """Duplicate producers (app/api/tasks/merge_producers.py): the report and the merge."""
-import time
 
 import pytest
 

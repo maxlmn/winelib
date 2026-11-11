@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **A smaller install**: geopandas (and pandas with it) is no longer needed: the app reads its maps with pyarrow and
+  shapely alone. About 380 MB less to install, and a lighter Docker image.
 - **Getting started**: a new installation's home page says what to do first (the map outlines, your cellar from a
   file or a first bottle, the help), each step ticked when it's done; it can be put away.
 - **The Producers page shows yours first**: those you have wines of, tasted, hold or listed; the whole directory

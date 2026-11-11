@@ -1,5 +1,4 @@
 """Market price (WineLabs.ai) and place coordinates (OpenStreetMap): the network is never used."""
-import time
 
 import pytest
 

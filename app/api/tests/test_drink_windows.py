@@ -1,7 +1,6 @@
 """Drinking windows: maturity in the cellar, drink-soon on the home page."""
 from datetime import date
 
-import pytest
 
 from db import Bottle, Producer, Wine
 from conftest import rp

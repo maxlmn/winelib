@@ -2,7 +2,6 @@
 as its vineyard, every vintage; a name found in several villages is the user's to choose; a lieu-dit that's only part
 of the name isn't one ("Bonnes Blanches" isn't "Les Blanches"). The store is faked: four lieux-dits."""
 import json
-import time
 
 import numpy as np
 
