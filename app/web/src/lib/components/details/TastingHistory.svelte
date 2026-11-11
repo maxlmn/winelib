@@ -108,7 +108,12 @@
 						</div>
 					{/each}
 				</div>
-				{#if photo}<img class="photo" src={photoSrc(photo, 'thumb')} alt="{d.place?.name ?? d.location ?? 'Occasion'}, {fmtDate(d.date)}" loading="lazy" decoding="async" />{/if}
+				{#if photo}
+					<!-- the day's photo, large enough to see; a click opens it whole -->
+					<a class="photo" href={photoSrc(photo, 'large')} target="_blank" rel="noopener" title="Open the photo">
+						<img src={photoSrc(photo, 'thumb')} alt="{d.place?.name ?? d.location ?? 'Occasion'}, {fmtDate(d.date)}" loading="lazy" decoding="async" />
+					</a>
+				{/if}
 			</li>
 		{/each}
 	</ul>
@@ -237,8 +242,14 @@
 		color: var(--accent);
 	}
 	.photo {
-		width: 64px;
-		height: 64px;
+		display: block;
+		align-self: start;
+		line-height: 0;
+	}
+	.photo img {
+		width: 220px;
+		max-width: 100%;
+		max-height: 240px;
 		object-fit: cover;
 		border-radius: 6px;
 	}
@@ -263,6 +274,15 @@
 			grid-column: 1 / -1;
 			flex-direction: row;
 			gap: 8px;
+		}
+		/* the photo under the day's wines, the row's width */
+		.what,
+		.photo {
+			grid-column: 1 / -1;
+		}
+		.photo img {
+			width: 100%;
+			max-height: 320px;
 		}
 	}
 </style>
