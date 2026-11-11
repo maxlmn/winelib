@@ -32,8 +32,48 @@ def config(connection=None):
     return cfg
 
 
+def copy_before(engine):
+    """The SQLite database copied to backups/ before a migration changes it (before-<revision>.sqlite, one per
+    revision left): SQLite doesn't undo a half-run schema change, so a migration that fails could leave a database
+    the app can't open. The copy's path, or None when there's nothing to migrate (or it isn't SQLite: pg_dump is
+    yours)."""
+    import sqlite3
+    import paths
+    file = engine.url.database
+    if engine.dialect.name != "sqlite" or not file or not os.path.isfile(file):
+        return None
+    with engine.connect() as conn:
+        if "alembic_version" not in set(inspect(conn).get_table_names()):
+            return None  # a new database, or one from before migrations (its first stamp changes nothing)
+        current = conn.execute(text("SELECT version_num FROM alembic_version")).scalar()
+        head = ScriptDirectory.from_config(config(conn)).get_current_head()
+    if not current or current == head or SQUASHED.get(current) == head:
+        return None
+    os.makedirs(paths.BACKUP_DIR, exist_ok=True)
+    target = os.path.join(paths.BACKUP_DIR, f"before-{current}.sqlite")
+    source, copy = sqlite3.connect(file), sqlite3.connect(target)
+    try:
+        source.backup(copy)
+    finally:
+        source.close()
+        copy.close()
+    log.info("The database copied to %s before its migration (%s to %s)", target, current, head)
+    return target
+
+
 def upgrade(engine):
     """Brings the database to the latest revision (stamping an older, unversioned one as the baseline first)."""
+    copied = copy_before(engine)
+    try:
+        _upgrade(engine)
+    except Exception:
+        if copied:
+            log.error("The migration failed. The database as it was is in %s: put it back in place of %s "
+                      "(with the version of WineLib you had) to go on as before.", copied, engine.url.database)
+        raise
+
+
+def _upgrade(engine):
     with engine.begin() as conn:
         cfg = config(conn)
         names = set(inspect(conn).get_table_names())

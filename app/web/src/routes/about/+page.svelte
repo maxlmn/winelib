@@ -27,6 +27,12 @@
 			The regions, appellations, grapes and outlines WineLib knows, where they come from, and how they were put together.
 			How to use them: <a href={links.help()}>Help</a>.
 		</p>
+		{#if a.version}
+			<p class="muted small">
+				WineLib <span class="num">{a.version}</span> ·
+				<a href="https://github.com/maxlmn/winelib/blob/main/CHANGELOG.md" target="_blank" rel="noopener">what changed</a>
+			</p>
+		{/if}
 	</div>
 
 	<Stats

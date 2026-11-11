@@ -31,6 +31,9 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: app/web/package-lock.json
+      # The app says its version (app/api/version.py): set it to the tag's before tagging
+      - name: The tag is the code's version
+        run: test "v$(cd app/api && python -c 'import version; print(version.VERSION)')" = "$GITHUB_REF_NAME"
       # the MCP server's SDK too: its tests are skipped without it (tests/test_mcp_server.py)
       - name: Tests
         run: |

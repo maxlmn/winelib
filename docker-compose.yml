@@ -14,6 +14,7 @@ services:
     # Optional keys (Settings › Integrations says what each needs; .secrets.env.example lists them all), here or
     # in a .secrets.env file in the data volume:
     # environment:
+    #   - WINELIB_HOSTS=wine.example.com   # reached through a domain of your own: the name it answers to
     #   - ANTHROPIC_API_KEY=...   # Fill from photos
     #   - ESRI_API_KEY=...        # the satellite view outside France
     #   - WINELABS_API_KEY=...    # market prices

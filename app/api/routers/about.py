@@ -10,6 +10,8 @@ import grapes as grape_profiles
 import map_pack
 from db import Appellation, Region, Varietal, Vineyard, get_session
 
+from version import VERSION
+
 router = APIRouter()
 
 DOCS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "docs")
@@ -38,6 +40,7 @@ def about_data(session: Session = Depends(get_session)):
     types = (session.query(Appellation.type, func.count(Appellation.id)).filter(Appellation.type.isnot(None))
              .group_by(Appellation.type).order_by(func.count(Appellation.id).desc()).limit(12).all())
     return {
+        "version": VERSION,
         "sources": _doc("sources.md"),
         "built": _doc("how-built.md"),
         "counts": {

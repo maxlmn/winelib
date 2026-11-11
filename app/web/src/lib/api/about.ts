@@ -5,6 +5,8 @@ import type { MapCredit } from '#lib/settings.svelte.ts';
 type Fetch = typeof fetch;
 
 export interface AboutData {
+	/** the app's version ("0.5.0", "0.5.0+dev" after it) */
+	version?: string;
 	sources: string;
 	built: string;
 	counts: {
