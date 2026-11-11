@@ -110,7 +110,7 @@
 {/snippet}
 
 {#each cards as c (c.name)}
-	<details class="card-box" class:plain open={c === cards[0]}>
+	<details class="card-box" open={c === cards[0]}>
 		<summary>
 			<div class="sum-top">
 				<b>{c.name}</b>
@@ -142,14 +142,6 @@
 		margin-bottom: 10px;
 		overflow: hidden;
 		background: var(--surface);
-	}
-	/* one wine's bottles: where they are as a plain heading over its lines, no band */
-	.card-box.plain summary {
-		padding: 12px 16px 0;
-		background: none;
-	}
-	.card-box.plain .columns {
-		padding-top: 8px;
 	}
 	summary {
 		list-style: none;

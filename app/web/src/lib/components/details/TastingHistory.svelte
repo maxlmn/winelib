@@ -8,7 +8,6 @@
 	import { regionLabel } from '#lib/regions.svelte.ts';
 	import { links } from '#lib/links.ts';
 	import { photoSrc } from '#lib/api/photos.ts';
-	import { plural } from '#lib/format.ts';
 	import { fmtDate, stars } from './wine.ts';
 
 	interface Props {
@@ -59,75 +58,60 @@
 {#if !days.length}
 	<p class="muted">{empty}</p>
 {:else}
-	<div class="days">
+	<!-- Plain rows, a day at a time: when and where at the side (small), the wines and their notes -->
+	<ul class="days">
 		{#each days.slice(0, limit) as d (d.key)}
 			{@const photo = d.wines.find((w) => w.photo)?.photo ?? d.visit?.photo}
-			<article class="day">
-				<header>
-					{#if d.place && !place}
-						<a class="where" href={links.place(d.place.id)}><PlaceName name={d.place.name} type={d.place.type} /></a>
-					{:else if place}
-						<span class="where">{d.visit && !d.wines.length ? 'Visit' : plural(d.wines.length, 'wine')}</span>
-					{:else}
-						<span class="where">{d.location || 'Unknown place'}</span>
-					{/if}
+			<li class="day">
+				<div class="when">
 					{#if d.date && d.wines.length}
 						<!-- the occasion in the journal: every wine of that day there -->
-						<a class="date num" href={links.occasion(d.date, d.place?.name ?? d.location)} title="Open the occasion in the journal">
-							{fmtDate(d.date)} ›
-						</a>
+						<a class="date num" href={links.occasion(d.date, d.place?.name ?? d.location)} title="Open the occasion in the journal">{fmtDate(d.date)}</a>
 					{:else}
 						<span class="date num">{fmtDate(d.date)}</span>
 					{/if}
-				</header>
-				<div class="content">
-					{#if photo}<img class="photo" src={photoSrc(photo, 'thumb')} alt="{d.place?.name ?? d.location ?? 'Occasion'}, {fmtDate(d.date)}" loading="lazy" decoding="async" />{/if}
-					{#if d.place && !place && (d.place.city || d.place.michelin_stars)}
-						<div class="meta muted">
-							{[d.place.city, d.place.country].filter(Boolean).join(', ')}
-							{#if d.place.michelin_stars}<span class="stars">{stars(d.place.michelin_stars)}</span>{/if}
-						</div>
+					{#if d.place && !place}
+						<a class="venue" href={links.place(d.place.id)}><PlaceName name={d.place.name} type={d.place.type} />{#if d.place.michelin_stars}<span class="stars">{stars(d.place.michelin_stars)}</span>{/if}</a>
+					{:else if !place && d.location}
+						<span class="venue">{d.location}</span>
 					{/if}
+				</div>
+				<div class="what">
 					{#if d.visit}
 						<div class="visit">
-							{#if d.wines.length}<span class="badge">Visit</span>{/if}
+							<span class="badge">Visit</span>
 							{#if d.visit.notes}<span class="visit-notes">{d.visit.notes}</span>{:else}<span class="muted">No notes.</span>{/if}
 							<a class="edit" href={links.editVisit(d.visit.id)}>Edit</a>
 						</div>
 					{/if}
-					{#if d.wines.length}
-						<ul>
-							{#each d.wines as t (t.id)}
-								<li>
-									<span class="end">
-										<BottleEnd
-											region={regionColor(t.region)}
-											color={t.color}
-											format={t.format}
-											size={11}
-											title="{regionLabel(t.region)} · {t.color ?? ''}{t.format ? ` · ${t.format}` : ''}"
-										/>
-									</span>
-									<div class="line">
-										<a href={links.wine(t.wine_id)}>
-											<b>{t.producer}</b>{t.cuvee ? ` – ${t.cuvee}` : ''}
-										</a>
-										<span class="vintage num">{t.vintage}</span><CriticPills scores={t.scores} />{#if t.rating}<span class="mine num" title="Your score">{t.rating}</span>{/if}
-										<!-- under the wine: its appellation, and the note (or the offer to write one), which opens the tasting -->
-										<div class="under">
-											{#if t.appellation}<span class="muted">{t.appellation}</span>{/if}
-											{#if !t.notes}<a class="add-note" href={links.tasting(t.id)} title="Open the tasting">Add a note</a>{/if}
-										</div>
-										{#if t.notes}<a class="note" href={links.tasting(t.id)} title="Open the tasting">{t.notes}</a>{/if}
-									</div>
-								</li>
-							{/each}
-						</ul>
-					{/if}
+					{#each d.wines as t (t.id)}
+						<div class="wine">
+							<span class="end">
+								<BottleEnd
+									region={regionColor(t.region)}
+									color={t.color}
+									format={t.format}
+									size={11}
+									title="{regionLabel(t.region)} · {t.color ?? ''}{t.format ? ` · ${t.format}` : ''}"
+								/>
+							</span>
+							<div class="line">
+								<a href={links.wine(t.wine_id)}><b>{t.producer}</b>{t.cuvee ? ` – ${t.cuvee}` : ''}</a>
+								<span class="vintage num">{t.vintage}</span><CriticPills scores={t.scores} />{#if t.rating}<span class="mine num" title="Your score">{t.rating}</span>{/if}
+								<!-- under the wine: its appellation, and the note (or the offer to write one), which opens the tasting -->
+								<div class="under">
+									{#if t.appellation}<span class="muted">{t.appellation}</span>{/if}
+									{#if !t.notes}<a class="add-note" href={links.tasting(t.id)} title="Open the tasting">Add a note</a>{/if}
+								</div>
+								{#if t.notes}<a class="note" href={links.tasting(t.id)} title="Open the tasting">{t.notes}</a>{/if}
+							</div>
+						</div>
+					{/each}
 				</div>
-			</article>
+				{#if photo}<img class="photo" src={photoSrc(photo, 'thumb')} alt="{d.place?.name ?? d.location ?? 'Occasion'}, {fmtDate(d.date)}" loading="lazy" decoding="async" />{/if}
+			</li>
 		{/each}
-	</div>
+	</ul>
 	{#if days.length > limit}
 		<button class="btn more" onclick={() => (limit += PAGE)}>Show more ({days.length - limit} days)</button>
 	{/if}
@@ -135,65 +119,54 @@
 
 <style>
 	.days {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
-		gap: 12px;
-		align-items: start;
+		list-style: none;
+		margin: -8px 0;
+		padding: 0;
 	}
 	.day {
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-		overflow: hidden;
-		background: var(--surface);
+		display: grid;
+		grid-template-columns: 130px minmax(0, 1fr) auto;
+		gap: 4px 16px;
+		padding: 10px 0;
+		font-size: 13px;
 	}
-	header {
+	.day + .day {
+		border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+	}
+	.when {
 		display: flex;
-		justify-content: space-between;
-		align-items: baseline;
-		gap: 10px;
-		padding: 12px 16px 0;
-	}
-	.where {
-		font-family: var(--heading-font);
-		font-size: 15px;
-		font-weight: 650;
+		flex-direction: column;
+		gap: 1px;
 		min-width: 0;
+		font-size: 12px;
+		color: var(--muted);
+	}
+	.date {
+		color: var(--text);
+		white-space: nowrap;
+	}
+	.venue {
+		color: var(--muted);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
-	a.where {
-		color: var(--text);
-		text-decoration: var(--link-decoration, none);
-	}
-	a.where:hover {
+	a.date:hover,
+	a.venue:hover {
 		color: var(--accent);
-	}
-	.date {
-		color: var(--muted);
-		font-size: 12px;
-		flex: none;
-	}
-	a.date:hover {
-		color: var(--accent);
-	}
-	.content {
-		padding: 6px 16px 10px;
-	}
-	.meta {
-		font-size: 12px;
-		margin-bottom: 6px;
 	}
 	.stars {
 		color: var(--gold);
 		margin-left: 4px;
 	}
+	.what {
+		min-width: 0;
+	}
 	.visit {
 		display: flex;
 		align-items: baseline;
 		gap: 8px;
-		margin-bottom: 8px;
-		font-size: 13px;
+		margin-bottom: 6px;
 	}
 	.visit-notes {
 		font-style: italic;
@@ -213,19 +186,12 @@
 		font-size: 12px;
 		color: var(--accent);
 	}
-	ul {
-		list-style: none;
-		padding: 0;
-		margin: 0;
-	}
-	li {
+	.wine {
 		display: flex;
 		gap: 8px;
-		padding: 5px 0;
-		font-size: 13px;
 	}
-	li + li {
-		border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+	.wine + .wine {
+		margin-top: 8px;
 	}
 	.end {
 		display: flex;
@@ -261,7 +227,7 @@
 		-webkit-line-clamp: 3;
 		line-clamp: 3;
 		overflow: hidden;
-		margin: 3px 0 2px;
+		margin: 3px 0 0;
 		color: var(--text);
 		font-style: italic;
 		white-space: pre-line;
@@ -270,16 +236,11 @@
 	.note:hover {
 		color: var(--accent);
 	}
-	.more {
-		margin-top: 12px;
-	}
 	.photo {
-		display: block;
-		max-width: min(100%, 320px);
-		max-height: 240px;
+		width: 64px;
+		height: 64px;
 		object-fit: cover;
 		border-radius: 6px;
-		margin-bottom: 8px;
 	}
 	.mine {
 		margin-left: 6px;
@@ -289,5 +250,19 @@
 		font-weight: 600;
 		color: var(--accent);
 		background: var(--accent-soft);
+	}
+	.more {
+		margin-top: 12px;
+	}
+	/* A phone: when and where on one line above the wines */
+	@media (max-width: 760px) {
+		.day {
+			grid-template-columns: minmax(0, 1fr) auto;
+		}
+		.when {
+			grid-column: 1 / -1;
+			flex-direction: row;
+			gap: 8px;
+		}
 	}
 </style>

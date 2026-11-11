@@ -21,13 +21,13 @@
 		tools?: Snippet;
 		/** the bar alone, no card around the content (a page of cards: Settings) */
 		plain?: boolean;
-		/** the tabs whose content is cards of its own (a cellar's, a history's): shown on the page itself, not as
-		 * boxes in the panel's box */
+		/** the tabs whose content is cards of its own: shown on the page itself, not as boxes in the panel's box
+		 * (none by default: a cellar's and a history's are plain rows) */
 		cards?: string[];
 		children: Snippet<[string]>;
 	}
 
-	let { tabs, initial, tools, plain = false, cards = ['cellar', 'history'], children }: Props = $props();
+	let { tabs, initial, tools, plain = false, cards = [], children }: Props = $props();
 
 	// The open tab lives in the URL (?tab=), so reloads and links keep it
 	const active = $derived.by(() => {
