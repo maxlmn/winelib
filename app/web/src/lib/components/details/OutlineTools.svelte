@@ -334,7 +334,13 @@
 		align-items: baseline;
 		gap: 12px;
 	}
-	.tools,
+	/* the drawing tools in a row (they had taken the lieu-dit's column: one under the other, the card's width) */
+	.tools {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px;
+	}
 	/* a lieu-dit found by name, above the drawing tools */
 	.lieu {
 		display: flex;

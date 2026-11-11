@@ -67,7 +67,7 @@ Maintenance finds your cuvées named after one and links them, after your tick.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="screenshots/lieux-dits-dark.png">
-  <img alt="Clos Rougeard Les Poyeux on its lieu-dit, the neighbouring lieux-dits around it" src="screenshots/lieux-dits.png">
+  <img alt="Les Gravières, a Santenay premier cru, on its vineyard, the neighbouring lieux-dits around it" src="screenshots/lieux-dits.png">
 </picture>
 
 **Draw what the map doesn't have.** A monopole, a parcel, an appellation without an official outline: draw it on

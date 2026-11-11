@@ -11,6 +11,9 @@
 - **Tasting Notes in one column**: an occasion's day, place and photo at the side, its wines beside, each note at
   the right of its wine; read down, not across two columns.
 - **A tasting history's photos** at a size to see (they had shrunk to a thumbnail), opened whole on a click.
+- **New screenshots** in the README and on the website, of the app as it looks now, taken from the demo cellar by a
+  script (`app/web/scripts/screenshots.mjs`, then `scripts/screenshots_compose.py`), so they can be retaken.
+- **The outline's drawing tools are in a row again** (they had stacked one under the other, the card's width).
 - **The version is said where you look for it**: at the bottom of Settings in the app, and on the website (its
   home page and every page's foot), linked to the release.
 
