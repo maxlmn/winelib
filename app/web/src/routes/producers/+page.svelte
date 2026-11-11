@@ -22,21 +22,28 @@
 		{ key: 'winemaker', label: 'Winemaker', values: (p) => [p.winemaker] },
 		{ key: 'list', label: 'Lists', values: (p) => p.lists }
 	];
+	// Yours (a wine of theirs in WineLib, tasted, in the cellar, on a list) first: the directory also holds the
+	// producers it ships with, thousands you may never have heard of
 	const HAVE = [
-		{ id: '', label: 'All' },
+		{ id: 'yours', label: 'Yours' },
 		{ id: 'tasted', label: 'Tasted' },
-		{ id: 'cellar', label: 'In cellar' }
+		{ id: 'cellar', label: 'In cellar' },
+		{ id: 'all', label: 'All' }
 	];
+	const yours = (p: ProducerRow) => p.wines > 0 || p.tastings > 0 || p.bottles > 0 || p.lists.length > 0;
+	const anyYours = $derived(all.some(yours));
 
 	const params = $derived(page.url.searchParams);
 	const q = $derived(params.get('q') ?? '');
-	const have = $derived(params.get('have') ?? '');
+	// none asked: yours, when you have any
+	const have = $derived(params.get('have') ?? (anyYours ? 'yours' : 'all'));
 	const selection = $derived(readSelection(params, FACETS));
 
 	const base = $derived(
 		all.filter(
 			(p) =>
 				textMatch(q, p.name, p.winemaker, p.village, p.notes) &&
+				(have !== 'yours' || yours(p)) &&
 				(have !== 'tasted' || p.tastings > 0) &&
 				(have !== 'cellar' || p.bottles > 0)
 		)
@@ -63,7 +70,7 @@
 	placeholder="Search name, winemaker, village, notes…"
 	{facets}
 	{selection}
-	extraActive={Boolean(have)}
+	extraActive={params.has('have')}
 	onsearch={(v) => setParams({ q: v })}
 	onselect={(key, values) => setParams({ [key]: values })}
 	onclear={clearAll}
@@ -81,6 +88,7 @@
 	<div class="bar">
 		<span class="count muted num">
 			{shown.length === all.length ? `${all.length} producers` : `${shown.length} of ${all.length} producers`}
+			{#if have === 'yours' && !q}· <button class="link" onclick={() => setParams({ have: 'all' })}>the whole directory</button>{/if}
 		</span>
 	</div>
 	{#if shown.length}
@@ -99,5 +107,16 @@
 	.empty {
 		padding: 16px;
 		margin: 0;
+	}
+	.link {
+		border: 0;
+		background: none;
+		padding: 0;
+		font: inherit;
+		color: var(--link);
+		cursor: pointer;
+	}
+	.link:hover {
+		color: var(--accent);
 	}
 </style>

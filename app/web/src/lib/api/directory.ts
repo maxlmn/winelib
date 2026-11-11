@@ -15,6 +15,8 @@ export interface ProducerRow {
 	notes: string | null;
 	tastings: number;
 	bottles: number;
+	/** its wines in WineLib (one you entered or imported: not the directory's alone) */
+	wines: number;
 }
 
 export interface PlaceRow {
