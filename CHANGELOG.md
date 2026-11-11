@@ -41,6 +41,13 @@
 - **A slow or absent server says so**: a first screen while the app loads (it was a blank page), a bar at the top
   while a page waits for its data (a click showed nothing), and *Can't reach WineLib* with *Try again* when the
   server doesn't answer (it said "500 Internal Error"). The home page's map and the search say when they failed.
+- **A new default look**: the Bordeaux palette and serif headings, where you haven't picked your own (Settings ›
+  Appearance has the others, Rosé and the plain headings included).
+- **A phone's bar at the bottom**: Home, Cellar, ＋ (a bottle, a tasting, a restaurant visit), Tastings and Search
+  within the thumb's reach; the other pages stay behind the menu button.
+- **Tasting cards, lighter**: an occasion's place and day on one plain card (no band, no box in a box), each wine
+  with its appellation under it and its note in full colour; a wine without a note offers *Add a note*. On the
+  Tasting Notes page the cards sit on the page itself.
 
 ## v0.5.0
 

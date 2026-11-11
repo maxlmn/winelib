@@ -2,7 +2,6 @@
 	import CriticPills from '#lib/components/CriticPills.svelte';
 	import PlaceName from '#lib/components/PlaceName.svelte';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
-	import Icon from '#lib/components/Icon.svelte';
 	import { placeMeta } from '#lib/places.ts';
 	import { regionLabel } from '#lib/regions.svelte.ts';
 	import type { RegionColors } from '#lib/types.ts';
@@ -57,14 +56,12 @@
 			{#if o.place?.stars}<span class="stars" title="{o.place.stars} Michelin star{o.place.stars > 1 ? 's' : ''}">{stars(o.place.stars)}</span>{/if}
 		</div>
 		<span class="date num">{fmtDay(o.date)}</span>
+		<span class="muted meta">{meta}</span>
+		<a class="action" href={links.newTasting({ place_id: o.place?.id, date: o.date })} title="Add a wine to this occasion">+ Wine</a>
 	</header>
 	<div class="body">
 		{#if o.photo}<img src={photoSrc(o.photo, 'thumb')} alt="{o.name}, {o.date}" loading="lazy" decoding="async" />{/if}
 		<div class="content">
-			<div class="meta">
-				<span class="muted">{meta || ' '}</span>
-				<a class="action" href={links.newTasting({ place_id: o.place?.id, date: o.date })} title="Add a wine to this occasion">+ Wine</a>
-			</div>
 				<ul>
 					{#each o.wines as w (w.id)}
 						<li>
@@ -82,14 +79,15 @@
 									<a href={links.wine(w.wine_id)}>
 										<b>{w.producer}</b>{w.cuvee ? ` – ${w.cuvee}` : ''}
 									</a>
-									{#if w.appellation}<span class="muted">({w.appellation})</span>{/if}
-									<span class="vintage num">[{w.vintage}]</span><CriticPills scores={w.scores} />{#if w.rating}<span class="mine num" title="Your score">{w.rating}</span>{/if}
+									<span class="vintage num">{w.vintage}</span><CriticPills scores={w.scores} />{#if w.rating}<span class="mine num" title="Your score">{w.rating}</span>{/if}
 								</span>
 							</div>
-							<!-- the note (or its absence) opens the tasting -->
-							<a class="note" class:empty={!w.notes} href={links.tasting(w.id)} title="Open the tasting">
-								{#if w.notes}{w.notes}{:else}<Icon name="glass" size={11} />No note{/if}
-							</a>
+							<!-- under the wine: its appellation, and the note (or the offer to write one), which opens the tasting -->
+							<div class="under">
+								{#if w.appellation}<span class="muted">{w.appellation}</span>{/if}
+								{#if !w.notes}<a class="add-note" href={links.tasting(w.id)} title="Open the tasting">Add a note</a>{/if}
+							</div>
+							{#if w.notes}<a class="note" href={links.tasting(w.id)} title="Open the tasting">{w.notes}</a>{/if}
 						</li>
 					{/each}
 				</ul>
@@ -99,6 +97,7 @@
 {/if}
 
 <style>
+	/* An occasion: a plain card, its place and day on top, then its wines; no band, nothing boxed inside */
 	.occ {
 		border: 1px solid var(--border);
 		border-radius: var(--radius);
@@ -108,19 +107,17 @@
 	.palette {
 		display: flex;
 		gap: 1px;
-		height: 4px;
+		height: 3px;
 	}
 	.palette span {
 		flex: 1;
 	}
 	header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 10px;
-		padding: 9px 14px;
-		background: var(--surface-2);
-		border-bottom: 1px solid var(--border);
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: baseline;
+		gap: 1px 10px;
+		padding: 12px 16px 0;
 	}
 	.where {
 		display: flex;
@@ -129,14 +126,15 @@
 		min-width: 0;
 	}
 	.name {
+		font-family: var(--heading-font);
 		font-weight: 650;
-		font-size: 15px;
+		font-size: 16px;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 	a.name {
-		color: var(--link);
+		color: var(--text);
 		text-decoration: var(--link-decoration, none);
 	}
 	a.name:hover {
@@ -159,11 +157,15 @@
 		font-size: 12px;
 		white-space: nowrap;
 	}
+	.meta {
+		font-size: 12px;
+		min-height: 1em;
+	}
 	.body {
 		display: flex;
 		flex-wrap: wrap-reverse;
 		gap: 14px;
-		padding: 10px 14px 12px;
+		padding: 10px 16px 14px;
 	}
 	.content {
 		flex: 1 1 300px;
@@ -176,16 +178,11 @@
 		object-fit: cover;
 		border-radius: 6px;
 	}
-	.meta {
-		display: flex;
-		justify-content: space-between;
-		gap: 10px;
-		font-size: 12px;
-		margin-bottom: 6px;
-	}
 	.action {
 		color: var(--muted);
+		font-size: 12px;
 		white-space: nowrap;
+		justify-self: end;
 	}
 	.action:hover {
 		color: var(--accent);
@@ -196,8 +193,11 @@
 		margin: 0;
 	}
 	li {
-		padding: 3px 0;
+		padding: 5px 0;
 		font-size: 13px;
+	}
+	li + li {
+		border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
 	}
 	.line {
 		display: flex;
@@ -215,7 +215,23 @@
 	}
 	.vintage {
 		color: var(--muted);
+		margin-left: 2px;
+	}
+	/* under the wine's name, in line with it (past the bottle end) */
+	.under {
+		display: flex;
+		justify-content: space-between;
+		gap: 10px;
+		margin-left: 19px;
 		font-size: 12px;
+	}
+	.add-note {
+		margin-left: auto;
+		color: var(--muted);
+		white-space: nowrap;
+	}
+	.add-note:hover {
+		color: var(--accent);
 	}
 	/* the note opens the tasting: three lines at most here, the whole on its page */
 	.note {
@@ -224,34 +240,25 @@
 		-webkit-line-clamp: 3;
 		line-clamp: 3;
 		overflow: hidden;
-		margin: 2px 0 4px 18px;
-		padding-left: 10px;
-		border-left: 2px solid var(--border);
-		color: var(--muted);
+		margin: 3px 0 2px 19px;
+		color: var(--text);
 		font-style: italic;
 		white-space: pre-line;
 		text-decoration: none;
 	}
-	.note.empty {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		font-style: normal;
-		font-size: 11px;
-		opacity: 0.7;
-	}
 	.note:hover {
 		color: var(--accent);
-		border-left-color: var(--accent);
-		opacity: 1;
 	}
 	/* Restaurant visits: a tinted one-line card, so they read apart from tastings */
 	.visit {
 		border-color: color-mix(in srgb, var(--gold) 45%, var(--border));
 	}
 	.visit header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 10px;
 		background: color-mix(in srgb, var(--gold) 14%, var(--surface));
-		border-bottom: none;
 		padding: 7px 14px;
 	}
 	.visit .where {

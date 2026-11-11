@@ -1,5 +1,5 @@
 :root {
-	--accent: var(--accent-light, #c27ba0);
+	--accent: var(--accent-light, #8e2443);
 	--accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
 	/* Resting links in the content; a palette can mute them (--link-mix) so the full accent marks actions,
 	   selection and hovers */
@@ -22,7 +22,7 @@
 
 /* data-theme is always resolved to light or dark (see theme.svelte.ts / app.html) */
 :root[data-theme='dark'] {
-	--accent: var(--accent-dark, #d690b5);
+	--accent: var(--accent-dark, #d4637f);
 	--accent-soft: color-mix(in srgb, var(--accent) 20%, transparent);
 	--link: color-mix(in srgb, var(--accent) var(--link-mix, 100%), var(--text));
 	--bg: color-mix(in srgb, var(--accent) 5%, #141216);
@@ -83,6 +83,16 @@
 
 :root[data-font='serif'] {
 	--heading-font: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+}
+
+/* The phone's bar at the bottom (+layout.svelte), when it's there: its height, for what sits above it */
+:root {
+	--tab-h: 0px;
+}
+@media (max-width: 760px) {
+	:root:has(.tabbar) {
+		--tab-h: calc(56px + env(safe-area-inset-bottom, 0px));
+	}
 }
 
 * {
@@ -355,7 +365,7 @@ html.map-full main .card {
 		position: fixed;
 		left: 0;
 		right: 0;
-		bottom: 0;
+		bottom: var(--tab-h);
 		height: 45dvh;
 		width: auto;
 		overflow-y: auto;

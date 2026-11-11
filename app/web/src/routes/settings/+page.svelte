@@ -620,7 +620,7 @@
 	.bar {
 		position: fixed;
 		left: 50%;
-		bottom: 16px;
+		bottom: calc(16px + var(--tab-h));
 		transform: translate(-50%, 140%);
 		display: flex;
 		align-items: center;

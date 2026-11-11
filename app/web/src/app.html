@@ -21,8 +21,8 @@
 				var r = document.documentElement;
 				var dark = t.mode === 'dark' || (t.mode !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
 				r.dataset.theme = dark ? 'dark' : 'light';
-				r.dataset.font = t.font || 'sans';
-				if (t.palette) r.dataset.palette = t.palette;
+				r.dataset.font = t.font || 'serif';
+				r.dataset.palette = t.palette || 'bordeaux';
 				if (t.light) r.style.setProperty('--accent-light', t.light);
 				if (t.dark) r.style.setProperty('--accent-dark', t.dark);
 				if (t.link) r.style.setProperty('--link-mix', t.link);
