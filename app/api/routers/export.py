@@ -7,6 +7,7 @@ rebuilt from it.
 """
 import csv
 import io
+import os
 import zipfile
 from datetime import date, datetime
 from decimal import Decimal
@@ -78,3 +79,27 @@ def export_zip(session: Session = Depends(get_session)):
             z.writestr(f"{name}.csv", out.getvalue())
     return Response(buf.getvalue(), media_type="application/zip",
                     headers={"Content-Disposition": f'attachment; filename="{_name("zip")}"'})
+
+
+@router.get("/api/export/photos.zip")
+def export_photos():
+    """The tasting photos as they were added, in one zip (written to a temporary file, not held in memory: they can
+    be gigabytes). 404 when there are none."""
+    import tempfile
+
+    from fastapi import HTTPException
+    from fastapi.responses import FileResponse
+    from starlette.background import BackgroundTask
+
+    import paths
+    from tasks.backup import _photos
+    names = _photos(paths.PHOTOS_DIR)
+    if not names:
+        raise HTTPException(404, "No photos yet")
+    fd, tmp = tempfile.mkstemp(suffix=".zip", prefix="winelib_photos_")
+    os.close(fd)
+    with zipfile.ZipFile(tmp, "w", zipfile.ZIP_STORED) as z:
+        for n in names:
+            z.write(os.path.join(paths.PHOTOS_DIR, n), arcname=n)
+    return FileResponse(tmp, media_type="application/zip", filename=f"winelib_photos_{datetime.now():%Y-%m-%d}.zip",
+                        background=BackgroundTask(os.remove, tmp))

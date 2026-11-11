@@ -55,4 +55,4 @@ vintage, any of the producer's wines. The bottles you own show apart. Add entrie
 A bottle's value is its market price when it has one, else what you paid. Market prices come by the wine's **LWIN**
 (the wine trade's code): Bordeaux Index and WineLabs quote them, with your own keys (Settings › Integrations).
 Settings › Maintenance › **LWIN codes** finds the LWIN of wines without one (and gives it to their other vintages);
-**Market prices** refreshes them (nightly as well).
+**Market prices** refreshes them.

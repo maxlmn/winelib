@@ -23,7 +23,7 @@ export default defineConfig({
 			components: { Footer: './src/components/Footer.astro' },
 			lastUpdated: false,
 			sidebar: [
-				{ label: 'Start', items: ['install', 'guide/first-steps'] },
+				{ label: 'Start', items: ['install', 'guide/first-steps', 'upkeep'] },
 				{
 					label: 'Guides',
 					items: ['guide/cellar', 'guide/tastings', 'guide/maps', 'guide/drawing', 'guide/grapes', 'guide/imports']
