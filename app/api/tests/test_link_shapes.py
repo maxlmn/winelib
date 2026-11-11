@@ -3,7 +3,7 @@ filled from shape_sources.json's link rules and the store."""
 import os
 
 import pytest
-from sqlalchemy import create_engine, inspect, text
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 

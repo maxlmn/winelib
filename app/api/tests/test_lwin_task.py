@@ -1,6 +1,5 @@
 """Settings › Maintenance › LWIN codes: sure matches saved, doubtful ones only listed."""
 import json
-import time
 
 import pytest
 

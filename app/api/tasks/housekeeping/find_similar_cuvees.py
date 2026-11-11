@@ -13,7 +13,7 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 import paths
-from models import Wine, Producer
+from models import Wine
 
 def normalize_cuvee(name):
     """

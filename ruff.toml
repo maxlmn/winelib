@@ -1,0 +1,8 @@
+# The Python code's lint (CI: .github/workflows/ci.yml): what's an error, not a style. From the repository root:
+#   pip install ruff && ruff check
+line-length = 120
+extend-exclude = ["app/web", "site", "data"]
+
+[lint]
+# Pyflakes (unused imports and names, undefined names, ...) and syntax errors
+select = ["F", "E9"]

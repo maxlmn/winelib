@@ -1,5 +1,4 @@
 """Detail pages: producers, wines, bottles, places, appellations, vineyards and their map shapes."""
-import os
 from datetime import date
 
 import pytest

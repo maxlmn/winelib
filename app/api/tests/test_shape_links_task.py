@@ -1,5 +1,4 @@
 """Settings › Maintenance › Shape links: app/api/shape_links.py, preview then save."""
-import time
 
 from db import Appellation, Region, Vineyard
 
