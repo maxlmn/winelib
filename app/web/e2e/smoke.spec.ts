@@ -64,11 +64,11 @@ test('a wine without an outline keeps its page as it is', async ({ page }) => {
 	expect(await page.evaluate(() => document.documentElement.classList.contains('map-full'))).toBe(false);
 });
 
-test("a tasting without a note opens from its \"No note\"; the page says it's a tasting", async ({ page }) => {
+test("a tasting without a note opens from its \"Add a note\"; the page says it's a tasting", async ({ page }) => {
 	await page.goto(`/wines/${ids().wine}`);
 	await page.getByRole('tab', { name: /History/ }).click();
-	const note = page.locator('a.note.empty').first();
-	await expect(note).toContainText('No note');
+	const note = page.locator('a.add-note').first();
+	await expect(note).toContainText('Add a note');
 	await note.click();
 	await expect(page).toHaveURL(new RegExp(`/tastings/${ids().tasting}$`));
 	await expect(page.locator('.kind').first()).toHaveText(/Tasting/i);

@@ -296,6 +296,13 @@
 			flex: 1;
 			margin: 0;
 		}
+		/* the bar at the bottom has Search: the top one keeps the brand, the theme and the menu */
+		:global(:root:has(.tabbar)) .search-btn {
+			display: none;
+		}
+		:global(:root:has(.tabbar)) .brand {
+			margin-right: auto;
+		}
 		.menu-btn {
 			display: block;
 			order: 1;

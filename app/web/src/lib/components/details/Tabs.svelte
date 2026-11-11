@@ -21,16 +21,21 @@
 		tools?: Snippet;
 		/** the bar alone, no card around the content (a page of cards: Settings) */
 		plain?: boolean;
+		/** the tabs whose content is cards of its own: shown on the page itself, not as boxes in the panel's box
+		 * (none by default: a cellar's and a history's are plain rows) */
+		cards?: string[];
 		children: Snippet<[string]>;
 	}
 
-	let { tabs, initial, tools, plain = false, children }: Props = $props();
+	let { tabs, initial, tools, plain = false, cards = [], children }: Props = $props();
 
 	// The open tab lives in the URL (?tab=), so reloads and links keep it
 	const active = $derived.by(() => {
 		const asked = page.url.searchParams.get('tab');
 		return tabs.find((t) => t.id === asked)?.id ?? initial ?? tabs[0]?.id;
 	});
+
+	const open_ = $derived(!plain && cards.includes(active ?? ''));
 
 	function open(id: string) {
 		const p = new URLSearchParams(page.url.searchParams.toString());
@@ -39,7 +44,7 @@
 	}
 </script>
 
-<section class="panel" class:card={!plain} class:plain>
+<section class="panel" class:card={!plain && !open_} class:plain class:open={open_}>
 	<div class="tabs" role="tablist">
 		{#each tabs as t (t.id)}
 			<button role="tab" aria-selected={active === t.id} class:on={active === t.id} onclick={() => open(t.id)}>
@@ -100,5 +105,19 @@
 	}
 	.plain .body {
 		padding: 0;
+	}
+	.open .tabs {
+		padding: 0;
+	}
+	.open .body {
+		padding: 14px 0 0;
+	}
+	/* over a page's full-size map the bar needs a ground of its own */
+	:global(html.map-full) .open .tabs {
+		padding: 4px 10px 0;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		box-shadow: var(--shadow);
 	}
 </style>

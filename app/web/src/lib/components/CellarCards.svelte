@@ -141,6 +141,7 @@
 		border-radius: var(--radius);
 		margin-bottom: 10px;
 		overflow: hidden;
+		background: var(--surface);
 	}
 	summary {
 		list-style: none;
