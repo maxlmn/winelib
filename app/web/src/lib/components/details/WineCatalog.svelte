@@ -182,10 +182,12 @@
 	}
 	/* the labels' column, at the right: two side by side, more slid in (a carousel) */
 	li.with-labels {
-		grid-template-columns: minmax(140px, 1fr) minmax(0, 2fr) 134px;
+		grid-template-columns: minmax(140px, 1fr) minmax(0, 2fr) 160px;
 	}
 	.labels {
 		display: flex;
+		align-self: start;
+		align-items: flex-start;
 		justify-content: flex-end;
 	}
 	.sub {
@@ -304,7 +306,7 @@
 			grid-template-columns: 1fr;
 		}
 		li.with-labels {
-			grid-template-columns: minmax(0, 1fr) 134px;
+			grid-template-columns: minmax(0, 1fr) 160px;
 		}
 		li.with-labels .name {
 			grid-column: 1 / -1;

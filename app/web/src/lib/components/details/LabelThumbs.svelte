@@ -105,11 +105,14 @@
 	.thumbs {
 		position: relative;
 		display: inline-flex;
+		align-self: flex-start;
 		flex: none;
 		max-width: 100%;
 	}
+	/* the thumbnails their own height, whatever the line's (a cuvée's vintages opened beside them) */
 	.track {
 		display: inline-flex;
+		align-items: flex-start;
 		flex-wrap: nowrap;
 		gap: 4px;
 	}
@@ -180,9 +183,9 @@
 	}
 	.thumb img {
 		display: block;
-		height: 34px;
+		height: 48px;
 		width: auto;
-		max-width: 64px;
+		max-width: 90px;
 		object-fit: cover;
 	}
 	/* the label larger, under its thumbnail, over the list: its right edge on the thumbnail's (the thumbnails sit at
