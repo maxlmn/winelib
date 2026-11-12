@@ -344,12 +344,11 @@
 
 	<section class="card">
 		<h2>Labels</h2>
-		<p class="muted">A wine's label at the top of its page: one you upload (a photo or a scan), or one drawn in its region's and its colour.</p>
+		<p class="muted">A wine's label at the top of its page and beside it in the lists: the one you upload (a photo or a scan; ⋯ › Upload its label).</p>
 		<label class="field">
 			<span>Show</span>
 			<select bind:value={draft.wine_labels}>
-				<option value="drawn">Uploaded labels, else a drawn one</option>
-				<option value="uploaded">Uploaded labels only</option>
+				<option value="uploaded">Uploaded labels</option>
 				<option value="off">No labels</option>
 			</select>
 		</label>

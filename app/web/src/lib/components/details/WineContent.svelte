@@ -206,8 +206,7 @@
 	<div class="beside-label">
 		<!-- its label (uploaded, else drawn) -->
 		<WineLabel bind:this={label} wineId={wine.id} producer={wine.producer.name} cuvee={wine.cuvee}
-			place={wine.appellation?.name ?? wine.region} vintage={wine.vintage} color={wine.color} shape={wine.label_shape}
-			uploaded={wine.label} region={wine.region_color} />
+			place={wine.appellation?.name ?? wine.region} vintage={wine.vintage} uploaded={wine.label} />
 		<!-- the lists naming this vintage, another one, or the cuvée (its producer's: the producer's page) -->
 		<div class="lists"><ListsPanel inline wineId={wine.id} bind:adding={addingToList} /></div>
 	</div>

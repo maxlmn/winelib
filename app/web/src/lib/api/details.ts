@@ -157,7 +157,6 @@ export interface WineDetail extends RegionInfo {
 	varietal: string | null;
 	blend: string | null;
 	/** the outline on its drawn label (WineLabel): its appellation's, else its region's, an SVG path in 100x100 */
-	label_shape: { d: string; of: 'appellation' | 'region' } | null;
 	/** its label, uploaded: this vintage's, else (from_vintage) the nearest vintage's of the same cuvée */
 	label: { url: string; from_vintage: string | null } | null;
 	/** its grapes in order, the main one first, with their share when known */
