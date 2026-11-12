@@ -148,3 +148,15 @@ def test_tasks_say_what_they_need(client, monkeypatch):
     monkeypatch.setattr(map_pack, "MAP_PACK_URL", "https://example.org/pack.zip")
     tasks = {t["id"]: t["unavailable"] for t in client.get("/api/maintenance").json()["tasks"]}
     assert tasks["prices"] is None and tasks["map_pack"] is None
+
+
+def test_merging_duplicates_keeps_the_label(client, tmp_path, monkeypatch):
+    import photos
+    monkeypatch.setattr(photos, "PHOTOS_DIR", str(tmp_path / "images"))
+    monkeypatch.setattr(photos, "THUMBS_DIR", str(tmp_path / "thumbs"))
+    jpeg = b"\xff\xd8\xff\xe0" + b"0" * 64
+    assert client.put("/api/wines/2/label", content=jpeg, headers={"content-type": "image/jpeg"}).status_code == 200
+    client.post("/api/maintenance/duplicates", json={"commit": True})
+    assert wait(client)["status"] == "done"
+    label = client.get("/api/wines/1").json()["label"]  # the copy kept has the deleted copy's label
+    assert label and label["from_vintage"] is None and "wine-label-1." in label["url"]

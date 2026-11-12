@@ -149,6 +149,31 @@ def _catalog_labels(vintages, labels):
     return list(out.values())
 
 
+def _labels_by_wine(wines):
+    """{wine id: {url, from_vintage}} of the wines that have an uploaded label, their own else the nearest vintage's
+    of the same cuvée (as on the wine's page): the producer's cellar and history lines show it."""
+    labels = photos.label_index()
+    if not labels:
+        return {}
+    families = {}
+    for w in wines:
+        families.setdefault((w.cuvee or "", w.appellation_id, w.varietal_id), []).append(w)
+    out = {}
+    for family in families.values():
+        with_label = [x for x in family if x.id in labels]
+        if not with_label:
+            continue
+        for w in family:
+            year = _year(w.vintage)
+            def gap(x):
+                y = _year(x.vintage)
+                return (x.id != w.id, abs(y - year) if y is not None and year is not None else 9999)
+            source = min(with_label, key=gap)
+            out[w.id] = {"url": photos.url_for(labels[source.id]),
+                         "from_vintage": None if source.id == w.id else vintage_label(source.vintage, source.disgorgement_date)}
+    return out
+
+
 def _catalog_query(session):
     return session.query(Wine).options(
         joinedload(Wine.producer), joinedload(Wine.appellation), joinedload(Wine.varietal))
@@ -193,6 +218,7 @@ def producer_detail(producer_id: int, session: Session = Depends(get_session)):
         "aliases": p.aliases,
         "stats": {**_cellar_totals(lines), "tastings": len(history), "wines": len(wines)},
         "wines": wine_catalog(session, wines),
+        "labels": _labels_by_wine(wines),
         "appellations": appellations,
         "vineyards": vineyards,
         "cellar": lines,

@@ -5,6 +5,7 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import { appSettings } from '#lib/settings.svelte.ts';
 	import LabelThumbs from './LabelThumbs.svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	interface Props {
 		wines: CatalogEntry[];
@@ -21,6 +22,23 @@
 	const shown = $derived(
 		showAll ? wines : wines.map((w) => ({ ...w, vintages: w.vintages.filter(seen) })).filter((w) => w.vintages.length)
 	);
+	// a column of labels at the right when any line has one (empty on the others: the columns line up)
+	// a cuvée's vintages folded into one line ("13 vintages · 2008–2017 · 7 bottles · 12 tasted"), a click opens them
+	const keyOf = (w: CatalogEntry) => `${w.producer_id}|${w.cuvee}|${w.appellation?.id}|${w.varietal}`;
+	const opened = new SvelteSet<string>();
+	const toggle = (key: string) => (opened.has(key) ? opened.delete(key) : opened.add(key));
+	function summary(vs: CatalogEntry['vintages']) {
+		const years = vs.map((v) => v.vintage).filter((y) => /^\d{4}/.test(y)).map((y) => y.slice(0, 4)).sort();
+		const bottles = vs.reduce((n, v) => n + v.bottles, 0);
+		const tasted = vs.filter((v) => v.tastings > 0).length;
+		return {
+			count: `${vs.length} ${vs.length === 1 ? 'vintage' : 'vintages'}`,
+			range: years.length > 1 && years[0] !== years.at(-1) ? `${years[0]}–${years.at(-1)}` : (years[0] ?? vs[0]?.vintage ?? ''),
+			bottles,
+			tasted
+		};
+	}
+	const withLabels = $derived(appSettings.wine_labels !== 'off' && shown.some((w) => w.labels?.length));
 </script>
 
 {#if !wines.length}
@@ -41,11 +59,13 @@
 	</p>
 	{#if !shown.length}<p class="muted">Nothing owned or tasted: tick the box above to see the {unseen} known from reviews.</p>{/if}
 	<ul>
-		{#each shown as w (`${w.producer_id}|${w.cuvee}|${w.appellation?.id}|${w.varietal}`)}
+		{#each shown as w (keyOf(w))}
+			{@const open = opened.has(keyOf(w))}
+			{@const sum = summary(w.vintages)}
 			<!-- The line under the headline: the appellation and grape it doesn't already show -->
 			{@const appInSub = !!(w.cuvee && w.appellation)}
 			{@const grapeInSub = !!(w.varietal && (w.cuvee || w.appellation))}
-			<li>
+			<li class:with-labels={withLabels}>
 				<div class="name">
 					<span class="dot" style:background={typeColor(w.color)}></span>
 					<div>
@@ -67,11 +87,19 @@
 							</div>
 						{/if}
 					</div>
-					<!-- its uploaded labels, small, side by side (Settings > Labels: none, none here either) -->
-					{#if w.labels?.length && appSettings.wine_labels !== 'off'}
-						<span class="labels"><LabelThumbs labels={w.labels} name={w.cuvee || w.appellation?.name || w.producer} /></span>
-					{/if}
 				</div>
+				<div class="vintages-cell">
+					<button type="button" class="fold" aria-expanded={open} onclick={() => toggle(keyOf(w))}>
+						<!-- two lines, beside the name's two: which vintages, then what's in the cellar and tasted -->
+						<span class="what">{sum.count}{#if sum.range}<span class="muted num">{` · ${sum.range}`}</span>{/if}</span>
+						<span class="chev" aria-hidden="true">{open ? '▴' : '▾'}</span>
+						<span class="had">
+							{#if sum.bottles}<span class="n num">{sum.bottles} {sum.bottles === 1 ? 'bottle' : 'bottles'}</span>{/if}
+							{#if sum.bottles && sum.tasted}<span class="muted"> · </span>{/if}
+							{#if sum.tasted}<span class="tick">{sum.tasted} tasted</span>{/if}
+						</span>
+					</button>
+					{#if open}
 				<div class="vintages">
 					{#each w.vintages as v (v.id)}
 						<a
@@ -81,14 +109,25 @@
 							href={links.wine(v.id)}
 							title={[v.bottles && `${v.bottles} in cellar`, v.tastings && `tasted ${v.tastings}×`, v.scores, v.lists?.length && `on ${v.lists.join(', ')}`].filter(Boolean).join(' · ') || 'Not in cellar, not tasted'}
 						>
-							{v.vintage}
-							{#if v.bottles}<span class="n">{v.bottles}</span>{/if}
-							{#if v.tastings}<span class="tick">✓</span>{/if}
-							{#if v.score}<span class="score">{v.score}</span>{/if}
-							{#if v.lists?.length}<span class="listed"><Icon name="bookmark" size={11} /></span>{/if}
+							<!-- each mark in its slot, empty or not: they line up from pill to pill -->
+							<span>{v.vintage}</span>
+							<span class="n">{v.bottles || ''}</span>
+							<span class="tick">{v.tastings ? '✓' : ''}</span>
+							<span class="marks">
+								{#if v.score}<span class="score">{v.score}</span>{/if}
+								{#if v.lists?.length}<span class="listed"><Icon name="bookmark" size={11} /></span>{/if}
+							</span>
 						</a>
 					{/each}
 				</div>
+					{/if}
+				</div>
+				<!-- its uploaded labels, small, side by side in a strip slid left and right (Settings > Labels: none, none here either) -->
+				{#if withLabels}
+					<div class="labels">
+						{#if w.labels?.length}<LabelThumbs labels={w.labels} name={w.cuvee || w.appellation?.name || w.producer} carousel />{/if}
+					</div>
+				{/if}
 			</li>
 		{/each}
 	</ul>
@@ -141,11 +180,13 @@
 	.producer {
 		margin-right: 4px;
 	}
-	/* the labels at the end of the name's column */
+	/* the labels' column, at the right: two side by side, more slid in (a carousel) */
+	li.with-labels {
+		grid-template-columns: minmax(140px, 1fr) minmax(0, 2fr) 134px;
+	}
 	.labels {
-		margin-left: auto;
-		align-self: center;
-		padding-left: 8px;
+		display: flex;
+		justify-content: flex-end;
 	}
 	.sub {
 		font-size: 12px;
@@ -159,6 +200,56 @@
 		flex-wrap: wrap;
 		gap: 5px;
 		align-content: flex-start;
+	}
+	/* the vintages folded: one line saying how many, which years, bottles and tastings; a click opens them */
+	.fold {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: baseline;
+		gap: 0 10px;
+		width: 100%;
+		padding: 3px 0;
+		border: none;
+		background: none;
+		font: inherit;
+		font-size: 13px;
+		color: var(--text);
+		text-align: left;
+		cursor: pointer;
+	}
+	.fold:hover {
+		color: var(--accent);
+	}
+	.had {
+		grid-column: 1 / -1;
+		font-size: 12px;
+	}
+	.chev {
+		color: var(--muted);
+	}
+	.vintages-cell .vintages {
+		margin-top: 6px;
+	}
+	/* the vintages in one column, newest first: pills of one width, the years and their marks in line */
+	.vintages {
+		display: grid;
+		grid-template-columns: 132px;
+		gap: 4px;
+	}
+	/* a pill: the year, then its bottles, its tick and its score (and list mark), each in its slot */
+	.vintages .chip {
+		display: grid;
+		grid-template-columns: 1fr 14px 10px 40px;
+		gap: 3px;
+	}
+	.vintages .n {
+		text-align: right;
+	}
+	.marks {
+		display: inline-flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 2px;
 	}
 	.chip {
 		display: inline-flex;
@@ -207,9 +298,16 @@
 	.listed :global(.icon) {
 		fill: currentColor;
 	}
+	/* a phone: the name, then the vintages and the labels' column */
 	@media (max-width: 640px) {
 		li {
 			grid-template-columns: 1fr;
+		}
+		li.with-labels {
+			grid-template-columns: minmax(0, 1fr) 134px;
+		}
+		li.with-labels .name {
+			grid-column: 1 / -1;
 		}
 	}
 </style>

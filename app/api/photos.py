@@ -186,6 +186,25 @@ def save_label(wine_id, data, content_type):
     return name
 
 
+def move_label(from_id, to_id):
+    """A merged wine's label goes to the wine it was merged into, when that one has none; else it's kept aside
+    (wine-label-merged-<id>, shown nowhere) rather than lost. Whether it moved."""
+    old = _label_files(from_id)
+    if not old:
+        return False
+    moved = False
+    for name in old:
+        ext = os.path.splitext(name)[1]
+        if not moved and not _label_files(to_id):
+            target, moved = f"{LABEL_PREFIX}{int(to_id)}{ext}", True
+        else:
+            target = f"{LABEL_PREFIX}merged-{int(from_id)}{ext}"
+        os.replace(os.path.join(PHOTOS_DIR, name), os.path.join(PHOTOS_DIR, target))
+    _drop_label_thumbs(from_id)
+    _drop_label_thumbs(to_id)
+    return moved
+
+
 def delete_label(wine_id):
     """Removes the wine's label; whether there was one."""
     old = _label_files(wine_id)

@@ -8,6 +8,8 @@
 	import { regionLabel } from '#lib/regions.svelte.ts';
 	import { links } from '#lib/links.ts';
 	import { photoSrc } from '#lib/api/photos.ts';
+	import { appSettings } from '#lib/settings.svelte.ts';
+	import LabelThumbs from './LabelThumbs.svelte';
 	import { fmtDate, stars } from './wine.ts';
 
 	interface Props {
@@ -17,9 +19,11 @@
 		place?: TastingPlace | null;
 		visits?: Visit[];
 		empty?: string;
+		/** the wines' labels (a producer's page): each wine's, small, opening larger */
+		labels?: Record<number, { url: string; from_vintage: string | null }>;
 	}
 
-	let { tastings, regionColors, place = null, visits = [], empty = 'No tastings recorded yet.' }: Props = $props();
+	let { tastings, regionColors, place = null, visits = [], empty = 'No tastings recorded yet.', labels = {} }: Props = $props();
 
 	const PAGE = 40;
 	let limit = $state(PAGE);
@@ -105,6 +109,10 @@
 								</div>
 								{#if t.notes}<a class="note" href={links.tasting(t.id)} title="Open the tasting">{t.notes}</a>{/if}
 							</div>
+							{#if labels[t.wine_id] && appSettings.wine_labels !== 'off'}
+								{@const l = labels[t.wine_id]}
+								<span class="thumb"><LabelThumbs labels={[{ url: l.url, vintages: [l.from_vintage ?? t.vintage] }]} name={t.cuvee || t.producer} /></span>
+							{/if}
 						</div>
 					{/each}
 				</div>
@@ -202,6 +210,9 @@
 		display: flex;
 		flex: none;
 		margin-top: 3px;
+	}
+	.thumb {
+		flex: none;
 	}
 	.line {
 		flex: 1;

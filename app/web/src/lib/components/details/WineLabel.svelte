@@ -129,7 +129,7 @@
 {/if}
 
 <style>
-	/* the header column's width, the label centred in it: its own size on a computer, the card's width on a phone */
+	/* the header column's width, the label filling it */
 	.wine-label {
 		align-self: stretch;
 		min-width: 0;
@@ -148,8 +148,7 @@
 	.small {
 		font-size: 12px;
 	}
-	/* an uploaded label: within the drawn one's box on a computer; on a phone up to the card's width (never enlarged
-	   past its own size) */
+	/* an uploaded label: up to the card's width (never enlarged past its own size), centred, not too tall */
 	.photo {
 		display: block;
 		width: fit-content;
@@ -159,15 +158,13 @@
 	}
 	.photo img {
 		display: block;
-		max-width: min(300px, 100%);
-		max-height: 220px;
+		max-width: 100%;
+		max-height: 420px;
 		border-radius: 3px;
 	}
 	/* a drawn label: wider than tall, as on a bottle */
 	.drawn.label {
-		width: 300px;
-		max-width: 100%;
-		margin: 0 auto;
+		width: 100%;
 		container-type: inline-size;
 		aspect-ratio: 3 / 2;
 		box-sizing: border-box;
@@ -253,15 +250,5 @@
 	.year {
 		margin-top: 1.3cqi;
 		font-size: 5.3cqi;
-	}
-	/* a phone: the card's width, the drawn label's type and outline growing with it */
-	@media (max-width: 560px) {
-		.drawn.label {
-			width: 100%;
-		}
-		.photo img {
-			max-width: 100%;
-			max-height: 420px;
-		}
 	}
 </style>

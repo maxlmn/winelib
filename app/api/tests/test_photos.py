@@ -241,3 +241,18 @@ def test_a_producers_wine_list_shows_each_different_label_once(client, photo_dir
         client.put(f"/api/wines/{ids[vintage]}/label", content=data, headers={"content-type": "image/jpeg"})
     labels = next(f for f in client.get(f"/api/producers/{producer}").json()["wines"] if f["cuvee"] == "Le Bourg")["labels"]
     assert [l["vintages"] for l in labels] == [["2018"], ["2017", "2016"]]  # the same image for 2016 and 2017: once
+
+
+def test_a_producers_cellar_and_history_get_each_wines_label(client, photo_dir):
+    from db import Wine as W
+    wid = wine_id(client)
+    with client.app.dependency_overrides[__import__("db").get_session]().__next__() as s:
+        w = s.get(W, wid)
+        s.add(W(producer_id=w.producer_id, cuvee=w.cuvee, vintage="2019", region_id=w.region_id))
+        s.commit()
+        ids = {x.vintage: x.id for x in s.query(W).filter(W.producer_id == w.producer_id)}
+        producer = w.producer_id
+    client.put(f"/api/wines/{ids['2016']}/label", content=JPEG, headers={"content-type": "image/jpeg"})
+    labels = client.get(f"/api/producers/{producer}").json()["labels"]
+    assert labels[str(ids["2016"])]["from_vintage"] is None
+    assert labels[str(ids["2019"])]["from_vintage"] == "2016"  # no label of its own: the nearest vintage's
