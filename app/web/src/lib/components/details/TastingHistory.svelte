@@ -56,6 +56,8 @@
 		return [...byKey.values()].sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
 	});
 
+	// a column of labels at the right of the wines when any has one (empty on the others: the notes line up)
+	const withLabels = $derived(appSettings.wine_labels !== 'off' && tastings.some((t) => labels[t.wine_id]));
 	const regionColor = (r: string | null) => (r && regionColors[r]) || FALLBACK_REGION;
 </script>
 
@@ -109,9 +111,13 @@
 								</div>
 								{#if t.notes}<a class="note" href={links.tasting(t.id)} title="Open the tasting">{t.notes}</a>{/if}
 							</div>
-							{#if labels[t.wine_id] && appSettings.wine_labels !== 'off'}
-								{@const l = labels[t.wine_id]}
-								<span class="thumb"><LabelThumbs labels={[{ url: l.url, vintages: [l.from_vintage ?? t.vintage] }]} name={t.cuvee || t.producer} /></span>
+							{#if withLabels}
+								<span class="thumb">
+									{#if labels[t.wine_id]}
+										{@const l = labels[t.wine_id]}
+										<LabelThumbs labels={[{ url: l.url, vintages: [l.from_vintage ?? t.vintage] }]} name={t.cuvee || t.producer} />
+									{/if}
+								</span>
 							{/if}
 						</div>
 					{/each}
@@ -211,8 +217,13 @@
 		flex: none;
 		margin-top: 3px;
 	}
+	/* the labels' column: one width, each at its right */
 	.thumb {
+		display: flex;
+		justify-content: flex-end;
+		align-items: flex-start;
 		flex: none;
+		width: 92px;
 	}
 	.line {
 		flex: 1;
