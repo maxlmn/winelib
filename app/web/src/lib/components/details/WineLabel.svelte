@@ -52,7 +52,8 @@
 		}
 	}
 
-	async function remove() {
+	/** The uploaded label removed, once confirmed (the page's ⋯ menu: Remove its label) */
+	export async function remove() {
 		const ok = await ask('The drawn label, or none, is shown in its place.', { title: 'Remove this label?', confirmLabel: 'Remove', danger: true });
 		if (!ok) return;
 		busy = 'Removing…';
@@ -114,14 +115,13 @@
 					</div>
 				</figure>
 			{/if}
-			<div class="tools">
-				{#if uploaded?.from_vintage}<span class="muted">The {uploaded.from_vintage}’s label</span>{/if}
-				<button type="button" class="link" onclick={pick} disabled={!!busy}>
-					{uploaded && !uploaded.from_vintage ? 'Replace' : uploaded ? 'Upload this vintage’s' : 'Upload the real label'}
-				</button>
-				{#if uploaded && !uploaded.from_vintage}<button type="button" class="link" onclick={remove} disabled={!!busy}>Remove</button>{/if}
-				{#if busy}<span class="muted" role="status">{busy}</span>{/if}
-			</div>
+			<!-- uploading, replacing, removing: the page's ⋯ menu (pick, remove) -->
+			{#if uploaded?.from_vintage || busy}
+				<div class="tools">
+					{#if uploaded?.from_vintage}<span class="muted">The {uploaded.from_vintage}’s label</span>{/if}
+					{#if busy}<span class="muted" role="status">{busy}</span>{/if}
+				</div>
+			{/if}
 		</div>
 	{:else if busy}
 		<span class="muted small" role="status">{busy}</span>
@@ -143,17 +143,6 @@
 		gap: 4px 14px;
 		margin-top: 6px;
 		font-size: 12px;
-	}
-	.link {
-		border: 0;
-		background: none;
-		padding: 0;
-		font: inherit;
-		color: var(--muted);
-		cursor: pointer;
-	}
-	.link:hover {
-		color: var(--accent);
 	}
 	.small {
 		font-size: 12px;
