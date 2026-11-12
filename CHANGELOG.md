@@ -10,6 +10,10 @@
 - **Maps always full size**: a page's map always fills the window, its details over it (Settings › Appearance ›
   Maps and the map's ⤢ / Back to the page are gone). A wine whose appellation and vineyard have no outline shows its
   region's, so its page keeps the same layout.
+- **A bottle is a card on its wine's page**: a cellar line clicked opens it above the Cellar card (how many and where,
+  paid and worth, the shelf, taking some out, market prices), ✕ closes it; the old bottle addresses lead there.
+- **Images open in a pop-up**: a label, a photo or a thumbnail clicked shows the image whole over the page (Esc or a
+  click outside closes it), not in a new tab.
 
 ## v0.7.0
 

@@ -1,10 +1,11 @@
 <script lang="ts">
+	/** A bottle of the wine, a card on its page above the Cellar card (a cellar line clicked: /wines/N?bottle=M): how
+	 * many and where, paid and worth, the shelf, taking some out, market prices and what happened to them; ✕ closes it */
 	import { appSettings, integrations } from '#lib/settings.svelte.ts';
 	import { messageOf, request } from '#lib/api/http.ts';
 	import { invalidateAll } from '$app/navigation';
 	import ActionMenu from '#lib/components/ActionMenu.svelte';
 	import Icon from '#lib/components/Icon.svelte';
-	import WineContent from '#lib/components/details/WineContent.svelte';
 	import { fmtDate } from '#lib/components/details/wine.ts';
 	import { links } from '#lib/links.ts';
 	import Change from '#lib/components/Change.svelte';
@@ -12,11 +13,23 @@
 	import BottleShelf from '#lib/components/details/BottleShelf.svelte';
 	import { formatName } from '#lib/wineList.ts';
 	import { amount, pct, money, today } from '#lib/format.ts';
-	import type { OutKind } from '#lib/api/details.ts';
+	import type { BottleDetail, OutKind, WineDetail } from '#lib/api/details.ts';
 
-	let { data } = $props();
-	const b = $derived(data.bottle);
-	const wine = $derived(data.detail);
+	interface Props {
+		b: BottleDetail;
+		wine: WineDetail;
+	}
+
+	let { b, wine }: Props = $props();
+
+	// opened (a cellar line clicked): brought into view
+	let card = $state<HTMLElement>();
+	$effect(() => {
+		void b.id;
+		// once the page is laid out (the map, the label): its top in view, a little of the page above it
+		const t = setTimeout(() => card?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+		return () => clearTimeout(t);
+	});
 	// The title in words: "1 bottle", "3 half bottles", "2 magnums", "4 50 cl bottles"; "2 bottles, finished" once none are left
 	const what = $derived.by(() => {
 		const name = formatName(b.bottle_size).toLowerCase();
@@ -129,148 +142,146 @@
 	}
 </script>
 
-<svelte:head><title>Bottle · {wine.producer.name} {wine.cuvee} {wine.vintage} · WineLib</title></svelte:head>
-
-<!-- the bottle: a band at the foot of its wine's header card, two lines (how many and where; paid and worth), the shelf
-	strip when its storage holds several bins; taking some out, new market prices and what happened to them open under -->
-{#snippet bottle()}
-	<div class="bottle">
-		<div class="line1">
-			<div class="what">
-				{#if b.qty || gone}
-					<span class="ends" aria-label="{b.qty} in the cellar{gone ? `, ${gone} gone` : ''}">
-						{#each { length: b.qty } as _, i (i)}<BottleEnd region={wine.region_color} color={wine.color} format={b.bottle_size} size={14} title="In the cellar" />{/each}
-						{#each { length: gone } as _, i (`g${i}`)}<span class="gone"><BottleEnd region={wine.region_color} color={wine.color} format={b.bottle_size} size={14} title="Gone" /></span>{/each}
-					</span>
-				{/if}
-				<b>{what}</b>
-				{#if b.location && b.location !== 'Consumed'}<!-- Consumed: a bottle recorded only for a tasting, no place -->
-					<span class="sep">·</span>
-					<a class="where" href={links.cellar({ loc: b.location, view: 'shelves' })} title="See it on the shelf map">
-						{b.qty ? 'In' : 'Was in'} {b.location}{b.location_group !== b.location ? ` · ${b.location_group}` : ''}
-					</a>
-				{/if}
-			</div>
-			<!-- as on the wine's header: the one to hand (Drink, while there's one left), the rest in the ⋯ menu -->
-			<div class="acts">
-				<ActionMenu>
-					{#if b.qty}<button class="menu-item" role="menuitem" onclick={startOut} disabled={!!out}><Icon name="bottle" size={15} />Take some out (gifted, sold…)</button>{/if}
-					<a class="menu-item" role="menuitem" href={links.editBottle(b.id)}><Icon name="edit" size={15} />Edit bottle</a>
-				</ActionMenu>
-				{#if b.qty}<a class="btn icon primary" href={links.newTasting({ bottle_id: b.id })} title="Drink it: a tasting" aria-label="Drink it"><Icon name="glass" size={15} /></a>{/if}
-			</div>
+<section class="card bottle" bind:this={card} aria-label="This bottle">
+	<div class="line1">
+		<div class="what">
+			{#if b.qty || gone}
+				<span class="ends" aria-label="{b.qty} in the cellar{gone ? `, ${gone} gone` : ''}">
+					{#each { length: b.qty } as _, i (i)}<BottleEnd region={wine.region_color} color={wine.color} format={b.bottle_size} size={14} title="In the cellar" />{/each}
+					{#each { length: gone } as _, i (`g${i}`)}<span class="gone"><BottleEnd region={wine.region_color} color={wine.color} format={b.bottle_size} size={14} title="Gone" /></span>{/each}
+				</span>
+			{/if}
+			<b>{what}</b>
+			{#if b.location && b.location !== 'Consumed'}<!-- Consumed: a bottle recorded only for a tasting, no place -->
+				<span class="sep">·</span>
+				<a class="where" href={links.cellar({ loc: b.location, view: 'shelves' })} title="See it on the shelf map">
+					{b.qty ? 'In' : 'Was in'} {b.location}{b.location_group !== b.location ? ` · ${b.location_group}` : ''}
+				</a>
+			{/if}
 		</div>
-		<div class="line2">
-			<span><span class="k">Paid</span> <span class="num">{purchase}</span>{#if bought}{' '}<span class="muted">({bought})</span>{/if}</span>
-			<span class="sep">·</span>
-			<span>
-				<span class="k">Market</span>
-				{#if b.last_price}
-					<span class="num" title={[b.last_price_source, b.last_price_date && `as of ${fmtDate(b.last_price_date)}`].filter(Boolean).join(', ')}>{amount(b.last_price, b.currency)}</span>
-					{#if b.change_pct !== null}<span class="change"><Change value={b.change_pct} /></span>{/if}
-				{:else}<span class="muted">–</span>{/if}
-				{#if wine.lwin && priceSources}
-					<button class="fetch" disabled={fetching || saving} onclick={fetchPrice} title="Ask {priceSources}">
-						{fetching ? 'asking…' : b.last_price ? 'refresh' : 'fetch'}
-					</button>
-				{:else if !wine.lwin && priceSources}
-					<a class="fetch" href={links.editWine(wine.id)} title="No LWIN on this wine: add one to fetch a market price">add an LWIN</a>
-				{/if}
-			</span>
+		<!-- as on the wine's header: the one to hand (Drink, while there's one left), the rest in the ⋯ menu -->
+		<div class="acts">
+			<ActionMenu>
+				{#if b.qty}<button class="menu-item" role="menuitem" onclick={startOut} disabled={!!out}><Icon name="bottle" size={15} />Take some out (gifted, sold…)</button>{/if}
+				<a class="menu-item" role="menuitem" href={links.editBottle(b.id)}><Icon name="edit" size={15} />Edit bottle</a>
+			</ActionMenu>
+			{#if b.qty}<a class="btn icon primary" href={links.newTasting({ bottle_id: b.id })} title="Drink it: a tasting" aria-label="Drink it"><Icon name="glass" size={15} /></a>{/if}
+			<a class="btn icon close" href={links.wine(wine.id)} data-sveltekit-noscroll title="Close" aria-label="Close this bottle">✕</a>
 		</div>
-		{#if priceMessage}<p class="msg small">{priceMessage}</p>{/if}
-		{#if b.shelf && b.qty && b.shelf.bins.length > 1}<div class="shelf"><BottleShelf shelf={b.shelf} /></div>{/if}<!-- a place on its own (Away): no shelf to show -->
-		{#if out}
-			<form class="out" onsubmit={(e) => { e.preventDefault(); saveOut(); }}>
-				<div class="seg" role="group" aria-label="What happened">
-					{#each KINDS as k (k.id)}
-						<button type="button" class:on={out.kind === k.id} onclick={() => out && (out.kind = k.id)}>{k.label}</button>
-					{/each}
-				</div>
-				<div class="fields">
-					{#if b.qty > 1}
-						<label><span class="label">How many</span><input type="number" min="1" max={b.qty} bind:value={out.qty} /></label>
-					{/if}
-					<label><span class="label">When</span><input type="date" bind:value={out.date} /></label>
-					{#if out.kind === 'sold'}
-						<label><span class="label">For, a bottle ({b.currency ?? appSettings.currency})</span><input type="number" min="0" step="any" bind:value={out.price} placeholder="Optional" /></label>
-					{/if}
-					<label class="note"><span class="label">Note</span><input bind:value={out.note} placeholder={kindOf(out.kind).note} /></label>
-				</div>
-				<div class="buttons">
-					<button class="btn primary">Take {out.qty > 1 ? `${out.qty} bottles` : 'it'} out</button>
-					<button type="button" class="btn" onclick={() => (out = null)}>Cancel</button>
-					{#if outError}<span class="msg">{outError}</span>{/if}
-				</div>
-			</form>
-		{:else if outError}
-			<p class="msg" role="alert">{outError}</p><!-- an undo that failed -->
-		{/if}
-		{#if proposals}
-			<div class="proposal">
-				<div class="label">New market prices · check before saving</div>
-				<div class="table-wrap">
-					<table>
-						<thead>
-							<tr><th>Bottle</th><th class="r">Now</th><th class="r">New</th><th class="r">Change</th><th>Source</th></tr>
-						</thead>
-						<tbody>
-							{#each proposals as p (p.bottle_id)}
-								<tr class:this={p.this}>
-									<td>
-										{#if p.this}<b>This bottle</b>{:else}<a href={links.bottle(p.bottle_id)}>{p.qty}× {p.bottle_size ?? '75cl'} @ {p.location ?? '?'}</a>{/if}
-										{#if p.this}<span class="muted"> · {p.qty}× {p.bottle_size ?? '75cl'}</span>{/if}
-									</td>
-									<td class="r num">
-										{p.old ? amount(p.old, p.currency) : '–'}
-										{#if p.old_date}<div class="muted small">{fmtDate(p.old_date)}{p.old_source ? ` · ${p.old_source}` : ''}</div>{/if}
-									</td>
-									<td class="r num">{amount(p.new, p.currency)}</td>
-									<td class="r num">
-										<Change value={change(p)} />
-									</td>
-									<td class="muted">{p.source ?? 'not found: kept'}</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				</div>
-				<div class="buttons">
-					<button class="btn primary" disabled={saving || !toSave.length} onclick={savePrices}>
-						{saving ? 'Saving…' : `Save ${toSave.length} price${toSave.length === 1 ? '' : 's'}`}
-					</button>
-					<button class="btn" disabled={saving} onclick={() => (proposals = null)}>Cancel</button>
-				</div>
-			</div>
-		{/if}
-		{#if story.length}
-			<div class="story">
-				<div class="label">What happened to {story.reduce((n, s) => n + (s.event?.qty ?? 1), 0) > 1 ? 'them' : 'it'}</div>
-				<ul>
-					{#each story as s (s.key)}
-						<li>
-							<span class="when num">{s.date ? fmtDate(s.date) : 'Undated'}</span>
-							{#if s.event}
-								<span class="what {s.event.kind}">{kindOf(s.event.kind).past}{s.event.qty > 1 ? ` ×${s.event.qty}` : ''}</span>
-								{#if s.event.note}<span>{s.event.note}</span>{/if}
-								{#if s.event.price}<span class="muted num">{amount(s.event.price, s.event.currency)}</span>{/if}
-								<button class="undo" onclick={() => s.event && undoOut(s.event.id)} title="Put {s.event.qty > 1 ? 'them' : 'it'} back in the cellar">Undo</button>
-							{/if}
-						</li>
-					{/each}
-				</ul>
-			</div>
-		{/if}
 	</div>
-{/snippet}
-
-{#key wine.id}
-	<WineContent {wine} regionColors={data.regionColors} {bottle} bottleId={b.id} />
-{/key}
+	<div class="line2">
+		<span><span class="k">Paid</span> <span class="num">{purchase}</span>{#if bought}{' '}<span class="muted">({bought})</span>{/if}</span>
+		<span class="sep">·</span>
+		<span>
+			<span class="k">Market</span>
+			{#if b.last_price}
+				<span class="num" title={[b.last_price_source, b.last_price_date && `as of ${fmtDate(b.last_price_date)}`].filter(Boolean).join(', ')}>{amount(b.last_price, b.currency)}</span>
+				{#if b.change_pct !== null}<span class="change"><Change value={b.change_pct} /></span>{/if}
+			{:else}<span class="muted">–</span>{/if}
+			{#if wine.lwin && priceSources}
+				<button class="fetch" disabled={fetching || saving} onclick={fetchPrice} title="Ask {priceSources}">
+					{fetching ? 'asking…' : b.last_price ? 'refresh' : 'fetch'}
+				</button>
+			{:else if !wine.lwin && priceSources}
+				<a class="fetch" href={links.editWine(wine.id)} title="No LWIN on this wine: add one to fetch a market price">add an LWIN</a>
+			{/if}
+		</span>
+	</div>
+	{#if priceMessage}<p class="msg small">{priceMessage}</p>{/if}
+	{#if b.shelf && b.qty && b.shelf.bins.length > 1}<div class="shelf"><BottleShelf shelf={b.shelf} /></div>{/if}<!-- a place on its own (Away): no shelf to show -->
+	{#if out}
+		<form class="out" onsubmit={(e) => { e.preventDefault(); saveOut(); }}>
+			<div class="seg" role="group" aria-label="What happened">
+				{#each KINDS as k (k.id)}
+					<button type="button" class:on={out.kind === k.id} onclick={() => out && (out.kind = k.id)}>{k.label}</button>
+				{/each}
+			</div>
+			<div class="fields">
+				{#if b.qty > 1}
+					<label><span class="label">How many</span><input type="number" min="1" max={b.qty} bind:value={out.qty} /></label>
+				{/if}
+				<label><span class="label">When</span><input type="date" bind:value={out.date} /></label>
+				{#if out.kind === 'sold'}
+					<label><span class="label">For, a bottle ({b.currency ?? appSettings.currency})</span><input type="number" min="0" step="any" bind:value={out.price} placeholder="Optional" /></label>
+				{/if}
+				<label class="note"><span class="label">Note</span><input bind:value={out.note} placeholder={kindOf(out.kind).note} /></label>
+			</div>
+			<div class="buttons">
+				<button class="btn primary">Take {out.qty > 1 ? `${out.qty} bottles` : 'it'} out</button>
+				<button type="button" class="btn" onclick={() => (out = null)}>Cancel</button>
+				{#if outError}<span class="msg">{outError}</span>{/if}
+			</div>
+		</form>
+	{:else if outError}
+		<p class="msg" role="alert">{outError}</p><!-- an undo that failed -->
+	{/if}
+	{#if proposals}
+		<div class="proposal">
+			<div class="label">New market prices · check before saving</div>
+			<div class="table-wrap">
+				<table>
+					<thead>
+						<tr><th>Bottle</th><th class="r">Now</th><th class="r">New</th><th class="r">Change</th><th>Source</th></tr>
+					</thead>
+					<tbody>
+						{#each proposals as p (p.bottle_id)}
+							<tr class:this={p.this}>
+								<td>
+									{#if p.this}<b>This bottle</b>{:else}<a href={links.wineBottle(wine.id, p.bottle_id)} data-sveltekit-noscroll>{p.qty}× {p.bottle_size ?? '75cl'} @ {p.location ?? '?'}</a>{/if}
+									{#if p.this}<span class="muted"> · {p.qty}× {p.bottle_size ?? '75cl'}</span>{/if}
+								</td>
+								<td class="r num">
+									{p.old ? amount(p.old, p.currency) : '–'}
+									{#if p.old_date}<div class="muted small">{fmtDate(p.old_date)}{p.old_source ? ` · ${p.old_source}` : ''}</div>{/if}
+								</td>
+								<td class="r num">{amount(p.new, p.currency)}</td>
+								<td class="r num">
+									<Change value={change(p)} />
+								</td>
+								<td class="muted">{p.source ?? 'not found: kept'}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+			<div class="buttons">
+				<button class="btn primary" disabled={saving || !toSave.length} onclick={savePrices}>
+					{saving ? 'Saving…' : `Save ${toSave.length} price${toSave.length === 1 ? '' : 's'}`}
+				</button>
+				<button class="btn" disabled={saving} onclick={() => (proposals = null)}>Cancel</button>
+			</div>
+		</div>
+	{/if}
+	{#if story.length}
+		<div class="story">
+			<div class="label">What happened to {story.reduce((n, s) => n + (s.event?.qty ?? 1), 0) > 1 ? 'them' : 'it'}</div>
+			<ul>
+				{#each story as s (s.key)}
+					<li>
+						<span class="when num">{s.date ? fmtDate(s.date) : 'Undated'}</span>
+						{#if s.event}
+							<span class="what {s.event.kind}">{kindOf(s.event.kind).past}{s.event.qty > 1 ? ` ×${s.event.qty}` : ''}</span>
+							{#if s.event.note}<span>{s.event.note}</span>{/if}
+							{#if s.event.price}<span class="muted num">{amount(s.event.price, s.event.currency)}</span>{/if}
+							<button class="undo" onclick={() => s.event && undoOut(s.event.id)} title="Put {s.event.qty > 1 ? 'them' : 'it'} back in the cellar">Undo</button>
+						{/if}
+					</li>
+				{/each}
+			</ul>
+		</div>
+	{/if}
+</section>
 
 <style>
+	/* a card as the page's others, a little apart from the next */
 	.bottle {
+		padding: 14px 18px;
+		margin-bottom: 14px;
 		font-size: 13px;
+	}
+	.close {
+		font-size: 13px;
+		color: var(--muted);
 	}
 	/* how many and where, the ⋯ and the glass at the right */
 	.line1 {

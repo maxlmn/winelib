@@ -54,7 +54,7 @@
 			<li class:current={b.bottle_id === current}>
 				<!-- the bottles' pips, its label under them (a producer's page) -->
 				<div class="side">
-				<a class="ends" href={links.bottle(b.bottle_id)} title="Open this bottle" tabindex="-1" aria-hidden="true">
+				<a class="ends" href={links.wineBottle(b.wine_id, b.bottle_id)} title="Open this bottle" tabindex="-1" aria-hidden="true">
 					{#each { length: Math.min(b.qty, 12) }}
 						<BottleEnd
 							region={regionColors[b.region] ?? FALLBACK_REGION}
@@ -71,7 +71,7 @@
 				{/if}
 				</div>
 				<div class="label">
-					<a href={links.bottle(b.bottle_id)}><b>{b.producer}</b>{b.cuvee ? ` – ${b.cuvee}` : ''}</a>
+					<a href={links.wineBottle(b.wine_id, b.bottle_id)}><b>{b.producer}</b>{b.cuvee ? ` – ${b.cuvee}` : ''}</a>
 					<span class="vintage num">{b.vintage}</span><CriticPills scores={b.scores} />
 					{#if b.bottle_id === current}<span class="this">this bottle</span>{/if}
 					{#if b.maturity}<span class="mat"><MaturityBadge maturity={b.maturity} from={b.drink_from} to={b.drink_to} /></span>{/if}

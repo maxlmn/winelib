@@ -20,18 +20,18 @@
 	import WineLabel from './WineLabel.svelte';
 	import { appSettings } from '#lib/settings.svelte.ts';
 	import Icon from '#lib/components/Icon.svelte';
-	import type { Snippet } from 'svelte';
+	import BottleCard from './BottleCard.svelte';
+	import type { BottleDetail } from '#lib/api/details.ts';
 
 	interface Props {
 		wine: WineDetail;
 		regionColors: RegionColors;
-		/** under the header, part of its card: the bottle a bottle's page is about */
-		bottle?: Snippet;
-		/** that bottle's id: its line marked in the Cellar tab */
-		bottleId?: number | null;
+		/** a bottle of it (a cellar line clicked: ?bottle=N): its card above the Cellar card, its line marked there */
+		bottle?: BottleDetail | null;
 	}
 
-	let { wine, regionColors, bottle, bottleId = null }: Props = $props();
+	let { wine, regionColors, bottle = null }: Props = $props();
+	const bottleId = $derived(bottle?.id ?? null);
 
 	let allVintages = $state(false);
 	// Add a critic's score, add to a list (the header's icons): their card's form, shown even when it has nothing yet
@@ -141,7 +141,7 @@
 		<WineActions wineId={wine.id} actions={wine.actions} bind:said />
 		<button class="menu-item" role="menuitem" onclick={() => (addingToList = true)}><Icon name="list" size={15} />Add to a list</button>
 		<button class="menu-item" role="menuitem" onclick={() => (editingStyle = true)}><Icon name="tag" size={15} />{wine.tags?.some((t) => t.set) ? 'Edit its style' : 'Add its style'}</button>
-		{#if !bottle && appSettings.wine_labels !== 'off'}
+		{#if appSettings.wine_labels !== 'off'}
 			<button class="menu-item" role="menuitem" onclick={() => label?.pick()}><Icon name="tag" size={15} />{wine.label && !wine.label.from_vintage ? 'Replace its label' : 'Upload its label'}</button>
 			{#if wine.label && !wine.label.from_vintage}
 				<button class="menu-item" role="menuitem" onclick={() => label?.remove()}><Icon name="tag" size={15} />Remove its label</button>
@@ -202,15 +202,12 @@
 	{actions}
 	{under}
 	aside={hasMap ? map : undefined}
-	footer={bottle}
 >
 	<div class="beside-label">
-		<!-- its label, drawn (the wine's page: a bottle's has its own band) -->
-		{#if !bottle}
-			<WineLabel bind:this={label} wineId={wine.id} producer={wine.producer.name} cuvee={wine.cuvee}
-				place={wine.appellation?.name ?? wine.region} vintage={wine.vintage} color={wine.color} shape={wine.label_shape}
-				uploaded={wine.label} region={wine.region_color} />
-		{/if}
+		<!-- its label (uploaded, else drawn) -->
+		<WineLabel bind:this={label} wineId={wine.id} producer={wine.producer.name} cuvee={wine.cuvee}
+			place={wine.appellation?.name ?? wine.region} vintage={wine.vintage} color={wine.color} shape={wine.label_shape}
+			uploaded={wine.label} region={wine.region_color} />
 		<!-- the lists naming this vintage, another one, or the cuvée (its producer's: the producer's page) -->
 		<div class="lists"><ListsPanel inline wineId={wine.id} bind:adding={addingToList} /></div>
 	</div>
@@ -261,6 +258,11 @@
 		{/if}
 	</div>
 
+
+<!-- a bottle of it, opened from the Cellar card: its own card, above that one -->
+{#if bottle}
+	<BottleCard b={bottle} {wine} />
+{/if}
 
 <Tabs
 	tabs={[
@@ -456,7 +458,8 @@
 		border-color: var(--accent);
 		color: var(--accent);
 	}
-	.cell.current {
+	.cell.current,
+	a.cell.current:hover {
 		background: var(--accent);
 		border-color: var(--accent);
 		color: var(--on-accent);

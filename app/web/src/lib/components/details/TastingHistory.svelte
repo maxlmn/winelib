@@ -8,6 +8,7 @@
 	import { regionLabel } from '#lib/regions.svelte.ts';
 	import { links } from '#lib/links.ts';
 	import { photoSrc } from '#lib/api/photos.ts';
+	import { opensImage } from '#lib/lightbox.svelte.ts';
 	import { appSettings } from '#lib/settings.svelte.ts';
 	import LabelThumbs from './LabelThumbs.svelte';
 	import { fmtDate, stars } from './wine.ts';
@@ -124,7 +125,7 @@
 				</div>
 				{#if photo}
 					<!-- the day's photo, large enough to see; a click opens it whole -->
-					<a class="photo" href={photoSrc(photo, 'large')} target="_blank" rel="noopener" title="Open the photo">
+					<a class="photo" href={photoSrc(photo, 'large')} use:opensImage title="Open the photo">
 						<img src={photoSrc(photo, 'thumb')} alt="{d.place?.name ?? d.location ?? 'Occasion'}, {fmtDate(d.date)}" loading="lazy" decoding="async" />
 					</a>
 				{/if}

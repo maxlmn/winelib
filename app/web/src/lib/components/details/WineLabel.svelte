@@ -7,6 +7,7 @@
 	import { ask, tell } from '#lib/ask.svelte.ts';
 	import { LABEL_TYPES, MAX_PHOTO_MB, deleteLabel, photoSrc, uploadLabel } from '#lib/api/photos.ts';
 	import { appSettings } from '#lib/settings.svelte.ts';
+	import { opensImage } from '#lib/lightbox.svelte.ts';
 	import { FALLBACK_REGION, typeColor } from '#lib/colors.ts';
 
 	interface Props {
@@ -95,7 +96,7 @@
 			ondrop={(e) => (e.preventDefault(), (dragging = false), put(e.dataTransfer?.files[0]))}
 		>
 			{#if uploaded}
-				<a class="label photo" href={uploaded.url} target="_blank" rel="noopener" title="Open the label full size">
+				<a class="label photo" href={uploaded.url} use:opensImage={{ src: /\.svg(\?|$)/i.test(uploaded.url) ? uploaded.url : photoSrc(uploaded.url, 'large'), alt: name }} title="Open the label full size">
 					<img src={/\.svg(\?|$)/i.test(uploaded.url) ? uploaded.url : photoSrc(uploaded.url, 'large')} alt={name} decoding="async" />
 				</a>
 			{:else}
