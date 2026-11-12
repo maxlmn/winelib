@@ -72,7 +72,9 @@ const SHOTS = [
 	{ name: 'phone-wine', path: `/wines/${wine.id}`, phone: true, wait: 3000 }
 ].filter((s) => !only.length || only.includes(s.name));
 
-const browser = await chromium.launch();
+// WebGL through ANGLE's software renderer: Chromium's default headless one leaves a map's top blank when its foot is
+// below the window (the phone's home page), a real browser draws it whole
+const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 for (const dark of [false, true]) {
 	for (const s of SHOTS) {
 		const ctx = await browser.newContext({
