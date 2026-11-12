@@ -74,6 +74,28 @@
 
 	const inCellar = $derived(wine.vintages.filter((v) => v.bottles));
 	const tasted = $derived(wine.vintages.filter((v) => v.tastings));
+	// The vintages by decade, newest first: a row each, a slot a year (0 to 9, so the years line up from row to row);
+	// the rest (NV...) on a line after
+	type V = (typeof wine.vintages)[number];
+	const decades = $derived.by(() => {
+		const rows = new Map<number, V[][]>();
+		const other: V[] = [];
+		for (const v of wine.vintages) {
+			const y = Number(/^(\d{4})/.exec(v.vintage)?.[1]);
+			if (!y) {
+				other.push(v);
+				continue;
+			}
+			const d = y - (y % 10);
+			if (!rows.has(d)) rows.set(d, Array.from({ length: 10 }, () => []));
+			rows.get(d)![y % 10].push(v);
+		}
+		return { rows: [...rows].sort((a, b) => b[0] - a[0]), other };
+	});
+	const vTitle = (v: V) =>
+		[v.vintage, v.bottles && `${v.bottles} in cellar`, v.tastings && `tasted ${v.tastings}×`, v.scores, v.lists?.length && `on ${v.lists.join(', ')}`]
+			.filter(Boolean)
+			.join(' · ');
 	const showVintages = $derived(wine.vintages.length > 1 || inCellar.length > 0 || tasted.length > 0);
 
 	const [drinkFrom, drinkTo] = $derived(wine.drink_window);
@@ -199,8 +221,29 @@
 			<section class="card vintages">
 				<h2>Vintages <span class="muted num">{wine.vintages.length}</span>
 				</h2>
-				<div class="chips">
-					{#each wine.vintages as v (v.id)}
+				<div class="decades">
+					{#each decades.rows as [d, slots] (d)}
+						<span class="decade num">{d}s</span>
+						{#each slots as vs, i (i)}
+							<span class="slot">
+								{#each vs as v (v.id)}
+									<a class="cell num" class:current={v.id === wine.id} class:owned={v.bottles > 0} class:tasted={v.tastings > 0} href={links.wine(v.id)} title={vTitle(v)}>
+										<span class="yy">’{String(d + i).slice(2)}</span>
+										<span class="marks">
+											{#if v.bottles}<span class="n">{v.bottles}</span>{/if}{#if v.tastings}<span class="tick">✓</span>{/if}{#if v.lists?.length}<span class="listed"><Icon name="bookmark" size={9} /></span>{/if}
+										</span>
+										<span class="sc">{v.score ? String(v.score).replace(/[()]/g, '') : ''}</span>
+									</a>
+								{:else}
+									<span class="cell none num" aria-hidden="true">’{String(d + i).slice(2)}</span>
+								{/each}
+							</span>
+						{/each}
+					{/each}
+				</div>
+				{#if decades.other.length}
+				<div class="chips other">
+					{#each decades.other as v (v.id)}
 						<a
 							class="chip num"
 							class:current={v.id === wine.id}
@@ -212,6 +255,7 @@
 						</a>
 					{/each}
 				</div>
+				{/if}
 			</section>
 		{/if}
 	</div>
@@ -363,6 +407,93 @@
 	h2 {
 		font-size: 14px;
 		margin: 0 0 10px;
+	}
+	/* by decade: the decade, then ten slots, small */
+	.decades {
+		display: grid;
+		grid-template-columns: auto repeat(10, minmax(0, 1fr));
+		gap: 4px 3px;
+		align-items: stretch;
+	}
+	.decade {
+		align-self: center;
+		padding-right: 6px;
+		font-size: 11px;
+		color: var(--muted);
+	}
+	.slot {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+	.cell {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		/* one height for all: the year, the marks, the score, each in its line, empty or not */
+		box-sizing: border-box;
+		height: 44px;
+		padding: 2px 0;
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		font-size: 12px;
+		line-height: 1.15;
+		color: var(--muted);
+		text-decoration: none;
+	}
+	.cell.tasted {
+		color: var(--text);
+		background: var(--surface-2);
+	}
+	.cell.owned {
+		color: var(--text);
+		border-color: var(--gold-text);
+	}
+	a.cell:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+	}
+	.cell.current {
+		background: var(--accent);
+		border-color: var(--accent);
+		color: var(--on-accent);
+	}
+	.cell.current .n,
+	.cell.current .tick,
+	.cell.current .listed,
+	.cell.current .sc {
+		color: var(--on-accent);
+	}
+	/* a year without a vintage: its place kept, faint */
+	.cell.none {
+		border-style: dashed;
+		border-color: color-mix(in srgb, var(--border) 60%, transparent);
+		color: color-mix(in srgb, var(--muted) 40%, transparent);
+	}
+	.marks {
+		display: inline-flex;
+		align-items: center;
+		gap: 2px;
+		min-height: 12px;
+		font-size: 10px;
+	}
+	.marks .tick {
+		font-size: 10px;
+	}
+	.marks .listed {
+		margin-left: 0;
+	}
+	.sc {
+		min-height: 11px;
+		white-space: nowrap;
+		font-size: 9.5px;
+		font-weight: 600;
+		color: var(--accent);
+	}
+	.other {
+		margin-top: 8px;
 	}
 	.chips {
 		display: flex;
