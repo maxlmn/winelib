@@ -6,6 +6,8 @@
   file or a first bottle, the help), each step ticked when it's done; it can be put away.
 - **The Producers page shows yours first**: those you have wines of, tasted, hold or listed; the whole directory
   (the thousands of producers WineLib ships with) is a click away, and shown on a new installation.
+- **A photo straight from a tasting's page**: *Add a photo of the evening* (or drop one on it), and *Replace* or
+  *Remove* under it, without opening the tasting's form. It's the evening's photo: every wine of it shows it.
 - **Backups hold your photos**: Maintenance › Backup also saves the tasting photos in a zip (when they changed), and
   keeps the last ten backups of each kind (two of the photos'), removing the older ones it wrote. Settings › Your
   data downloads the photos too. The restore script puts them back (`--photos`), uses the app's own database by
@@ -24,6 +26,8 @@
   stay), and a photo or a Bordeaux Index update that failed says so there, not in the browser's box.
 - **By keyboard**: a cellar's bottle pips are no longer each a tab stop (the bottle's line is the link); on a
   phone, the Producers and Places tables keep the name in view while the other columns scroll sideways.
+- **The ⋯ menu stays on the screen**: on a phone, a tasting's page opened it off its left edge (its buttons, now in a
+  row under the title, were a column at the left); every page's menu opens the side that fits.
 - **A tasting history's photos** at a size to see (they had shrunk to a thumbnail), opened whole on a click.
 - **The version is said where you look for it**: at the bottom of Settings in the app, and on the website (its
   home page and every page's foot), linked to the release.
