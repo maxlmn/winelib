@@ -120,6 +120,9 @@
 		<button class="menu-item" role="menuitem" onclick={() => (editingStyle = true)}><Icon name="tag" size={15} />{wine.tags?.some((t) => t.set) ? 'Edit its style' : 'Add its style'}</button>
 		{#if !bottle && appSettings.wine_labels !== 'off'}
 			<button class="menu-item" role="menuitem" onclick={() => label?.pick()}><Icon name="tag" size={15} />{wine.label && !wine.label.from_vintage ? 'Replace its label' : 'Upload its label'}</button>
+			{#if wine.label && !wine.label.from_vintage}
+				<button class="menu-item" role="menuitem" onclick={() => label?.remove()}><Icon name="tag" size={15} />Remove its label</button>
+			{/if}
 		{/if}
 		<button class="menu-item" role="menuitem" onclick={openDrink}><Icon name="calendar" size={15} />{drink ? 'Edit its drinking window' : 'Add a drinking window'}</button>
 		<hr />
