@@ -52,6 +52,8 @@
 	<ul>
 		{#each lines.slice(0, limit) as b (b.bottle_id)}
 			<li class:current={b.bottle_id === current}>
+				<!-- the bottles' pips, its label under them (a producer's page) -->
+				<div class="side">
 				<a class="ends" href={links.bottle(b.bottle_id)} title="Open this bottle" tabindex="-1" aria-hidden="true">
 					{#each { length: Math.min(b.qty, 12) }}
 						<BottleEnd
@@ -63,6 +65,11 @@
 						/>
 					{/each}
 				</a>
+				{#if labels[b.wine_id] && appSettings.wine_labels !== 'off'}
+					{@const l = labels[b.wine_id]}
+					<span class="thumb"><LabelThumbs labels={[{ url: l.url, vintages: [l.from_vintage ?? b.vintage] }]} name={b.cuvee || b.producer} align="left" /></span>
+				{/if}
+				</div>
 				<div class="label">
 					<a href={links.bottle(b.bottle_id)}><b>{b.producer}</b>{b.cuvee ? ` – ${b.cuvee}` : ''}</a>
 					<span class="vintage num">{b.vintage}</span><CriticPills scores={b.scores} />
@@ -70,10 +77,6 @@
 					{#if b.maturity}<span class="mat"><MaturityBadge maturity={b.maturity} from={b.drink_from} to={b.drink_to} /></span>{/if}
 					{#if b.appellation}<div class="under muted">{b.appellation}</div>{/if}
 				</div>
-				{#if labels[b.wine_id] && appSettings.wine_labels !== 'off'}
-					{@const l = labels[b.wine_id]}
-					<span class="thumb"><LabelThumbs labels={[{ url: l.url, vintages: [l.from_vintage ?? b.vintage] }]} name={b.cuvee || b.producer} /></span>
-				{/if}
 				<div class="where muted">
 					{#if prices}
 						<span class="num">{#if paid(b)}<b class="paid" title="Paid a bottle">{paid(b)}</b>{' · '}{/if}{b.qty} {b.qty === 1 ? 'bottle' : 'bottles'}</span>
@@ -124,13 +127,23 @@
 		flex-wrap: wrap;
 		align-items: center;
 		gap: 2px;
-		flex: none;
 		width: 80px; /* six to a row: the names line up */
-		align-self: center;
+	}
+	/* the pips' column: a label under them, at its width */
+	.side {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		flex: none;
+		width: 80px;
+		align-self: flex-start;
+		padding-top: 3px;
 	}
 	.thumb {
-		flex: none;
-		align-self: center;
+		display: flex;
+	}
+	.side :global(button.thumb img) {
+		max-width: 76px;
 	}
 	.label {
 		flex: 1;
