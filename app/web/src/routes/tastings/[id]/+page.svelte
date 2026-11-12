@@ -9,7 +9,7 @@
 	import { FALLBACK_REGION } from '#lib/colors.ts';
 	import { links } from '#lib/links.ts';
 	import { plural, money } from '#lib/format.ts';
-	import { photoSrc } from '#lib/api/photos.ts';
+	import OccasionPhoto from '#lib/components/tastings/OccasionPhoto.svelte';
 	import { fmtDay, stars, wineName } from '#lib/components/tastings/journal.ts';
 	import ShareSticker from '#lib/components/tastings/ShareSticker.svelte';
 	import { fmtDate } from '#lib/components/details/wine.ts';
@@ -116,11 +116,8 @@
 		{#if t.tags}
 			<div class="tags">{#each t.tags.split(',').map((x) => x.trim()).filter(Boolean) as tag}<span class="tag">{tag}</span>{/each}</div>
 		{/if}
-		{#if t.photo}
-			<a class="photo" href={t.photo} target="_blank" rel="noopener" title="Open the full-size photo">
-				<img src={photoSrc(t.photo, 'large')} alt="{t.location}, {t.date}" decoding="async" />
-			</a>
-		{/if}
+		<!-- the evening's photo: added, replaced or removed here -->
+		<OccasionPhoto place={t.place?.name ?? t.location} date={t.date} url={t.photo} alt="{t.location}, {t.date}" />
 	</section>
 
 	{#if others}
@@ -317,18 +314,6 @@
 		border: 1px solid var(--accent);
 		color: var(--accent);
 	}
-	.photo {
-		display: block;
-		width: fit-content;
-		cursor: zoom-in;
-	}
-	img {
-		display: block;
-		max-width: 100%;
-		max-height: 420px;
-		margin-top: 14px;
-		border-radius: 8px;
-	}
 	.occasion {
 		list-style: none;
 		padding: 0;
@@ -423,5 +408,12 @@
 	}
 	.kicker-link:hover {
 		color: var(--accent);
+	}
+	/* a phone: the page's buttons in a row under the title, not a column at the left */
+	@media (max-width: 760px) {
+		.head .page-actions {
+			flex-direction: row;
+			align-items: center;
+		}
 	}
 </style>

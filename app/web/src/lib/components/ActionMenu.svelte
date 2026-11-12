@@ -12,8 +12,17 @@
 	let panel = $state<HTMLElement>();
 
 	const items = () => [...(panel?.querySelectorAll<HTMLElement>('a, button:not(:disabled)') ?? [])].filter((e) => e.offsetParent !== null);
+	// Opened under its button's right edge; where that would run off the screen (the button at the left, on a phone),
+	// under its left edge instead
+	let alignLeft = $state(false);
 	$effect(() => {
-		if (open) queueMicrotask(() => items()[0]?.focus());
+		if (!open) return;
+		alignLeft = false;
+		queueMicrotask(() => {
+			const r = panel?.getBoundingClientRect();
+			if (r && r.left < 8) alignLeft = true;
+			items()[0]?.focus();
+		});
 	});
 	function onkey(e: KeyboardEvent) {
 		if (!open) return;
@@ -42,7 +51,7 @@
 <div class="action-menu" bind:this={root}>
 	<button class="btn more" bind:this={button} aria-haspopup="menu" aria-expanded={open} title={label} aria-label={label} onclick={() => (open = !open)}>⋯</button>
 	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions: the items are links and buttons -->
-	<div class="panel card" role="menu" tabindex="-1" hidden={!open} onclick={onpanel} bind:this={panel}>
+	<div class="panel card" class:left={alignLeft} role="menu" tabindex="-1" hidden={!open} onclick={onpanel} bind:this={panel}>
 		{@render children()}
 	</div>
 </div>
@@ -73,5 +82,13 @@
 	}
 	.panel[hidden] {
 		display: none;
+	}
+	.panel.left {
+		right: auto;
+		left: 0;
+	}
+	/* never wider than the screen */
+	.panel {
+		max-width: calc(100vw - 16px);
 	}
 </style>
