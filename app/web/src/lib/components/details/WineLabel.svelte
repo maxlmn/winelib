@@ -165,6 +165,7 @@
 	/* a drawn label: wider than tall, as on a bottle */
 	.drawn.label {
 		width: 100%;
+		margin: 0; /* a figure's own margins would push it out of the card */
 		container-type: inline-size;
 		aspect-ratio: 3 / 2;
 		box-sizing: border-box;
