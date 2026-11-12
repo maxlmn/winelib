@@ -2,11 +2,10 @@
 
 ## Unreleased
 
-- **A wine's label on its page**: upload the real one (a photo, a scan or a drawing: *Upload the real label* under
-  it, *Upload its label* in the menu, or drop it on the label); a vintage without its own shows the nearest
-  vintage's. Without one, a label is drawn in the wine's pip colours (its region's and its own) with the outline of
-  its appellation. Settings › Labels: uploaded and drawn, uploaded only, or none. Labels are kept with the photos,
-  so the photo backups hold them.
+- **A wine's label on its page**: upload the real one (a photo, a scan or a drawing: *Upload its label* in the ⋯
+  menu, or drop an image on the label); a vintage without its own shows the nearest vintage's. Wine lists show each
+  cuvée's labels small (a producer's cellar and history too), larger on hover or click. Settings › Labels: uploaded
+  labels, or none. Labels are kept with the photos, so the photo backups hold them.
 - **Maps always full size**: a page's map always fills the window, its details over it (Settings › Appearance ›
   Maps and the map's ⤢ / Back to the page are gone). A wine whose appellation and vineyard have no outline shows its
   region's, so its page keeps the same layout.

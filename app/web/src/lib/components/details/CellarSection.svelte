@@ -17,7 +17,7 @@
 		bottles: Bottle[];
 		regionColors: RegionColors;
 		empty?: string;
-		/** one wine's bottles: its lines as they are (kept for its callers; the lines are the same) */
+		/** one wine's bottles (its page): a line clicked opens the bottle's card there, the page not scrolled */
 		plain?: boolean;
 		/** the bottle whose page this is: its line marked */
 		current?: number | null;
@@ -28,7 +28,7 @@
 		labels?: Record<number, { url: string; from_vintage: string | null }>;
 	}
 
-	let { bottles, regionColors, empty = 'Nothing in the cellar.', current = null, prices = false, labels = {} }: Props = $props();
+	let { bottles, regionColors, empty = 'Nothing in the cellar.', plain = false, current = null, prices = false, labels = {} }: Props = $props();
 	const paid = (b: Bottle) => (b.price ? `${symbol(b.currency ?? appSettings.currency)}${Math.round(b.price).toLocaleString()}` : null);
 
 	const PAGE = 60;
@@ -54,7 +54,7 @@
 			<li class:current={b.bottle_id === current}>
 				<!-- the bottles' pips, its label under them (a producer's page) -->
 				<div class="side">
-				<a class="ends" href={links.wineBottle(b.wine_id, b.bottle_id)} title="Open this bottle" tabindex="-1" aria-hidden="true">
+				<a class="ends" href={links.wineBottle(b.wine_id, b.bottle_id)} data-sveltekit-reset={plain ? "false" : undefined} title="Open this bottle" tabindex="-1" aria-hidden="true">
 					{#each { length: Math.min(b.qty, 12) }}
 						<BottleEnd
 							region={regionColors[b.region] ?? FALLBACK_REGION}
@@ -71,7 +71,7 @@
 				{/if}
 				</div>
 				<div class="label">
-					<a href={links.wineBottle(b.wine_id, b.bottle_id)}><b>{b.producer}</b>{b.cuvee ? ` – ${b.cuvee}` : ''}</a>
+					<a href={links.wineBottle(b.wine_id, b.bottle_id)} data-sveltekit-reset={plain ? "false" : undefined}><b>{b.producer}</b>{b.cuvee ? ` – ${b.cuvee}` : ''}</a>
 					<span class="vintage num">{b.vintage}</span><CriticPills scores={b.scores} />
 					{#if b.bottle_id === current}<span class="this">this bottle</span>{/if}
 					{#if b.maturity}<span class="mat"><MaturityBadge maturity={b.maturity} from={b.drink_from} to={b.drink_to} /></span>{/if}

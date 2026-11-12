@@ -22,14 +22,6 @@
 
 	let { b, wine }: Props = $props();
 
-	// opened (a cellar line clicked): brought into view
-	let card = $state<HTMLElement>();
-	$effect(() => {
-		void b.id;
-		// once the page is laid out (the map, the label): its top in view, a little of the page above it
-		const t = setTimeout(() => card?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
-		return () => clearTimeout(t);
-	});
 	// The title in words: "1 bottle", "3 half bottles", "2 magnums", "4 50 cl bottles"; "2 bottles, finished" once none are left
 	const what = $derived.by(() => {
 		const name = formatName(b.bottle_size).toLowerCase();
@@ -142,7 +134,7 @@
 	}
 </script>
 
-<section class="card bottle" bind:this={card} aria-label="This bottle">
+<section class="card bottle" aria-label="This bottle">
 	<div class="line1">
 		<div class="what">
 			{#if b.qty || gone}
@@ -166,7 +158,7 @@
 				<a class="menu-item" role="menuitem" href={links.editBottle(b.id)}><Icon name="edit" size={15} />Edit bottle</a>
 			</ActionMenu>
 			{#if b.qty}<a class="btn icon primary" href={links.newTasting({ bottle_id: b.id })} title="Drink it: a tasting" aria-label="Drink it"><Icon name="glass" size={15} /></a>{/if}
-			<a class="btn icon close" href={links.wine(wine.id)} data-sveltekit-noscroll title="Close" aria-label="Close this bottle">✕</a>
+			<a class="btn icon close" href={links.wine(wine.id)} data-sveltekit-reset="false" title="Close" aria-label="Close this bottle">✕</a>
 		</div>
 	</div>
 	<div class="line2">
@@ -227,7 +219,7 @@
 						{#each proposals as p (p.bottle_id)}
 							<tr class:this={p.this}>
 								<td>
-									{#if p.this}<b>This bottle</b>{:else}<a href={links.wineBottle(wine.id, p.bottle_id)} data-sveltekit-noscroll>{p.qty}× {p.bottle_size ?? '75cl'} @ {p.location ?? '?'}</a>{/if}
+									{#if p.this}<b>This bottle</b>{:else}<a href={links.wineBottle(wine.id, p.bottle_id)} data-sveltekit-reset="false">{p.qty}× {p.bottle_size ?? '75cl'} @ {p.location ?? '?'}</a>{/if}
 									{#if p.this}<span class="muted"> · {p.qty}× {p.bottle_size ?? '75cl'}</span>{/if}
 								</td>
 								<td class="r num">

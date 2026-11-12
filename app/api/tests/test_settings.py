@@ -122,3 +122,9 @@ def test_outlines_are_known_without_the_map_packs_credits(client):
     s.commit()
     sessions.close()
     assert client.get("/api/integrations").json()["outlines"] is True
+
+
+def test_drawn_labels_chosen_before_they_went_are_uploaded_ones():
+    from settings import Settings
+    assert Settings(wine_labels="drawn").wine_labels == "uploaded"
+    assert Settings().wine_labels == "uploaded"

@@ -20,7 +20,7 @@ export interface AppSettings {
 	bi_location: string;
 	map_default_basemap: Basemap;
 	/** a wine's label on its page: none, only the uploaded ones, or a drawn one for the others too */
-	wine_labels: 'off' | 'uploaded' | 'drawn';
+	wine_labels: 'off' | 'uploaded';
 	/** lists sort and rank wines by this critic's score */
 	preferred_critic: string;
 }
@@ -35,7 +35,7 @@ export const appSettings = $state<AppSettings>({
 	other_group: 'Cellar',
 	bi_location: '',
 	map_default_basemap: 'plain',
-	wine_labels: 'drawn',
+	wine_labels: 'uploaded',
 	preferred_critic: ''
 });
 

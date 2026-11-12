@@ -16,7 +16,6 @@ import photos
 from photos import photo_index, photo_url
 import geo
 import grapes
-import label_shape
 import plugins
 import lieux_dits
 import scores
@@ -258,7 +257,6 @@ def wine_detail(wine_id: int, session: Session = Depends(get_session)):
         "drink_window": [w.drink_window_start, w.drink_window_end],
         "scores": scores.listing(w.scores),
         "actions": plugins.wine_actions(w),  # buttons the plug-ins add (plugins.py)
-        "label_shape": label_shape.of_wine(w),  # the outline on its drawn label
         "label": _label(w, family),
         "maturity": maturity(w.drink_window_start, w.drink_window_end),
         "vintages": vintages,
