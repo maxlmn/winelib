@@ -1,11 +1,17 @@
 # Changelog
 
-## Unreleased
+## v0.8.0
 
 - **A wine's label on its page**: upload the real one (a photo, a scan or a drawing: *Upload its label* in the ⋯
   menu, or drop an image on the label); a vintage without its own shows the nearest vintage's. Wine lists show each
   cuvée's labels small (a producer's cellar and history too), larger on hover or click. Settings › Labels: uploaded
-  labels, or none. Labels are kept with the photos, so the photo backups hold them.
+  labels, or none. Labels are kept with the photos, so the photo backups hold them, and follow a wine merged into
+  another.
+- **Vintages by decade**: a wine's Vintages card is a row a decade, a slot a year (the years in line from row to
+  row), each small cell with its bottles, tick and score.
+- **Wine lists fold their vintages**: a producer's, a vineyard's or a vintage's list shows each cuvée in two lines
+  (how many vintages, which years; bottles, tasted), a click opening them in one column; its labels in a strip at
+  the right, slid left and right.
 - **Maps always full size**: a page's map always fills the window, its details over it (Settings › Appearance ›
   Maps and the map's ⤢ / Back to the page are gone). A wine whose appellation and vineyard have no outline shows its
   region's, so its page keeps the same layout.
