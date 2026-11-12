@@ -131,6 +131,37 @@ def label_of(wine_ids):
     return None
 
 
+def label_index():
+    """{wine id: file name} of every uploaded label, the folder read once."""
+    if not os.path.isdir(PHOTOS_DIR):
+        return {}
+    out = {}
+    for n in os.listdir(PHOTOS_DIR):
+        base, ext = os.path.splitext(n)
+        if base.startswith(LABEL_PREFIX) and ext.lower() in PHOTO_EXTS and base[len(LABEL_PREFIX):].isdigit():
+            out[int(base[len(LABEL_PREFIX):])] = n
+    return out
+
+
+_digests = {}
+
+
+def label_digest(name):
+    """A label file's content hash (kept while the file is unchanged): the same label uploaded for two vintages is one
+    label."""
+    import hashlib
+    path = os.path.join(PHOTOS_DIR, name)
+    try:
+        st = os.stat(path)
+    except OSError:
+        return name
+    key = (name, st.st_mtime_ns, st.st_size)
+    if key not in _digests:
+        with open(path, "rb") as f:
+            _digests[key] = hashlib.sha1(f.read()).hexdigest()
+    return _digests[key]
+
+
 def _drop_label_thumbs(wine_id):
     key = f"{LABEL_PREFIX}{int(wine_id)}"
     try:

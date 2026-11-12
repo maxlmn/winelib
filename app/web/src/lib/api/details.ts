@@ -88,6 +88,8 @@ export interface CatalogEntry {
 	vintages: VintageRef[];
 	/** the lists naming the cuvée, any vintage */
 	lists?: string[];
+	/** its uploaded labels, newest vintage first: one per different image, with the vintages that have it */
+	labels?: { url: string; vintages: string[] }[];
 }
 
 export interface ProducerDetail extends RegionInfo {

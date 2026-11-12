@@ -225,3 +225,19 @@ def test_another_vintages_label_the_nearest(photo_dir):
     assert _label(family[0], family)["from_vintage"] == "2018"  # 2 years away, not 6
     (photo_dir / "wine-label-1.png").write_bytes(PNG)
     assert _label(family[0], family)["from_vintage"] is None
+
+
+def test_a_producers_wine_list_shows_each_different_label_once(client, photo_dir):
+    from db import Wine as W
+    wid = wine_id(client)
+    with client.app.dependency_overrides[__import__("db").get_session]().__next__() as s:
+        w = s.get(W, wid)
+        s.add(W(producer_id=w.producer_id, cuvee=w.cuvee, vintage="2017", region_id=w.region_id))
+        s.add(W(producer_id=w.producer_id, cuvee=w.cuvee, vintage="2018", region_id=w.region_id))
+        s.commit()
+        ids = {x.vintage: x.id for x in s.query(W).filter(W.producer_id == w.producer_id)}
+        producer = w.producer_id
+    for vintage, data in (("2016", JPEG), ("2017", JPEG), ("2018", PNG)):
+        client.put(f"/api/wines/{ids[vintage]}/label", content=data, headers={"content-type": "image/jpeg"})
+    labels = next(f for f in client.get(f"/api/producers/{producer}").json()["wines"] if f["cuvee"] == "Le Bourg")["labels"]
+    assert [l["vintages"] for l in labels] == [["2018"], ["2017", "2016"]]  # the same image for 2016 and 2017: once

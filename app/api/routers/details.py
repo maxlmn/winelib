@@ -113,9 +113,10 @@ def _vintage_sort_key(v):
 
 
 def wine_catalog(session, wines):
-    """Wines grouped by cuvée (same cuvée, appellation and grape), each with its vintages."""
+    """Wines grouped by cuvée (same cuvée, appellation and grape), each with its vintages and uploaded labels."""
     bottles, tasted = _wine_counts(session, [w.id for w in wines])
     on_lists, cuvee_lists = list_marks(session, wines)
+    labels = photos.label_index()
     families = {}
     for w in wines:
         key = (w.cuvee or "", w.appellation_id, w.varietal_id)
@@ -133,7 +134,19 @@ def wine_catalog(session, wines):
                                 "scores": scores.label(w.scores), "lists": on_lists.get(w.id, [])})
     for fam in families.values():
         fam["vintages"].sort(key=_vintage_sort_key, reverse=True)
+        fam["labels"] = _catalog_labels(fam["vintages"], labels)
     return sorted(families.values(), key=lambda f: (f["producer"].lower(), f["cuvee"].lower()))
+
+
+def _catalog_labels(vintages, labels):
+    """A cuvée's uploaded labels, newest vintage first: one per different image, with the vintages that have it."""
+    out = {}
+    for v in vintages:
+        name = labels.get(v["id"])
+        if name:
+            entry = out.setdefault(photos.label_digest(name), {"url": photos.url_for(name), "vintages": []})
+            entry["vintages"].append(v["vintage"])
+    return list(out.values())
 
 
 def _catalog_query(session):
