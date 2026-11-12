@@ -42,7 +42,9 @@ const paths = {
 	// Detail pages
 	producer: (id: Id) => `/producers/${id}`,
 	wine: (id: Id) => `/wines/${id}`,
+	/** a bottle: its wine's page, the bottle's card open (/bottles/N redirects there, its wine looked up) */
 	bottle: (id: Id) => `/bottles/${id}`,
+	wineBottle: (wineId: Id, bottleId: Id) => `/wines/${wineId}?bottle=${bottleId}`,
 	tasting: (id: Id) => `/tastings/${id}`,
 	place: (id: Id) => `/places/${id}`,
 	appellation: (id: Id) => `/appellations/${id}`,

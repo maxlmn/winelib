@@ -8,6 +8,7 @@
 	import { FALLBACK_REGION } from '#lib/colors.ts';
 	import { links } from '#lib/links.ts';
 	import { photoSrc } from '#lib/api/photos.ts';
+	import { opensImage } from '#lib/lightbox.svelte.ts';
 	import { fmtDay, stars } from './journal.ts';
 	import type { Occasion } from './journal.ts';
 
@@ -23,7 +24,7 @@
 	<article class="occ visit">
 		<header>
 			{#if o.photo}
-				<a class="thumb" href={photoSrc(o.photo, 'large')} target="_blank" rel="noopener" title="Open the photo">
+				<a class="thumb" href={photoSrc(o.photo, 'large')} use:opensImage title="Open the photo">
 					<img src={photoSrc(o.photo, 'thumb')} alt="{o.name}, {o.date}" loading="lazy" decoding="async" />
 				</a>
 			{/if}
@@ -63,7 +64,7 @@
 		<span class="muted meta">{meta}</span>
 		<a class="action" href={links.newTasting({ place_id: o.place?.id, date: o.date })} title="Add a wine to this occasion">+ Wine</a>
 		{#if o.photo && !plain}
-			<a class="photo" href={photoSrc(o.photo, 'large')} target="_blank" rel="noopener" title="Open the photo">
+			<a class="photo" href={photoSrc(o.photo, 'large')} use:opensImage title="Open the photo">
 				<img src={photoSrc(o.photo, 'thumb')} alt="{o.name}, {o.date}" loading="lazy" decoding="async" />
 			</a>
 		{/if}

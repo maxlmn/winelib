@@ -5,6 +5,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { ask, tell } from '#lib/ask.svelte.ts';
 	import { MAX_PHOTO_MB, PHOTO_TYPES, deletePhoto, photoSrc, uploadPhoto } from '#lib/api/photos.ts';
+	import { opensImage } from '#lib/lightbox.svelte.ts';
 
 	interface Props {
 		/** the place's name (or the free-text location) and the day it's filed under */
@@ -57,7 +58,7 @@
 	<input bind:this={input} type="file" accept={PHOTO_TYPES.join(',')} hidden onchange={(e) => put(e.currentTarget.files?.[0])} />
 	{#if url}
 		<figure>
-			<a class="shot" href={url} target="_blank" rel="noopener" title="Open the full-size photo">
+			<a class="shot" href={url} use:opensImage={{ src: photoSrc(url, 'large') }} title="Open the full-size photo">
 				<img src={photoSrc(url, 'large')} {alt} decoding="async" />
 			</a>
 			<figcaption>

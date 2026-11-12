@@ -2,6 +2,7 @@
 	/** A cuvée's uploaded labels, small and side by side (one per different image, newest vintage first); hovered or
 	 * clicked, a label opens larger in a pop-up with the vintages that have it */
 	import { photoSrc } from '#lib/api/photos.ts';
+	import { opensImage } from '#lib/lightbox.svelte.ts';
 
 	interface Props {
 		labels: { url: string; vintages: string[] }[];
@@ -92,7 +93,7 @@
 		{#if carousel && canRight}<button type="button" class="arrow next" aria-label="More labels" onclick={() => slide(1)}>›</button>{/if}
 		{#if shown}
 			<span class="pop" class:left={align === 'left'} role="dialog" aria-label="The {vintages(shown)} label of {name}">
-				<a href={shown.url} target="_blank" rel="noopener" title="Open the label full size">
+				<a href={shown.url} use:opensImage={{ src: src(shown.url, 'large'), alt: `The ${vintages(shown)} label of ${name}` }} title="Open the label full size">
 					<img src={src(shown.url, 'large')} alt="The {vintages(shown)} label of {name}" decoding="async" />
 				</a>
 				<span class="muted">{vintages(shown)}</span>

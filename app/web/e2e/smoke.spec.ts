@@ -94,9 +94,9 @@ test("a tasting card's date opens the occasion in the journal", async ({ page })
 test("the cellar's wine label opens the bottle", async ({ page }) => {
 	await page.goto('/cellar?view=list');
 	await page.getByRole('link', { name: 'Le Bourg' }).first().click();
-	await expect(page).toHaveURL(new RegExp(`/bottles/${ids().bottle}$`));
-	// the bottle: the band at the foot of its wine's card; its line marked in the Cellar tab
-	await expect(page.locator('.foot .line1')).toContainText(/bottles? · In R1/);
+	// the bottle: a card on its wine's page (the old /bottles/N address goes there); its line marked in the Cellar tab
+	await expect(page).toHaveURL(new RegExp(`/wines/[0-9]+[?]bottle=${ids().bottle}$`));
+	await expect(page.locator('section.bottle .line1')).toContainText(/bottles? · In R1/);
 	await page.getByRole('tab', { name: /Cellar/ }).click();
 	await expect(page.locator('li.current')).toContainText('this bottle');
 });

@@ -8,5 +8,5 @@
 <svelte:head><title>{wine.producer.name} {wine.cuvee || wine.appellation?.name || ''} {wine.vintage} · WineLib</title></svelte:head>
 
 {#key wine.id}
-	<WineContent {wine} regionColors={data.regionColors} />
+	<WineContent {wine} regionColors={data.regionColors} bottle={data.bottle} />
 {/key}
