@@ -3,6 +3,8 @@
 	import { typeColor } from '#lib/colors.ts';
 	import { links } from '#lib/links.ts';
 	import Icon from '#lib/components/Icon.svelte';
+	import { appSettings } from '#lib/settings.svelte.ts';
+	import LabelThumbs from './LabelThumbs.svelte';
 
 	interface Props {
 		wines: CatalogEntry[];
@@ -65,6 +67,10 @@
 							</div>
 						{/if}
 					</div>
+					<!-- its uploaded labels, small, side by side (Settings > Labels: none, none here either) -->
+					{#if w.labels?.length && appSettings.wine_labels !== 'off'}
+						<span class="labels"><LabelThumbs labels={w.labels} name={w.cuvee || w.appellation?.name || w.producer} /></span>
+					{/if}
 				</div>
 				<div class="vintages">
 					{#each w.vintages as v (v.id)}
@@ -134,6 +140,12 @@
 	}
 	.producer {
 		margin-right: 4px;
+	}
+	/* the labels at the end of the name's column */
+	.labels {
+		margin-left: auto;
+		align-self: center;
+		padding-left: 8px;
 	}
 	.sub {
 		font-size: 12px;
