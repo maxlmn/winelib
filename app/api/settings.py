@@ -41,6 +41,8 @@ class Settings(BaseModel):
     storage_groups: list[StorageGroup] = []
     other_group: str = Field(default="Cellar", min_length=1)
     map_default_basemap: Literal["plain", "satellite"] = "plain"
+    # A wine's label on its page: none, only those uploaded, or those uploaded and a drawn one for the others
+    wine_labels: Literal["off", "uploaded", "drawn"] = "drawn"
     # The critic whose score sorts the lists and ranks a vintage's best rated (every critic's is shown); none until
     # chosen, or the first critic scores are added for
     preferred_critic: str = ""

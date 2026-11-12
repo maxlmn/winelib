@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- **A wine's label on its page**: upload the real one (a photo, a scan or a drawing: *Upload the real label* under
+  it, *Upload its label* in the menu, or drop it on the label); a vintage without its own shows the nearest
+  vintage's. Without one, a label is drawn in the wine's pip colours (its region's and its own) with the outline of
+  its appellation. Settings › Labels: uploaded and drawn, uploaded only, or none. Labels are kept with the photos,
+  so the photo backups hold them.
+
 ## v0.7.0
 
 - **Getting started**: a new installation's home page says what to do first (the map outlines, your cellar from a

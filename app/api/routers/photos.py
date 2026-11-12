@@ -1,9 +1,11 @@
-"""Occasion photos: look up, upload (raw image body) and remove the photo of a place on a day."""
+"""Occasion photos: look up, upload (raw image body) and remove the photo of a place on a day. Wines' labels too."""
 from datetime import date
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy.orm import Session
 
 import photos
+from db import Wine, get_session
 
 router = APIRouter()
 
@@ -31,6 +33,27 @@ async def put_photo(place: str, date: date, request: Request):
         raise HTTPException(413, f"Photos can be up to {photos.MAX_UPLOAD // 1024 // 1024} MB")
     name = photos.save_photo(place, date, data, content_type)
     return {"url": photos.url_for(name)}
+
+
+@router.put("/api/wines/{wine_id}/label")
+async def put_label(wine_id: int, request: Request, session: Session = Depends(get_session)):
+    """A wine's label: a photo or a scan (JPEG, PNG, WebP) or a drawing (SVG), the raw image as the body."""
+    if session.get(Wine, wine_id) is None:
+        raise HTTPException(404, "Wine not found")
+    content_type = request.headers.get("content-type", "").split(";")[0].strip().lower()
+    if content_type not in photos.LABEL_TYPES:
+        raise HTTPException(415, "Labels must be JPEG, PNG, WebP or SVG")
+    data = await request.body()
+    if not data:
+        raise HTTPException(422, "The label is empty")
+    if len(data) > photos.MAX_UPLOAD:
+        raise HTTPException(413, f"Labels can be up to {photos.MAX_UPLOAD // 1024 // 1024} MB")
+    return {"url": photos.url_for(photos.save_label(wine_id, data, content_type))}
+
+
+@router.delete("/api/wines/{wine_id}/label")
+def delete_label(wine_id: int):
+    return {"deleted": photos.delete_label(wine_id)}
 
 
 @router.delete("/api/photos")

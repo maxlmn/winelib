@@ -105,6 +105,65 @@ def _existing(place, day):
             if os.path.splitext(n)[0].lower() == key and os.path.splitext(n)[1].lower() in PHOTO_EXTS]
 
 
+# --- Wine labels: one per wine (vintage), uploaded from its page, kept with the photos (and their backups) ------
+
+LABEL_TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "image/svg+xml": ".svg"}
+LABEL_PREFIX = "wine-label-"
+
+
+def _label_files(wine_id):
+    key = f"{LABEL_PREFIX}{int(wine_id)}"
+    if not os.path.isdir(PHOTOS_DIR):
+        return []
+    return [n for n in os.listdir(PHOTOS_DIR)
+            if os.path.splitext(n)[0] == key and os.path.splitext(n)[1].lower() in PHOTO_EXTS]
+
+
+def label_of(wine_ids):
+    """(URL, wine id) of the first of these wines with an uploaded label, or None."""
+    if not os.path.isdir(PHOTOS_DIR):
+        return None
+    names = {os.path.splitext(n)[0]: n for n in os.listdir(PHOTOS_DIR)
+             if n.startswith(LABEL_PREFIX) and os.path.splitext(n)[1].lower() in PHOTO_EXTS}
+    for wine_id in wine_ids:
+        if (name := names.get(f"{LABEL_PREFIX}{int(wine_id)}")):
+            return url_for(name), wine_id
+    return None
+
+
+def _drop_label_thumbs(wine_id):
+    key = f"{LABEL_PREFIX}{int(wine_id)}"
+    try:
+        for name in os.listdir(THUMBS_DIR):
+            if os.path.splitext(name.rsplit("~", 2)[0])[0] == key:
+                os.remove(os.path.join(THUMBS_DIR, name))
+    except OSError:
+        pass
+
+
+def save_label(wine_id, data, content_type):
+    """Replaces the wine's label (whatever its previous format) and returns the new file name."""
+    os.makedirs(PHOTOS_DIR, exist_ok=True)
+    name = f"{LABEL_PREFIX}{int(wine_id)}{LABEL_TYPES[content_type]}"
+    tmp = os.path.join(PHOTOS_DIR, f".{name}.part")
+    with open(tmp, "wb") as f:
+        f.write(data)
+    for old in _label_files(wine_id):
+        os.remove(os.path.join(PHOTOS_DIR, old))
+    os.replace(tmp, os.path.join(PHOTOS_DIR, name))
+    _drop_label_thumbs(wine_id)
+    return name
+
+
+def delete_label(wine_id):
+    """Removes the wine's label; whether there was one."""
+    old = _label_files(wine_id)
+    for name in old:
+        os.remove(os.path.join(PHOTOS_DIR, name))
+    _drop_label_thumbs(wine_id)
+    return bool(old)
+
+
 def save_photo(place, day, data, content_type):
     """Replaces the occasion's photo (whatever its previous format) and returns the new file name."""
     os.makedirs(PHOTOS_DIR, exist_ok=True)

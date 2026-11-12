@@ -17,6 +17,8 @@
 	import WineActions from './WineActions.svelte';
 	import ActionMenu from '#lib/components/ActionMenu.svelte';
 	import ListsPanel from './ListsPanel.svelte';
+	import WineLabel from './WineLabel.svelte';
+	import { appSettings } from '#lib/settings.svelte.ts';
 	import Icon from '#lib/components/Icon.svelte';
 	import type { Snippet } from 'svelte';
 
@@ -61,6 +63,8 @@
 	let said = $state<{ text: string; busy: boolean; error?: boolean } | null>(null);
 	// Draw vineyard: drawn on the wine's map (DetailMap), created with its outline and linked to the wine
 	let drawingVineyard = $state(false);
+	// its label (WineLabel): the menu's Upload its label opens its file picker
+	let label = $state<ReturnType<typeof WineLabel>>();
 
 	const sum = (xs: { qty: number }[]) => xs.reduce((n, b) => n + b.qty, 0);
 	const cellarHere = $derived(wine.cellar.filter((b) => b.wine_id === wine.id));
@@ -114,6 +118,9 @@
 		<WineActions wineId={wine.id} actions={wine.actions} bind:said />
 		<button class="menu-item" role="menuitem" onclick={() => (addingToList = true)}><Icon name="list" size={15} />Add to a list</button>
 		<button class="menu-item" role="menuitem" onclick={() => (editingStyle = true)}><Icon name="tag" size={15} />{wine.tags?.some((t) => t.set) ? 'Edit its style' : 'Add its style'}</button>
+		{#if !bottle && appSettings.wine_labels !== 'off'}
+			<button class="menu-item" role="menuitem" onclick={() => label?.pick()}><Icon name="tag" size={15} />{wine.label && !wine.label.from_vintage ? 'Replace its label' : 'Upload its label'}</button>
+		{/if}
 		<button class="menu-item" role="menuitem" onclick={openDrink}><Icon name="calendar" size={15} />{drink ? 'Edit its drinking window' : 'Add a drinking window'}</button>
 		<hr />
 		<a class="menu-item" role="menuitem" href={links.editWine(wine.id)}><Icon name="edit" size={15} />Edit wine</a>
@@ -171,8 +178,16 @@
 	aside={hasMap ? map : undefined}
 	footer={bottle}
 >
-	<!-- the lists naming this vintage, another one, or the cuvée (its producer's: the producer's page) -->
-	<ListsPanel inline wineId={wine.id} bind:adding={addingToList} />
+	<div class="beside-label">
+		<!-- its label, drawn (the wine's page: a bottle's has its own band) -->
+		{#if !bottle}
+			<WineLabel bind:this={label} wineId={wine.id} producer={wine.producer.name} cuvee={wine.cuvee}
+				place={wine.appellation?.name ?? wine.region} vintage={wine.vintage} color={wine.color} shape={wine.label_shape}
+				uploaded={wine.label} region={wine.region_color} />
+		{/if}
+		<!-- the lists naming this vintage, another one, or the cuvée (its producer's: the producer's page) -->
+		<div class="lists"><ListsPanel inline wineId={wine.id} bind:adding={addingToList} /></div>
+	</div>
 </DetailHeader>
 
 <div class="row">
@@ -234,6 +249,25 @@
 </Tabs>
 
 <style>
+	/* the label at the left of the header's column, the lists beside it */
+	.beside-label {
+		display: flex;
+		align-items: flex-start;
+		gap: 18px;
+	}
+	@media (max-width: 560px) {
+		.beside-label {
+			flex-direction: column;
+		}
+	}
+	.beside-label .lists {
+		flex: 1;
+		min-width: 0;
+	}
+	.beside-label:empty,
+	.lists:empty {
+		display: none;
+	}
 	.said {
 		max-width: 180px;
 		text-align: right;
