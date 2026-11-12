@@ -44,3 +44,17 @@ export async function applyPhotoChange(place: string | null | undefined, date: s
 		await tell(`Saved, but the photo couldn’t be ${change.file ? 'uploaded' : 'removed'}: ${e instanceof Error ? e.message : e}`, 'The photo wasn’t saved');
 	}
 }
+
+/** A wine's label (app/api/photos.py): a photo or scan, or a drawing (SVG) */
+export const LABEL_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
+
+export async function uploadLabel(wineId: number, file: File): Promise<string> {
+	const res = await fetch(`/api/wines/${wineId}/label`, { method: 'PUT', headers: { 'content-type': file.type }, body: file });
+	if (!res.ok) throw new Error(await detail(res));
+	return (await res.json()).url;
+}
+
+export async function deleteLabel(wineId: number) {
+	const res = await fetch(`/api/wines/${wineId}/label`, { method: 'DELETE' });
+	if (!res.ok) throw new Error(await detail(res));
+}

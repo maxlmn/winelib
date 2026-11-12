@@ -352,6 +352,19 @@
 	</section>
 
 	<section class="card">
+		<h2>Labels</h2>
+		<p class="muted">A wine's label at the top of its page: one you upload (a photo or a scan), or one drawn in its region's and its colour.</p>
+		<label class="field">
+			<span>Show</span>
+			<select bind:value={draft.wine_labels}>
+				<option value="drawn">Uploaded labels, else a drawn one</option>
+				<option value="uploaded">Uploaded labels only</option>
+				<option value="off">No labels</option>
+			</select>
+		</label>
+	</section>
+
+	<section class="card">
 		<h2>Critics</h2>
 		<p class="muted">Lists sort by this critic's score, and the vintage pages rank wines by it.</p>
 		<label class="field">

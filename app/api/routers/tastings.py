@@ -89,6 +89,8 @@ def photo(name: str, size: Optional[Literal["thumb", "large"]] = None, v: Option
             return FileResponse(photos.thumbnail(name, size), media_type="image/jpeg", headers=headers)
         except Exception:  # Pillow raises many kinds (UnidentifiedImageError, OSError, DecompressionBombError...)
             pass
+    if ext == ".svg":  # opened on its own, an SVG is a page: nothing in it runs
+        headers = {**(headers or {}), "Content-Security-Policy": "sandbox; default-src 'none'; style-src 'unsafe-inline'"}
     return FileResponse(path, headers=headers)
 
 

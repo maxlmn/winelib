@@ -12,9 +12,11 @@ from routers.lists import family as list_family, marks as list_marks
 from routers.map import MAPPABLE_VINE, lieu_shapes_response, map_stats, shapes_response
 from cellar import cellar_lines, location_group, maturity, to_base
 from display import iso, vineyard_label, vintage_label
+import photos
 from photos import photo_index, photo_url
 import geo
 import grapes
+import label_shape
 import plugins
 import lieux_dits
 import scores
@@ -81,6 +83,29 @@ def _wine_counts(session, wine_ids):
     tasted = dict(session.query(Bottle.wine_id, func.count(TastingNote.id)).join(TastingNote.bottle)
                   .filter(Bottle.wine_id.in_(wine_ids)).group_by(Bottle.wine_id).all())
     return bottles, tasted
+
+
+def _year(vintage):
+    try:
+        return int(str(vintage)[:4])
+    except (TypeError, ValueError):
+        return None
+
+
+def _label(w, family):
+    """Its uploaded label ({url, from_vintage}): this vintage's, else the nearest vintage's of the same cuvée (a
+    label rarely changes but for its year), from_vintage saying which; None without any."""
+    year = _year(w.vintage)
+    def gap(x):
+        y = _year(x.vintage)
+        return abs(y - year) if y is not None and year is not None else 9999
+    others = sorted((x for x in family if x.id != w.id), key=gap)
+    found = photos.label_of([w.id] + [x.id for x in others])
+    if not found:
+        return None
+    url, wine_id = found
+    source = next((x for x in family if x.id == wine_id), w)
+    return {"url": url, "from_vintage": None if wine_id == w.id else vintage_label(source.vintage, source.disgorgement_date)}
 
 
 def _vintage_sort_key(v):
@@ -194,6 +219,8 @@ def wine_detail(wine_id: int, session: Session = Depends(get_session)):
         "drink_window": [w.drink_window_start, w.drink_window_end],
         "scores": scores.listing(w.scores),
         "actions": plugins.wine_actions(w),  # buttons the plug-ins add (plugins.py)
+        "label_shape": label_shape.of_wine(w),  # the outline on its drawn label
+        "label": _label(w, family),
         "maturity": maturity(w.drink_window_start, w.drink_window_end),
         "vintages": vintages,
         # lists naming the cuvée, any vintage (those naming a vintage: on it)

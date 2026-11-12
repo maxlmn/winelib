@@ -185,3 +185,43 @@ def test_rename_keeps_a_photo_already_there(photo_dir):
     assert photos.rename_place("A", "B") == 0  # B already has that day's photo
     assert photos.rename_place("a", "C") == 1  # matched case-insensitively; AB_ and A_notes aren't A's
     assert sorted(os.listdir(photo_dir)) == ["AB_2024-03-01.jpg", "A_notes.jpg", f"B_{DAY}.png", f"C_{DAY}.jpg"]
+
+
+# --- Wine labels ---------------------------------------------------------------------------------------------
+
+def wine_id(client):
+    return client.get("/api/search", params={"q": "Rougeard"}).json()["results"][0]["id"]
+
+
+def test_a_wines_label_uploaded_replaced_and_removed(client, photo_dir):
+    wid = wine_id(client)
+    assert client.get(f"/api/wines/{wid}").json()["label"] is None
+    res = client.put(f"/api/wines/{wid}/label", content=JPEG, headers={"content-type": "image/jpeg"})
+    assert res.json()["url"].startswith(f"/api/tastings/photos/wine-label-{wid}.jpg?v=")
+    label = client.get(f"/api/wines/{wid}").json()["label"]
+    assert label["url"].startswith(f"/api/tastings/photos/wine-label-{wid}.jpg") and label["from_vintage"] is None
+    # an SVG in its place: the photo gone, and opened on its own it runs nothing
+    client.put(f"/api/wines/{wid}/label", content=b"<svg xmlns='http://www.w3.org/2000/svg'/>", headers={"content-type": "image/svg+xml"})
+    assert sorted(p.name for p in photo_dir.iterdir()) == [f"wine-label-{wid}.svg"]
+    assert "sandbox" in client.get(f"/api/tastings/photos/wine-label-{wid}.svg").headers["content-security-policy"]
+    assert client.delete(f"/api/wines/{wid}/label").json() == {"deleted": True}
+    assert client.get(f"/api/wines/{wid}").json()["label"] is None
+
+
+def test_label_validation(client):
+    wid = wine_id(client)
+    assert client.put(f"/api/wines/{wid}/label", content=b"GIF89a", headers={"content-type": "image/gif"}).status_code == 415
+    assert client.put(f"/api/wines/{wid}/label", content=b"", headers={"content-type": "image/png"}).status_code == 422
+    assert client.put("/api/wines/99999/label", content=PNG, headers={"content-type": "image/png"}).status_code == 404
+
+
+def test_another_vintages_label_the_nearest(photo_dir):
+    from types import SimpleNamespace
+    from routers.details import _label
+    family = [SimpleNamespace(id=i, vintage=v, disgorgement_date=None) for i, v in ((1, "2016"), (2, "2010"), (3, "2018"))]
+    photo_dir.mkdir()
+    for i in (2, 3):
+        (photo_dir / f"wine-label-{i}.png").write_bytes(PNG)
+    assert _label(family[0], family)["from_vintage"] == "2018"  # 2 years away, not 6
+    (photo_dir / "wine-label-1.png").write_bytes(PNG)
+    assert _label(family[0], family)["from_vintage"] is None
