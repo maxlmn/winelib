@@ -129,9 +129,10 @@
 {/if}
 
 <style>
+	/* the header column's width, the label centred in it: its own size on a computer, the card's width on a phone */
 	.wine-label {
-		flex: none;
-		max-width: 100%;
+		align-self: stretch;
+		min-width: 0;
 	}
 	.wine-label.dragging .label {
 		outline: 2px dashed var(--accent);
@@ -147,10 +148,13 @@
 	.small {
 		font-size: 12px;
 	}
-	/* an uploaded label: as it is, within the drawn one's box */
+	/* an uploaded label: within the drawn one's box on a computer; on a phone up to the card's width (never enlarged
+	   past its own size) */
 	.photo {
 		display: block;
 		width: fit-content;
+		max-width: 100%;
+		margin: 0 auto;
 		cursor: zoom-in;
 	}
 	.photo img {
@@ -161,11 +165,11 @@
 	}
 	/* a drawn label: wider than tall, as on a bottle */
 	.drawn.label {
-		flex: none;
 		width: 300px;
 		max-width: 100%;
+		margin: 0 auto;
+		container-type: inline-size;
 		aspect-ratio: 3 / 2;
-		margin: 0;
 		box-sizing: border-box;
 		border-radius: 3px;
 		overflow: hidden;
@@ -188,8 +192,8 @@
 		box-sizing: border-box;
 		display: flex;
 		align-items: center;
-		gap: 12px;
-		padding: 8px 14px;
+		gap: 4cqi;
+		padding: 2.6cqi 4.6cqi;
 		border: 1px solid color-mix(in srgb, var(--ink) 55%, transparent);
 		border-radius: 2px;
 	}
@@ -202,8 +206,8 @@
 		gap: 1px;
 	}
 	.emblem {
-		width: 84px;
-		height: 84px;
+		width: 28cqi;
+		height: 28cqi;
 		flex: none;
 	}
 	.emblem path {
@@ -218,42 +222,46 @@
 		display: grid;
 		place-items: center;
 		flex: none;
-		width: 64px;
-		height: 64px;
-		margin: 0 10px;
+		width: 21cqi;
+		height: 21cqi;
+		margin: 0 3.3cqi;
 		border: 1.5px solid var(--ink);
 		border-radius: 50%;
 		color: var(--ink);
-		font-size: 22px;
+		font-size: 7.3cqi;
 		letter-spacing: 0.04em;
 	}
 	.producer {
-		font-size: 15px;
+		font-size: 5cqi;
 		line-height: 1.2;
 		overflow-wrap: anywhere;
 	}
 	.cuvee {
-		font-size: 12.5px;
+		font-size: 4.2cqi;
 		font-style: italic;
 		line-height: 1.2;
 		overflow-wrap: anywhere;
 	}
 	.place {
-		margin-top: 6px;
-		font-size: 9.5px;
+		margin-top: 2cqi;
+		font-size: 3.2cqi;
 		letter-spacing: 0.12em;
 		text-transform: uppercase;
 		color: var(--ink);
 		line-height: 1.3;
 	}
 	.year {
-		margin-top: 4px;
-		font-size: 16px;
+		margin-top: 1.3cqi;
+		font-size: 5.3cqi;
 	}
-	/* a phone: the card's width */
+	/* a phone: the card's width, the drawn label's type and outline growing with it */
 	@media (max-width: 560px) {
 		.drawn.label {
 			width: 100%;
+		}
+		.photo img {
+			max-width: 100%;
+			max-height: 420px;
 		}
 	}
 </style>

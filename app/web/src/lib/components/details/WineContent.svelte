@@ -252,19 +252,15 @@
 </Tabs>
 
 <style>
-	/* the label at the left of the header's column, the lists beside it */
+	/* the label centred in the header's column, the lists under it */
 	.beside-label {
 		display: flex;
-		align-items: flex-start;
-		gap: 18px;
-	}
-	@media (max-width: 560px) {
-		.beside-label {
-			flex-direction: column;
-		}
+		flex-direction: column;
+		align-items: center;
+		gap: 14px;
 	}
 	.beside-label .lists {
-		flex: 1;
+		align-self: stretch;
 		min-width: 0;
 	}
 	.beside-label:empty,
