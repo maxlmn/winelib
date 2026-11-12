@@ -9,7 +9,7 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import Session, joinedload
 
 from routers.lists import family as list_family, marks as list_marks
-from routers.map import MAPPABLE_VINE, lieu_shapes_response, map_stats, shapes_response
+from routers.map import MAPPABLE_APP, MAPPABLE_VINE, lieu_shapes_response, map_stats, shapes_response
 from cellar import cellar_lines, location_group, maturity, to_base
 from display import iso, vineyard_label, vintage_label
 import photos
@@ -651,7 +651,8 @@ def producer_shapes(producer_id: int, session: Session = Depends(get_session)):
 def wine_shapes(wine_id: int, lieu_dit: str = "", suggested: int | None = None,
                 session: Session = Depends(get_session)):
     """The wine's appellation and vineyard; with lieu_dit (a store id) or suggested (a vineyard id), that one as its
-    vineyard instead (a suggestion seen before it's linked: Maintenance's Lieux-dits / Vineyards for your wines)."""
+    vineyard instead (a suggestion seen before it's linked: Maintenance's Lieux-dits / Vineyards for your wines).
+    Neither with an outline: its region's, so the page keeps its map."""
     w = _get(session, Wine, wine_id, "Wine")
     apps = [w.appellation_id] if w.appellation_id else []
     if suggested is not None:
@@ -661,7 +662,11 @@ def wine_shapes(wine_id: int, lieu_dit: str = "", suggested: int | None = None,
         if found is None:
             raise HTTPException(404, "No such lieu-dit in the map store")
         return found
-    return shapes(session, apps, [w.vineyard_id] if w.vineyard_id else [])
+    vines = [w.vineyard_id] if w.vineyard_id else []
+    mapped = (apps and session.query(Appellation.id).filter(Appellation.id.in_(apps), MAPPABLE_APP).first()) or         (vines and session.query(Vineyard.id).filter(Vineyard.id.in_(vines), MAPPABLE_VINE).first())
+    if not mapped and w.region_obj is not None:
+        return shapes_response(session, apps, vines, region=w.region_obj)
+    return shapes(session, apps, vines)
 
 
 @router.get("/api/appellations/{appellation_id}/shapes")

@@ -194,3 +194,13 @@ def test_details(client):
     assert client.get("/api/appellations/1").json()["bottles"] == 8
     assert client.get("/api/appellations/1").json()["stats"]["tastings"] == 1
     assert client.get("/api/vineyards/9999").status_code == 404
+
+
+def test_a_wine_without_a_mapped_place_gets_its_regions_outline(client):
+    from db import Wine as W
+    with client.app.dependency_overrides[__import__("db").get_session]().__next__() as s:
+        bulles = s.query(W).filter_by(cuvee="Bulles").one().id
+        picasses = s.query(W).filter_by(cuvee="Les Picasses").one().id
+    region = client.get(f"/api/wines/{bulles}/shapes").json()["region"]["features"]
+    assert region and region[0]["properties"]["name"] == "Loire"  # no appellation, no vineyard: the Loire's outline
+    assert "region" not in client.get(f"/api/wines/{picasses}/shapes").json()  # its own map: no region drawn

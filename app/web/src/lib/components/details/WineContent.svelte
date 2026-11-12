@@ -107,7 +107,8 @@
 	const disgorged = $derived(wine.color?.startsWith('Bubbles') ? wine.disgorgement_date : null);
 	const disgYear = $derived(disgorged?.match(/(\d{4})(?!.*\d{4})/)?.[1].slice(2) ?? disgorged);
 	const drink = $derived(drinkFrom || drinkTo ? `${drinkFrom ?? '…'}–${drinkTo ?? '…'}` : null);
-	const hasMap = $derived(!!(wine.appellation || wine.vineyard));
+	// its appellation's or vineyard's map, else its region's (the page keeps its layout, the map behind it)
+	const hasMap = $derived(!!(wine.appellation || wine.vineyard || wine.region));
 
 	// A lieu-dit clicked on the map: this wine's vineyard (and its cuvée's other vintages')
 	const lieuAction = $derived({
@@ -158,7 +159,7 @@
 {#snippet map()}
 	<!-- its vineyard in the address: a new one (linked from the map) is drawn at once -->
 	<DetailMap src={`${shapesUrl('wines', wine.id)}?vineyard=${wine.vineyard?.id ?? ''}`} height={300}
-		frame={wine.vineyard ? { kind: 'vineyard', id: wine.vineyard.id } : null} empty="No boundary data for this appellation." {lieuAction}
+		frame={wine.vineyard ? { kind: 'vineyard', id: wine.vineyard.id } : null} empty="No map for this wine’s appellation or region yet." {lieuAction}
 		draw={drawingVineyard ? { kind: 'vineyards', name: '', wine: wine.id } : null}
 		ondrawn={(saved) => {
 			drawingVineyard = false;
