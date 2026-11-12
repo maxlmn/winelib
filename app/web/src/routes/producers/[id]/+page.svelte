@@ -116,12 +116,12 @@
 	>
 		{#snippet children(tab)}
 			{#if tab === 'cellar'}
-				<CellarSection bottles={p.cellar} regionColors={data.regionColors} empty="No bottles from this producer currently in stock." />
+				<CellarSection bottles={p.cellar} labels={p.labels} regionColors={data.regionColors} empty="No bottles from this producer currently in stock." />
 				{#if p.cellar.length}
 					<a class="more" href={links.cellar({ producer: p.name })}>Open in the cellar →</a>
 				{/if}
 			{:else if tab === 'history'}
-				<TastingHistory tastings={p.tastings} regionColors={data.regionColors} empty="No tasting notes recorded for this producer yet." />
+				<TastingHistory tastings={p.tastings} labels={p.labels} regionColors={data.regionColors} empty="No tasting notes recorded for this producer yet." />
 			{:else}
 				<WineCatalog wines={p.wines} />
 			{/if}

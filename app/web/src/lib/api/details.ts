@@ -109,6 +109,8 @@ export interface ProducerDetail extends RegionInfo {
 	aliases: string | null;
 	stats: CellarTotals & { tastings: number; wines: number };
 	wines: CatalogEntry[];
+	/** the label of each of its wines that has one (its own, else the nearest vintage's): its cellar and history lines */
+	labels?: Record<number, { url: string; from_vintage: string | null }>;
 	/** where the wines come from, most tasted first: wines, bottles in the cellar and tastings each */
 	appellations: PlaceCount[];
 	vineyards: (PlaceCount & { village: string | null; subregion: string | null })[];

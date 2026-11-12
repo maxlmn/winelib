@@ -74,7 +74,8 @@ def _join(a, b):
 def carry(twin, w):
     """Gives the twin what w has and it lacks: every field it has empty (region, vineyard, LWIN, drinking window,
     blend...), w's grapes and shares it lacks, each critic's score (with its note, link and date) the twin has none
-    from, its list entries (one per list: an entry of both keeps the twin's, with w's note) and its style tags."""
+    from, its list entries (one per list: an entry of both keeps the twin's, with w's note), its style tags and its
+    uploaded label (when the twin has none)."""
     for col in Wine.__table__.columns:
         if col.key in KEPT:
             continue
@@ -100,6 +101,9 @@ def carry(twin, w):
             else:
                 item.wine_id, item.producer_id = twin.id, twin.producer_id
                 theirs[(item.list_id, item.kind)] = item
+        if w.id is not None and twin.id is not None:
+            import photos
+            photos.move_label(w.id, twin.id)
         has = {t for t, in session.query(WineTag.tag).filter(WineTag.wine_id == twin.id)}
         for row in session.query(WineTag).filter(WineTag.wine_id == w.id).all():
             if row.tag in has:

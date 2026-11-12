@@ -7,9 +7,13 @@
 		labels: { url: string; vintages: string[] }[];
 		/** the cuvée's name, for the images' descriptions */
 		name: string;
+		/** the pop-up's side: its right edge on the thumbnail's (thumbnails at a line's end), else its left edge */
+		align?: 'left' | 'right';
+		/** a strip of the column's width, the labels side by side in it, slid left and right (‹ ›) when they don't fit */
+		carousel?: boolean;
 	}
 
-	let { labels, name }: Props = $props();
+	let { labels, name, align = 'right', carousel = false }: Props = $props();
 
 	let open = $state<number | null>(null);
 	// a click keeps it open (a phone has no hover): hover alone closes it when the pointer leaves
@@ -34,6 +38,22 @@
 			pinned = false;
 		}
 	}
+	// the carousel: its arrows shown when there's more that way
+	let track = $state<HTMLElement>();
+	let canLeft = $state(false);
+	let canRight = $state(false);
+	function edges() {
+		if (!track) return;
+		canLeft = track.scrollLeft > 1;
+		canRight = track.scrollLeft + track.clientWidth < track.scrollWidth - 1;
+	}
+	function slide(dir: number) {
+		track?.scrollBy({ left: dir * track.clientWidth * 0.8, behavior: 'smooth' });
+	}
+	$effect(() => {
+		void labels.length;
+		edges();
+	});
 	function key(e: KeyboardEvent) {
 		if (e.key === 'Escape' && open !== null) {
 			open = null;
@@ -45,46 +65,105 @@
 <svelte:window onpointerdown={outside} onkeydown={key} />
 
 {#if labels.length}
-	<span class="thumbs" bind:this={root}>
-		{#each labels as l, i (l.url)}
-			<span
-				class="thumb-wrap"
-				role="presentation"
-				onpointerenter={(e) => e.pointerType === 'mouse' && !pinned && (open = i)}
-				onpointerleave={(e) => e.pointerType === 'mouse' && !pinned && (open = null)}
-			>
+	{@const shown = open !== null ? labels[open] : null}
+	<!-- the pop-up outside the strip (it would be clipped in it): under the thumbnails, on their side -->
+	<span
+		class="thumbs"
+		class:carousel
+		bind:this={root}
+		role="presentation"
+		onpointerleave={(e) => e.pointerType === 'mouse' && !pinned && (open = null)}
+	>
+		<span class="track" bind:this={track} onscroll={edges}>
+			{#each labels as l, i (l.url)}
 				<button
 					type="button"
 					class="thumb"
 					aria-expanded={open === i}
 					aria-label="The {vintages(l)} label of {name}"
+					onpointerenter={(e) => e.pointerType === 'mouse' && !pinned && (open = i)}
 					onclick={() => toggle(i)}
 				>
-					<img src={src(l.url, 'thumb')} alt="" loading="lazy" decoding="async" />
+					<img src={src(l.url, 'thumb')} alt="" loading="lazy" decoding="async" onload={edges} />
 				</button>
-				{#if open === i}
-					<span class="pop" role="dialog" aria-label="The {vintages(l)} label of {name}">
-						<a href={l.url} target="_blank" rel="noopener" title="Open the label full size">
-							<img src={src(l.url, 'large')} alt="The {vintages(l)} label of {name}" decoding="async" />
-						</a>
-						<span class="muted">{vintages(l)}</span>
-					</span>
-				{/if}
+			{/each}
+		</span>
+		{#if carousel && canLeft}<button type="button" class="arrow prev" aria-label="Previous labels" onclick={() => slide(-1)}>‹</button>{/if}
+		{#if carousel && canRight}<button type="button" class="arrow next" aria-label="More labels" onclick={() => slide(1)}>›</button>{/if}
+		{#if shown}
+			<span class="pop" class:left={align === 'left'} role="dialog" aria-label="The {vintages(shown)} label of {name}">
+				<a href={shown.url} target="_blank" rel="noopener" title="Open the label full size">
+					<img src={src(shown.url, 'large')} alt="The {vintages(shown)} label of {name}" decoding="async" />
+				</a>
+				<span class="muted">{vintages(shown)}</span>
 			</span>
-		{/each}
+		{/if}
 	</span>
 {/if}
 
 <style>
 	.thumbs {
+		position: relative;
+		display: inline-flex;
+		flex: none;
+		max-width: 100%;
+	}
+	.track {
 		display: inline-flex;
 		flex-wrap: nowrap;
 		gap: 4px;
-		flex: none;
 	}
-	.thumb-wrap {
-		position: relative;
-		display: inline-flex;
+	/* the carousel: the column's width, slid sideways, each label snapping to its edge */
+	.thumbs.carousel {
+		display: flex;
+		width: 100%;
+	}
+	.carousel .track {
+		display: flex;
+		width: 100%;
+		overflow-x: auto;
+		scroll-snap-type: x mandatory;
+		scrollbar-width: none;
+		overscroll-behavior-x: contain;
+	}
+	.carousel .track::-webkit-scrollbar {
+		display: none;
+	}
+	.carousel .thumb {
+		flex: none;
+		scroll-snap-align: start;
+	}
+	/* fewer than fit: at the column's right */
+	.carousel .thumb:first-child {
+		margin-left: auto;
+	}
+	.arrow {
+		position: absolute;
+		top: 50%;
+		transform: translateY(-50%);
+		display: grid;
+		place-items: center;
+		width: 18px;
+		height: 22px;
+		padding: 0;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		background: color-mix(in srgb, var(--surface) 92%, transparent);
+		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+		color: var(--text);
+		font-size: 15px;
+		line-height: 1;
+		cursor: pointer;
+	}
+	.arrow:hover {
+		color: var(--accent);
+		border-color: var(--accent);
+	}
+	.prev {
+		left: -4px;
+	}
+	.next {
+		right: -4px;
 	}
 	.thumb {
 		display: block;
@@ -125,6 +204,10 @@
 		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
 		font-size: 12px;
 		text-align: center;
+	}
+	.pop.left {
+		right: auto;
+		left: 0;
 	}
 	.pop img {
 		display: block;
