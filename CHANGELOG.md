@@ -7,6 +7,9 @@
   vintage's. Without one, a label is drawn in the wine's pip colours (its region's and its own) with the outline of
   its appellation. Settings › Labels: uploaded and drawn, uploaded only, or none. Labels are kept with the photos,
   so the photo backups hold them.
+- **Maps always full size**: a page's map always fills the window, its details over it (Settings › Appearance ›
+  Maps and the map's ⤢ / Back to the page are gone). A wine whose appellation and vineyard have no outline shows its
+  region's, so its page keeps the same layout.
 
 ## v0.7.0
 

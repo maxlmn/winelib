@@ -10,7 +10,6 @@
 	import { FALLBACK_REGION } from '#lib/colors.ts';
 	import { untrack } from 'svelte';
 	import { portal } from '#lib/portal.ts';
-	import { mapView } from '#lib/mapView.svelte.ts';
 	import type { LieuAction, Layers } from '#lib/components/WineMap.svelte';
 	import { DEFAULT_LAYERS } from '#lib/components/WineMap.svelte';
 	import LayerToggle from '#lib/components/LayerToggle.svelte';
@@ -45,37 +44,26 @@
 
 	let { src, current = null, frame = null, height = 320, empty = 'No boundary data for this one.', fullUrl = null, lieuAction = null, draw = null, ondrawn, counts = null, nothing = $bindable(false) }: Props = $props();
 
-	// Full size (Settings › Appearance, or ⤢ here): the map fills the window behind the page, which becomes a column
-	// of cards over its left side (html.map-full in app.css); Esc goes back. Not for a map with nothing to show (no
-	// boundary data): the page stays as it is, its "no data" line in place of the map
-	const big = $derived.by(() => mapView.full && !blank);
+	// Full size, always: the map fills the window behind the page, which becomes a column of cards over its left side
+	// (html.map-full in app.css). Not for a map with nothing to show (no boundary data): the page stays as it is, its
+	// "no data" line in place of the map
+	const big = $derived.by(() => !blank);
 	$effect(() => {
 		document.documentElement.classList.toggle('map-full', big);
 		return () => document.documentElement.classList.remove('map-full');
 	});
-	// Each page opens as Settings › Appearance says (full size or in the page); the same page reloading its map (a
-	// vineyard just linked from it) stays as it is
-	const page = $derived(src.split('?')[0]);
-	$effect(() => {
-		page;
-		mapView.full = untrack(() => mapView.always);
-	});
-	function onkey(e: KeyboardEvent) {
-		if (big && !drawing && e.key === 'Escape') mapView.full = false;
-	}
 
-	// Drawing an outline (draw): on this very map, full size (as it was when done), on the photos (put back after)
+	// Drawing an outline (draw): on this very map, on the photos (put back after)
 	let mlmap = $state<MlMap | null>(null);
 	// the window's size, followed (a phone turned, a window resized): what the page's column or sheet covers
 	let winWidth = $state(1024);
 	let winHeight = $state(768);
 	let drawing = $state<DrawSpec | null>(null);
-	let before: { full: boolean; basemap: Basemap } | null = null;
+	let before: { basemap: Basemap } | null = null;
 	$effect(() => {
 		if (!draw || drawing) return;
 		untrack(() => {
-			before = { full: mapView.full, basemap };
-			mapView.full = true;
+			before = { basemap };
 			basemap = 'satellite';
 			drawing = draw;
 		});
@@ -86,7 +74,7 @@
 	});
 	function drawn(saved: boolean, created?: number) {
 		drawing = null;
-		if (before) ({ full: mapView.full, basemap } = before);
+		if (before) ({ basemap } = before);
 		before = null;
 		ondrawn?.(saved, created);
 	}
@@ -207,7 +195,7 @@
 	const appColor = $derived(shapes?.appellations.features[0]?.properties.color ?? FALLBACK_REGION);
 </script>
 
-<svelte:window onkeydown={onkey} bind:innerWidth={winWidth} bind:innerHeight={winHeight} />
+<svelte:window bind:innerWidth={winWidth} bind:innerHeight={winHeight} />
 
 {#if blank}
 	<div class="empty muted" style:min-height="{Math.min(height, 120)}px">
@@ -271,10 +259,6 @@
 						</button>
 					</div>
 				{/if}
-				<div class="seg size">
-					<button onclick={() => (mapView.full = !big)} title={big ? 'Back to the page (Esc)' : 'The map full size, the page’s details over it'}
-						aria-label={big ? 'Back to the page' : 'Full map'}>{big ? '✕' : '⤢'}</button>
-				</div>
 				</div>
 				<!-- every shape, in columns -->
 				<div class="keys">
@@ -364,9 +348,6 @@
 		figure.big :global(.maplibregl-ctrl-bottom-left) {
 			left: 0;
 		}
-	}
-	.size button {
-		white-space: nowrap;
 	}
 	.map {
 		position: relative;

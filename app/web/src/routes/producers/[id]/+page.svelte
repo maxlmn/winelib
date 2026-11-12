@@ -12,7 +12,6 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import ActionMenu from '#lib/components/ActionMenu.svelte';
 	import { money } from '#lib/format.ts';
-	import { mapView } from '#lib/mapView.svelte.ts';
 
 	let { data } = $props();
 	// Add to a list (the header's icon): the lists card's form, shown even when it's on none yet
@@ -87,7 +86,7 @@
 
 	{#if p.appellations.length || p.vineyards.length}
 		<!-- full size, the map is out behind the page (portal): its card, left with its title, hidden -->
-		<section class="card map-card" class:away={mapView.full && !mapEmpty}>
+		<section class="card map-card" class:away={!mapEmpty}>
 			<h2>Where the wines come from</h2>
 			<DetailMap src={shapesUrl('producers', p.id)} height={340} empty="No boundary data for these appellations." counts={mapCounts} bind:nothing={mapEmpty} />
 			{#if mapEmpty && vineyards.length}
