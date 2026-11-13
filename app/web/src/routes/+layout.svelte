@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '../app.css';
+	import Logo from '#lib/components/Logo.svelte';
 	import { navigating, page } from '$app/state';
 	import { links } from '#lib/links.ts';
 	import { initTheme, setTheme, theme } from '#lib/theme.svelte.ts';
@@ -73,7 +74,7 @@
 <a class="skip" href="#main">Skip to the page</a>
 <div class="shell">
 	<nav bind:offsetHeight={navHeight} aria-label="Pages">
-		<a class="brand" href={links.home()}>🍷 <span>WineLib</span></a>
+		<a class="brand" href={links.home()}><Logo size={24} /><span>WineLib</span></a>
 		<button class="search-btn" onclick={() => (searchOpen = true)}>
 			<span>⌕ Search…</span><kbd>{isMac ? '⌘' : 'Ctrl'} K</kbd>
 		</button>
@@ -175,10 +176,15 @@
 		gap: 2px;
 	}
 	.brand {
+		display: flex;
+		align-items: center;
+		gap: 8px;
 		font-weight: 700;
 		font-size: 17px;
 		padding: 4px 10px 14px;
 		font-family: var(--heading-font);
+		color: var(--text);
+		text-decoration: none;
 	}
 	.search-btn {
 		display: flex;

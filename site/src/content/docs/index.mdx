@@ -5,6 +5,10 @@ template: splash
 editUrl: false
 hero:
   title: Your cellar and tasting journal, on maps
+  # a region's page, its map beside it (the app's screenshots, copied in by scripts/sync.mjs; relative: this page is
+  # the site's root, whatever its base path), whole: Starlight's own hero image would crop it square
+  image:
+    html: '<img class="hero-shot light" src="screenshots/map.png" alt="Bourgogne&rsquo;s page in WineLib, its appellations and producers beside its map" /><img class="hero-shot dark" src="screenshots/map-dark.png" alt="Bourgogne&rsquo;s page in WineLib, its appellations and producers beside its map" />'
   tagline: WineLib keeps your bottles and every wine you've tasted, and puts them on the map of the world's appellations, down to the vineyard. It runs on your own computer, so your data stays yours.
   actions:
     - text: Try the demo

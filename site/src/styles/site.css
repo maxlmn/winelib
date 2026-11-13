@@ -1,8 +1,8 @@
-/* The app's colours: its rosé accent on warm paper (light) and plum night (dark) */
+/* The app's colours: its default palette's bordeaux on warm paper (light), its rose on plum night (dark) */
 :root {
-	--sl-color-accent-low: #3c2533;
-	--sl-color-accent: #c27ba0;
-	--sl-color-accent-high: #ecc6da;
+	--sl-color-accent-low: #3d1a27;
+	--sl-color-accent: #d4637f;
+	--sl-color-accent-high: #f3c6d2;
 	--sl-color-white: #ece8ef;
 	--sl-color-gray-1: #dcd6e0;
 	--sl-color-gray-2: #b9b1bf;
@@ -13,9 +13,9 @@
 	--sl-color-black: #141216;
 }
 :root[data-theme='light'] {
-	--sl-color-accent-low: #f3dfe9;
-	--sl-color-accent: #a85c84;
-	--sl-color-accent-high: #6b3253;
+	--sl-color-accent-low: #f4dde4;
+	--sl-color-accent: #8e2443;
+	--sl-color-accent-high: #5e1129;
 	--sl-color-white: #2a2522;
 	--sl-color-gray-1: #3b3531;
 	--sl-color-gray-2: #554e49;
@@ -54,4 +54,29 @@
 }
 .hero .tagline {
 	max-width: 36rem;
+}
+
+/* The hero's picture: the app's window, whole, framed like the screenshots below */
+.hero > .hero-html {
+	width: 100%;
+}
+.hero-shot {
+	display: block;
+	width: 100%;
+	height: auto;
+	border-radius: 0.75rem;
+	border: 1px solid var(--sl-color-hairline);
+	box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.12);
+}
+:root[data-theme='light'] .hero-shot.dark,
+:root:not([data-theme='light']) .hero-shot.light {
+	display: none;
+}
+@media (min-width: 50rem) {
+	.hero {
+		grid-template-columns: 5fr 6fr;
+	}
+	.hero > .hero-html {
+		width: 100%;
+	}
 }

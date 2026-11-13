@@ -15,8 +15,9 @@ export default defineConfig({
 		starlight({
 			title: 'WineLib',
 			description: 'Your wine cellar and tasting journal, on maps. Self-hosted, open source.',
-			logo: { src: './src/assets/logo.png', alt: '' },
-			favicon: '/icon.png',
+			// the app's mark (app/web/scripts/brand.mjs draws these), on the page's own ground
+			logo: { light: './src/assets/logo-light.svg', dark: './src/assets/logo-dark.svg', alt: '' },
+			favicon: '/favicon.svg',
 			head: [{ tag: 'link', attrs: { rel: 'apple-touch-icon', href: `${base.replace(/\/$/, '')}/apple-touch-icon.png` } }],
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/maxlmn/winelib' }],
 			customCss: ['./src/styles/site.css'],

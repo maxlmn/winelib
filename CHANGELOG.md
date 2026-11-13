@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **A logo of its own**: a wine glass in a map pin, in the app's bordeaux, drawn as a vector: the sidebar's mark (in
+  your palette's colours), the favicon (light or dark with your system), the loading screen and the install icons;
+  the 🍷 emoji, which every system drew its own way, is gone. `app/web/scripts/brand.mjs` draws every file from one
+  drawing.
+- **The website in the app's colours**: the bordeaux of the app's default palette (its rose in dark), the new logo on
+  the page's own ground (no black tile), and the home page opens on a region's page beside the headline.
+
 ## v0.8.0
 
 - **A wine's label on its page**: upload the real one (a photo, a scan or a drawing: *Upload its label* in the ⋯
