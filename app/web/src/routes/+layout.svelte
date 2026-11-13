@@ -182,7 +182,7 @@
 		font-weight: 700;
 		font-size: 17px;
 		padding: 4px 10px 14px;
-		font-family: var(--heading-font);
+		font-family: var(--brand-font);
 		color: var(--text);
 		text-decoration: none;
 	}

@@ -80,3 +80,10 @@
 		width: 100%;
 	}
 }
+
+/* The name WineLib as the app sets it: its serif, in the text's colour, beside the mark */
+.site-title {
+	font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+	font-weight: 700;
+	color: var(--sl-color-white);
+}
