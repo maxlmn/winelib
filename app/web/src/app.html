@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍷</text></svg>" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.svg" type="image/svg+xml" />
 		<!-- Installable on a phone or a computer (Add to Home Screen, Install app): service-worker.ts -->
 		<link rel="manifest" href="%sveltekit.assets%/manifest.webmanifest" />
 		<link rel="apple-touch-icon" href="%sveltekit.assets%/apple-touch-icon.png" />
@@ -52,8 +52,11 @@
 				opacity: 0;
 				animation: boot-in 0.3s 0.4s forwards;
 			}
+			#boot img {
+				margin: 0 auto 4px;
+			}
 			#boot b {
-				font-size: 20px;
+				font: 700 22px 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
 				color: #2a2522;
 			}
 			:root[data-theme='dark'] #boot {
@@ -71,7 +74,7 @@
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">
-		<div id="boot" aria-live="polite"><b>🍷 WineLib</b><span>Loading…</span></div>
+		<div id="boot" aria-live="polite"><img src="%sveltekit.assets%/favicon.svg" width="44" height="44" alt="" /><b>WineLib</b><span>Loading…</span></div>
 		<div style="display: contents">%sveltekit.body%</div>
 	</body>
 </html>

@@ -20,6 +20,8 @@
 	--radius: 10px;
 	--shadow: 0 1px 2px #0000000d, 0 4px 16px #00000010;
 	--heading-font: inherit;
+	/* the name WineLib, set the same everywhere (the website, the loading screen), whatever the heading font */
+	--brand-font: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
 	color-scheme: light;
 }
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- **A logo of its own**: a black wine glass of bordeaux in a white map pin, drawn as a vector, the same on a light or a
+  dark page: the sidebar's mark, the favicon, the loading screen and the install icons (on a bordeaux tile);
+  the 🍷 emoji, which every system drew its own way, is gone. `app/web/scripts/brand.mjs` draws every file from one
+  drawing.
+- **The website in the app's colours**: the bordeaux of the app's default palette (its rose in dark), the new logo on
+  the page's own ground (no black tile), and the home page opens on a region's page beside the headline.
+- **The name WineLib set the same everywhere**: in the app's serif, on the website, in the sidebar (whatever heading
+  font you chose in Settings › Appearance) and on the loading screen.
+
 ## v0.8.0
 
 - **A wine's label on its page**: upload the real one (a photo, a scan or a drawing: *Upload its label* in the ⋯
