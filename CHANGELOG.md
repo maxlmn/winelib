@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.8.1
 
 - **More room for the map on a phone**: the legend folds to one row (Legend, Plain or Satellite, Full map), its
   layers and shapes a tap away; **Full map** sets the page's cards aside for the map alone, **Show the page** brings
