@@ -15,6 +15,8 @@ export interface ListLine {
 	grapes: string[];
 	format: string | null;
 	vintages: ListVintage[];
+	/** its bottles, oldest vintage first: the line's details on screen */
+	bottles: Bottle[];
 }
 
 export interface ListAppellation {
@@ -98,7 +100,8 @@ export function wineList(bottles: Bottle[], leftOut: Set<string> = new Set()): L
 									format: bs[0].format,
 									vintages: [...new Map(bs.map((b) => [vintageKey(b), b.vintage]))]
 										.map(([key, vintage]) => ({ key, vintage }))
-										.sort((a, b) => byVintage(a.vintage, b.vintage))
+										.sort((a, b) => byVintage(a.vintage, b.vintage)),
+									bottles: [...bs].sort((a, b) => byVintage(a.vintage, b.vintage) || byText(a.location, b.location))
 								}))
 								.sort(
 									(a, b) =>

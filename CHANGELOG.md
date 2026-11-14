@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **On a phone, a page's cards scroll over its map**: they start over the map's lower half and scroll with the
+  window, up over the map and its legend (they used to scroll in their own box under it, the legend always on top).
+- **A wine list's bottles on a click**: on screen, clicking a wine on the wine list opens its bottles under it
+  (vintage, how many, where they're kept, score, price paid, where bought), each one a link to its card on the wine's
+  page. Never printed.
 - **A wine list by storage**: the wine list page has the cellar's Storage filter, to print the list of one place
   or of a few together (it stays in the page's address, like the rest of the selection).
 - **A logo of its own**: a black wine glass of bordeaux in a white map pin, drawn as a vector, the same on a light or a

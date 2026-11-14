@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { SvelteSet } from 'svelte/reactivity';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
 	import MultiSelect from '#lib/components/MultiSelect.svelte';
 	import { activeCount, filterLocations, filterWines, fromParams, options, toParams, emptyFilters } from '#lib/filters.ts';
 	import { links } from '#lib/links.ts';
+	import { symbol } from '#lib/format.ts';
+	import { appSettings } from '#lib/settings.svelte.ts';
 	import { regionLabel } from '#lib/regions.svelte.ts';
 	import { formatName, vintageKey, wineList } from '#lib/wineList.ts';
 	import type { Bottle } from '#lib/types.ts';
@@ -66,6 +69,12 @@
 			if (id) p.set('from', id);
 			else p.delete('from');
 		});
+	// A line's bottles, opened under it by clicking the wine (on screen only: never printed)
+	const opened = new SvelteSet<string>();
+	const toggle = (key: string) => (opened.has(key) ? opened.delete(key) : opened.add(key));
+	const paid = (b: Bottle) => (b.price ? `${symbol(b.currency ?? appSettings.currency)}${Math.round(b.price).toLocaleString()}` : null);
+	const where = (b: Bottle) => (b.location_group && b.location_group !== b.location ? `${b.location_group} › ${b.location}` : b.location);
+
 	// Back to the cellar with the same filters, to change the selection
 	const cellarHref = $derived(`${links.cellar()}?${toParams(filters)}`);
 </script>
@@ -143,14 +152,34 @@
 						{#each a.lines as l (l.key)}
 							<div class="line">
 								{#if ends}<span class="end"><BottleEnd region={data.regionColors[r.region]} color={l.color} format={l.format} size={9} /></span>{/if}
-								<div class="wine">
-									<span class="producer">{l.producer}</span>{#if l.cuvee}<span class="cuvee">{l.cuvee}</span>{/if}{#if formatName(l.format)}<span class="format">{formatName(l.format)}</span>{/if}{#if grapes && l.grapes.length}<span class="grapes">{l.grapes.join(', ')}</span>{/if}
-								</div>
+								{#snippet name()}<span class="producer">{l.producer}</span>{#if l.cuvee}<span class="cuvee">{l.cuvee}</span>{/if}{#if formatName(l.format)}<span class="format">{formatName(l.format)}</span>{/if}{#if grapes && l.grapes.length}<span class="grapes">{l.grapes.join(', ')}</span>{/if}{/snippet}
+								{#if whole}
+									<div class="wine">{@render name()}</div>
+								{:else}
+									<button class="wine open" class:on={opened.has(l.key)} aria-expanded={opened.has(l.key)} title="Its bottles" onclick={() => toggle(l.key)}>{@render name()}</button>
+								{/if}
 								<div class="vintages">
 									{#each l.vintages as v, i (v.key)}{#if i}<span class="sep">·</span>{/if}<button class="vintage" title="Leave {v.vintage || 'it'} out" onclick={() => leaveOut([v.key])}>{v.vintage}</button>{#if whole && tastedKeys.has(v.key)}<span class="tick" title="Tasted">✓</span>{/if}{/each}
 								</div>
 								<button class="out no-print" title="Leave out of the list" aria-label="Leave {l.producer} {l.cuvee} out" onclick={() => leaveOut(l.vintages.map((v) => v.key))}>✕</button>
 							</div>
+							{#if !whole && opened.has(l.key)}
+								<ul class="bottles no-print">
+									{#each l.bottles as b (b.bottle_id)}
+										<li>
+											<a href={links.wineBottle(b.wine_id, b.bottle_id)}>
+												<span class="b-vintage">{b.vintage || 'NV'}</span>
+												<span class="b-qty">{b.qty} ×</span>
+												<span class="b-where">{where(b) || 'No location'}</span>
+												{#if b.scores}<span class="b-extra">{b.scores}</span>{/if}
+												{#if paid(b)}<span class="b-extra" title="Paid a bottle">{paid(b)}</span>{/if}
+												{#if b.vendor}<span class="b-extra">{b.vendor}</span>{/if}
+												<span class="b-go" aria-hidden="true">→</span>
+											</a>
+										</li>
+									{/each}
+								</ul>
+							{/if}
 						{/each}
 					{/each}
 				</div>
@@ -325,6 +354,60 @@
 	}
 	.producer {
 		font-weight: 600;
+	}
+	/* the wine's name opens its bottles: the line still reads like print */
+	button.wine {
+		border: none;
+		background: none;
+		padding: 0;
+		font: inherit;
+		color: inherit;
+		text-align: left;
+		cursor: pointer;
+	}
+	button.wine:hover .producer,
+	button.wine.on .producer {
+		text-decoration: underline;
+		text-decoration-color: var(--rule);
+		text-underline-offset: 2px;
+	}
+	.bottles {
+		list-style: none;
+		margin: 0.5mm 0 2mm 7mm;
+		padding: 1mm 0 1mm 3mm;
+		border-left: 2px solid var(--rule);
+		font-family: var(--font, system-ui), system-ui, sans-serif;
+		font-size: 9pt;
+	}
+	.bottles a {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0 3mm;
+		padding: 0.6mm 2mm;
+		border-radius: 3px;
+		color: var(--ink);
+		text-decoration: none;
+	}
+	.bottles a:hover {
+		background: #f4efe9;
+	}
+	.b-vintage {
+		min-width: 3em;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+	}
+	.b-qty {
+		min-width: 2.2em;
+		font-variant-numeric: tabular-nums;
+	}
+	.b-where {
+		flex: 1;
+		min-width: 8em;
+	}
+	.b-extra,
+	.b-go {
+		color: var(--ink-soft);
 	}
 	.cuvee::before {
 		content: ' · ';

@@ -236,7 +236,7 @@ test('Needs attention checks again after a task fixed what it found', async ({ p
 });
 
 // (desktop Chromium scrolls them even when a phone's touch scrolling doesn't: a basic check, not that one)
-test('a phone, the map full size: the cards over it scroll', async ({ page }) => {
+test('a phone, the map full size: the cards over it scroll, up over its legend', async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 700 });
 	await page.goto(`/wines/${ids().wine}`);
 	const card = page.locator('main header.head'); // the wine's card, at the top: its label makes it tall
@@ -244,7 +244,12 @@ test('a phone, the map full size: the cards over it scroll', async ({ page }) =>
 	const box = (await card.boundingBox())!;
 	await page.mouse.move(box.x + box.width / 2, box.y + 10);
 	await page.mouse.wheel(0, 300);
-	await expect.poll(() => page.evaluate(() => document.querySelector('main')!.scrollTop)).toBeGreaterThan(0);
+	await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(0);
+	// scrolled up to the legend's place, the cards are over it (they used to scroll under it)
+	await page.evaluate(() => scrollTo(0, document.querySelector('main header.head')!.getBoundingClientRect().top + scrollY - 60));
+	const legend = (await page.locator('figure.big figcaption').boundingBox())!;
+	const over = await page.evaluate(([x, y]) => !!document.elementFromPoint(x, y)?.closest('main'), [legend.x + 20, legend.y + legend.height / 2]);
+	expect(over).toBe(true);
 });
 
 test("a grape's page: its description in its one card, the family beside it, the sources' credits", async ({ page }) => {
