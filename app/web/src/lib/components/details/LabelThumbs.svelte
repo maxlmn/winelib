@@ -24,7 +24,16 @@
 	const src = (url: string, size: 'thumb' | 'large') => (/\.svg(\?|$)/i.test(url) ? url : photoSrc(url, size));
 	const vintages = (l: { vintages: string[] }) => (l.vintages.length > 3 ? `${l.vintages.at(-1)}–${l.vintages[0]}` : l.vintages.join(', '));
 
+	// no room under the thumbnails (the foot of the window, a phone's bottom bar): the pop-up opens above them
+	let up = $state(false);
+	function place() {
+		if (!root) return;
+		const r = root.getBoundingClientRect();
+		const need = Math.min(340, innerHeight * 0.5);
+		up = r.bottom + need > innerHeight - 72 && r.top > need;
+	}
 	function toggle(i: number) {
+		place();
 		if (open === i && pinned) {
 			open = null;
 			pinned = false;
@@ -82,7 +91,7 @@
 					class="thumb"
 					aria-expanded={open === i}
 					aria-label="The {vintages(l)} label of {name}"
-					onpointerenter={(e) => e.pointerType === 'mouse' && !pinned && (open = i)}
+					onpointerenter={(e) => e.pointerType === 'mouse' && !pinned && (place(), (open = i))}
 					onclick={() => toggle(i)}
 				>
 					<img src={src(l.url, 'thumb')} alt="" loading="lazy" decoding="async" onload={edges} />
@@ -92,7 +101,7 @@
 		{#if carousel && canLeft}<button type="button" class="arrow prev" aria-label="Previous labels" onclick={() => slide(-1)}>‹</button>{/if}
 		{#if carousel && canRight}<button type="button" class="arrow next" aria-label="More labels" onclick={() => slide(1)}>›</button>{/if}
 		{#if shown}
-			<span class="pop" class:left={align === 'left'} role="dialog" aria-label="The {vintages(shown)} label of {name}">
+			<span class="pop" class:left={align === 'left'} class:up role="dialog" aria-label="The {vintages(shown)} label of {name}">
 				<a href={shown.url} use:opensImage={{ src: src(shown.url, 'large'), alt: `The ${vintages(shown)} label of ${name}` }} title="Open the label full size">
 					<img src={src(shown.url, 'large')} alt="The {vintages(shown)} label of {name}" decoding="async" />
 				</a>
@@ -208,6 +217,10 @@
 		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
 		font-size: 12px;
 		text-align: center;
+	}
+	.pop.up {
+		top: auto;
+		bottom: calc(100% + 6px);
 	}
 	.pop.left {
 		right: auto;

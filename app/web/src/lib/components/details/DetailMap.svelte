@@ -277,7 +277,10 @@
 					</span>
 				{/each}
 				</div>
-				{#if missing.length}<span class="missing" title={missing.join(' · ')}>{missing.length} without boundaries</span>{/if}
+				{#if missing.length && outline && !keys.length}
+					<!-- the region drawn in place of a wine's appellation or vineyard, which has no outline -->
+					<span class="missing">{missing.join(', ')}: no outline, {outline.features[0].properties.name} shown</span>
+				{:else if missing.length}<span class="missing" title={missing.join(' · ')}>{missing.length} without boundaries</span>{/if}
 			</figcaption>
 		{/if}
 	</figure>

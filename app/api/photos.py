@@ -186,23 +186,79 @@ def save_label(wine_id, data, content_type):
     return name
 
 
+def _spare_prefix(wine_id):
+    return f"{LABEL_PREFIX}{int(wine_id)}-spare-"
+
+
+def label_spares(wine_id):
+    """The file names of the labels kept aside for this wine: those of wines merged into it when it had its own."""
+    if not os.path.isdir(PHOTOS_DIR):
+        return []
+    prefix = _spare_prefix(wine_id)
+    return sorted(n for n in os.listdir(PHOTOS_DIR) if n.startswith(prefix) and os.path.splitext(n)[1].lower() in PHOTO_EXTS)
+
+
+def _drop_thumbs_of(names):
+    bases = {os.path.splitext(n)[0] for n in names}
+    try:
+        for name in os.listdir(THUMBS_DIR):
+            if os.path.splitext(name.rsplit("~", 2)[0])[0] in bases:
+                os.remove(os.path.join(THUMBS_DIR, name))
+    except OSError:
+        pass
+
+
+def _new_spare(wine_id, ext):
+    n = 1
+    while os.path.exists(os.path.join(PHOTOS_DIR, name := f"{_spare_prefix(wine_id)}{n}{ext}")):
+        n += 1
+    return name
+
+
 def move_label(from_id, to_id):
-    """A merged wine's label goes to the wine it was merged into, when that one has none; else it's kept aside
-    (wine-label-merged-<id>, shown nowhere) rather than lost. Whether it moved."""
-    old = _label_files(from_id)
-    if not old:
-        return False
+    """A merged wine's label goes to the wine it was merged into, when that one has none; else it's kept aside for
+    it (wine-label-<id>-spare-<n>: its page offers to use it or remove it) rather than lost. Its own spares follow.
+    Whether its label became the kept wine's."""
     moved = False
-    for name in old:
+    for name in _label_files(from_id):
         ext = os.path.splitext(name)[1]
         if not moved and not _label_files(to_id):
             target, moved = f"{LABEL_PREFIX}{int(to_id)}{ext}", True
         else:
-            target = f"{LABEL_PREFIX}merged-{int(from_id)}{ext}"
+            target = _new_spare(to_id, ext)
         os.replace(os.path.join(PHOTOS_DIR, name), os.path.join(PHOTOS_DIR, target))
+    for name in label_spares(from_id):
+        os.replace(os.path.join(PHOTOS_DIR, name), os.path.join(PHOTOS_DIR, _new_spare(to_id, os.path.splitext(name)[1])))
     _drop_label_thumbs(from_id)
     _drop_label_thumbs(to_id)
     return moved
+
+
+def use_spare(wine_id, name):
+    """A label kept aside becomes the wine's; the one it had is kept aside in its place. The new file name, or None
+    when the wine has no such spare."""
+    if name not in label_spares(wine_id):
+        return None
+    ext = os.path.splitext(name)[1]
+    holding = os.path.join(PHOTOS_DIR, f".{name}.part")
+    os.replace(os.path.join(PHOTOS_DIR, name), holding)
+    for old in _label_files(wine_id):
+        os.replace(os.path.join(PHOTOS_DIR, old), os.path.join(PHOTOS_DIR, _new_spare(wine_id, os.path.splitext(old)[1])))
+    new = f"{LABEL_PREFIX}{int(wine_id)}{ext}"
+    os.replace(holding, os.path.join(PHOTOS_DIR, new))
+    os.utime(os.path.join(PHOTOS_DIR, new))  # a new version: its address changes
+    _drop_label_thumbs(wine_id)
+    _drop_thumbs_of(label_spares(wine_id) + [name])
+    return new
+
+
+def delete_spare(wine_id, name):
+    """Removes a label kept aside; whether the wine had it."""
+    if name not in label_spares(wine_id):
+        return False
+    os.remove(os.path.join(PHOTOS_DIR, name))
+    _drop_thumbs_of([name])
+    return True
 
 
 def delete_label(wine_id):

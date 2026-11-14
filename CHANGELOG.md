@@ -10,6 +10,11 @@
   the page's own ground (no black tile), and the home page opens on a region's page beside the headline.
 - **The name WineLib set the same everywhere**: in the app's serif, on the website, in the sidebar (whatever heading
   font you chose in Settings › Appearance) and on the loading screen.
+- **Labels, the loose ends**: a first label can be dropped anywhere on the wine's page; a merge that finds a label on
+  both wines keeps the second under the first (*Use this one*, *Remove*); a label opened near the foot of the screen
+  opens upward; a producer's history gives labels a column only on the days that have one.
+- A wine shown on its region's map says so in the legend (“Vin de France: no outline, Loire shown”), and *this
+  bottle* in a wine's cellar list goes to the bottle's card.
 
 ## v0.8.0
 

@@ -1,10 +1,11 @@
 <script lang="ts">
 	/** A wine's label at the top of its page (Settings > Labels): the one uploaded for it (a photo, a scan, a drawing),
 	 * else the nearest vintage's of the cuvée; nothing when none is. Uploading, replacing, removing: the page's ⋯ menu
-	 * (pick, remove), or an image dropped on the label */
+	 * (pick, remove), or an image dropped on the label (anywhere on the page while it has none). Under it, the labels
+	 * kept aside from wines merged into it: to use in its place, or remove */
 	import { invalidateAll } from '$app/navigation';
 	import { ask, tell } from '#lib/ask.svelte.ts';
-	import { LABEL_TYPES, MAX_PHOTO_MB, deleteLabel, photoSrc, uploadLabel } from '#lib/api/photos.ts';
+	import { LABEL_TYPES, MAX_PHOTO_MB, deleteLabel, deleteSpareLabel, photoSrc, uploadLabel, useSpareLabel } from '#lib/api/photos.ts';
 	import { appSettings } from '#lib/settings.svelte.ts';
 	import { opensImage } from '#lib/lightbox.svelte.ts';
 
@@ -17,9 +18,44 @@
 		vintage: string;
 		/** the uploaded label: this vintage's, else (from_vintage) another vintage's of the cuvée */
 		uploaded?: { url: string; from_vintage: string | null } | null;
+		/** labels kept aside from wines merged into this one */
+		spares?: { name: string; url: string }[];
 	}
 
-	let { wineId, producer, cuvee, place, vintage, uploaded = null }: Props = $props();
+	let { wineId, producer, cuvee, place, vintage, uploaded = null, spares = [] }: Props = $props();
+
+	// Without a label, an image dragged over the page: dropped anywhere, it's the wine's label
+	let over = $state(false);
+	const hasFile = (e: DragEvent) => !!e.dataTransfer?.types.includes('Files');
+	const anywhere = $derived(appSettings.wine_labels !== 'off' && !uploaded);
+	function pageOver(e: DragEvent) {
+		if (!anywhere || !hasFile(e)) return;
+		e.preventDefault();
+		over = true;
+	}
+	function pageLeave(e: DragEvent) {
+		if (!e.relatedTarget) over = false; // left the window
+	}
+	function pageDrop(e: DragEvent) {
+		if (!anywhere || !hasFile(e)) return;
+		e.preventDefault();
+		over = false;
+		put(e.dataTransfer?.files[0]);
+	}
+
+	async function spare(name: string, use: boolean) {
+		if (!use && !(await ask('It can’t be brought back.', { title: 'Remove this kept label?', confirmLabel: 'Remove', danger: true }))) return;
+		busy = use ? 'Changing…' : 'Removing…';
+		try {
+			await (use ? useSpareLabel : deleteSpareLabel)(wineId, name);
+			await invalidateAll();
+		} catch (e) {
+			await tell(e instanceof Error ? e.message : String(e), use ? 'The label wasn’t changed' : 'The label wasn’t removed');
+		} finally {
+			busy = '';
+		}
+	}
+	const isSvg = (url: string) => /\.svg(\?|$)/i.test(url);
 
 	let input = $state<HTMLInputElement>();
 	let busy = $state('');
@@ -65,7 +101,10 @@
 	const large = $derived(uploaded ? (/\.svg(\?|$)/i.test(uploaded.url) ? uploaded.url : photoSrc(uploaded.url, 'large')) : '');
 </script>
 
+<svelte:window ondragover={pageOver} ondragleave={pageLeave} ondrop={pageDrop} />
+
 {#if appSettings.wine_labels !== 'off'}
+	{#if over}<div class="drop-here" aria-hidden="true"><span>Drop the image: this wine’s label</span></div>{/if}
 	<input bind:this={input} type="file" accept={LABEL_TYPES.join(',')} hidden onchange={(e) => put(e.currentTarget.files?.[0])} />
 	{#if uploaded}
 		<div
@@ -90,6 +129,20 @@
 	{:else if busy}
 		<span class="muted small" role="status">{busy}</span>
 	{/if}
+	{#if spares.length}
+		<div class="spares">
+			<span class="muted">Kept from {spares.length > 1 ? 'wines' : 'a wine'} merged into this one</span>
+			{#each spares as s (s.name)}
+				<div class="spare">
+					<a href={s.url} use:opensImage={{ src: isSvg(s.url) ? s.url : photoSrc(s.url, 'large'), alt: 'A label kept from a merged wine' }} title="Open it full size">
+						<img src={isSvg(s.url) ? s.url : photoSrc(s.url, 'thumb')} alt="A label kept from a merged wine" loading="lazy" decoding="async" />
+					</a>
+					<button type="button" class="link" disabled={!!busy} onclick={() => spare(s.name, true)}>Use this one</button>
+					<button type="button" class="link" disabled={!!busy} onclick={() => spare(s.name, false)}>Remove</button>
+				</div>
+			{/each}
+		</div>
+	{/if}
 {/if}
 
 <style>
@@ -112,6 +165,59 @@
 	}
 	.small {
 		font-size: 12px;
+	}
+	/* an image dragged over the page of a wine without a label */
+	.drop-here {
+		position: fixed;
+		inset: 0;
+		z-index: 900;
+		display: grid;
+		place-items: center;
+		background: color-mix(in srgb, var(--accent) 14%, transparent);
+		outline: 3px dashed var(--accent);
+		outline-offset: -10px;
+		pointer-events: none;
+	}
+	.drop-here span {
+		padding: 10px 16px;
+		border-radius: 8px;
+		background: var(--surface);
+		box-shadow: var(--shadow);
+		font-size: 14px;
+	}
+	/* the labels kept aside from a merge */
+	.spares {
+		align-self: stretch;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 6px;
+		font-size: 12px;
+	}
+	.spare {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+	.spare img {
+		display: block;
+		height: 48px;
+		max-width: 90px;
+		object-fit: cover;
+		border: 1px solid var(--border);
+		border-radius: 3px;
+	}
+	.link {
+		padding: 0;
+		border: none;
+		background: none;
+		font: inherit;
+		color: var(--accent);
+		cursor: pointer;
+	}
+	.link:disabled {
+		color: var(--muted);
+		cursor: default;
 	}
 	/* the label: up to the card's width (never enlarged past its own size), centred, not too tall */
 	.photo {

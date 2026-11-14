@@ -56,6 +56,22 @@ def delete_label(wine_id: int):
     return {"deleted": photos.delete_label(wine_id)}
 
 
+@router.post("/api/wines/{wine_id}/label/spares/{name}")
+def use_spare_label(wine_id: int, name: str):
+    """A label kept aside from a merge becomes the wine's (the one it had is kept aside in its place)."""
+    new = photos.use_spare(wine_id, name)
+    if new is None:
+        raise HTTPException(404, "No such label kept for this wine")
+    return {"url": photos.url_for(new)}
+
+
+@router.delete("/api/wines/{wine_id}/label/spares/{name}")
+def delete_spare_label(wine_id: int, name: str):
+    if not photos.delete_spare(wine_id, name):
+        raise HTTPException(404, "No such label kept for this wine")
+    return {"deleted": name}
+
+
 @router.delete("/api/photos")
 def delete_photo(place: str, date: date):
     _check(place)

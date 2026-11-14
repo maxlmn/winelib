@@ -258,6 +258,8 @@ def wine_detail(wine_id: int, session: Session = Depends(get_session)):
         "scores": scores.listing(w.scores),
         "actions": plugins.wine_actions(w),  # buttons the plug-ins add (plugins.py)
         "label": _label(w, family),
+        # labels kept aside from wines merged into it
+        "label_spares": [{"name": n, "url": photos.url_for(n)} for n in photos.label_spares(w.id)],
         "maturity": maturity(w.drink_window_start, w.drink_window_end),
         "vintages": vintages,
         # lists naming the cuvée, any vintage (those naming a vintage: on it)
