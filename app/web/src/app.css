@@ -433,6 +433,12 @@ html.map-full main .card {
 	html.map-full main > * {
 		pointer-events: auto;
 	}
+	/* the map alone (its Full map tap): the page's cards slid away under the bottom bar */
+	html.map-only main {
+		visibility: hidden;
+		max-height: 100dvh;
+		overflow: hidden;
+	}
 }
 
 /* Drawing an outline on a phone (DetailMap, OutlineTools): the whole map, the page's sheet set aside */

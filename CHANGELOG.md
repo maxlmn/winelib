@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **More room for the map on a phone**: the legend folds to one row (Legend, Plain or Satellite, Full map), its
+  layers and shapes a tap away; **Full map** sets the page's cards aside for the map alone, **Show the page** brings
+  them back.
 - **On a phone, a page's cards scroll over its map**: they start over the map's lower half and scroll with the
   window, up over the map and its legend (they used to scroll in their own box under it, the legend always on top).
 - **A wine list's bottles on a click**: on screen, clicking a wine on the wine list opens its bottles under it
