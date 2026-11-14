@@ -2,7 +2,8 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
-	import { activeCount, filterLocations, filterWines, fromParams, toParams, emptyFilters } from '#lib/filters.ts';
+	import MultiSelect from '#lib/components/MultiSelect.svelte';
+	import { activeCount, filterLocations, filterWines, fromParams, options, toParams, emptyFilters } from '#lib/filters.ts';
 	import { links } from '#lib/links.ts';
 	import { regionLabel } from '#lib/regions.svelte.ts';
 	import { formatName, vintageKey, wineList } from '#lib/wineList.ts';
@@ -24,6 +25,9 @@
 	const grapes = $derived(params.get('grapes') === '1');
 
 	const inCellar = $derived(filterLocations(filterWines(data.cellar.bottles, filters), filters));
+	// Where the bottles are kept (the cellar's Storage filter, picked here too): one place's list, or a few together
+	const storages = $derived(options(filterWines(data.cellar.bottles, filters), 'location_group'));
+	const setStorage = (values: string[]) => goto(`?${toParams({ ...filters, group: values }, params)}`, { replace: true, reset: false });
 	const onList = $derived(new Set(list?.items.flatMap((i) => i.wine_ids) ?? []));
 	// A list's entries as lines of the menu: a wine its vintage, a cuvée "any vintage", a producer alone
 	const entries = $derived(
@@ -94,6 +98,9 @@
 				{#each data.lists as l (l.id)}<option value={String(l.id)}>{l.name}</option>{/each}
 			</select>
 		</label>
+		{#if !whole && (storages.length > 1 || filters.group.length)}
+			<MultiSelect label="Storage" options={storages} selected={filters.group} onchange={setStorage} />
+		{/if}
 		{#if list}
 			<div class="seg" role="group" aria-label="What to print">
 				<button class:on={!whole} onclick={() => set((p) => p.delete('whole'))}>Your bottles of it</button>

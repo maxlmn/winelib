@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **A wine list by storage**: the wine list page has the cellar's Storage filter, to print the list of one place
+  or of a few together (it stays in the page's address, like the rest of the selection).
 - **A logo of its own**: a black wine glass of bordeaux in a white map pin, drawn as a vector, the same on a light or a
   dark page: the sidebar's mark, the favicon, the loading screen and the install icons (on a bordeaux tile);
   the 🍷 emoji, which every system drew its own way, is gone. `app/web/scripts/brand.mjs` draws every file from one
