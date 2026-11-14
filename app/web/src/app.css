@@ -417,22 +417,21 @@ html.map-full main :is(.body.split, .about.has-image, .top, .map-card) {
 html.map-full main .card {
 	box-shadow: var(--shadow);
 }
-/* On a phone the page's cards float over the map's lower half, scrolled on their own (a touch there scrolls them,
-   one above pans the map) */
+/* On a phone the page's cards start over the map's lower half and scroll with the window, up over the map and its
+   legend (which stay behind). The space above the first card is the map's: a touch there pans it, one on the cards
+   scrolls the page */
 @media (max-width: 760px) {
 	html.map-full main {
-		position: fixed;
-		left: 0;
-		right: 0;
-		bottom: var(--tab-h);
-		height: 45dvh;
 		width: auto;
-		overflow-y: auto;
-		overscroll-behavior: contain;
-		padding: 12px 10px 40px;
+		padding: calc(55dvh - var(--tab-h) - var(--nav-h, 52px)) 10px calc(40px + var(--tab-h));
+		/* a short page still scrolls its first card up to the bar, over the legend */
+		min-height: calc(155dvh - var(--tab-h) - 2 * var(--nav-h, 52px));
+		box-sizing: border-box;
 		background: transparent;
-		/* the cards fade out at the top as they scroll up, not cut */
-		mask-image: linear-gradient(to bottom, transparent 0, #000 12px);
+		pointer-events: none;
+	}
+	html.map-full main > * {
+		pointer-events: auto;
 	}
 }
 
