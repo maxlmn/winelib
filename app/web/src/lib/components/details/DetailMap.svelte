@@ -58,6 +58,21 @@
 	// the window's size, followed (a phone turned, a window resized): what the page's column or sheet covers
 	let winWidth = $state(1024);
 	let winHeight = $state(768);
+	// A phone: the legend folded to one row (its list opens on a tap), and the map alone on the screen at a tap (the
+	// page's cards set aside, html.map-only in app.css)
+	const phone = $derived(winWidth <= 760);
+	let legendOpen = $state(false);
+	let mapOnly = $state(false);
+	// the view kept, moved by half the cards' height: what was centred over them is centred on the screen
+	function toggleMapOnly() {
+		mapOnly = !mapOnly;
+		mlmap?.panBy([0, (mapOnly ? -1 : 1) * Math.round(winHeight * 0.45) / 2], { duration: 300 });
+	}
+	$effect(() => {
+		const on = big && phone && mapOnly;
+		document.documentElement.classList.toggle('map-only', on);
+		return () => document.documentElement.classList.remove('map-only');
+	});
 	let drawing = $state<DrawSpec | null>(null);
 	let before: { basemap: Basemap } | null = null;
 	$effect(() => {
@@ -229,7 +244,7 @@
 					{lieuAction}
 					cardSide={big ? 'right' : 'left'}
 					padLeft={big && winWidth > 760 ? 560 : 0}
-					padBottom={big && winWidth <= 760 && !drawing ? Math.round(winHeight * 0.45) : 0}
+					padBottom={big && phone && !drawing && !mapOnly ? Math.round(winHeight * 0.45) : 0}
 					onmap={(m) => (mlmap = m)}
 					quiet={!!drawing}
 				/>
@@ -238,9 +253,13 @@
 			{/if}
 		</div>
 		{#if shapes && !drawing}
-			<figcaption>
+			<figcaption class:folded={big && phone && !legendOpen}>
 				<!-- one row: the layers at the left, the map's buttons at the right -->
 				<div class="bar">
+				{#if big && phone}
+					<!-- a phone: the legend's list and layers behind a tap, the map alone at another -->
+					<button class="fold" aria-expanded={legendOpen} onclick={() => (legendOpen = !legendOpen)}>Legend{#if keys.length}<span class="n num">{keys.length}</span>{/if}<span class="chev" aria-hidden="true">{legendOpen ? '▴' : '▾'}</span></button>
+				{/if}
 				<div class="kinds">
 					<LayerToggle label="Appellations" bind:mode={layers.appellation} swatch={appColor} />
 					<LayerToggle label="Vineyards" bind:mode={layers.vineyard} swatch={darken(appColor, 1)} />
@@ -251,6 +270,9 @@
 						<button class:on={basemap === id} aria-pressed={basemap === id} onclick={() => (basemap = id as Basemap)}>{label}</button>
 					{/each}
 				</div>
+				{#if big && phone}
+					<button class="fold alone" class:on={mapOnly} aria-pressed={mapOnly} onclick={toggleMapOnly}>{mapOnly ? 'Show the page' : 'Full map'}</button>
+				{/if}
 				{#if fullUrl}
 					<div class="seg detail">
 						<button class:on={full} aria-pressed={full} disabled={fullLoading} onclick={toggleFull}
@@ -351,6 +373,10 @@
 		figure.big :global(.maplibregl-ctrl-bottom-left) {
 			left: 0;
 		}
+		/* the map alone: its credits and scale at its foot */
+		:global(html.map-only) figure.big :global(:is(.maplibregl-ctrl-bottom-left, .maplibregl-ctrl-bottom-right)) {
+			bottom: 0;
+		}
 	}
 	.map {
 		position: relative;
@@ -374,6 +400,36 @@
 	}
 	.bar .kinds {
 		margin-right: auto;
+	}
+	/* a phone: the legend's tap, the map alone's */
+	.fold {
+		padding: 4px 9px;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		background: var(--surface);
+		color: var(--text);
+		font: inherit;
+		font-size: 12px;
+		cursor: pointer;
+	}
+	.fold .n {
+		margin-left: 5px;
+		color: var(--muted);
+	}
+	.fold .chev {
+		margin-left: 5px;
+	}
+	.fold.alone {
+		margin-left: auto;
+	}
+	.fold.on {
+		background: var(--accent);
+		border-color: var(--accent);
+		color: var(--on-accent);
+	}
+	/* folded: one row, the switch and the two taps */
+	figcaption.folded :is(.kinds, .keys, .missing, .detail) {
+		display: none;
 	}
 	.seg {
 		display: inline-flex;
