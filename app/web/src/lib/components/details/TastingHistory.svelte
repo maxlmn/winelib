@@ -57,8 +57,6 @@
 		return [...byKey.values()].sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
 	});
 
-	// a column of labels at the right of the wines when any has one (empty on the others: the notes line up)
-	const withLabels = $derived(appSettings.wine_labels !== 'off' && tastings.some((t) => labels[t.wine_id]));
 	const regionColor = (r: string | null) => (r && regionColors[r]) || FALLBACK_REGION;
 </script>
 
@@ -69,6 +67,8 @@
 	<ul class="days">
 		{#each days.slice(0, limit) as d (d.key)}
 			{@const photo = d.wines.find((w) => w.photo)?.photo ?? d.visit?.photo}
+			<!-- a column of labels at the right of the day's wines when one has a label (empty on the others) -->
+			{@const withLabels = appSettings.wine_labels !== 'off' && d.wines.some((w) => labels[w.wine_id])}
 			<li class="day">
 				<div class="when">
 					{#if d.date && d.wines.length}
@@ -224,7 +224,11 @@
 		justify-content: flex-end;
 		align-items: flex-start;
 		flex: none;
-		width: 92px;
+		width: 68px;
+	}
+	.thumb :global(button.thumb img) {
+		height: 40px;
+		max-width: 66px;
 	}
 	.line {
 		flex: 1;

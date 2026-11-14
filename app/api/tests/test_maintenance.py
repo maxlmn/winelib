@@ -160,3 +160,24 @@ def test_merging_duplicates_keeps_the_label(client, tmp_path, monkeypatch):
     assert wait(client)["status"] == "done"
     label = client.get("/api/wines/1").json()["label"]  # the copy kept has the deleted copy's label
     assert label and label["from_vintage"] is None and "wine-label-1." in label["url"]
+
+
+def test_a_merge_keeps_the_other_label_aside_to_use_or_remove(client, tmp_path, monkeypatch):
+    import photos
+    monkeypatch.setattr(photos, "PHOTOS_DIR", str(tmp_path / "images"))
+    monkeypatch.setattr(photos, "THUMBS_DIR", str(tmp_path / "thumbs"))
+    jpeg, png = bytes.fromhex("ffd8ffe0") + b"0" * 64, bytes.fromhex("89504e470d0a1a0a") + b"0" * 64
+    client.put("/api/wines/1/label", content=jpeg, headers={"content-type": "image/jpeg"})
+    client.put("/api/wines/2/label", content=png, headers={"content-type": "image/png"})
+    client.post("/api/maintenance/duplicates", json={"commit": True})
+    assert wait(client)["status"] == "done"
+    wine = client.get("/api/wines/1").json()
+    assert ".jpg" in wine["label"]["url"]  # the kept copy keeps its own
+    [spare] = wine["label_spares"]  # the other's is kept aside
+    assert spare["name"] == "wine-label-1-spare-1.png"
+    assert client.post(f"/api/wines/1/label/spares/{spare['name']}").status_code == 200  # used: the two swap
+    wine = client.get("/api/wines/1").json()
+    assert ".png" in wine["label"]["url"] and [s["name"] for s in wine["label_spares"]] == ["wine-label-1-spare-1.jpg"]
+    assert client.delete("/api/wines/1/label/spares/wine-label-1-spare-1.jpg").status_code == 200
+    assert client.get("/api/wines/1").json()["label_spares"] == []
+    assert client.delete("/api/wines/1/label/spares/wine-label-1-spare-1.jpg").status_code == 404

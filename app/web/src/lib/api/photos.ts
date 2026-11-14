@@ -54,6 +54,17 @@ export async function uploadLabel(wineId: number, file: File): Promise<string> {
 	return (await res.json()).url;
 }
 
+/** A label kept aside from a merge becomes the wine's (the one it had is kept aside in its place) */
+export async function useSpareLabel(wineId: number, name: string) {
+	const res = await fetch(`/api/wines/${wineId}/label/spares/${encodeURIComponent(name)}`, { method: 'POST' });
+	if (!res.ok) throw new Error(await detail(res));
+}
+
+export async function deleteSpareLabel(wineId: number, name: string) {
+	const res = await fetch(`/api/wines/${wineId}/label/spares/${encodeURIComponent(name)}`, { method: 'DELETE' });
+	if (!res.ok) throw new Error(await detail(res));
+}
+
 export async function deleteLabel(wineId: number) {
 	const res = await fetch(`/api/wines/${wineId}/label`, { method: 'DELETE' });
 	if (!res.ok) throw new Error(await detail(res));

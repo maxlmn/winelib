@@ -134,7 +134,7 @@
 	}
 </script>
 
-<section class="card bottle" aria-label="This bottle">
+<section class="card bottle" id="bottle-card" aria-label="This bottle">
 	<div class="line1">
 		<div class="what">
 			{#if b.qty || gone}

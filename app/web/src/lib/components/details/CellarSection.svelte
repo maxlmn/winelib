@@ -73,7 +73,7 @@
 				<div class="label">
 					<a href={links.wineBottle(b.wine_id, b.bottle_id)} data-sveltekit-reset={plain ? "false" : undefined}><b>{b.producer}</b>{b.cuvee ? ` – ${b.cuvee}` : ''}</a>
 					<span class="vintage num">{b.vintage}</span><CriticPills scores={b.scores} />
-					{#if b.bottle_id === current}<span class="this">this bottle</span>{/if}
+					{#if b.bottle_id === current}<button type="button" class="this" title="Its card, above" onclick={() => document.getElementById('bottle-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>this bottle ↑</button>{/if}
 					{#if b.maturity}<span class="mat"><MaturityBadge maturity={b.maturity} from={b.drink_from} to={b.drink_to} /></span>{/if}
 					{#if b.appellation}<div class="under muted">{b.appellation}</div>{/if}
 				</div>
@@ -157,6 +157,11 @@
 		font-size: 12px;
 	}
 	.this {
+		padding: 0;
+		border: none;
+		background: none;
+		font: inherit;
+		cursor: pointer;
 		margin-left: 6px;
 		font-size: 11px;
 		font-weight: 600;
