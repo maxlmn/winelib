@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { labelTip } from '#lib/labelTip.svelte.ts';
 	import CriticPills from '#lib/components/CriticPills.svelte';
 	import { regionLabel } from '#lib/regions.svelte.ts';
 	import MaturityBadge from '#lib/components/MaturityBadge.svelte';
@@ -137,7 +138,7 @@
 						onpointerenter={(e) => e.pointerType === 'mouse' && appSettings.map_follow === 'hover' && onwine?.(b)}
 						onclick={(e) => !(e.target as HTMLElement).closest('a, button') && onwine?.(b)}
 					>
-						<a class="line-ends" href={links.bottle(b.bottle_id)} title="Open this bottle" tabindex="-1" aria-hidden="true">{@render ends(b)}</a>
+						<a class="line-ends" href={links.bottle(b.bottle_id)} title={b.label ? undefined : 'Open this bottle'} tabindex="-1" aria-hidden="true" use:labelTip={b.label}>{@render ends(b)}</a>
 						<span class="label">
 							<a href={links.bottle(b.bottle_id)}>
 								<b>{b.producer}</b>{b.cuvee ? ` – ${b.cuvee}` : ''}

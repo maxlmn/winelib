@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **A line's round pips show its label too**: hovering the bottle ends at the start of a line (the Cellar's storage
+  cards, the tasting notes, the home page's lists) shows the wine's label, framed, beside them.
 - **Labels on the tastings' pips**: hovering a wine on the year's ribbon (the home and Tasting Notes pages) shows its
   label beside its name, as the Cellar's rack does. The journal carries each tasting's label (`label` on
   `GET /api/tastings`).

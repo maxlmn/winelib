@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { labelTip } from '#lib/labelTip.svelte.ts';
 	import { regionColor, regionLabel } from '#lib/regions.svelte.ts';
 	import { appSettings, groupOrder } from '#lib/settings.svelte.ts';
 	/** "What should I open?" (and what to drink soon): a few bottles from the cellar for the evening: first those a
@@ -153,8 +154,8 @@
 					onpointerenter={(e) => e.pointerType === 'mouse' && appSettings.map_follow === 'hover' && onwine?.(b)}
 					onclick={(e) => !(e.target as HTMLElement).closest('a, button, input, select') && onwine?.(b)}
 				>
-					<span class="end">
-						<BottleEnd region={regionColor(b.region) ?? FALLBACK_REGION} color={b.color} format={b.format} size={11} title="{regionLabel(b.region)} · {b.color ?? ''}" />
+					<span class="end" use:labelTip={b.label}>
+						<BottleEnd region={regionColor(b.region) ?? FALLBACK_REGION} color={b.color} format={b.format} size={11} title={b.label ? undefined : `${regionLabel(b.region)} · ${b.color ?? ''}`} />
 					</span>
 					<div class="main">
 						<a href={links.bottle(b.bottle_id)}>{b.producer}{label(b) ? ` – ${label(b)}` : ''}</a>

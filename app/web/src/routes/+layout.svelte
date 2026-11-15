@@ -7,6 +7,7 @@
 	import type { Mode } from '#lib/theme.svelte.ts';
 	import AskDialog from '#lib/components/AskDialog.svelte';
 	import Lightbox from '#lib/components/Lightbox.svelte';
+	import LabelTip from '#lib/components/LabelTip.svelte';
 	import CommandPalette from '#lib/components/CommandPalette.svelte';
 	import { warmJournal } from '#lib/api/tastings.ts';
 	import { onMount } from 'svelte';
@@ -134,6 +135,7 @@
 <CommandPalette bind:open={searchOpen} />
 <AskDialog />
 <Lightbox />
+<LabelTip />
 
 <style>
 	.progress {

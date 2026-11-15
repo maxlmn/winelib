@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { labelTip } from '#lib/labelTip.svelte.ts';
 	/** A detail page's Cellar tab (a wine's, a bottle's, a producer's, an appellation's...): its bottles as plain
 	 * lines, each saying where it is. No card per storage place (the Cellar page has those: CellarCards). */
 	import CriticPills from '#lib/components/CriticPills.svelte';
@@ -65,7 +66,7 @@
 			>
 				<!-- the bottles' pips, its label under them (a producer's page) -->
 				<div class="side">
-				<a class="ends" href={links.wineBottle(b.wine_id, b.bottle_id)} data-sveltekit-reset={plain ? "false" : undefined} title="Open this bottle" tabindex="-1" aria-hidden="true">
+				<a class="ends" href={links.wineBottle(b.wine_id, b.bottle_id)} data-sveltekit-reset={plain ? "false" : undefined} title={b.label ? undefined : 'Open this bottle'} tabindex="-1" aria-hidden="true" use:labelTip={b.label}>
 					{#each { length: Math.min(b.qty, 12) }}
 						<BottleEnd
 							region={regionColors[b.region] ?? FALLBACK_REGION}
