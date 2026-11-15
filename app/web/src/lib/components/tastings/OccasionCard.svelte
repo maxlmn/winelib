@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { labelTip } from '#lib/labelTip.svelte.ts';
 	import { appSettings } from '#lib/settings.svelte.ts';
 	import CriticPills from '#lib/components/CriticPills.svelte';
 	import Icon from '#lib/components/Icon.svelte';
@@ -109,7 +110,7 @@
 					>
 						<div class="wine">
 							<div class="line">
-								<span class="end">
+								<span class="end" use:labelTip={w.label}>
 									<BottleEnd
 										region={regionColors[w.region] ?? FALLBACK_REGION}
 										color={w.color}
