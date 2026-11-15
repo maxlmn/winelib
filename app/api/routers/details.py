@@ -618,9 +618,16 @@ def _wine_places(session, *filters):
 
 @router.get("/api/producers/{producer_id}/shapes")
 def producer_shapes(producer_id: int, session: Session = Depends(get_session)):
-    """Where the producer's wines come from."""
-    _get(session, Producer, producer_id, "Producer")
-    return shapes(session, *_wine_places(session, Wine.producer_id == producer_id))
+    """Where the producer's wines come from; none with an outline (no wine at all, or none mapped): its region's,
+    so its page keeps its map."""
+    p = _get(session, Producer, producer_id, "Producer")
+    apps, vines = _wine_places(session, Wine.producer_id == producer_id)
+    apps, vines = list(apps), list(vines)
+    mapped = (apps and session.query(Appellation.id).filter(Appellation.id.in_(apps), MAPPABLE_APP).first()) or \
+        (vines and session.query(Vineyard.id).filter(Vineyard.id.in_(vines), MAPPABLE_VINE).first())
+    if not mapped and p.region_obj is not None:
+        return shapes_response(session, apps, vines, region=p.region_obj)
+    return shapes(session, apps, vines)
 
 
 @router.get("/api/wines/{wine_id}/shapes")

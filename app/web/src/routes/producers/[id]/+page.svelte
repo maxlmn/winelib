@@ -84,7 +84,8 @@
 		{/if}
 	</DetailHeader>
 
-	{#if p.appellations.length || p.vineyards.length}
+	<!-- its wines' appellations and vineyards; none (no wine yet, or none with an outline): its region's -->
+	{#if p.appellations.length || p.vineyards.length || p.region}
 		<!-- full size, the map is out behind the page (portal): its card, left with its title, hidden -->
 		<section class="card map-card" class:away={!mapEmpty}>
 			<h2>Where the wines come from</h2>

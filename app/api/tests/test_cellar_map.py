@@ -204,3 +204,18 @@ def test_a_wine_without_a_mapped_place_gets_its_regions_outline(client):
     region = client.get(f"/api/wines/{bulles}/shapes").json()["region"]["features"]
     assert region and region[0]["properties"]["name"] == "Loire"  # no appellation, no vineyard: the Loire's outline
     assert "region" not in client.get(f"/api/wines/{picasses}/shapes").json()  # its own map: no region drawn
+
+
+def test_a_producer_without_a_wine_shows_its_regions_outline(client):
+    """No wine of its own (nothing mapped): the producer's page gets its region's outline, so it keeps its map."""
+    from db import Producer, Region
+    with client.app.dependency_overrides[__import__("db").get_session]().__next__() as s:
+        region = s.query(Region).filter(Region.name == "Loire").one()
+        p = Producer(name="A producer with no wine yet", region_id=region.id)
+        s.add(p)
+        s.commit()
+        pid, name = p.id, region.name
+    body = client.get(f"/api/producers/{pid}/shapes").json()
+    assert body["appellations"]["features"] == [] and body["vineyards"]["features"] == []
+    if "region" in body:  # its outline, when the outlines are installed
+        assert body["region"]["features"][0]["properties"]["name"] == name
