@@ -13,6 +13,7 @@
 	import { links } from '#lib/links.ts';
 	import { money } from '#lib/format.ts';
 	import { appSettings } from '#lib/settings.svelte.ts';
+	import { portal } from '#lib/portal.ts';
 
 	let { data } = $props();
 	const p = $derived(data.detail);
@@ -21,7 +22,31 @@
 			? [{ id: p.id, lat: p.lat, lng: p.lng, label: `${p.name}${p.michelin_stars ? ` ${stars(p.michelin_stars)}` : ''}`, sub: [p.city, p.country].filter(Boolean).join(', ') }]
 			: []
 	);
+	// With its coordinates the place is over its map (the whole window behind the page, as a wine's), its streets
+	// framed beside the page's column (above the cards on a phone)
+	const onMap = $derived(point.length > 0);
+	$effect(() => {
+		document.documentElement.classList.toggle('map-full', onMap);
+		return () => document.documentElement.classList.remove('map-full');
+	});
+	let winWidth = $state(1024);
+	let winHeight = $state(768);
+	const phone = $derived(winWidth <= 760);
 </script>
+
+<svelte:window bind:innerWidth={winWidth} bind:innerHeight={winHeight} />
+
+{#if onMap}
+	<div class="place-map" use:portal role="region" aria-label="The place on its map">
+		<PointMap
+			points={point}
+			basemap={appSettings.map_default_basemap}
+			zoom={15}
+			padLeft={phone ? 0 : 560}
+			padBottom={phone ? Math.round(winHeight * 0.45) : 0}
+		/>
+	</div>
+{/if}
 
 <svelte:head><title>{p.name} · WineLib</title></svelte:head>
 
@@ -38,12 +63,8 @@
 	<a class="btn icon primary" href={links.newTasting({ place_id: p.id })} title="Add a tasting here" aria-label="Add a tasting here"><span class="plus">+</span><Icon name="glass" size={15} /></a>
 {/snippet}
 
-{#snippet map()}
-	<div class="map"><PointMap points={point} basemap={appSettings.map_default_basemap} zoom={15} /></div>
-{/snippet}
-
 {#key p.id}
-	<DetailHeader kind={['Place', p.type].filter(Boolean).join(' · ')} {title} trail={[p.city, p.country]} {actions} aside={point.length ? map : undefined}>
+	<DetailHeader kind={['Place', p.type].filter(Boolean).join(' · ')} {title} trail={[p.city, p.country]} {actions}>
 		<Stats
 			items={[
 				{ label: 'Visits', value: p.stats.visits },
@@ -86,13 +107,6 @@
 		font-size: 18px;
 		vertical-align: middle;
 	}
-	.map {
-		position: relative;
-		height: 300px;
-		border-radius: 8px;
-		overflow: hidden;
-		border: 1px solid var(--border);
-	}
 	.palette {
 		margin-top: 14px;
 	}
@@ -122,5 +136,17 @@
 	h2 {
 		font-size: 14px;
 		margin: 0 0 12px;
+	}
+	/* the place's map, full size: behind the page's column, beside the sidebar; under the bar on a phone */
+	.place-map {
+		position: fixed;
+		inset: 0 0 0 200px;
+		z-index: 40;
+		background: var(--bg);
+	}
+	@media (max-width: 760px) {
+		.place-map {
+			inset: var(--nav-h, 52px) 0 var(--tab-h, 0px) 0;
+		}
 	}
 </style>

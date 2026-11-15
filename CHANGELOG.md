@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- **A place over its map**: a place with its coordinates has the map of its streets behind its page (the whole window,
+  as a wine's), its pin framed beside the page's column.
+- **A producer without a wine over its region**: a producer with no wine yet (or none with an outline) has its
+  region's outline behind its page, so it keeps its map.
+
 ## v0.8.2
 
 - **The Producers over the map**: **On the map** (the default) has your producers a line each in the column (the whole

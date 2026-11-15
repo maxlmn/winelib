@@ -100,7 +100,7 @@
 		const key = points.map((p) => p.id).join(',');
 		if (key === fittedFor || !points.length) return;
 		fittedFor = key;
-		if (points.length === 1) map.jumpTo({ center: [points[0].lng, points[0].lat], zoom });
+		if (points.length === 1) map.jumpTo({ center: [points[0].lng, points[0].lat], zoom, padding: padding() });
 		else {
 			const lngs = points.map((p) => p.lng), lats = points.map((p) => p.lat);
 			map.fitBounds([Math.min(...lngs), Math.min(...lats), Math.max(...lngs), Math.max(...lats)], { padding: padding(), maxZoom: zoom, duration: 0 });
