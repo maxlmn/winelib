@@ -19,6 +19,8 @@ export interface AppSettings {
 	/** app bottles whose location contains this are reconciled with the Bordeaux Index portfolio */
 	bi_location: string;
 	map_default_basemap: Basemap;
+	/** a wine in a page's lists moves the map behind it on a click, or on hover */
+	map_follow: 'click' | 'hover';
 	/** a wine's label on its page: none, only the uploaded ones, or a drawn one for the others too */
 	wine_labels: 'off' | 'uploaded';
 	/** lists sort and rank wines by this critic's score */
@@ -35,6 +37,7 @@ export const appSettings = $state<AppSettings>({
 	other_group: 'Cellar',
 	bi_location: '',
 	map_default_basemap: 'plain',
+	map_follow: 'click',
 	wine_labels: 'uploaded',
 	preferred_critic: ''
 });

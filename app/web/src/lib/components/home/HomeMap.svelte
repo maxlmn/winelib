@@ -12,10 +12,8 @@
 	import type { Extent } from '#lib/geo.ts';
 	import type { MapCollection, RegionCollection, RegionProps } from '#lib/types.ts';
 
-	interface Focus {
-		wineId: number;
-		region: string | null;
-	}
+	/** a wine (its vineyard, appellation or region), or a place ([lng, lat]: a restaurant, a home, pinned) */
+	type Focus = { wineId: number; region: string | null; point?: undefined } | { point: [number, number]; wineId?: undefined; region?: undefined };
 	/** full: the whole window behind the page (html.map-full in app.css), the page's cards over its left side (over
 	 * its lower half on a phone) */
 	/** by: what colours the regions, deeper where there's more of it: your bottles, your tastings, or both (a switch on
@@ -85,8 +83,9 @@
 	$effect(() => {
 		if (place && place.id === (focus?.wineId ?? null)) placeRegion = focus?.region ?? null;
 	});
-	const vines = $derived(place?.vineyards?.features.length ? place.vineyards : null);
-	const apps = $derived(place?.appellations?.features.length ? place.appellations : null);
+	const point = $derived(focus?.point ?? null);
+	const vines = $derived(!point && place?.vineyards?.features.length ? place.vineyards : null);
+	const apps = $derived(!point && place?.appellations?.features.length ? place.appellations : null);
 	// on a vineyard: it alone filled, its appellation an outline around it
 	const layers = $derived<Layers>({ appellation: vines ? 'outline' : 'fill', vineyard: 'fill', lieu: 'outline' });
 	// at least `min` degrees across, centred on the box: a speck of a vineyard still shows its slope
@@ -125,6 +124,8 @@
 	// Fitted to the regions most of your bottles and tastings come from (90%), not every one: a single wine from Canada
 	// or China would widen it to the whole world; the whole map without any
 	const extent = $derived.by((): Extent | null => {
+		// a place: its streets around it (a few km across)
+		if (point) return atLeast([point[0], point[1], point[0], point[1]], 0.04);
 		// the latest tasting's wine: its vineyard, else its appellation, else its region with its neighbours (~6° across)
 		const own = vines ?? apps;
 		const ownBox = own ? bbox(own.features.map((f) => f.geometry)) : null;
@@ -159,7 +160,8 @@
 			{layers}
 			selected={null}
 			basemap={appSettings.map_default_basemap}
-			fitKey="home:{place.id ?? ''}"
+			fitKey={point ? `place:${point.join(',')}` : `home:${place.id ?? ''}`}
+			pin={point}
 			flyMs={900}
 			{extent}
 			onselect={() => {}}

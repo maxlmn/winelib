@@ -18,7 +18,7 @@
 		{ key: 'producer', label: 'Producer' },
 		{ key: 'cuvee', label: 'Cuvée' },
 		{ key: 'appellation', label: 'Appellation' },
-		{ key: 'varietal', label: 'Grapes' },
+		{ key: 'varietal', label: 'Grape' },
 		{ key: 'vintage', label: 'Vintage' },
 		{ key: 'format', label: 'Format' },
 		{ key: 'location', label: 'Location' },
@@ -85,7 +85,8 @@
 					<td class="muted">
 						{#if b.appellation_id}<a class="quiet" href={links.appellation(b.appellation_id)}>{b.appellation}</a>{:else}{b.appellation ?? ''}{/if}
 					</td>
-					<td class="muted">{#each b.grapes as g, i (g)}{#if i}{', '}{/if}<a class="quiet" href={links.grape(g)}>{g}</a>{/each}</td>
+					<!-- the main grape only (a blend's others on hover): the column stays narrow -->
+					<td class="muted" title={b.grapes.length > 1 ? b.grapes.join(', ') : undefined}>{#if b.grapes[0]}<a class="quiet" href={links.grape(b.grapes[0])}>{b.grapes[0]}</a>{#if b.grapes.length > 1}<span class="more"> +{b.grapes.length - 1}</span>{/if}{/if}</td>
 					<td class="strong num">{b.vintage}</td>
 					<td class="muted">{b.format ?? ''}</td>
 					<td><span class="loc">{b.location}</span></td>
@@ -180,5 +181,10 @@
 	}
 	.drink.young {
 		color: var(--muted);
+	}
+	/* a blend's other grapes, counted (named on hover) */
+	.more {
+		font-size: 11px;
+		opacity: 0.8;
 	}
 </style>

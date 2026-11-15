@@ -53,6 +53,16 @@
 	// along the year's ribbon: quicker (it's swept along), at once for its replay
 	const pointBottle = (b: Bottle) => point({ kind: 'bottle', id: b.bottle_id, wine_id: b.wine_id, region: b.region });
 	const shownWine = $derived(pointed ?? (lastWine ? { kind: 'tasting' as const, id: lastWine.id, wine_id: lastWine.wine_id, region: lastWine.region } : null));
+	// an evening's place pointed at (its line in the latest tastings): pinned on the map, until a wine is pointed at
+	let pinned = $state<[number, number] | null>(null);
+	$effect(() => {
+		void pointed;
+		pinned = null;
+	});
+	function pointPlace(where: [number, number]) {
+		clearTimeout(pointTimer);
+		pointTimer = setTimeout(() => (pinned = where), 180);
+	}
 	const shownTasting = $derived(shownWine?.kind === 'tasting' ? shownWine.id : null);
 	const shownBottle = $derived(shownWine?.kind === 'bottle' ? shownWine.id : null);
 	// The past year's wines as one line of region colours
@@ -123,7 +133,7 @@
 
 <!-- The map is the page's ground: the whole window behind the cards, on the latest tasting's wine (or the one
      pointed at in the list) -->
-<HomeMap full focus={shownWine ? { wineId: shownWine.wine_id, region: shownWine.region } : null} />
+<HomeMap full focus={pinned ? { point: pinned } : shownWine ? { wineId: shownWine.wine_id, region: shownWine.region } : null} />
 
 <section class="card latest">
 	<div class="sec-head">
@@ -131,7 +141,7 @@
 		<a class="more" href={links.tastings()}>All tasting notes →</a>
 	</div>
 	{#each latest as o (o.key)}
-		<OccasionCard occasion={o} regionColors={data.regionColors} plain onwine={pointTasting} shown={shownTasting} />
+		<OccasionCard occasion={o} regionColors={data.regionColors} plain onwine={pointTasting} shown={pinned ? null : shownTasting} onplace={pointPlace} />
 	{:else}
 		<p class="muted">No tastings yet. <a class="more" href={links.newTasting()}>Add the first one</a></p>
 	{/each}

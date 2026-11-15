@@ -1,5 +1,6 @@
 <script lang="ts">
 	import RegionStrip from '#lib/components/RegionStrip.svelte';
+	import { appSettings } from '#lib/settings.svelte.ts';
 	import { links } from '#lib/links.ts';
 	import { barWidth } from '#lib/format.ts';
 	import { fmtDay, wineName } from './journal.ts';
@@ -140,7 +141,7 @@
 					active={shown}
 					onhover={(k) => {
 						const t = k == null ? null : byId.get(Number(k));
-						if (t && !playing) onwine?.(t, false);
+						if (t && !playing && appSettings.map_follow === 'hover') onwine?.(t, false);
 					}}
 				/>
 				<div class="marks">

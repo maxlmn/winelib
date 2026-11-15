@@ -10,6 +10,8 @@
 	import TastingTable from '#lib/components/tastings/TastingTable.svelte';
 	import TastingTrends from '#lib/components/tastings/TastingTrends.svelte';
 	import TastingRibbon from '#lib/components/tastings/TastingRibbon.svelte';
+	import HomeMap from '#lib/components/home/HomeMap.svelte';
+	import type { Tasting } from '#lib/api/tastings.ts';
 	import {
 		LIST_KEYS, PERIODS, activeCount, emptyFilters, grapeOptions, filterTastings, filterVisits, fromParams, isoDay, occasions, options,
 		stats, toMarkdown, toParams, wineName
@@ -21,10 +23,11 @@
 
 	let { data } = $props();
 
+	// Two modes: the notes as cards over the map (the default), or the tables, wide (the views below; "map" is the
+	// places' map, the restaurants and homes)
 	const VIEWS = [
-		{ id: 'cards', label: 'Cards' },
 		{ id: 'list', label: 'List' },
-		{ id: 'map', label: 'Map' },
+		{ id: 'map', label: 'Places' },
 		{ id: 'trends', label: 'Trends' }
 	];
 	const LABELS: Record<ListKey, string> = {
@@ -35,6 +38,28 @@
 	const params = $derived(page.url.searchParams);
 	const filters = $derived(fromParams(params));
 	const view = $derived(VIEWS.find((v) => v.id === params.get('view'))?.id ?? 'cards');
+	const onMap = $derived(view === 'cards');
+	// a wine pointed at (in the cards, or along the ribbon): the map flies to it
+	// ...or a place (an occasion's header): the map pins it
+	let pointed = $state<Tasting | null>(null);
+	let pinned = $state<[number, number] | null>(null);
+	let pointTimer: ReturnType<typeof setTimeout> | undefined;
+	function point(t: Tasting, wait = 180) {
+		clearTimeout(pointTimer);
+		const go = () => ((pointed = t), (pinned = null));
+		if (wait) pointTimer = setTimeout(go, wait);
+		else go();
+	}
+	function pointPlace(where: [number, number]) {
+		clearTimeout(pointTimer);
+		pointTimer = setTimeout(() => (pinned = where), 180);
+	}
+	const focus = $derived(pinned ? { point: pinned } : pointed ? { wineId: pointed.wine_id, region: pointed.region } : null);
+	// the tables: back on the one last opened (this visit), the list at first
+	let lastTable = $state('list');
+	$effect(() => {
+		if (!onMap) lastTable = view;
+	});
 	const selectedPlace = $derived(Number(params.get('place')) || null);
 
 	const tastings = $derived(filterTastings(journal.tastings, filters));
@@ -86,6 +111,10 @@
 <div class="page-head">
 	<h1>Tasting Notes</h1>
 	<div class="actions">
+		<div class="mode" role="group" aria-label="How the notes are shown">
+			<button class:on={onMap} aria-pressed={onMap} onclick={() => setParams({ view: null })} title="The notes as cards, over the map">On the map</button>
+			<button class:on={!onMap} aria-pressed={!onMap} onclick={() => setParams({ view: lastTable })} title="The list, the places and the trends, the page's whole width">Tables</button>
+		</div>
 		<a class="btn icon primary" href={links.newTasting()} title="Add a tasting" aria-label="Add a tasting"><span class="plus">+</span><Icon name="glass" size={15} /></a>
 		<a class="btn icon" href={links.newVisit()} title="Add a restaurant visit" aria-label="Add a restaurant visit"><span class="plus">+</span><Icon name="pin" size={15} /></a>
 		<button class="btn" onclick={exportMarkdown} disabled={!tastings.length}>↓ Export</button>
@@ -102,7 +131,17 @@
 	{/each}
 </div>
 
-<TastingRibbon {tastings} />
+{#if onMap}
+	<HomeMap full by="tasted" {focus} />
+	<TastingRibbon
+		{tastings}
+		label="Every wine, oldest on the left: its region’s colour, its own below. Sweep it, or replay it, the map following"
+		onwine={(t, now) => point(t, now ? 0 : 90)}
+		shown={pointed?.id ?? null}
+	/>
+{:else}
+	<TastingRibbon {tastings} />
+{/if}
 
 <div class="filters card">
 	<input
@@ -148,11 +187,15 @@
 </div>
 
 <!-- The cards sit on the page itself: not cards in a card -->
-<div class="panel card" class:flat={view === 'cards' && cards.length > 0}>
-	<div class="tabs">
-		{#each VIEWS as v}
-			<button class:on={view === v.id} onclick={() => setParams({ view: v.id === 'cards' ? null : v.id })}>{v.label}</button>
-		{/each}
+<div class="panel card">
+	<div class="tabs" class:bare={onMap}>
+		{#if onMap}
+			<h2>Notes</h2>
+		{:else}
+			{#each VIEWS as v}
+				<button class:on={view === v.id} onclick={() => setParams({ view: v.id })}>{v.label}</button>
+			{/each}
+		{/if}
 		<span class="count muted num">
 			{plural(tastings.length, 'wine')} · {plural(cards.length, 'occasion')}
 		</span>
@@ -164,7 +207,7 @@
 				{#if filters.period !== 'all'}<button class="btn" onclick={() => setPeriod('all')}>Show all time</button>{/if}
 			</div>
 		{:else if view === 'cards'}
-			<JournalCards occasions={cards} regionColors={data.regionColors} />
+			<JournalCards occasions={cards} regionColors={data.regionColors} onwine={(w) => point(w)} shown={pinned ? null : (pointed?.id ?? null)} onplace={pointPlace} />
 		{:else if view === 'list'}
 			{#if tastings.length}
 				<TastingTable {tastings} places={journal.places} regionColors={data.regionColors} />
@@ -194,6 +237,44 @@
 </div>
 
 <style>
+	/* in the column over the map: the four figures two by two */
+	:global(html.map-full) .kpis {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	/* on the map: a heading in place of the tables' tabs */
+	.tabs.bare {
+		align-items: baseline;
+		padding: 12px 16px 10px;
+	}
+	.tabs.bare h2 {
+		margin: 0;
+		font-size: 15px;
+	}
+	.mode {
+		display: inline-flex;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		overflow: hidden;
+	}
+	.mode button {
+		border: none;
+		background: none;
+		padding: 6px 11px;
+		font: inherit;
+		font-size: 13px;
+		cursor: pointer;
+		color: var(--muted);
+	}
+	.mode button.on {
+		background: var(--accent);
+		color: var(--on-accent);
+	}
+	/* in the column over the map: the title, its buttons on a line of their own under it */
+	:global(html.map-full) .page-head {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 10px;
+	}
 	.actions {
 		display: flex;
 		flex-wrap: wrap;
@@ -324,18 +405,6 @@
 	}
 	.body {
 		padding: 16px;
-	}
-	.panel.flat {
-		background: none;
-		border-color: transparent;
-		box-shadow: none;
-	}
-	.panel.flat .tabs {
-		padding-left: 0;
-		padding-right: 0;
-	}
-	.panel.flat .body {
-		padding: 16px 0 0;
 	}
 	.empty {
 		text-align: center;

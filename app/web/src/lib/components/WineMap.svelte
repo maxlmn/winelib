@@ -69,12 +69,14 @@
 		worldCopies?: boolean;
 		/** a new framing (fitKey changed) flown to over this many ms instead of jumping (the first one always jumps) */
 		flyMs?: number;
+		/** a place pinned on the map ([lng, lat]: a restaurant, a home), or none */
+		pin?: [number, number] | null;
 	}
 
 	let {
 		appellations, vineyards, layers = DEFAULT_LAYERS, here = null,
 		selected, basemap, fitKey, extent = null, onselect, pinCard = true,
-		regions = null, onregion = null, regionHref = null, worldCopies = true, lieuAction = null, cardSide = 'left', padLeft = 0, padBottom = 0, flyMs = 0,
+		regions = null, onregion = null, regionHref = null, worldCopies = true, lieuAction = null, cardSide = 'left', padLeft = 0, padBottom = 0, flyMs = 0, pin = null,
 		onmap, quiet = false
 	}: Props = $props();
 
@@ -327,6 +329,12 @@
 					layout: { 'text-field': ['get', 'name'], 'text-font': ['Noto Sans Regular'], 'text-size': 11, 'text-max-width': 8, visibility: 'none' },
 					paint: { 'text-color': '#ffffff', 'text-halo-color': '#1c1a1f', 'text-halo-width': 1.4 }
 				});
+				// a place pinned (pin): a dot in the accent, ringed white, over everything
+				mm.addSource('pin', { type: 'geojson', data: EMPTY });
+				mm.addLayer({
+					id: 'pin', type: 'circle', source: 'pin',
+					paint: { 'circle-radius': 7, 'circle-color': accentColor(), 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2.5 }
+				});
 				reloadLieux = loadLieux;
 				ready = true;
 				onmap?.(mm);
@@ -336,6 +344,13 @@
 			gone = true;
 			m?.remove();
 		};
+	});
+
+	$effect(() => {
+		if (!ready || !map) return;
+		(map.getSource('pin') as GeoJSONSource).setData(
+			pin ? ({ type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: pin } }] } as FeatureCollection) : EMPTY
+		);
 	});
 
 	// Region outlines: the overview's are filled and clickable; inside a region, an outline for context
