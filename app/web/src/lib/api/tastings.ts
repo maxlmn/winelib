@@ -2,6 +2,8 @@ import { invalidate } from '$app/navigation';
 
 export interface Tasting {
 	id: number;
+	/** its wine's uploaded label (another vintage's of the cuvée, from_vintage, when it has none), or none */
+	label?: { url: string; from_vintage: string | null } | null;
 	date: string;
 	seq: number | null;
 	glasses: number | null;

@@ -275,3 +275,13 @@ def test_the_cellars_lines_carry_their_wines_label(client, photo_dir):
     assert all(b["label"]["url"].startswith(f"/api/tastings/photos/wine-label-{wid}.jpg") for b in lines)
     others = [b for b in client.get("/api/cellar").json()["bottles"] if b["wine_id"] != wid]
     assert all(b["label"] is None for b in others)  # another cuvée's: not this one's label
+
+
+def test_the_journals_tastings_carry_their_wines_label(client, photo_dir):
+    rows = client.get("/api/tastings").json()["tastings"]
+    assert rows
+    wid = rows[0]["wine_id"]
+    assert all(t["label"] is None for t in rows)
+    client.put(f"/api/wines/{wid}/label", content=JPEG, headers={"content-type": "image/jpeg"})
+    rows = client.get("/api/tastings").json()["tastings"]
+    assert all(t["label"]["url"].startswith(f"/api/tastings/photos/wine-label-{wid}.jpg") for t in rows if t["wine_id"] == wid)

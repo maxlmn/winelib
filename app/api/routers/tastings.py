@@ -49,6 +49,8 @@ def tastings(session: Session = Depends(get_session)):
     rows = []
     found = session.execute(TASTINGS_SQL, {"critic": scores.preferred()}).mappings().all()
     labels = scores.labels(session, [r["wine_id"] for r in found])
+    import labels as wine_labels
+    label_of = wine_labels.of_wines(session, [r["wine_id"] for r in found])
     grapes = grapes_by_wine(session)
     for r in found:
         rows.append({
@@ -60,6 +62,8 @@ def tastings(session: Session = Depends(get_session)):
             "grapes": grapes.get(r["wine_id"]) or ([r["varietal"]] if r["varietal"] else []),
             "region": r["region"] or "Unknown", "vintage": vintage_label(r["vintage"], r["disgorgement_date"]),
             "score": r["score"] if scores.real(r["score"]) else None, "scores": labels.get(r["wine_id"]),
+            # its wine's uploaded label ({url, from_vintage}), or None
+            "label": label_of.get(r["wine_id"]),
         })
     visits = session.query(RestaurantVisit).filter(RestaurantVisit.place_id.isnot(None)).order_by(RestaurantVisit.date.desc()).all()
     place_ids = {r["place_id"] for r in rows if r["place_id"]} | {v.place_id for v in visits}

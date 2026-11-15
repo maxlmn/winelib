@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Labels on the tastings' pips**: hovering a wine on the year's ribbon (the home and Tasting Notes pages) shows its
+  label beside its name, as the Cellar's rack does. The journal carries each tasting's label (`label` on
+  `GET /api/tastings`).
 - **The Tasting Notes page on its map**, as the Cellar: **On the map** (the default) has the notes as cards over the
   map coloured by your tastings, the year's ribbon sweepable and replayable, a wine pointed at flying the map to it,
   and an occasion's place (its header) pinned on the map; **Tables** has the list, the places' map (now called

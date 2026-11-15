@@ -131,7 +131,7 @@ def _load_cellar(session, query=CELLAR_SQL, params=None):
     rows = session.execute(query, {"critic": scores.preferred(), **(params or {})}).mappings().all()
     labels = scores.labels(session, [r["wine_id"] for r in rows])
     import labels as wine_labels
-    label_of = wine_labels.of_cellar(session, [r["wine_id"] for r in rows])
+    label_of = wine_labels.of_wines(session, [r["wine_id"] for r in rows])
     import style_tags
     styles = style_tags.of_wines(session, [r["wine_id"] for r in rows])
     grapes = (grapes_by_wine(session, in_stock=True) if query is CELLAR_SQL
