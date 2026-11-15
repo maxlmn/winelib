@@ -10,6 +10,9 @@
 	import { appSettings } from '#lib/settings.svelte.ts';
 	import { regionLabel } from '#lib/regions.svelte.ts';
 	import { formatName, vintageKey, wineList } from '#lib/wineList.ts';
+	import type { ListLine } from '#lib/wineList.ts';
+	import { labelThumb } from '#lib/pips.ts';
+	import { opensImage } from '#lib/lightbox.svelte.ts';
 	import type { Bottle } from '#lib/types.ts';
 
 	let { data } = $props();
@@ -26,6 +29,7 @@
 	const leftOut = $derived(new Set(params.getAll('x')));
 	const ends = $derived(params.get('ends') !== '0');
 	const grapes = $derived(params.get('grapes') === '1');
+	const withLabels = $derived(params.get('labels') !== '0');
 
 	const inCellar = $derived(filterLocations(filterWines(data.cellar.bottles, filters), filters));
 	// Where the bottles are kept (the cellar's Storage filter, picked here too): one place's list, or a few together
@@ -49,6 +53,10 @@
 	const sections = $derived(
 		wineList(bottles, leftOut).map((s) => (whole && s.title === 'Other' ? { ...s, title: 'Producers' } : s))
 	);
+	// A line's label, framed beside it: a vintage's own, else the one its cuvée shows (another vintage's)
+	const lineLabel = (l: ListLine) => (l.bottles.find((b) => b.label && !b.label.from_vintage) ?? l.bottles.find((b) => b.label))?.label ?? null;
+	const anyLabel = $derived(!whole && sections.some((s) => s.regions.some((r) => r.appellations.some((a) => a.lines.some((l) => lineLabel(l))))));
+	const labels = $derived(withLabels && anyLabel);
 	const count = $derived(sections.flatMap((s) => s.regions.flatMap((r) => r.appellations.flatMap((a) => a.lines))).length);
 	const filtered = $derived(activeCount(filters) > 0);
 
@@ -98,6 +106,7 @@
 	<div class="toggles">
 		<label class="check"><input type="checkbox" checked={ends} onchange={(e) => set((p) => (e.currentTarget.checked ? p.delete('ends') : p.set('ends', '0')))} /> Bottle ends</label>
 		<label class="check"><input type="checkbox" checked={grapes} onchange={(e) => set((p) => (e.currentTarget.checked ? p.set('grapes', '1') : p.delete('grapes')))} /> Grapes</label>
+		{#if anyLabel}<label class="check"><input type="checkbox" checked={withLabels} onchange={(e) => set((p) => (e.currentTarget.checked ? p.delete('labels') : p.set('labels', '0')))} /> Labels</label>{/if}
 	</div>
 	<div class="from">
 		<label>
@@ -152,6 +161,11 @@
 						{#each a.lines as l (l.key)}
 							<div class="line">
 								{#if ends}<span class="end"><BottleEnd region={data.regionColors[r.region]} color={l.color} format={l.format} size={9} /></span>{/if}
+								{#if labels}
+									{@const lab = lineLabel(l)}
+									<!-- the wine's label, framed (an empty slot on the others: the names stay in line) -->
+									<span class="lab">{#if lab}<a href={lab.url} use:opensImage={{ src: labelThumb(lab.url, 'large'), alt: `${l.producer} ${l.cuvee}` }} title="Open the label"><img src={labelThumb(lab.url)} alt="" loading="lazy" decoding="async" /></a>{/if}</span>
+								{/if}
 								{#snippet name()}<span class="producer">{l.producer}</span>{#if l.cuvee}<span class="cuvee">{l.cuvee}</span>{/if}{#if formatName(l.format)}<span class="format">{formatName(l.format)}</span>{/if}{#if grapes && l.grapes.length}<span class="grapes">{l.grapes.join(', ')}</span>{/if}{/snippet}
 								{#if whole}
 									<div class="wine">{@render name()}</div>
@@ -351,6 +365,30 @@
 	.wine {
 		flex: 1;
 		min-width: 0;
+	}
+	/* a label, framed like a print on the page */
+	.lab {
+		flex: none;
+		width: 19mm;
+		align-self: center;
+		display: flex;
+		justify-content: center;
+	}
+	.lab a {
+		display: block;
+		cursor: zoom-in;
+	}
+	.lab img {
+		display: block;
+		max-width: 18mm;
+		max-height: 13mm;
+		padding: 0.6mm;
+		background: #fff;
+		border: 0.3mm solid var(--rule);
+		box-shadow: 0 0.3mm 0.8mm rgb(0 0 0 / 0.12);
+	}
+	.line:has(.lab img) {
+		padding: 1.2mm 0;
 	}
 	.producer {
 		font-weight: 600;

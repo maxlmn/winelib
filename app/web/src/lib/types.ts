@@ -33,6 +33,8 @@ export interface Bottle {
 	purchase_date: string | null;
 	/** where it was bought */
 	vendor?: string | null;
+	/** its uploaded label (another vintage's of the cuvée, from_vintage, when it has none of its own), or none */
+	label?: { url: string; from_vintage: string | null } | null;
 	/** drinking window (set on the wine) and where the wine stands in it */
 	drink_from: number | null;
 	drink_to: number | null;

@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- **Labels on the wine list**: each wine with a label has it beside its line, small and framed like a print (its own
+  vintage's, else the one its cuvée shows); clicked, it opens full size. A *Labels* box turns them off for a list
+  without.
+- **Labels on the cellar's pips**: hovering a bottle's pip in a storage card shows its wine's label, framed, at the left of its
+  name. The cellar's data carries each line's label (`label` on `GET /api/cellar`).
+- **The home map on your latest tasting, every time**: it opens on the latest evening's last wine (not its first): on
+  its vineyard when it has one, else its appellation (drawn on the map), else its region with its neighbours around
+  it. A map framed before its box had its size (the page still laying itself out) is framed once it has it, and again
+  as the box settles until you move it: it used to stay on the whole world.
+
 ## v0.8.1
 
 - **More room for the map on a phone**: the legend folds to one row (Legend, Plain or Satellite, Full map), its

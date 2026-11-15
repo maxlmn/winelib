@@ -256,3 +256,22 @@ def test_a_producers_cellar_and_history_get_each_wines_label(client, photo_dir):
     labels = client.get(f"/api/producers/{producer}").json()["labels"]
     assert labels[str(ids["2016"])]["from_vintage"] is None
     assert labels[str(ids["2019"])]["from_vintage"] == "2016"  # no label of its own: the nearest vintage's
+
+
+def test_the_cellars_lines_carry_their_wines_label(client, photo_dir):
+    from db import Bottle, Wine as W
+    wid = wine_id(client)
+    with client.app.dependency_overrides[__import__("db").get_session]().__next__() as s:
+        w = s.get(W, wid)
+        other = W(producer_id=w.producer_id, cuvee="Another", vintage="2016", region_id=w.region_id)
+        s.add(other)
+        s.flush()
+        s.add_all([Bottle(wine_id=wid, qty=2, location="H1"), Bottle(wine_id=other.id, qty=1, location="H1")])
+        s.commit()
+    lines = [b for b in client.get("/api/cellar").json()["bottles"] if b["wine_id"] == wid]
+    assert lines and all(b["label"] is None for b in lines)
+    client.put(f"/api/wines/{wid}/label", content=JPEG, headers={"content-type": "image/jpeg"})
+    lines = [b for b in client.get("/api/cellar").json()["bottles"] if b["wine_id"] == wid]
+    assert all(b["label"]["url"].startswith(f"/api/tastings/photos/wine-label-{wid}.jpg") for b in lines)
+    others = [b for b in client.get("/api/cellar").json()["bottles"] if b["wine_id"] != wid]
+    assert all(b["label"] is None for b in others)  # another cuvée's: not this one's label

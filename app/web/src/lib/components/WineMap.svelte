@@ -294,7 +294,20 @@
 					}, 250);
 				};
 				mm.on('moveend', loadLieux);
-				const sized = new ResizeObserver(() => mm.resize());
+				const sized = new ResizeObserver(() => {
+					mm.resize();
+					boxSize = container.clientWidth * 10000 + container.clientHeight;
+					const c = mm.getContainer();
+					if (lastFit && c.clientWidth > lastFit.pad.left + lastFit.pad.right + 40 && c.clientHeight > lastFit.pad.top + lastFit.pad.bottom + 40)
+						mm.fitBounds(lastFit.b, { padding: lastFit.pad, duration: 0 });
+				});
+				// moved by hand (a drag, a wheel, a pinch, the zoom buttons): its view is the user's, kept as the box changes
+				mm.on('movestart', (e) => {
+					if ((e as { originalEvent?: Event }).originalEvent) lastFit = null;
+				});
+				mm.on('zoomstart', (e) => {
+					if ((e as { originalEvent?: Event }).originalEvent) lastFit = null;
+				});
 				sized.observe(container);
 				mm.once('remove', () => sized.disconnect());
 				loadLieux();
@@ -338,14 +351,22 @@
 		if (!ready || !map) return;
 		(map.getSource('vines') as GeoJSONSource).setData(shadedVines);
 	});
-	// Framed when fitKey changes (a new page, a legend's shape), on the extent or else the shapes
+	// Framed when fitKey changes (a new page, a legend's shape), on the extent or else the shapes. Not while the map's box
+	// is still too small for its margins (a page still laying itself out): the fit would fail and the world stay shown;
+	// it's framed once the box has its size (boxSize, followed below)
+	let boxSize = $state(0);
+	// the last framing, made again when the box changes size (a page still laying itself out) until it's moved by hand
+	let lastFit: { b: Extent; pad: ReturnType<typeof framing> } | null = null;
 	$effect(() => {
 		if (!ready || !map) return;
 		if (fitKey !== fitted && (extent || appellations || vineyards)) {
 			const b = extent ?? bbox([...(appellations?.features ?? []), ...(vineyards?.features ?? [])].map((f) => f.geometry));
-			if (b) {
+			const pad = framing();
+			const c = map.getContainer();
+			if (b && boxSize >= 0 && c.clientWidth > pad.left + pad.right + 40 && c.clientHeight > pad.top + pad.bottom + 40) {
 				fitted = fitKey;
-				map.fitBounds(b, { padding: framing(), duration: 0 });
+				lastFit = { b, pad };
+				map.fitBounds(b, { padding: pad, duration: 0 });
 			}
 		}
 	});

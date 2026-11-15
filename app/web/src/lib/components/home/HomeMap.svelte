@@ -1,14 +1,42 @@
 <script lang="ts">
 	/** The home page's map: the regions you drink from or keep bottles of, in their colours; a click opens its card (and a link to its page).
-	 * Opened on `focus` (the latest tasting's region) when there's one, else on where most of your wine comes from. */
+	 * Opened on `focus` (the latest tasting's wine) when there's one: its vineyard, else its appellation (drawn), else its
+	 * region with its neighbours; else on where most of your wine comes from. */
 	import { onMount } from 'svelte';
 	import WineMap from '#lib/components/WineMap.svelte';
 	import { links } from '#lib/links.ts';
 	import { appSettings } from '#lib/settings.svelte.ts';
+	import { bbox } from '#lib/geo.ts';
 	import type { Extent } from '#lib/geo.ts';
-	import type { RegionCollection, RegionProps } from '#lib/types.ts';
+	import type { MapCollection, RegionCollection, RegionProps } from '#lib/types.ts';
 
-	let { minHeight = 440, focus = null }: { minHeight?: number; focus?: string | null } = $props();
+	interface Focus {
+		wineId: number;
+		region: string | null;
+	}
+	let { minHeight = 440, focus = null }: { minHeight?: number; focus?: Focus | null } = $props();
+
+	// The focused wine's vineyard and appellation (its page's shapes); null while asked, {} when it has none or failed
+	let place = $state<{ appellations?: MapCollection; vineyards?: MapCollection } | null>(null);
+	$effect(() => {
+		const id = focus?.wineId;
+		place = id ? null : {};
+		if (!id) return;
+		let stale = false;
+		fetch(`/api/wines/${id}/shapes`)
+			.then((r) => (r.ok ? r.json() : {}))
+			.catch(() => ({}))
+			.then((p) => !stale && (place = p));
+		return () => (stale = true);
+	});
+	const vines = $derived(place?.vineyards?.features.length ? place.vineyards : null);
+	const apps = $derived(place?.appellations?.features.length ? place.appellations : null);
+	// at least `min` degrees across, centred on the box: a speck of a vineyard still shows its slope
+	const atLeast = ([w, s, e, n]: Extent, min: number): Extent => {
+		const cx = (w + e) / 2, cy = (s + n) / 2;
+		const half = Math.max(e - w, n - s, min) / 2;
+		return [cx - half, Math.max(cy - half, -85), cx + half, Math.min(cy + half, 85)];
+	};
 
 	let overview = $state<RegionCollection | null>(null);
 	let failed = $state(false);
@@ -30,8 +58,12 @@
 	// Fitted to the regions most of your bottles and tastings come from (90%), not every one: a single wine from Canada
 	// or China would widen it to the whole world; the whole map without any
 	const extent = $derived.by((): Extent | null => {
-		const focused = focus ? regions?.features.find((f) => f.properties.name === focus)?.properties.bbox : null;
-		if (focused) return focused;
+		// the latest tasting's wine: its vineyard, else its appellation, else its region with its neighbours (~6° across)
+		const own = vines ?? apps;
+		const ownBox = own ? bbox(own.features.map((f) => f.geometry)) : null;
+		if (ownBox) return atLeast(ownBox, vines ? 0.015 : 0.08);
+		const focused = focus?.region ? regions?.features.find((f) => f.properties.name === focus.region)?.properties.bbox : null;
+		if (focused) return atLeast(focused, 6);
 		const weight = (p: RegionProps) => p.bottles + p.tastings;
 		const ranked = (regions?.features ?? []).map((f) => f.properties).sort((a, b) => weight(b) - weight(a));
 		const total = ranked.reduce((n, p) => n + weight(p), 0);
@@ -49,12 +81,12 @@
 </script>
 
 <div class="home-map" style:min-height="{minHeight}px">
-	{#if regions}
+	{#if regions && place}
 		<WineMap
 			{regions}
 			regionHref={(r: RegionProps) => links.region(r.name)}
-			appellations={null}
-			vineyards={null}
+			appellations={apps}
+			vineyards={vines}
 			selected={null}
 			basemap={appSettings.map_default_basemap}
 			fitKey="home"

@@ -4,6 +4,10 @@ import type { Tasting } from '#lib/api/details.ts';
 import type { Bottle } from '#lib/types.ts';
 import { links } from '#lib/links.ts';
 import { fmtDay } from '#lib/components/tastings/journal.ts';
+import { photoSrc } from '#lib/api/photos.ts';
+
+/** a label's small copy (an SVG as it is) */
+export const labelThumb = (url: string, size: 'thumb' | 'large' = 'thumb') => (/\.svg(\?|$)/i.test(url) ? url : photoSrc(url, size));
 
 const wine = (w: { producer: string; cuvee: string; vintage: string }) => `${w.producer}${w.cuvee ? ` – ${w.cuvee}` : ''} ${w.vintage}`;
 const byRegion = (a: Pip, b: Pip) => (a.region ?? '').localeCompare(b.region ?? '');
@@ -18,6 +22,7 @@ export const bottlePips = (bottles: Bottle[]): Pip[] =>
 			label: wine(b),
 			sub: [b.appellation, b.location].filter(Boolean).join(' · '),
 			href: links.bottle(b.bottle_id),
+			image: b.label ? labelThumb(b.label.url) : null,
 			key: b.bottle_id
 		}))
 	);
