@@ -12,6 +12,7 @@
 	import { appSettings } from '#lib/settings.svelte.ts';
 	import { plural } from '#lib/format.ts';
 	import Stars from '#lib/components/directory/Stars.svelte';
+	import { fmtDay } from '#lib/components/tastings/journal.ts';
 
 	let { data } = $props();
 
@@ -42,6 +43,23 @@
 
 	const base = $derived(all.filter((p) => textMatch(q, p.name, p.city, p.notes) && (!visited || p.visits > 0)));
 	const shown = $derived(applyFacets(base, FACETS, selection));
+	// the column's list: the most visited first (the default), the latest visited, or by name (?sort=, as the filters)
+	const SORTS = [
+		['visits', 'Visits'],
+		['latest', 'Latest visit'],
+		['name', 'Name']
+	] as const;
+	const sortBy = $derived(SORTS.some(([k]) => k === params.get('sort')) ? params.get('sort')! : 'visits');
+	const byName = (a: PlaceRow, b: PlaceRow) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+	const listed = $derived(
+		[...shown].sort((a, b) =>
+			sortBy === 'name'
+				? byName(a, b)
+				: sortBy === 'latest'
+					? (b.last_visit ?? '').localeCompare(a.last_visit ?? '') || byName(a, b)
+					: b.visits - a.visits || (b.last_visit ?? '').localeCompare(a.last_visit ?? '') || byName(a, b)
+		)
+	);
 	const facets = $derived(FACETS.map((facet) => ({ facet, options: facetOptions(base, FACETS, selection, facet) })));
 	const visitedCount = $derived(all.filter((p) => p.visits > 0).length);
 
@@ -91,6 +109,14 @@
 <div class="panel card">
 	<div class="tabs">
 		<h2>{onMap ? 'Places' : 'Table'}</h2>
+		{#if onMap}
+			<label class="sort">
+				<span class="muted">Sort</span>
+				<select value={sortBy} onchange={(e) => setParams({ sort: e.currentTarget.value === 'visits' ? null : e.currentTarget.value })}>
+					{#each SORTS as [k, label] (k)}<option value={k}>{label}</option>{/each}
+				</select>
+			</label>
+		{/if}
 		<span class="count muted num">
 			{shown.length === all.length ? `${all.length} places` : `${shown.length} of ${all.length} places`}
 		</span>
@@ -100,7 +126,7 @@
 	{:else if onMap}
 		<!-- a place a line: clicked (or hovered, Settings › Map) the map flies to it -->
 		<ul class="places">
-			{#each shown as p (p.id)}
+			{#each listed as p (p.id)}
 				<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
 				<li
 					class:shown={selectedId === p.id}
@@ -113,7 +139,10 @@
 						<Stars n={p.stars} />
 						<div class="muted p-sub">{[p.type, p.city, p.country].filter(Boolean).join(' · ')}</div>
 					</div>
-					<div class="muted num p-visits">{p.visits ? plural(p.visits, 'visit') : 'not visited'}</div>
+					<div class="muted num p-visits">
+						{p.visits ? plural(p.visits, 'visit') : 'not visited'}
+						{#if p.last_visit}<div class="p-last">{fmtDay(p.last_visit)}</div>{/if}
+					</div>
 				</li>
 			{/each}
 		</ul>
@@ -211,5 +240,26 @@
 	.p-visits {
 		flex: none;
 		font-size: 12px;
+	}
+	.sort {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		margin-left: 10px;
+		font-size: 12px;
+	}
+	.sort select {
+		padding: 3px 6px;
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		background: var(--surface);
+		font: inherit;
+		color: inherit;
+	}
+	.p-visits {
+		text-align: right;
+	}
+	.p-last {
+		font-size: 11px;
 	}
 </style>
