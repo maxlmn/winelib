@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **The Lists over the map**: the lists page over a map of every list's regions (deeper where they have more
+  entries; a list's card hovered shows its own), and a list's page over a map of its regions, an entry pointed at
+  flying the map to it (a wine or a cuvée: its vineyard, appellation or region; a producer: its region).
+- **The Places over their map**: the places page has the map of all your places behind it (**On the map**, the
+  default): the places a line each in the column, one clicked (or hovered, Settings › Map) flying the map to it, its
+  card open there; **Tables** has the table, the page's whole width.
+- **The Tasting Notes map opens on the latest tasting**, the latest evening's last wine, marked in the notes.
 - **A line's round pips show its label too**: hovering the bottle ends at the start of a line (the Cellar's storage
   cards, the tasting notes, the home page's lists) shows the wine's label, framed, beside them.
 - **Labels on the tastings' pips**: hovering a wine on the year's ribbon (the home and Tasting Notes pages) shows its

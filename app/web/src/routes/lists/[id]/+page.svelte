@@ -4,6 +4,8 @@
 	import { aborted, messageOf, request } from '#lib/api/http.ts';
 	import { onMount } from 'svelte';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
+	import HomeMap from '#lib/components/home/HomeMap.svelte';
+	import { appSettings } from '#lib/settings.svelte.ts';
 	import ListDots from '#lib/components/ListDots.svelte';
 	import CriteriaBuilder from '#lib/components/CriteriaBuilder.svelte';
 	import { emptyCriteria, hasCriteria, matches, addEntry, compareKeys, deleteList, editEntry, editList, entryName, KIND_LABEL, noteKey, removeEntry, type EntryKind, type ListEntry } from '#lib/api/lists.ts';
@@ -176,9 +178,26 @@
 			listError = messageOf(e);
 		}
 	}
+
+	// The map behind: the list's regions, by how many entries each has; an entry pointed at, after a moment's pause
+	const counts = $derived.by(() => {
+		const out: Record<string, number> = {};
+		for (const e of list.items) if (e.region) out[e.region] = (out[e.region] ?? 0) + 1;
+		return out;
+	});
+	let pointed = $state<ListEntry | null>(null);
+	let pointTimer: ReturnType<typeof setTimeout> | undefined;
+	function point(e: ListEntry) {
+		clearTimeout(pointTimer);
+		pointTimer = setTimeout(() => (pointed = e), 180);
+	}
 </script>
 
 <svelte:head><title>{list.name} · WineLib</title></svelte:head>
+
+<!-- The list over the map: its regions coloured, deeper where it has more entries; an entry pointed at flies the map
+     to it (a wine or a cuvée: its vineyard, appellation or region; a producer: its region) -->
+<HomeMap full {counts} focus={pointed ? { wineId: pointed.wine?.id ?? null, region: pointed.region } : null} />
 
 <div class="page-head">
 	<div>
@@ -291,7 +310,14 @@
 
 	<ol class="entries card">
 		{#each shown as i (i.id)}
-			<li class:tasted={i.tasted} class:dimmed={dimmed(i)}>
+			<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
+			<li
+				class:tasted={i.tasted}
+				class:dimmed={dimmed(i)}
+				class:shown={pointed?.id === i.id}
+				onpointerenter={(e) => e.pointerType === 'mouse' && appSettings.map_follow === 'hover' && point(i)}
+				onclick={(e) => !(e.target as HTMLElement).closest('a, button, input, select, form') && point(i)}
+			>
 				<span class="tick" role="img" aria-label={i.tasted ? 'Tasted' : 'Not tasted yet'}>{#if i.tasted}✓{/if}</span>
 				<span class="end"><BottleEnd region={regionColor(i.region)} color={i.wine?.color} size={16} /></span>
 				<div class="what">
@@ -670,5 +696,30 @@
 			grid-column: 3;
 			text-align: left;
 		}
+	}
+	/* an entry pointed at (the map shows it): a soft tint */
+	.entries li {
+		cursor: pointer;
+		transition: background 0.15s;
+	}
+	.entries li:hover {
+		background: color-mix(in srgb, var(--accent) 5%, transparent);
+	}
+	.entries li.shown,
+	.entries li.shown:hover {
+		background: color-mix(in srgb, var(--accent) 10%, transparent);
+	}
+	/* over the map: the find and sort row, the description, on cards like the rest */
+	:global(html.map-full) .tools,
+	:global(html.map-full) .about {
+		padding: 10px 12px;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		box-shadow: var(--shadow);
+	}
+	:global(html.map-full) .about {
+		margin: 0 0 14px;
+		max-width: none;
 	}
 </style>

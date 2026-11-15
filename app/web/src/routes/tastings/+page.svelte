@@ -54,7 +54,6 @@
 		clearTimeout(pointTimer);
 		pointTimer = setTimeout(() => (pinned = where), 180);
 	}
-	const focus = $derived(pinned ? { point: pinned } : pointed ? { wineId: pointed.wine_id, region: pointed.region } : null);
 	// the tables: back on the one last opened (this visit), the list at first
 	let lastTable = $state('list');
 	$effect(() => {
@@ -65,6 +64,10 @@
 	const tastings = $derived(filterTastings(journal.tastings, filters));
 	const visits = $derived(filterVisits(journal, filters));
 	const cards = $derived(occasions(journal, tastings, visits));
+	// with nothing pointed at, the latest tasting shown: the latest evening's last wine
+	const latest = $derived(cards.find((o) => o.wines.length)?.wines.at(-1) ?? null);
+	const shownWine = $derived(pointed ?? latest);
+	const focus = $derived(pinned ? { point: pinned } : shownWine ? { wineId: shownWine.wine_id, region: shownWine.region } : null);
 	const s = $derived(stats(journal, tastings, visits));
 	const sAll = $derived(stats(journal, journal.tastings, journal.visits));
 
@@ -137,7 +140,7 @@
 		{tastings}
 		label="Every wine, oldest on the left: its region’s colour, its own below. Sweep it, or replay it, the map following"
 		onwine={(t, now) => point(t, now ? 0 : 90)}
-		shown={pointed?.id ?? null}
+		shown={shownWine?.id ?? null}
 	/>
 {:else}
 	<TastingRibbon {tastings} />
@@ -207,7 +210,7 @@
 				{#if filters.period !== 'all'}<button class="btn" onclick={() => setPeriod('all')}>Show all time</button>{/if}
 			</div>
 		{:else if view === 'cards'}
-			<JournalCards occasions={cards} regionColors={data.regionColors} onwine={(w) => point(w)} shown={pinned ? null : (pointed?.id ?? null)} onplace={pointPlace} />
+			<JournalCards occasions={cards} regionColors={data.regionColors} onwine={(w) => point(w)} shown={pinned ? null : (shownWine?.id ?? null)} onplace={pointPlace} />
 		{:else if view === 'list'}
 			{#if tastings.length}
 				<TastingTable {tastings} places={journal.places} regionColors={data.regionColors} />

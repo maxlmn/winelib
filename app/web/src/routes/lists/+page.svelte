@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import ListDots from '#lib/components/ListDots.svelte';
+	import HomeMap from '#lib/components/home/HomeMap.svelte';
 	import { createList, DOT_ORDERS, emptyCriteria, hasCriteria, matches, sortDots, type DotOrder } from '#lib/api/lists.ts';
 	import CriteriaBuilder from '#lib/components/CriteriaBuilder.svelte';
 	import { links } from '#lib/links.ts';
@@ -109,9 +110,20 @@
 			error = e instanceof Error ? e.message : 'Couldn’t create it';
 		}
 	}
+
+	// The map behind: the regions of the lists' entries (every list, or the one hovered), by how many each has
+	let hovered = $state<(typeof data.lists)[number] | null>(null);
+	const counts = $derived.by(() => {
+		const out: Record<string, number> = {};
+		for (const l of hovered ? [hovered] : data.lists) for (const d of l.dots) if (d.region) out[d.region] = (out[d.region] ?? 0) + 1;
+		return out;
+	});
 </script>
 
 <svelte:head><title>Lists · WineLib</title></svelte:head>
+
+<!-- Over the map: every list's regions coloured, by how many entries each has; a list's card hovered colours its own -->
+<HomeMap full {counts} />
 
 <div class="page-head">
 	<h1>Lists</h1>
@@ -167,7 +179,13 @@
 		{#each columns as col, i (i)}
 		<div class="col">
 		{#each col as l (l.id)}
-			<a class="list card" href={links.list(l.id)} bind:offsetHeight={heights[l.id]}>
+			<a
+				class="list card"
+				href={links.list(l.id)}
+				bind:offsetHeight={heights[l.id]}
+				onpointerenter={(e) => e.pointerType === 'mouse' && (hovered = l)}
+				onpointerleave={() => (hovered = null)}
+			>
 				<div class="head">
 					<h2>{#if l.is_wishlist}<span class="star" aria-hidden="true">★</span> {/if}{l.name}</h2>
 					{#if l.live}<span class="badge live" title="Live: {l.live}">Live</span>{/if}

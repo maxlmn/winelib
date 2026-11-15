@@ -27,9 +27,16 @@
 		basemap?: Basemap;
 		/** zoom used when there is a single point */
 		zoom?: number;
+		/** pixels covered on the left (a page's column over a full-size map) or at the bottom (a phone's cards):
+		 * framed in the rest */
+		padLeft?: number;
+		padBottom?: number;
+		/** the selected point flown to when it changes (chosen in a list beside the map) */
+		flyToSelected?: boolean;
 	}
 
-	let { points, selectedId = null, onselect, basemap = 'plain', zoom = 14 }: Props = $props();
+	let { points, selectedId = null, onselect, basemap = 'plain', zoom = 14, padLeft = 0, padBottom = 0, flyToSelected = false }: Props = $props();
+	const padding = () => ({ top: 50, right: 50, bottom: 50 + padBottom, left: 50 + padLeft });
 
 	let container: HTMLDivElement;
 	let map = $state<MlMap>();
@@ -96,7 +103,7 @@
 		if (points.length === 1) map.jumpTo({ center: [points[0].lng, points[0].lat], zoom });
 		else {
 			const lngs = points.map((p) => p.lng), lats = points.map((p) => p.lat);
-			map.fitBounds([Math.min(...lngs), Math.min(...lats), Math.max(...lngs), Math.max(...lats)], { padding: 50, maxZoom: zoom, duration: 0 });
+			map.fitBounds([Math.min(...lngs), Math.min(...lats), Math.max(...lngs), Math.max(...lats)], { padding: padding(), maxZoom: zoom, duration: 0 });
 		}
 	});
 
@@ -107,6 +114,20 @@
 		if (selectedRef !== null) map.setFeatureState({ source: 'points', id: selectedRef }, { selected: false });
 		selectedRef = selectedId;
 		if (selectedId !== null) map.setFeatureState({ source: 'points', id: selectedId }, { selected: true });
+	});
+	// chosen in a list beside the map: flown to, its streets around it
+	$effect(() => {
+		if (!map || !flyToSelected || selectedId === null) return;
+		const p = points.find((x) => x.id === selectedId);
+		if (p) map.flyTo({ center: [p.lng, p.lat], zoom: Math.max(map.getZoom(), zoom), padding: padding(), duration: 900 });
+	});
+	// the box resized (a page laying itself out, a phone turned)
+	$effect(() => {
+		if (!map || !container) return;
+		const m = map;
+		const ro = new ResizeObserver(() => m.resize());
+		ro.observe(container);
+		return () => ro.disconnect();
 	});
 
 	$effect(() => {
