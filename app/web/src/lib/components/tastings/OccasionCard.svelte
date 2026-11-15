@@ -433,17 +433,20 @@
 		color: var(--accent);
 		background: var(--accent-soft);
 	}
-	/* a wine that shows itself on a map when pointed at; the one shown marked */
+	/* a wine that shows itself on a map when pointed at; the one shown on a soft tint (no outline: its pip at the
+	   left is the line's mark), with room around the pip */
 	li.points {
+		margin-inline: -8px;
+		padding-inline: 8px;
 		border-radius: 6px;
 		cursor: pointer;
 		transition: background 0.15s;
 	}
-	li.points:hover,
-	li.shown {
-		background: color-mix(in srgb, var(--accent) 8%, transparent);
+	li.points:hover {
+		background: color-mix(in srgb, var(--accent) 5%, transparent);
 	}
-	li.shown {
-		box-shadow: inset 2px 0 0 var(--accent);
+	li.shown,
+	li.shown:hover {
+		background: color-mix(in srgb, var(--accent) 10%, transparent);
 	}
 </style>
