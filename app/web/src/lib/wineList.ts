@@ -45,6 +45,12 @@ const SECTIONS: [string, string[]][] = [
 	['Sweet & fortified', ['Sweet', 'Fortified']]
 ];
 
+/** A colour's section (its place in a list's order, its title): Sparkling first, Sweet & fortified last, Other after */
+export function colorSection(color: string | null): { order: number; title: string } {
+	const i = SECTIONS.findIndex(([, colors]) => colors.includes(color ?? ''));
+	return i < 0 ? { order: SECTIONS.length, title: 'Other' } : { order: i, title: SECTIONS[i][0] };
+}
+
 /** A wine in one format: what leaves one vintage out */
 export const vintageKey = (b: Pick<Bottle, 'wine_id' | 'format'>) => `${b.wine_id}-${b.format ?? ''}`;
 

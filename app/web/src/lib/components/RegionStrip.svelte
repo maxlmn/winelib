@@ -26,7 +26,8 @@
 		pips,
 		variant = 'tracks',
 		height = 14,
-		onhover
+		onhover,
+		active = null
 	}: {
 		pips: Pip[];
 		/** tracks: a bar per wine in its region's color, its color on a thin track below (timelines, lists);
@@ -35,6 +36,8 @@
 		/** the bar's height, or the bottle end's diameter */
 		height?: number;
 		onhover?: (key: Pip['key'] | null) => void;
+		/** the pip of this key raised, as when hovered (the one a map shows, a replay's) */
+		active?: Pip['key'] | null;
 	} = $props();
 
 	// The rack's rows, every other one shifted half a bottle as in a real rack, filled to the width. A bottle end's
@@ -83,6 +86,7 @@
 	<svelte:element
 		this={pip.href ? 'a' : 'span'}
 		class="pip"
+		class:active={active != null && pip.key === active}
 		href={pip.href}
 		tabindex={pip.href ? -1 : undefined}
 		style:--d={d ? `${d}px` : null}
@@ -163,8 +167,13 @@
 		background: var(--wine);
 	}
 	.tracks .pip:hover,
-	.tracks .pip:focus-visible {
+	.tracks .pip:focus-visible,
+	.tracks .pip.active {
 		transform: scale(1.6, 1.25);
+	}
+	.tracks .pip.active {
+		z-index: 1;
+		box-shadow: 0 0 0 1px var(--surface), 0 0 0 2px var(--text);
 	}
 
 	/* Rack: bottle ends in rows, every other row shifted half a bottle, sized by volume; the wine's color as the

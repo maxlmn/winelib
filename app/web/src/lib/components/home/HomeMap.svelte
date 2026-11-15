@@ -18,7 +18,41 @@
 	}
 	/** full: the whole window behind the page (html.map-full in app.css), the page's cards over its left side (over
 	 * its lower half on a phone) */
-	let { minHeight = 440, focus = null, full = false }: { minHeight?: number; focus?: Focus | null; full?: boolean } = $props();
+	/** by: what colours the regions, deeper where there's more of it: your bottles, your tastings, or both (a switch on
+	 * the map, remembered on this device) */
+	let {
+		minHeight = 440,
+		focus = null,
+		full = false,
+		by: byDefault = 'both'
+	}: { minHeight?: number; focus?: Focus | null; full?: boolean; by?: By } = $props();
+
+	type By = 'both' | 'cellar' | 'tasted';
+	// remembered per kind of page (the home page's both, the cellar's cellar)
+	const byKey = () => `winelib.mapBy.${byDefault}`;
+	const read = (): By | null => {
+		try {
+			const v = localStorage.getItem(byKey());
+			return v === 'both' || v === 'cellar' || v === 'tasted' ? v : null;
+		} catch {
+			return null;
+		}
+	};
+	let chosen = $state<By | null>(read());
+	const by = $derived(chosen ?? byDefault);
+	function choose(v: By) {
+		chosen = v;
+		try {
+			localStorage.setItem(byKey(), v);
+		} catch {
+			// not kept: this visit only
+		}
+	}
+	const BY: [By, string, string][] = [
+		['both', 'Both', 'Your bottles and your tastings'],
+		['cellar', 'Cellar', 'The bottles in your cellar'],
+		['tasted', 'Tasted', 'The wines you’ve tasted']
+	];
 
 	$effect(() => {
 		document.documentElement.classList.toggle('map-full', full);
@@ -76,9 +110,18 @@
 	}
 	onMount(load);
 
-	const regions = $derived(
-		overview ? { ...overview, features: overview.features.filter((f) => f.properties.bottles > 0 || f.properties.tastings > 0) } : null
-	);
+	// The regions with something of the chosen kind, each with its depth: its share of the most any region has (eased a
+	// little, so a region with a few bottles still shows beside the one with hundreds)
+	const amount = (p: RegionProps) => (by === 'cellar' ? p.bottles : by === 'tasted' ? p.tastings : p.bottles + p.tastings);
+	const regions = $derived.by(() => {
+		if (!overview) return null;
+		const mine = overview.features.filter((f) => amount(f.properties) > 0);
+		const most = Math.max(1, ...mine.map((f) => amount(f.properties)));
+		return {
+			...overview,
+			features: mine.map((f) => ({ ...f, properties: { ...f.properties, weight: (amount(f.properties) / most) ** 0.8 } }))
+		};
+	});
 	// Fitted to the regions most of your bottles and tastings come from (90%), not every one: a single wine from Canada
 	// or China would widen it to the whole world; the whole map without any
 	const extent = $derived.by((): Extent | null => {
@@ -125,6 +168,11 @@
 			padLeft={full && !phone ? 560 : 0}
 			padBottom={full && phone ? Math.round(winHeight * 0.45) : 0}
 		/>
+		<div class="by" role="group" aria-label="What colours the regions">
+			{#each BY as [id, label, title] (id)}
+				<button class:on={by === id} aria-pressed={by === id} {title} onclick={() => choose(id)}>{label}</button>
+			{/each}
+		</div>
 	{:else if failed}
 		<div class="loading muted">The map couldn’t be loaded. <button type="button" class="link" onclick={load}>Try again</button></div>
 	{:else}
@@ -164,6 +212,32 @@
 		flex: 1;
 		border-radius: calc(var(--radius) - 2px);
 		overflow: hidden;
+	}
+	/* the switch: what colours the regions, at the map's top right beside its zoom */
+	.by {
+		position: absolute;
+		top: 10px;
+		right: 50px;
+		z-index: 2;
+		display: inline-flex;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		overflow: hidden;
+		background: var(--surface);
+		box-shadow: var(--shadow);
+	}
+	.by button {
+		border: none;
+		background: none;
+		padding: 5px 10px;
+		font: inherit;
+		font-size: 12px;
+		color: var(--muted);
+		cursor: pointer;
+	}
+	.by button.on {
+		background: var(--accent);
+		color: var(--on-accent);
 	}
 	.link {
 		background: none;

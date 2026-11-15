@@ -306,6 +306,13 @@
 				// moved by hand (a drag, a wheel, a pinch, the zoom buttons): its view is the user's, kept as the box changes
 				mm.on('movestart', (e) => {
 					if ((e as { originalEvent?: Event }).originalEvent) lastFit = null;
+					else {
+						// flown elsewhere by the page (a wine pointed at): the hover cards of where it was go
+						setHover(null);
+						hovered = null;
+						hoveredRegion = null;
+						hoveredLieu = null;
+					}
 				});
 				mm.on('zoomstart', (e) => {
 					if ((e as { originalEvent?: Event }).originalEvent) lastFit = null;
@@ -339,7 +346,15 @@
 		const hover: ExpressionSpecification = ['boolean', ['feature-state', 'hover'], false];
 		// filled while seen whole; fading as the map zooms in among their appellations and vineyards (the home map on a
 		// vineyard: the region's colour mustn't cover it all)
-		map.setPaintProperty('regions-fill', 'fill-opacity', regionsAnswer ? ['interpolate', ['linear'], ['zoom'], 6, ['case', hover, 0.45, 0.22], 9, ['case', hover, 0.1, 0.03]] : 0.05);
+		// A region's own depth (its `weight`, 0 to 1: how much of your wine it holds, the home map's) deepens its fill
+		const depth: ExpressionSpecification = ['coalesce', ['get', 'weight'], 0.4];
+		map.setPaintProperty(
+			'regions-fill',
+			'fill-opacity',
+			regionsAnswer
+				? ['interpolate', ['linear'], ['zoom'], 6, ['case', hover, 0.6, ['+', 0.05, ['*', 0.5, depth]]], 9, ['case', hover, 0.1, 0.03]]
+				: 0.05
+		);
 		map.setPaintProperty('regions-line', 'line-width', regionsAnswer ? ['case', hover, 2.5, 1.5] : 2);
 		map.setPaintProperty('regions-line', 'line-dasharray', regionsAnswer ? [1, 0] : [3, 2]);
 	});

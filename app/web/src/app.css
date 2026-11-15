@@ -426,6 +426,14 @@ html.map-full main :is(.body.split, .about.has-image, .top, .map-card) {
 html.map-full main .card {
 	box-shadow: var(--shadow);
 }
+html.map-full main > .page-head {
+	padding: 12px 16px;
+	margin-bottom: 14px;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+}
 /* On a phone the page's cards start over the map's lower half and scroll with the window, up over the map and its
    legend (which stay behind). The space above the first card is the map's: a touch there pans it, one on the cards
    scrolls the page */
