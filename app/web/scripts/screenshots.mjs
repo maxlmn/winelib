@@ -28,10 +28,10 @@ const note = (await api('/api/tastings')).tastings.find((t) => /Turque/.test(t.c
 
 /** name, the page, what to do on it before the picture; phone: the phone's size (the composed "mobile" picture) */
 const SHOTS = [
-	{ name: 'home', path: '/' },
-	{ name: 'cellar', path: '/cellar', prep: (p) => top(p, '.panel .tabs') },
-	{ name: 'lists', path: '/lists' },
-	{ name: 'list', path: `/lists/${list.id}` },
+	{ name: 'home', path: '/', wait: 3500 },
+	{ name: 'cellar', path: '/cellar', wait: 3500 },
+	{ name: 'lists', path: '/lists', wait: 3500 },
+	{ name: 'list', path: `/lists/${list.id}`, wait: 3500 },
 	{ name: 'worldmap', path: '/map', wait: 3000 },
 	{ name: 'map', path: '/regions/Bourgogne', wait: 3000 },
 	{ name: 'wine', path: `/wines/${wine.id}`, wait: 3000 },
@@ -51,7 +51,7 @@ const SHOTS = [
 			await settle(p, 5000);
 		}
 	},
-	{ name: 'tastings', path: '/tastings?period=all', prep: (p) => top(p, '.panel') },
+	{ name: 'tastings', path: '/tastings?period=all', wait: 3500 },
 	{
 		name: 'sticker', path: `/tastings/${note.id}`,
 		prep: async (p) => { await p.getByRole('button', { name: /Share/ }).first().click(); await p.waitForTimeout(1200); }
@@ -67,8 +67,8 @@ const SHOTS = [
 		prep: async (p) => { await p.keyboard.press('Control+k'); await p.keyboard.type('saumur'); await p.waitForTimeout(1200); }
 	},
 	{ name: 'winelist', path: '/cellar/list' },
-	{ name: 'phone-home', path: '/', phone: true },
-	{ name: 'phone-cellar', path: '/cellar?view=cards', phone: true, prep: (p) => top(p, '.panel', 70) },
+	{ name: 'phone-home', path: '/', phone: true, wait: 3500 },
+	{ name: 'phone-cellar', path: '/cellar', phone: true, wait: 3500 },
 	{ name: 'phone-wine', path: `/wines/${wine.id}`, phone: true, wait: 3000 }
 ].filter((s) => !only.length || only.includes(s.name));
 
