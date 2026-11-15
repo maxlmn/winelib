@@ -9,6 +9,8 @@
 		label: string;
 		/** a second line (date, place, storage...) */
 		sub?: string;
+		/** the wine's label (a small image's address), at the top of the hover card */
+		image?: string | null;
 		href?: string;
 		/** handed to onhover, e.g. to highlight the wine in a list */
 		key?: number | string;
@@ -64,9 +66,10 @@
 	function show(pip: Pip, e: Event) {
 		const el = e.currentTarget as HTMLElement;
 		const r = el.getBoundingClientRect();
-		const below = r.top < 90;
-		// Kept inside the window at its edges (the card is up to 280px wide)
-		const x = Math.min(Math.max(r.left + r.width / 2, 148), innerWidth - 148);
+		const below = r.top < (pip.image ? 130 : 90);
+		// Kept inside the window at its edges (the card is up to 280px wide, 400px with a label)
+		const half = pip.image ? 208 : 148;
+		const x = Math.min(Math.max(r.left + r.width / 2, half), innerWidth - half);
 		tip = { pip, x, y: below ? r.bottom : r.top, below };
 		onhover?.(pip.key ?? null);
 	}
@@ -106,6 +109,7 @@
 	{#if tip}
 		<div class="tip" class:below={tip.below} style:left="{tip.x}px" style:top="{tip.y}px" role="tooltip">
 			<span class="swatch" style:background={regionColor(tip.pip.region) ?? FALLBACK_REGION}></span>
+			{#if tip.pip.image}<img class="label" src={tip.pip.image} alt="" decoding="async" />{/if}
 			<div>
 				<b>{tip.pip.label}</b>
 				{#if tip.pip.color}<span class="type"><span class="dot" style:background={typeColor(tip.pip.color)}></span>{tip.pip.color}</span>{/if}
@@ -215,6 +219,22 @@
 	}
 	.tip.below {
 		transform: translate(-50%, 8px);
+	}
+	/* the wine's label, framed, at the left of its name */
+	.tip:has(.label) {
+		max-width: 400px;
+	}
+	.tip .label {
+		display: block;
+		flex: none;
+		align-self: center;
+		max-width: 120px;
+		max-height: 96px;
+		padding: 3px;
+		background: #fff;
+		border: 1px solid var(--border);
+		border-radius: 3px;
+		box-shadow: 0 1px 3px rgb(0 0 0 / 0.15);
 	}
 	.type {
 		display: block;

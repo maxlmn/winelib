@@ -130,6 +130,8 @@ def _load_cellar(session, query=CELLAR_SQL, params=None):
     bottles = []
     rows = session.execute(query, {"critic": scores.preferred(), **(params or {})}).mappings().all()
     labels = scores.labels(session, [r["wine_id"] for r in rows])
+    import labels as wine_labels
+    label_of = wine_labels.of_cellar(session, [r["wine_id"] for r in rows])
     import style_tags
     styles = style_tags.of_wines(session, [r["wine_id"] for r in rows])
     grapes = (grapes_by_wine(session, in_stock=True) if query is CELLAR_SQL
@@ -158,6 +160,8 @@ def _load_cellar(session, query=CELLAR_SQL, params=None):
             "maturity": maturity(r["drink_window_start"], r["drink_window_end"]),
             "purchase_date": r["purchase_date"].isoformat() if hasattr(r["purchase_date"], "isoformat") else r["purchase_date"],
             "vendor": r["vendor"],
+            # its uploaded label ({url, from_vintage}: another vintage's of the cuvée when it has none), or None
+            "label": label_of.get(r["wine_id"]),
             # its style tags, set or tasted ("fresh", "mineral"): the filters'
             "tags": [t["tag"] for t in styles.get(r["wine_id"], [])],
         })

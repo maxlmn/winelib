@@ -34,6 +34,8 @@
 		}
 		return out;
 	});
+	// The latest tasting: the latest evening's last wine (the home map opens on it)
+	const lastWine = $derived(latest[0]?.wines.at(-1) ?? null);
 	// The past year's wines as one line of region colours
 	const yearAgo = $derived(`${Number(d.today.slice(0, 4)) - 1}${d.today.slice(4)}`);
 	const recentTastings = $derived(data.journal.tastings.filter((t) => t.date >= yearAgo));
@@ -108,7 +110,7 @@
 			<h2>Your wine map</h2>
 			<a class="more" href={links.map()}>The map →</a>
 		</div>
-		<HomeMap focus={latest[0]?.wines[0]?.region ?? null} />
+		<HomeMap focus={lastWine ? { wineId: lastWine.wine_id, region: lastWine.region } : null} />
 	</section>
 	<div class="side">
 		<section class="card latest">
