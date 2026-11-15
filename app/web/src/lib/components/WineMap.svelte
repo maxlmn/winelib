@@ -335,7 +335,9 @@
 		const drawable = (regions?.features ?? []).filter((f) => f.geometry);
 		(map.getSource('regions') as GeoJSONSource).setData({ type: 'FeatureCollection', features: drawable } as FeatureCollection);
 		const hover: ExpressionSpecification = ['boolean', ['feature-state', 'hover'], false];
-		map.setPaintProperty('regions-fill', 'fill-opacity', regionsAnswer ? ['case', hover, 0.45, 0.22] : 0.05);
+		// filled while seen whole; fading as the map zooms in among their appellations and vineyards (the home map on a
+		// vineyard: the region's colour mustn't cover it all)
+		map.setPaintProperty('regions-fill', 'fill-opacity', regionsAnswer ? ['interpolate', ['linear'], ['zoom'], 6, ['case', hover, 0.45, 0.22], 9, ['case', hover, 0.1, 0.03]] : 0.05);
 		map.setPaintProperty('regions-line', 'line-width', regionsAnswer ? ['case', hover, 2.5, 1.5] : 2);
 		map.setPaintProperty('regions-line', 'line-dasharray', regionsAnswer ? [1, 0] : [3, 2]);
 	});

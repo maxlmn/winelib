@@ -4,6 +4,7 @@
 	 * region with its neighbours; else on where most of your wine comes from. */
 	import { onMount } from 'svelte';
 	import WineMap from '#lib/components/WineMap.svelte';
+	import type { Layers } from '#lib/components/WineMap.svelte';
 	import { links } from '#lib/links.ts';
 	import { appSettings } from '#lib/settings.svelte.ts';
 	import { bbox } from '#lib/geo.ts';
@@ -31,6 +32,8 @@
 	});
 	const vines = $derived(place?.vineyards?.features.length ? place.vineyards : null);
 	const apps = $derived(place?.appellations?.features.length ? place.appellations : null);
+	// on a vineyard: it alone filled, its appellation an outline around it
+	const layers = $derived<Layers>({ appellation: vines ? 'outline' : 'fill', vineyard: 'fill', lieu: 'outline' });
 	// at least `min` degrees across, centred on the box: a speck of a vineyard still shows its slope
 	const atLeast = ([w, s, e, n]: Extent, min: number): Extent => {
 		const cx = (w + e) / 2, cy = (s + n) / 2;
@@ -87,6 +90,7 @@
 			regionHref={(r: RegionProps) => links.region(r.name)}
 			appellations={apps}
 			vineyards={vines}
+			{layers}
 			selected={null}
 			basemap={appSettings.map_default_basemap}
 			fitKey="home"
