@@ -3,6 +3,7 @@
 	 * Opened on `focus` (the latest tasting's wine) when there's one: its vineyard, else its appellation (drawn), else its
 	 * region with its neighbours; else on where most of your wine comes from. */
 	import { onMount } from 'svelte';
+	import { portal } from '#lib/portal.ts';
 	import WineMap from '#lib/components/WineMap.svelte';
 	import type { Layers } from '#lib/components/WineMap.svelte';
 	import { links } from '#lib/links.ts';
@@ -15,20 +16,40 @@
 		wineId: number;
 		region: string | null;
 	}
-	let { minHeight = 440, focus = null }: { minHeight?: number; focus?: Focus | null } = $props();
+	/** full: the whole window behind the page (html.map-full in app.css), the page's cards over its left side (over
+	 * its lower half on a phone) */
+	let { minHeight = 440, focus = null, full = false }: { minHeight?: number; focus?: Focus | null; full?: boolean } = $props();
 
-	// The focused wine's vineyard and appellation (its page's shapes); null while asked, {} when it has none or failed
-	let place = $state<{ appellations?: MapCollection; vineyards?: MapCollection } | null>(null);
 	$effect(() => {
-		const id = focus?.wineId;
-		place = id ? null : {};
-		if (!id) return;
+		document.documentElement.classList.toggle('map-full', full);
+		return () => document.documentElement.classList.remove('map-full');
+	});
+	let winWidth = $state(1024);
+	let winHeight = $state(768);
+	const phone = $derived(winWidth <= 760);
+
+	// The focused wine's vineyard and appellation (its page's shapes), kept by wine: a wine hovered again isn't asked
+	// again, and the map keeps the last one shown while the next is asked (it flies there once it has it)
+	type Place = { id: number | null; appellations?: MapCollection; vineyards?: MapCollection };
+	type Shapes = Omit<Place, 'id'>;
+	const asked = new Map<number, Promise<Shapes>>();
+	let place = $state<Place | null>(null);
+	$effect(() => {
+		const id = focus?.wineId ?? null;
+		if (!id) {
+			place = { id: null };
+			return;
+		}
 		let stale = false;
-		fetch(`/api/wines/${id}/shapes`)
-			.then((r) => (r.ok ? r.json() : {}))
-			.catch(() => ({}))
-			.then((p) => !stale && (place = p));
+		if (!asked.has(id))
+			asked.set(id, fetch(`/api/wines/${id}/shapes`).then((r) => (r.ok ? (r.json() as Promise<Shapes>) : {})).catch(() => ({})));
+		asked.get(id)!.then((p) => !stale && (place = { ...p, id }));
 		return () => (stale = true);
+	});
+	// the focus's region, as it was when its shapes came (a region-only wine)
+	let placeRegion = $state<string | null>(null);
+	$effect(() => {
+		if (place && place.id === (focus?.wineId ?? null)) placeRegion = focus?.region ?? null;
 	});
 	const vines = $derived(place?.vineyards?.features.length ? place.vineyards : null);
 	const apps = $derived(place?.appellations?.features.length ? place.appellations : null);
@@ -65,7 +86,7 @@
 		const own = vines ?? apps;
 		const ownBox = own ? bbox(own.features.map((f) => f.geometry)) : null;
 		if (ownBox) return atLeast(ownBox, vines ? 0.015 : 0.08);
-		const focused = focus?.region ? regions?.features.find((f) => f.properties.name === focus.region)?.properties.bbox : null;
+		const focused = placeRegion ? regions?.features.find((f) => f.properties.name === placeRegion)?.properties.bbox : null;
 		if (focused) return atLeast(focused, 6);
 		const weight = (p: RegionProps) => p.bottles + p.tastings;
 		const ranked = (regions?.features ?? []).map((f) => f.properties).sort((a, b) => weight(b) - weight(a));
@@ -83,7 +104,9 @@
 	});
 </script>
 
-<div class="home-map" style:min-height="{minHeight}px">
+<svelte:window bind:innerWidth={winWidth} bind:innerHeight={winHeight} />
+
+<div class="home-map" class:full style:min-height={full ? null : `${minHeight}px`} use:portal={full} role="region" aria-label="Your wine map">
 	{#if regions && place}
 		<WineMap
 			{regions}
@@ -93,10 +116,14 @@
 			{layers}
 			selected={null}
 			basemap={appSettings.map_default_basemap}
-			fitKey="home"
+			fitKey="home:{place.id ?? ''}"
+			flyMs={900}
 			{extent}
 			onselect={() => {}}
 			worldCopies={false}
+			cardSide={full && !phone ? 'right' : 'left'}
+			padLeft={full && !phone ? 560 : 0}
+			padBottom={full && phone ? Math.round(winHeight * 0.45) : 0}
 		/>
 	{:else if failed}
 		<div class="loading muted">The map couldn’t be loaded. <button type="button" class="link" onclick={load}>Try again</button></div>
@@ -106,6 +133,32 @@
 </div>
 
 <style>
+	/* Full size: behind the page's column, beside the sidebar; under the bar and over the tab bar on a phone */
+	.home-map.full {
+		position: fixed;
+		inset: 0 0 0 200px;
+		z-index: 40;
+		min-height: 0;
+		border-radius: 0;
+		background: var(--bg);
+	}
+	/* its scale beside the page's column, not under it */
+	.home-map.full :global(.maplibregl-ctrl-bottom-left) {
+		left: 560px;
+	}
+	@media (max-width: 760px) {
+		.home-map.full {
+			inset: var(--nav-h, 52px) 0 var(--tab-h, 0px) 0;
+		}
+		/* a phone: the credits and scale just above the cards */
+		.home-map.full :global(:is(.maplibregl-ctrl-bottom-left, .maplibregl-ctrl-bottom-right)) {
+			left: auto;
+			bottom: 45dvh;
+		}
+		.home-map.full :global(.maplibregl-ctrl-bottom-left) {
+			left: 0;
+		}
+	}
 	.home-map {
 		position: relative;
 		flex: 1;

@@ -67,12 +67,14 @@
 		quiet?: boolean;
 		/** the world repeated side by side when zoomed out (off: a wide box shows one world) */
 		worldCopies?: boolean;
+		/** a new framing (fitKey changed) flown to over this many ms instead of jumping (the first one always jumps) */
+		flyMs?: number;
 	}
 
 	let {
 		appellations, vineyards, layers = DEFAULT_LAYERS, here = null,
 		selected, basemap, fitKey, extent = null, onselect, pinCard = true,
-		regions = null, onregion = null, regionHref = null, worldCopies = true, lieuAction = null, cardSide = 'left', padLeft = 0, padBottom = 0,
+		regions = null, onregion = null, regionHref = null, worldCopies = true, lieuAction = null, cardSide = 'left', padLeft = 0, padBottom = 0, flyMs = 0,
 		onmap, quiet = false
 	}: Props = $props();
 
@@ -366,9 +368,10 @@
 			const pad = framing();
 			const c = map.getContainer();
 			if (b && boxSize >= 0 && c.clientWidth > pad.left + pad.right + 40 && c.clientHeight > pad.top + pad.bottom + 40) {
+				const first = !fitted;
 				fitted = fitKey;
 				lastFit = { b, pad };
-				map.fitBounds(b, { padding: pad, duration: 0 });
+				map.fitBounds(b, { padding: pad, duration: first ? 0 : flyMs });
 			}
 		}
 	});

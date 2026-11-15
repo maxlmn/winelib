@@ -34,8 +34,18 @@
 		}
 		return out;
 	});
-	// The latest tasting: the latest evening's last wine (the home map opens on it)
+	// The latest tasting: the latest evening's last wine (the home map opens on it). A wine of the latest tastings
+	// pointed at (hovered a moment, or tapped) takes its place on the map
 	const lastWine = $derived(latest[0]?.wines.at(-1) ?? null);
+	type Wine = (typeof latest)[number]['wines'][number];
+	let pointed = $state<Wine | null>(null);
+	let pointTimer: ReturnType<typeof setTimeout> | undefined;
+	function point(w: Wine) {
+		clearTimeout(pointTimer);
+		// a moment's pause first: a pointer crossing the list doesn't send the map flying from wine to wine
+		pointTimer = setTimeout(() => (pointed = w), 180);
+	}
+	const shownWine = $derived(pointed ?? lastWine);
 	// The past year's wines as one line of region colours
 	const yearAgo = $derived(`${Number(d.today.slice(0, 4)) - 1}${d.today.slice(4)}`);
 	const recentTastings = $derived(data.journal.tastings.filter((t) => t.date >= yearAgo));
@@ -102,55 +112,51 @@
 	</a>
 </div>
 
-<!-- Two rows, their columns as tall as each other: the map beside the latest tasting and the year's wines; what to
-     open beside what came in, half and half -->
-<div class="row">
-	<section class="card map-card">
-		<div class="sec-head">
-			<h2>Your wine map</h2>
-			<a class="more" href={links.map()}>The map →</a>
-		</div>
-		<HomeMap focus={lastWine ? { wineId: lastWine.wine_id, region: lastWine.region } : null} />
-	</section>
-	<div class="side">
-		<section class="card latest">
-			<div class="sec-head">
-				<h2>Latest {latest.length > 1 ? 'tastings' : 'tasting'}</h2>
-				<a class="more" href={links.tastings()}>All tasting notes →</a>
-			</div>
-			{#each latest as o (o.key)}
-				<OccasionCard occasion={o} regionColors={data.regionColors} plain />
-			{:else}
-				<p class="muted">No tastings yet. <a class="more" href={links.newTasting()}>Add the first one</a></p>
-			{/each}
-		</section>
-		{#if recentTastings.length > 1}
-			<TastingRibbon tastings={recentTastings} label="The past year, a wine per bar: its region’s colour (its own below)" />
-		{/if}
-	</div>
-</div>
+<!-- The map is the page's ground: the whole window behind the cards, on the latest tasting's wine (or the one
+     pointed at in the list) -->
+<HomeMap full focus={shownWine ? { wineId: shownWine.wine_id, region: shownWine.region } : null} />
 
-<div class="row even">
-	<WhatToOpen bottles={data.cellar.bottles} totals={d.drink_soon.bottles} />
-	<!-- Without any purchase dates (none recorded), there's nothing recent to show -->
-	{#if recentBottles.length || !data.cellar.bottles.length}
-		<section class="card purchases-card">
-			<div class="sec-head">
-				<h2>Recent purchases <span class="muted num">{plural(recentQty, 'bottle')}</span></h2>
-				<a class="more" href={links.cellar()}>The cellar →</a>
-			</div>
-			{#if recentBottles.length}
-				<CellarSection bottles={recentBottles} regionColors={data.regionColors} prices />
-			{:else}
-				<p class="muted">No purchases yet. <a class="more" href={links.newBottle()}>Add one</a></p>
-			{/if}
-		</section>
-	{/if}
-</div>
+<section class="card latest">
+	<div class="sec-head">
+		<h2>Latest {latest.length > 1 ? 'tastings' : 'tasting'}</h2>
+		<a class="more" href={links.tastings()}>All tasting notes →</a>
+	</div>
+	{#each latest as o (o.key)}
+		<OccasionCard occasion={o} regionColors={data.regionColors} plain onwine={point} shown={shownWine?.id ?? null} />
+	{:else}
+		<p class="muted">No tastings yet. <a class="more" href={links.newTasting()}>Add the first one</a></p>
+	{/each}
+</section>
+{#if recentTastings.length > 1}
+	<TastingRibbon tastings={recentTastings} label="The past year, a wine per bar: its region’s colour (its own below)" />
+{/if}
+
+<WhatToOpen bottles={data.cellar.bottles} totals={d.drink_soon.bottles} />
+<!-- Without any purchase dates (none recorded), there's nothing recent to show -->
+{#if recentBottles.length || !data.cellar.bottles.length}
+	<section class="card purchases-card">
+		<div class="sec-head">
+			<h2>Recent purchases <span class="muted num">{plural(recentQty, 'bottle')}</span></h2>
+			<a class="more" href={links.cellar()}>The cellar →</a>
+		</div>
+		{#if recentBottles.length}
+			<CellarSection bottles={recentBottles} regionColors={data.regionColors} prices />
+		{:else}
+			<p class="muted">No purchases yet. <a class="more" href={links.newBottle()}>Add one</a></p>
+		{/if}
+	</section>
+{/if}
 
 <style>
+	/* over the map: the greeting and its buttons on a card like the rest */
 	.page-head {
 		align-items: flex-end;
+		padding: 12px 16px;
+		margin-bottom: 14px;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		box-shadow: var(--shadow);
 	}
 	h1 {
 		margin: 0;
@@ -211,41 +217,6 @@
 	}
 	.more:hover {
 		color: var(--accent);
-	}
-	.row {
-		display: grid;
-		grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-		gap: 14px;
-		margin-bottom: 14px;
-	}
-	.row.even {
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-	}
-	@media (max-width: 1000px) {
-		.row,
-		.row.even {
-			grid-template-columns: minmax(0, 1fr);
-		}
-	}
-	.side {
-		display: flex;
-		flex-direction: column;
-		gap: 14px;
-		min-width: 0;
-	}
-	.side > :global(*),
-	.row > :global(*) {
-		margin: 0;
-	}
-	/* Beside the map: the latest tasting at the top, the year's ribbon at the bottom, level with the map */
-	.side > :global(.ribbon) {
-		margin-top: auto;
-	}
-	/* The map grows to its row's height (the latest tasting and the ribbon beside it) */
-	.map-card {
-		display: flex;
-		flex-direction: column;
-		padding: 14px 14px 12px;
 	}
 	.latest :global(.occ) {
 		margin: 0;
