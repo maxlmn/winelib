@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **The Producers over the map**: **On the map** (the default) has your producers a line each in the column (the whole
+  directory in steps), the map behind coloured by how many each region has; a producer clicked (or hovered,
+  Settings › Map) flies the map to where its wines come from, its appellations and vineyards drawn. **Tables** has the
+  table, the page's whole width.
+- **A list of tiers in sections**: a list whose notes are a few tiers (“Benchmark”, “Name To Know”), each on several
+  entries, shows its entries under a heading per tier (its tasted count beside it), the ones without a note last, in
+  the list's order or by note; sorted by name or what's left to taste, one list as before.
 - **The Lists over the map**: the lists page over a map of every list's regions (deeper where they have more
   entries; a list's card hovered shows its own), and a list's page over a map of its regions, an entry pointed at
   flying the map to it (a wine or a cuvée: its vineyard, appellation or region; a producer: its region).
