@@ -7,12 +7,21 @@
 	import { links } from '#lib/links.ts';
 	import { accentColor } from '#lib/theme.svelte.ts';
 	import Stars from './Stars.svelte';
+	import { portal } from '#lib/portal.ts';
 
-	let { rows }: { rows: PlaceRow[] } = $props();
+	/** full: the whole window behind the page (html.map-full in app.css), the page's column over its left side (its
+	 * lower half on a phone); `selectedId` chosen here or in the page's list (bindable), flown to */
+	let { rows, full = false, selectedId = $bindable(null) }: { rows: PlaceRow[]; full?: boolean; selectedId?: number | null } = $props();
 
 	const NOT_VISITED = '#9a93a0';
 
-	let selectedId = $state<number | null>(null);
+	$effect(() => {
+		document.documentElement.classList.toggle('map-full', full);
+		return () => document.documentElement.classList.remove('map-full');
+	});
+	let winWidth = $state(1024);
+	let winHeight = $state(768);
+	const phone = $derived(winWidth <= 760);
 
 	const located = $derived(rows.filter((p) => p.lat !== null && p.lng !== null));
 	const points = $derived(
@@ -33,8 +42,18 @@
 	const selected = $derived(located.find((p) => p.id === selectedId) ?? null);
 </script>
 
-<div class="map">
-	<PointMap {points} {selectedId} onselect={(id) => (selectedId = id)} zoom={13} />
+<svelte:window bind:innerWidth={winWidth} bind:innerHeight={winHeight} />
+
+<div class="map" class:full use:portal={full}>
+	<PointMap
+		{points}
+		{selectedId}
+		onselect={(id) => (selectedId = id)}
+		zoom={13}
+		flyToSelected={full}
+		padLeft={full && !phone ? 560 : 0}
+		padBottom={full && phone ? Math.round(winHeight * 0.45) : 0}
+	/>
 	{#if selected}
 		<div class="pick card">
 			<button class="close" onclick={() => (selectedId = null)} aria-label="Close">✕</button>
@@ -51,7 +70,7 @@
 		</div>
 	{/if}
 </div>
-<div class="legend muted">
+<div class="legend muted" class:over={full}>
 	<span><span class="dot" style:background="var(--accent)"></span> Visited (size: number of visits)</span>
 	<span><span class="dot" style:background={NOT_VISITED}></span> Not visited</span>
 	<span class="num">{located.length} of {rows.length} places have coordinates</span>
@@ -64,6 +83,29 @@
 		min-height: 360px;
 		border-radius: 8px;
 		overflow: hidden;
+	}
+	/* Full size: behind the page's column, beside the sidebar; under the bar and over the tab bar on a phone */
+	.map.full {
+		position: fixed;
+		inset: 0 0 0 200px;
+		z-index: 40;
+		height: auto;
+		min-height: 0;
+		border-radius: 0;
+	}
+	@media (max-width: 760px) {
+		.map.full {
+			inset: var(--nav-h, 52px) 0 var(--tab-h, 0px) 0;
+		}
+	}
+	/* full size, the legend under the page's other cards: in the column, a card of its own */
+	.legend.over {
+		padding: 8px 12px;
+		margin-bottom: 14px;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		box-shadow: var(--shadow);
 	}
 	.pick {
 		position: absolute;

@@ -13,7 +13,9 @@
 	import type { MapCollection, RegionCollection, RegionProps } from '#lib/types.ts';
 
 	/** a wine (its vineyard, appellation or region), or a place ([lng, lat]: a restaurant, a home, pinned) */
-	type Focus = { wineId: number; region: string | null; point?: undefined } | { point: [number, number]; wineId?: undefined; region?: undefined };
+	type Focus =
+		| { wineId: number | null; region: string | null; point?: undefined }
+		| { point: [number, number]; wineId?: undefined; region?: undefined };
 	/** full: the whole window behind the page (html.map-full in app.css), the page's cards over its left side (over
 	 * its lower half on a phone) */
 	/** by: what colours the regions, deeper where there's more of it: your bottles, your tastings, or both (a switch on
@@ -22,8 +24,16 @@
 		minHeight = 440,
 		focus = null,
 		full = false,
-		by: byDefault = 'both'
-	}: { minHeight?: number; focus?: Focus | null; full?: boolean; by?: By } = $props();
+		by: byDefault = 'both',
+		counts = null
+	}: {
+		minHeight?: number;
+		focus?: Focus | null;
+		full?: boolean;
+		by?: By;
+		/** what colours the regions instead of your bottles and tastings (a list's entries, by region name): no switch */
+		counts?: Record<string, number> | null;
+	} = $props();
 
 	type By = 'both' | 'cellar' | 'tasted';
 	// remembered per kind of page (the home page's both, the cellar's cellar)
@@ -111,7 +121,8 @@
 
 	// The regions with something of the chosen kind, each with its depth: its share of the most any region has (eased a
 	// little, so a region with a few bottles still shows beside the one with hundreds)
-	const amount = (p: RegionProps) => (by === 'cellar' ? p.bottles : by === 'tasted' ? p.tastings : p.bottles + p.tastings);
+	const amount = (p: RegionProps) =>
+		counts ? (counts[p.name] ?? 0) : by === 'cellar' ? p.bottles : by === 'tasted' ? p.tastings : p.bottles + p.tastings;
 	const regions = $derived.by(() => {
 		if (!overview) return null;
 		const mine = overview.features.filter((f) => amount(f.properties) > 0);
@@ -170,11 +181,11 @@
 			padLeft={full && !phone ? 560 : 0}
 			padBottom={full && phone ? Math.round(winHeight * 0.45) : 0}
 		/>
-		<div class="by" role="group" aria-label="What colours the regions">
+		{#if !counts}<div class="by" role="group" aria-label="What colours the regions">
 			{#each BY as [id, label, title] (id)}
 				<button class:on={by === id} aria-pressed={by === id} {title} onclick={() => choose(id)}>{label}</button>
 			{/each}
-		</div>
+		</div>{/if}
 	{:else if failed}
 		<div class="loading muted">The map couldn’t be loaded. <button type="button" class="link" onclick={load}>Try again</button></div>
 	{:else}

@@ -9,6 +9,9 @@
 	import { applyFacets, facetOptions, readSelection, textMatch } from '#lib/components/directory/facets.ts';
 	import type { Facet } from '#lib/components/directory/facets.ts';
 	import { links } from '#lib/links.ts';
+	import { appSettings } from '#lib/settings.svelte.ts';
+	import { plural } from '#lib/format.ts';
+	import Stars from '#lib/components/directory/Stars.svelte';
 
 	let { data } = $props();
 
@@ -20,16 +23,21 @@
 		{ key: 'type', label: 'Type', values: (p) => [p.type] },
 		{ key: 'stars', label: 'Michelin', values: (p) => [starLabel(p.stars)] }
 	];
-	const VIEWS = [
-		{ id: 'list', label: 'List' },
-		{ id: 'map', label: 'Map' }
-	];
+	// Two modes: the places over their map (the default), or the table, the page's whole width (view=list)
 
 	const all = $derived(data.places);
 	const params = $derived(page.url.searchParams);
 	const q = $derived(params.get('q') ?? '');
 	const visited = $derived(params.get('visited') === '1');
-	const view = $derived(params.get('view') ?? 'list');
+	const onMap = $derived(params.get('view') !== 'list');
+	// a place chosen in the column's list or on the map: the map flies to it, its card open there
+	let selectedId = $state<number | null>(null);
+	let pointTimer: ReturnType<typeof setTimeout> | undefined;
+	function point(id: number, wait = 0) {
+		clearTimeout(pointTimer);
+		if (wait) pointTimer = setTimeout(() => (selectedId = id), wait);
+		else selectedId = id;
+	}
 	const selection = $derived(readSelection(params, FACETS));
 
 	const base = $derived(all.filter((p) => textMatch(q, p.name, p.city, p.notes) && (!visited || p.visits > 0)));
@@ -49,6 +57,10 @@
 <div class="page-head">
 	<h1>Places</h1>
 	<div class="actions">
+		<div class="mode" role="group" aria-label="How the places are shown">
+			<button class:on={onMap} aria-pressed={onMap} onclick={() => setParams({ view: null })} title="Your places as a list, over their map">On the map</button>
+			<button class:on={!onMap} aria-pressed={!onMap} onclick={() => setParams({ view: 'list' })} title="The table, the page's whole width">Tables</button>
+		</div>
 		<a class="btn icon primary" href={links.newVisit()} title="Add a visit" aria-label="Add a visit"><span class="plus">+</span><Icon name="pin" size={15} /></a>
 		<a class="btn icon" href={links.newPlace()} title="Add a place" aria-label="Add a place"><span class="plus">+</span><Icon name="home" size={15} /></a>
 	</div>
@@ -72,19 +84,39 @@
 	{/snippet}
 </DirectoryFilters>
 
+{#if onMap}
+	<PlacesMap rows={shown} full bind:selectedId />
+{/if}
+
 <div class="panel card">
 	<div class="tabs">
-		{#each VIEWS as v}
-			<button class:on={view === v.id} onclick={() => setParams({ view: v.id === 'list' ? null : v.id })}>{v.label}</button>
-		{/each}
+		<h2>{onMap ? 'Places' : 'Table'}</h2>
 		<span class="count muted num">
 			{shown.length === all.length ? `${all.length} places` : `${shown.length} of ${all.length} places`}
 		</span>
 	</div>
 	{#if !shown.length}
 		<p class="muted empty">No places match these filters.</p>
-	{:else if view === 'map'}
-		<div class="body"><PlacesMap rows={shown} /></div>
+	{:else if onMap}
+		<!-- a place a line: clicked (or hovered, Settings › Map) the map flies to it -->
+		<ul class="places">
+			{#each shown as p (p.id)}
+				<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
+				<li
+					class:shown={selectedId === p.id}
+					class:unlocated={p.lat === null || p.lng === null}
+					onpointerenter={(e) => e.pointerType === 'mouse' && appSettings.map_follow === 'hover' && p.lat !== null && point(p.id, 180)}
+					onclick={(e) => !(e.target as HTMLElement).closest('a, button') && p.lat !== null && point(p.id)}
+				>
+					<div class="p-main">
+						<a href={links.place(p.id)}>{p.name}</a>
+						<Stars n={p.stars} />
+						<div class="muted p-sub">{[p.type, p.city, p.country].filter(Boolean).join(' · ')}</div>
+					</div>
+					<div class="muted num p-visits">{p.visits ? plural(p.visits, 'visit') : 'not visited'}</div>
+				</li>
+			{/each}
+		</ul>
 	{:else}
 		<PlaceTable rows={shown} onfilter={(key, value) => addFilter(key, value)} />
 	{/if}
@@ -102,29 +134,82 @@
 		padding: 8px 10px 0;
 		border-bottom: 1px solid var(--border);
 	}
-	.tabs button {
-		border: none;
-		background: none;
-		padding: 8px 12px;
-		cursor: pointer;
-		color: var(--muted);
-		border-bottom: 2px solid transparent;
-		margin-bottom: -1px;
-	}
-	.tabs button.on {
-		color: var(--text);
-		border-bottom-color: var(--accent);
-		font-weight: 600;
-	}
 	.count {
 		margin-left: auto;
 		font-size: 12px;
 	}
-	.body {
-		padding: 16px;
-	}
 	.empty {
 		padding: 16px;
 		margin: 0;
+	}
+	.tabs h2 {
+		margin: 0;
+		padding: 4px 6px 8px;
+		font-size: 15px;
+	}
+	.mode {
+		display: inline-flex;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		overflow: hidden;
+	}
+	.mode button {
+		border: none;
+		background: none;
+		padding: 6px 11px;
+		font: inherit;
+		font-size: 13px;
+		cursor: pointer;
+		color: var(--muted);
+	}
+	.mode button.on {
+		background: var(--accent);
+		color: var(--on-accent);
+	}
+	/* in the column over the map: the title, its buttons on a line of their own under it */
+	:global(html.map-full) .page-head {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 10px;
+	}
+	/* the places in the column: a line each, the one on the map tinted */
+	.places {
+		list-style: none;
+		margin: 0;
+		padding: 6px 8px 10px;
+	}
+	.places li {
+		display: flex;
+		align-items: baseline;
+		gap: 10px;
+		padding: 7px 8px;
+		border-radius: 6px;
+		font-size: 13px;
+		cursor: pointer;
+		transition: background 0.15s;
+	}
+	.places li + li {
+		border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+	}
+	.places li:hover {
+		background: color-mix(in srgb, var(--accent) 5%, transparent);
+	}
+	.places li.shown {
+		background: color-mix(in srgb, var(--accent) 10%, transparent);
+	}
+	/* no coordinates: not on the map */
+	.places li.unlocated {
+		cursor: default;
+	}
+	.p-main {
+		flex: 1;
+		min-width: 0;
+	}
+	.p-sub {
+		font-size: 12px;
+	}
+	.p-visits {
+		flex: none;
+		font-size: 12px;
 	}
 </style>
