@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.8.2
 
 - **The Producers over the map**: **On the map** (the default) has your producers a line each in the column (the whole
   directory in steps), the map behind coloured by how many each region has; a producer clicked (or hovered,
