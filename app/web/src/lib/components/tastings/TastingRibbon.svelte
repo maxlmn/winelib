@@ -1,6 +1,7 @@
 <script lang="ts">
 	import RegionStrip from '#lib/components/RegionStrip.svelte';
 	import { appSettings } from '#lib/settings.svelte.ts';
+	import { labelThumb } from '#lib/pips.ts';
 	import { links } from '#lib/links.ts';
 	import { barWidth } from '#lib/format.ts';
 	import { fmtDay, wineName } from './journal.ts';
@@ -29,6 +30,7 @@
 			label: wineName(t),
 			sub: `${fmtDay(t.date)} · ${t.location}`,
 			href: links.tasting(t.id),
+			image: t.label ? labelThumb(t.label.url) : null,
 			key: t.id
 		}))
 	);

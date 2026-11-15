@@ -38,8 +38,8 @@ def by_wine(wines, index=None):
     return out
 
 
-def of_cellar(session, wine_ids):
-    """by_wine for these wines (a cellar's lines), their cuvées' other vintages with a label read along"""
+def of_wines(session, wine_ids):
+    """by_wine for these wines (a cellar's lines, a journal's tastings), their cuvées' other vintages with a label read along"""
     from db import Wine
     index = photos.label_index()
     ids = set(wine_ids)
