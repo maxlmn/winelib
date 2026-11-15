@@ -5,8 +5,8 @@
 - **The home page on its map**: the map is the page's ground, the whole window behind it, on the latest tasting's
   wine; the greeting, figures, latest tastings, the year's ribbon, what to open and recent purchases a column of cards
   over its left side (over its lower half on a phone, scrolling up over it, as a wine's page). **Pointing at a wine of
-  the latest tastings** (hovering it a moment, or tapping it outside its links) flies the map to it, the wine shown
-  marked in the list.
+  the latest tastings, of what to open or of the recent purchases** (hovering it a moment, or tapping it outside its
+  links) flies the map to it, the wine shown on a soft tint in its list.
 - **The home map on a vineyard reads**: the vineyard alone filled, its appellation an outline around it, and the
   regions' tint fading as the map zooms in (the region and the appellation coloured the whole view).
 - **A printed page without the phone's bar**: a printed page is narrower than a phone's breakpoint, so the bottom bar

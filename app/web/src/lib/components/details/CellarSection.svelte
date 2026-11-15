@@ -26,9 +26,13 @@
 		prices?: boolean;
 		/** the wines' labels (a producer's page): each line's, small, opening larger */
 		labels?: Record<number, { url: string; from_vintage: string | null }>;
+		/** a bottle pointed at (hovered, or tapped outside its links), e.g. for a map to show its wine */
+		onwine?: (b: Bottle) => void;
+		/** the bottle shown there: its line marked */
+		shown?: number | null;
 	}
 
-	let { bottles, regionColors, empty = 'Nothing in the cellar.', plain = false, current = null, prices = false, labels = {} }: Props = $props();
+	let { bottles, regionColors, empty = 'Nothing in the cellar.', plain = false, current = null, prices = false, labels = {}, onwine, shown = null }: Props = $props();
 	const paid = (b: Bottle) => (b.price ? `${symbol(b.currency ?? appSettings.currency)}${Math.round(b.price).toLocaleString()}` : null);
 
 	const PAGE = 60;
@@ -51,7 +55,14 @@
 {#if lines.length}
 	<ul>
 		{#each lines.slice(0, limit) as b (b.bottle_id)}
-			<li class:current={b.bottle_id === current}>
+			<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
+			<li
+				class:current={b.bottle_id === current}
+				class:points={!!onwine}
+				class:shown={onwine && shown === b.bottle_id}
+				onpointerenter={(e) => e.pointerType === 'mouse' && onwine?.(b)}
+				onclick={(e) => !(e.target as HTMLElement).closest('a, button, input, select') && onwine?.(b)}
+			>
 				<!-- the bottles' pips, its label under them (a producer's page) -->
 				<div class="side">
 				<a class="ends" href={links.wineBottle(b.wine_id, b.bottle_id)} data-sveltekit-reset={plain ? "false" : undefined} title="Open this bottle" tabindex="-1" aria-hidden="true">
@@ -185,5 +196,20 @@
 	}
 	.more {
 		margin-top: 12px;
+	}
+	/* a wine that shows itself on a map when pointed at (the home page's); the one shown on a soft tint */
+	li.points {
+		margin-inline: -8px;
+		padding-inline: 8px;
+		border-radius: 6px;
+		cursor: pointer;
+		transition: background 0.15s;
+	}
+	li.points:hover {
+		background: color-mix(in srgb, var(--accent) 5%, transparent);
+	}
+	li.shown,
+	li.shown:hover {
+		background: color-mix(in srgb, var(--accent) 10%, transparent);
 	}
 </style>

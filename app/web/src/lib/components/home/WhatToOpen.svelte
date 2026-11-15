@@ -15,10 +15,19 @@
 	import { windowLabel } from '#lib/maturity.ts';
 	import type { Bottle } from '#lib/types.ts';
 
+	/** onwine: a bottle pointed at (hovered, or tapped outside its links), e.g. for a map to show its wine; `shown`
+	 * marks the bottle shown there */
 	let {
 		bottles,
-		totals = null
-	}: { bottles: Bottle[]; totals?: { ready: number; young: number; past: number; unknown: number } | null } = $props();
+		totals = null,
+		onwine,
+		shown = null
+	}: {
+		bottles: Bottle[];
+		totals?: { ready: number; young: number; past: number; unknown: number } | null;
+		onwine?: (b: Bottle) => void;
+		shown?: number | null;
+	} = $props();
 
 	const SHOWN = 6;
 	const MOSAIC = 24;
@@ -137,7 +146,13 @@
 	{#if picks.length}
 		<ul>
 			{#each picks as b (b.bottle_id)}
-				<li>
+				<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
+				<li
+					class:points={!!onwine}
+					class:shown={onwine && shown === b.bottle_id}
+					onpointerenter={(e) => e.pointerType === 'mouse' && onwine?.(b)}
+					onclick={(e) => !(e.target as HTMLElement).closest('a, button, input, select') && onwine?.(b)}
+				>
 					<span class="end">
 						<BottleEnd region={regionColor(b.region) ?? FALLBACK_REGION} color={b.color} format={b.format} size={11} title="{regionLabel(b.region)} · {b.color ?? ''}" />
 					</span>
@@ -325,5 +340,20 @@
 		border-radius: 50%;
 		flex: none;
 		display: inline-block;
+	}
+	/* a wine that shows itself on a map when pointed at (the home page's); the one shown on a soft tint */
+	li.points {
+		margin-inline: -8px;
+		padding-inline: 8px;
+		border-radius: 6px;
+		cursor: pointer;
+		transition: background 0.15s;
+	}
+	li.points:hover {
+		background: color-mix(in srgb, var(--accent) 5%, transparent);
+	}
+	li.shown,
+	li.shown:hover {
+		background: color-mix(in srgb, var(--accent) 10%, transparent);
 	}
 </style>

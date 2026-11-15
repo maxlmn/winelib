@@ -14,6 +14,7 @@
 	import TastingRibbon from '#lib/components/tastings/TastingRibbon.svelte';
 	import { occasions } from '#lib/components/tastings/journal.ts';
 	import { goto } from '$app/navigation';
+	import type { Bottle } from '#lib/types.ts';
 
 	let { data } = $props();
 	const d = $derived(data.dashboard);
@@ -37,15 +38,20 @@
 	// The latest tasting: the latest evening's last wine (the home map opens on it). A wine of the latest tastings
 	// pointed at (hovered a moment, or tapped) takes its place on the map
 	const lastWine = $derived(latest[0]?.wines.at(-1) ?? null);
-	type Wine = (typeof latest)[number]['wines'][number];
-	let pointed = $state<Wine | null>(null);
+	// ...as does a bottle of what to open or of the recent purchases: the one shown marked in its list
+	type Pointed = { kind: 'tasting' | 'bottle'; id: number; wine_id: number; region: string | null };
+	let pointed = $state<Pointed | null>(null);
 	let pointTimer: ReturnType<typeof setTimeout> | undefined;
-	function point(w: Wine) {
+	function point(p: Pointed) {
 		clearTimeout(pointTimer);
-		// a moment's pause first: a pointer crossing the list doesn't send the map flying from wine to wine
-		pointTimer = setTimeout(() => (pointed = w), 180);
+		// a moment's pause first: a pointer crossing a list doesn't send the map flying from wine to wine
+		pointTimer = setTimeout(() => (pointed = p), 180);
 	}
-	const shownWine = $derived(pointed ?? lastWine);
+	const pointTasting = (t: { id: number; wine_id: number; region: string | null }) => point({ kind: 'tasting', id: t.id, wine_id: t.wine_id, region: t.region });
+	const pointBottle = (b: Bottle) => point({ kind: 'bottle', id: b.bottle_id, wine_id: b.wine_id, region: b.region });
+	const shownWine = $derived(pointed ?? (lastWine ? { kind: 'tasting' as const, id: lastWine.id, wine_id: lastWine.wine_id, region: lastWine.region } : null));
+	const shownTasting = $derived(shownWine?.kind === 'tasting' ? shownWine.id : null);
+	const shownBottle = $derived(shownWine?.kind === 'bottle' ? shownWine.id : null);
 	// The past year's wines as one line of region colours
 	const yearAgo = $derived(`${Number(d.today.slice(0, 4)) - 1}${d.today.slice(4)}`);
 	const recentTastings = $derived(data.journal.tastings.filter((t) => t.date >= yearAgo));
@@ -122,7 +128,7 @@
 		<a class="more" href={links.tastings()}>All tasting notes →</a>
 	</div>
 	{#each latest as o (o.key)}
-		<OccasionCard occasion={o} regionColors={data.regionColors} plain onwine={point} shown={shownWine?.id ?? null} />
+		<OccasionCard occasion={o} regionColors={data.regionColors} plain onwine={pointTasting} shown={shownTasting} />
 	{:else}
 		<p class="muted">No tastings yet. <a class="more" href={links.newTasting()}>Add the first one</a></p>
 	{/each}
@@ -131,7 +137,7 @@
 	<TastingRibbon tastings={recentTastings} label="The past year, a wine per bar: its region’s colour (its own below)" />
 {/if}
 
-<WhatToOpen bottles={data.cellar.bottles} totals={d.drink_soon.bottles} />
+<WhatToOpen bottles={data.cellar.bottles} totals={d.drink_soon.bottles} onwine={pointBottle} shown={shownBottle} />
 <!-- Without any purchase dates (none recorded), there's nothing recent to show -->
 {#if recentBottles.length || !data.cellar.bottles.length}
 	<section class="card purchases-card">
@@ -140,7 +146,7 @@
 			<a class="more" href={links.cellar()}>The cellar →</a>
 		</div>
 		{#if recentBottles.length}
-			<CellarSection bottles={recentBottles} regionColors={data.regionColors} prices />
+			<CellarSection bottles={recentBottles} regionColors={data.regionColors} prices onwine={pointBottle} shown={shownBottle} />
 		{:else}
 			<p class="muted">No purchases yet. <a class="more" href={links.newBottle()}>Add one</a></p>
 		{/if}
