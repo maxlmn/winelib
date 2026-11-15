@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { appSettings } from '#lib/settings.svelte.ts';
 	import CriticPills from '#lib/components/CriticPills.svelte';
+	import Icon from '#lib/components/Icon.svelte';
 	import PlaceName from '#lib/components/PlaceName.svelte';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
 	import { placeMeta } from '#lib/places.ts';
@@ -21,8 +23,19 @@
 		regionColors,
 		plain = false,
 		onwine,
-		shown = null
-	}: { occasion: Occasion; regionColors: RegionColors; plain?: boolean; onwine?: (w: Occasion['wines'][number]) => void; shown?: number | null } = $props();
+		shown = null,
+		onplace
+	}: {
+		occasion: Occasion;
+		regionColors: RegionColors;
+		plain?: boolean;
+		onwine?: (w: Occasion['wines'][number]) => void;
+		shown?: number | null;
+		/** its place pointed at (its header hovered, or tapped outside its links): for a map to pin it; only for a
+		 * place with its coordinates */
+		onplace?: (where: [number, number]) => void;
+	} = $props();
+	const where = $derived<[number, number] | null>(o.place?.lat != null && o.place?.lng != null ? [o.place.lng, o.place.lat] : null);
 
 	const meta = $derived(o.place ? placeMeta(o.place) : '');
 </script>
@@ -59,7 +72,12 @@
 	<div class="palette" aria-hidden="true">
 		{#each o.wines as w (w.id)}<span style:background={regionColors[w.region] ?? FALLBACK_REGION}></span>{/each}
 	</div>
-	<header>
+	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions, a11y_no_static_element_interactions -->
+	<header
+		class:points={!!(onplace && where)}
+		onpointerenter={(e) => e.pointerType === 'mouse' && appSettings.map_follow === 'hover' && where && onplace?.(where)}
+		onclick={(e) => !(e.target as HTMLElement).closest('a, button') && where && onplace?.(where)}
+	>
 		<div class="where">
 			{#if o.place}
 				<a class="name" href={links.place(o.place.id)}><PlaceName name={o.name} type={o.place.type} /></a>
@@ -86,7 +104,7 @@
 					<li
 						class:shown={onwine && shown === w.id}
 						class:points={!!onwine}
-						onpointerenter={(e) => e.pointerType === 'mouse' && onwine?.(w)}
+						onpointerenter={(e) => e.pointerType === 'mouse' && appSettings.map_follow === 'hover' && onwine?.(w)}
 						onclick={(e) => !(e.target as HTMLElement).closest('a') && onwine?.(w)}
 					>
 						<div class="wine">
@@ -104,17 +122,17 @@
 									<a href={links.wine(w.wine_id)}><b>{w.producer}</b>{w.cuvee ? ` – ${w.cuvee}` : ''}</a>
 									<span class="vintage num">{w.vintage}</span><CriticPills scores={w.scores} />{#if w.rating}<span class="mine num" title="Your score">{w.rating}</span>{/if}
 								</span>
+								<!-- no note yet: a small pencil at the line's end opens the tasting to write one -->
+								{#if !w.notes}<a class="add-note" href={links.tasting(w.id)} title="Add a note" aria-label="Add a note to {w.producer} {w.cuvee}"><Icon name="edit" size={13} /></a>{/if}
 							</div>
 							{#if w.appellation}<div class="under muted">{w.appellation}</div>{/if}
 						</div>
-						<!-- the note (or the offer to write one) opens the tasting -->
-						<div class="said">
-							{#if w.notes}
+						<!-- the note opens the tasting -->
+						{#if w.notes}
+							<div class="said">
 								<a class="note" href={links.tasting(w.id)} title="Open the tasting">{w.notes}</a>
-							{:else}
-								<a class="add-note" href={links.tasting(w.id)} title="Open the tasting">Add a note</a>
-							{/if}
-						</div>
+							</div>
+						{/if}
 					</li>
 				{/each}
 			</ul>
@@ -265,12 +283,16 @@
 		font-size: 12px;
 	}
 	.add-note {
-		font-size: 12px;
+		flex: none;
+		align-self: center;
+		display: inline-flex;
+		padding: 2px;
 		color: var(--muted);
-		white-space: nowrap;
+		opacity: 0.7;
 	}
 	.add-note:hover {
 		color: var(--accent);
+		opacity: 1;
 	}
 	/* the note opens the tasting: a few lines here, the whole on its page */
 	.note {
@@ -307,6 +329,26 @@
 		.said {
 			margin: 3px 0 0 19px;
 		}
+	}
+	/* In the column over a full-size map (the Tasting Notes page's): laid out as on a phone, when and where on top,
+	   each note under its wine */
+	:global(html.map-full) .occ:not(.plain) {
+		display: block;
+	}
+	:global(html.map-full) .occ:not(.plain) header {
+		padding: 12px 16px 0;
+	}
+	:global(html.map-full) .occ:not(.plain) .photo img {
+		max-height: 220px;
+	}
+	:global(html.map-full) .occ:not(.plain) .body {
+		padding: 6px 16px 10px;
+	}
+	:global(html.map-full) .occ:not(.plain) li {
+		display: block;
+	}
+	:global(html.map-full) .occ:not(.plain) .said {
+		margin: 3px 0 0 19px;
 	}
 	/* A row in a list (the home page's latest tastings): no card, the day and the place small on a line, each note
 	   under its wine */
@@ -448,5 +490,12 @@
 	li.shown,
 	li.shown:hover {
 		background: color-mix(in srgb, var(--accent) 10%, transparent);
+	}
+	/* a header whose place shows on a map when pointed at */
+	header.points {
+		cursor: pointer;
+	}
+	header.points:hover .name {
+		color: var(--accent);
 	}
 </style>

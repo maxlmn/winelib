@@ -41,6 +41,9 @@ class Settings(BaseModel):
     storage_groups: list[StorageGroup] = []
     other_group: str = Field(default="Cellar", min_length=1)
     map_default_basemap: Literal["plain", "satellite"] = "plain"
+    # A wine pointed at in a page's lists (home, cellar, tasting notes) moves the map behind it: on a click (or a tap),
+    # or as soon as the pointer rests on it
+    map_follow: Literal["click", "hover"] = "click"
     # A wine's label on its page and in the lists: the one uploaded for it, or none
     wine_labels: Literal["off", "uploaded"] = "uploaded"
     # The critic whose score sorts the lists and ranks a vintage's best rated (every critic's is shown); none until

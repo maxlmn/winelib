@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '#lib/components/Icon.svelte';
 	import CriticPills from '#lib/components/CriticPills.svelte';
 	import PlaceName from '#lib/components/PlaceName.svelte';
 	import type { Tasting, TastingPlace, Visit } from '#lib/api/details.ts';
@@ -108,7 +109,7 @@
 								<!-- under the wine: its appellation, and the note (or the offer to write one), which opens the tasting -->
 								<div class="under">
 									{#if t.appellation}<span class="muted">{t.appellation}</span>{/if}
-									{#if !t.notes}<a class="add-note" href={links.tasting(t.id)} title="Open the tasting">Add a note</a>{/if}
+									{#if !t.notes}<a class="add-note" href={links.tasting(t.id)} title="Add a note" aria-label="Add a note to {t.producer} {t.cuvee}"><Icon name="edit" size={13} /></a>{/if}
 								</div>
 								{#if t.notes}<a class="note" href={links.tasting(t.id)} title="Open the tasting">{t.notes}</a>{/if}
 							</div>
@@ -246,8 +247,9 @@
 	}
 	.add-note {
 		margin-left: auto;
+		display: inline-flex;
 		color: var(--muted);
-		white-space: nowrap;
+		opacity: 0.7;
 	}
 	.add-note:hover {
 		color: var(--accent);

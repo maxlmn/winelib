@@ -340,6 +340,14 @@
 				<option value="satellite">Satellite</option>
 			</select>
 		</label>
+		<label class="field">
+			<span>Follow a wine</span>
+			<select bind:value={draft.map_follow}>
+				<option value="click">On a click</option>
+				<option value="hover">On hover</option>
+			</select>
+		</label>
+		<p class="muted">The map behind the home, Cellar and Tasting Notes pages goes to the wine (or the place) you click in their lists, or the one your pointer rests on.</p>
 	</section>
 
 	<section class="card">

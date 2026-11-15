@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- **The Tasting Notes page on its map**, as the Cellar: **On the map** (the default) has the notes as cards over the
+  map coloured by your tastings, the year's ribbon sweepable and replayable, a wine pointed at flying the map to it,
+  and an occasion's place (its header) pinned on the map; **Tables** has the list, the places' map (now called
+  *Places*) and the trends, the page's whole width. The occasion cards lay out as on a phone in the narrow column, the
+  figures two by two.
+- **The map follows on a click, or on hover** (Settings › Map › Follow a wine; a click by default): moving the map as
+  the pointer crosses a list was dizzying. A sweep along the year's ribbon and its replay move it either way.
+- **An evening's place on the map**: on the home page and the Tasting Notes page, an occasion's header pins its
+  restaurant or home on the map.
+- **Add a note** is a small pencil at the end of the wine's line (the tasting notes, the home page, a wine's or a
+  producer's history), not a line of its own.
+- The Cellar's list shows a wine's main grape (a blend's others counted, named on hover): the column stays narrow.
 - **The year replayed on the map**: on the home page, the past year's ribbon points the map at its wines: hover or
   sweep along it (a finger drags along it on a phone) and the map follows; **▶ Replay** walks through the year wine by
   wine, a couple of seconds each, the wine's bar raised in the ribbon. The ribbon's first year no longer overlaps the

@@ -60,7 +60,7 @@
 				class:current={b.bottle_id === current}
 				class:points={!!onwine}
 				class:shown={onwine && shown === b.bottle_id}
-				onpointerenter={(e) => e.pointerType === 'mouse' && onwine?.(b)}
+				onpointerenter={(e) => e.pointerType === 'mouse' && appSettings.map_follow === 'hover' && onwine?.(b)}
 				onclick={(e) => !(e.target as HTMLElement).closest('a, button, input, select') && onwine?.(b)}
 			>
 				<!-- the bottles' pips, its label under them (a producer's page) -->

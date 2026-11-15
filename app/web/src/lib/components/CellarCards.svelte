@@ -134,7 +134,7 @@
 						class:current={b.bottle_id === current}
 						class:points={!!onwine}
 						class:shown={onwine && shown === b.bottle_id}
-						onpointerenter={(e) => e.pointerType === 'mouse' && onwine?.(b)}
+						onpointerenter={(e) => e.pointerType === 'mouse' && appSettings.map_follow === 'hover' && onwine?.(b)}
 						onclick={(e) => !(e.target as HTMLElement).closest('a, button') && onwine?.(b)}
 					>
 						<a class="line-ends" href={links.bottle(b.bottle_id)} title="Open this bottle" tabindex="-1" aria-hidden="true">{@render ends(b)}</a>
@@ -178,7 +178,7 @@
 					onhover={(k) => {
 						hot = k;
 						const b = k == null ? null : byId.get(Number(k));
-						if (b) onwine?.(b);
+						if (b && appSettings.map_follow === 'hover') onwine?.(b);
 					}}
 				/>
 			{/if}

@@ -6,7 +6,20 @@
 	import { fmtMonth } from './journal.ts';
 	import type { Occasion } from './journal.ts';
 
-	let { occasions, regionColors }: { occasions: Occasion[]; regionColors: RegionColors } = $props();
+	/** onwine / shown: a wine pointed at, for a map to show it, and the one shown (OccasionCard's) */
+	let {
+		occasions,
+		regionColors,
+		onwine,
+		shown = null,
+		onplace
+	}: {
+		occasions: Occasion[];
+		regionColors: RegionColors;
+		onwine?: (w: Occasion['wines'][number]) => void;
+		shown?: number | null;
+		onplace?: (where: [number, number]) => void;
+	} = $props();
 
 	const STEP = 40;
 	let limit = $state(STEP);
@@ -44,7 +57,7 @@
 		<h3>{fmtMonth(s.month)} <span class="muted num">{plural(s.wines, 'wine')} · {plural(s.occasions, 'occasion')}</span></h3>
 		<div class="cards">
 			{#each s.days.flat() as o (o.key)}
-				<OccasionCard occasion={o} {regionColors} />
+				<OccasionCard occasion={o} {regionColors} {onwine} {shown} {onplace} />
 			{/each}
 		</div>
 	</section>
