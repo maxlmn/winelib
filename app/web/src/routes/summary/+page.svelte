@@ -5,6 +5,7 @@
 	import Breakdown from '#lib/components/summary/Breakdown.svelte';
 	import Kpi from '#lib/components/summary/Kpi.svelte';
 	import Highlights from '#lib/components/summary/Highlights.svelte';
+	import StorageDonuts from '#lib/components/cellar/StorageDonuts.svelte';
 	import Change from '#lib/components/Change.svelte';
 	import { money, pct, plural } from '#lib/format.ts';
 	import { links } from '#lib/links.ts';
@@ -78,6 +79,8 @@
 	</div>
 	{#if c.total}
 		<Highlights cellar={c.highlights} />
+		<!-- where it's kept: the market value and the bottles by storage place -->
+		{#if data.bottles.length}<div class="storage card"><StorageDonuts bottles={data.bottles} /></div>{/if}
 		<Breakdown data={c} unit="bottles" filterHref={cellarHref} />
 	{:else}
 		<p class="card empty muted">No bottles in the cellar.</p>
@@ -96,5 +99,9 @@
 	}
 	.empty {
 		padding: 16px;
+	}
+	.storage {
+		padding: 14px 16px;
+		margin-bottom: 14px;
 	}
 </style>

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **The storage donuts on the Summary**: the market value and the bottles by storage place move from the Cellar page
+  (its column over the map is shorter) to the Summary page's cellar inventory.
+- **The places sorted**: the Places page's list (on the map) sorts by visits (the default), by the latest visit or by
+  name, each place with its last visit's day.
 - **A place over its map**: a place with its coordinates has the map of its streets behind its page (the whole window,
   as a wine's), its pin framed beside the page's column.
 - **A producer without a wine over its region**: a producer with no wine yet (or none with an outline) has its

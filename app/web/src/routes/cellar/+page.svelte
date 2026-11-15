@@ -12,7 +12,6 @@
 	import VintageHeatmap from '#lib/components/VintageHeatmap.svelte';
 	import PriceChanges from '#lib/components/cellar/PriceChanges.svelte';
 	import BordeauxIndex from '#lib/components/cellar/BordeauxIndex.svelte';
-	import StorageDonuts from '#lib/components/cellar/StorageDonuts.svelte';
 	import { FALLBACK_REGION, TYPE_COLORS } from '#lib/colors.ts';
 	import { activeCount, emptyFilters, filterLocations, filterWines, fromParams, grapeOptions, options, styleOptions, toParams, totals } from '#lib/filters.ts';
 	import type { Filters, ListKey } from '#lib/filters.ts';
@@ -172,10 +171,6 @@
 	{/each}
 </div>
 
-{#if shown.length}
-	<div class="storage card"><StorageDonuts bottles={shown} {money} /></div>
-{/if}
-
 <div class="filters card">
 	<input
 		class="search"
@@ -307,10 +302,6 @@
 	}
 	.kpi {
 		padding: 14px 16px;
-	}
-	.storage {
-		padding: 14px 16px;
-		margin-bottom: 14px;
 	}
 	.label {
 		font-size: 12px;
