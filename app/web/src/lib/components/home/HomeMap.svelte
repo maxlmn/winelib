@@ -12,10 +12,12 @@
 	import type { Extent } from '#lib/geo.ts';
 	import type { MapCollection, RegionCollection, RegionProps } from '#lib/types.ts';
 
-	/** a wine (its vineyard, appellation or region), or a place ([lng, lat]: a restaurant, a home, pinned) */
+	/** a wine (its vineyard, appellation or region), a producer (where its wines come from: their appellations and
+	 * vineyards, else its region), or a place ([lng, lat]: a restaurant, a home, pinned) */
 	type Focus =
-		| { wineId: number | null; region: string | null; point?: undefined }
-		| { point: [number, number]; wineId?: undefined; region?: undefined };
+		| { wineId: number | null; region: string | null; producerId?: undefined; point?: undefined }
+		| { producerId: number; region: string | null; wineId?: undefined; point?: undefined }
+		| { point: [number, number]; wineId?: undefined; producerId?: undefined; region?: undefined };
 	/** full: the whole window behind the page (html.map-full in app.css), the page's cards over its left side (over
 	 * its lower half on a phone) */
 	/** by: what colours the regions, deeper where there's more of it: your bottles, your tastings, or both (a switch on
@@ -72,32 +74,35 @@
 
 	// The focused wine's vineyard and appellation (its page's shapes), kept by wine: a wine hovered again isn't asked
 	// again, and the map keeps the last one shown while the next is asked (it flies there once it has it)
-	type Place = { id: number | null; appellations?: MapCollection; vineyards?: MapCollection };
+	type Place = { id: string | null; appellations?: MapCollection; vineyards?: MapCollection };
 	type Shapes = Omit<Place, 'id'>;
-	const asked = new Map<number, Promise<Shapes>>();
+	const asked = new Map<string, Promise<Shapes>>();
 	let place = $state<Place | null>(null);
+	// the focus as a key ("w12": a wine, "p3": a producer) and the address of its shapes
+	const focusKey = $derived(focus?.wineId ? `w${focus.wineId}` : focus?.producerId ? `p${focus.producerId}` : null);
 	$effect(() => {
-		const id = focus?.wineId ?? null;
-		if (!id) {
+		const key = focusKey;
+		if (!key) {
 			place = { id: null };
 			return;
 		}
 		let stale = false;
-		if (!asked.has(id))
-			asked.set(id, fetch(`/api/wines/${id}/shapes`).then((r) => (r.ok ? (r.json() as Promise<Shapes>) : {})).catch(() => ({})));
-		asked.get(id)!.then((p) => !stale && (place = { ...p, id }));
+		const url = key[0] === 'w' ? `/api/wines/${key.slice(1)}/shapes` : `/api/producers/${key.slice(1)}/shapes`;
+		if (!asked.has(key)) asked.set(key, fetch(url).then((r) => (r.ok ? (r.json() as Promise<Shapes>) : {})).catch(() => ({})));
+		asked.get(key)!.then((p) => !stale && (place = { ...p, id: key }));
 		return () => (stale = true);
 	});
 	// the focus's region, as it was when its shapes came (a region-only wine)
 	let placeRegion = $state<string | null>(null);
 	$effect(() => {
-		if (place && place.id === (focus?.wineId ?? null)) placeRegion = focus?.region ?? null;
+		if (place && place.id === focusKey) placeRegion = focus?.region ?? null;
 	});
+	const ofProducer = $derived(place?.id?.[0] === 'p');
 	const point = $derived(focus?.point ?? null);
 	const vines = $derived(!point && place?.vineyards?.features.length ? place.vineyards : null);
 	const apps = $derived(!point && place?.appellations?.features.length ? place.appellations : null);
 	// on a vineyard: it alone filled, its appellation an outline around it
-	const layers = $derived<Layers>({ appellation: vines ? 'outline' : 'fill', vineyard: 'fill', lieu: 'outline' });
+	const layers = $derived<Layers>({ appellation: vines && place?.id?.[0] !== 'p' ? 'outline' : 'fill', vineyard: 'fill', lieu: 'outline' });
 	// at least `min` degrees across, centred on the box: a speck of a vineyard still shows its slope
 	const atLeast = ([w, s, e, n]: Extent, min: number): Extent => {
 		const cx = (w + e) / 2, cy = (s + n) / 2;
@@ -138,9 +143,10 @@
 		// a place: its streets around it (a few km across)
 		if (point) return atLeast([point[0], point[1], point[0], point[1]], 0.04);
 		// the latest tasting's wine: its vineyard, else its appellation, else its region with its neighbours (~6° across)
-		const own = vines ?? apps;
-		const ownBox = own ? bbox(own.features.map((f) => f.geometry)) : null;
-		if (ownBox) return atLeast(ownBox, vines ? 0.015 : 0.08);
+		// (a producer: every appellation and vineyard of its wines, together)
+		const own = ofProducer ? [...(apps?.features ?? []), ...(vines?.features ?? [])] : (vines ?? apps)?.features;
+		const ownBox = own?.length ? bbox(own.map((f) => f.geometry)) : null;
+		if (ownBox) return atLeast(ownBox, vines && !ofProducer ? 0.015 : 0.08);
 		const focused = placeRegion ? regions?.features.find((f) => f.properties.name === placeRegion)?.properties.bbox : null;
 		if (focused) return atLeast(focused, 6);
 		const weight = (p: RegionProps) => p.bottles + p.tastings;

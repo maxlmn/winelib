@@ -39,6 +39,22 @@
 			.filter((i) => matches(find, entryName(i), i.note, i.wine?.appellation, i.region))
 	);
 	const hasNotes = $derived(list.items.some((i) => i.note));
+	// Tiers: a list whose notes are a few words, each on several entries ("Benchmark", "Name To Know"), not ranks
+	// ("#7"): in the list's order or by note, its entries in a section per tier, the ones without a note last
+	const tierNotes = $derived.by(() => {
+		const count = new Map<string, number>();
+		for (const i of list.items) if (i.note?.trim()) count.set(i.note.trim(), (count.get(i.note.trim()) ?? 0) + 1);
+		const notes = [...count.keys()];
+		const tiered = notes.length >= 1 && notes.length <= 8 && notes.every((n) => count.get(n)! >= 3 && noteKey(n)[0] === 1);
+		return tiered ? notes.sort((a, b) => compareKeys(noteKey(a), noteKey(b))) : [];
+	});
+	const sections = $derived.by(() => {
+		if (!tierNotes.length || (sort !== 'list' && sort !== 'note')) return [{ title: null as string | null, items: shown }];
+		const of = (n: string | null) => shown.filter((i) => (i.note?.trim() || null) === n);
+		return [...tierNotes.map((n) => ({ title: n as string | null, items: of(n) })), { title: 'Others', items: of(null) }].filter(
+			(sec) => sec.items.length
+		);
+	});
 	// Greyed out, not hidden: what's left to find stands out in the whole list (remembered on this device)
 	let dim = $state({ tasted: false, owned: false });
 	onMount(() => {
@@ -308,8 +324,13 @@
 	</label>
 	</div>
 
-	<ol class="entries card">
-		{#each shown as i (i.id)}
+	<!-- a section per tier (a list of tiers: Benchmark, Name To Know...), else one -->
+	{#each sections as sec (sec.title)}
+		{#if sec.title}
+			<h3 class="tier">{sec.title} <span class="muted num">{sec.items.filter((i) => i.tasted).length} / {sec.items.length} tasted</span></h3>
+		{/if}
+		<ol class="entries card">
+			{#each sec.items as i (i.id)}
 			<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
 			<li
 				class:tasted={i.tasted}
@@ -332,7 +353,7 @@
 							<button class="btn small primary">Save</button>
 							<button type="button" class="btn small" onclick={() => (editing = null)}>Cancel</button>
 						</form>
-					{:else if i.note}
+					{:else if i.note && i.note.trim() !== sec.title}
 						<button class="note" onclick={() => { editing = i.id; draftNote = i.note ?? ''; }}>{i.note}</button>
 					{/if}
 				</div>
@@ -355,8 +376,9 @@
 					{/if}
 				</div>
 			</li>
-		{/each}
-	</ol>
+			{/each}
+		</ol>
+	{/each}
 	{#if !shown.length && find.trim()}<p class="muted none">Nothing on the list matches “{find.trim()}”.</p>{/if}
 {/if}
 
@@ -721,5 +743,25 @@
 	:global(html.map-full) .about {
 		margin: 0 0 14px;
 		max-width: none;
+	}
+	/* a tier's heading over its entries */
+	.tier {
+		display: flex;
+		align-items: baseline;
+		gap: 10px;
+		margin: 18px 0 8px;
+		font-size: 15px;
+	}
+	.tier .muted {
+		font-size: 12px;
+		font-weight: 400;
+	}
+	:global(html.map-full) .tier {
+		padding: 8px 12px;
+		margin: 14px 0 8px;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: var(--radius);
+		box-shadow: var(--shadow);
 	}
 </style>
