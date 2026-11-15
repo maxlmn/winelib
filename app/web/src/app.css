@@ -394,8 +394,17 @@ button.sort {
 	.shell {
 		display: block !important;
 	}
-	.shell > nav {
+	/* the bars and screen-only bits: a printed page is narrower than a phone's breakpoint, so the phone's bottom bar
+	   would print too */
+	.shell > nav,
+	.tabbar,
+	.skip,
+	.progress,
+	main > .demo {
 		display: none !important;
+	}
+	:root {
+		--tab-h: 0px !important;
 	}
 	.shell > main {
 		padding: 0 !important;

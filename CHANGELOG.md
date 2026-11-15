@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **A printed page without the phone's bar**: a printed page is narrower than a phone's breakpoint, so the bottom bar
+  (Home, Cellar, +, Tastings, Search) printed with it, on the wine list above all; it's left out now, with the other
+  screen-only bits.
 - **Labels on the wine list**: each wine with a label has it beside its line, small and framed like a print (its own
   vintage's, else the one its cuvée shows); clicked, it opens full size. A *Labels* box turns them off for a list
   without.
