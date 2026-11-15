@@ -14,7 +14,15 @@
 
 	/** plain: a row in a list (the home page's latest tastings), not a card: its day and place small on a line,
 	 * then its wines */
-	let { occasion: o, regionColors, plain = false }: { occasion: Occasion; regionColors: RegionColors; plain?: boolean } = $props();
+	/** onwine: a wine pointed at (hovered, or tapped outside its links), e.g. for a map to show it; `shown` marks the
+	 * wine shown there */
+	let {
+		occasion: o,
+		regionColors,
+		plain = false,
+		onwine,
+		shown = null
+	}: { occasion: Occasion; regionColors: RegionColors; plain?: boolean; onwine?: (w: Occasion['wines'][number]) => void; shown?: number | null } = $props();
 
 	const meta = $derived(o.place ? placeMeta(o.place) : '');
 </script>
@@ -74,7 +82,13 @@
 		<div class="content">
 			<ul>
 				{#each o.wines as w (w.id)}
-					<li>
+					<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
+					<li
+						class:shown={onwine && shown === w.id}
+						class:points={!!onwine}
+						onpointerenter={(e) => e.pointerType === 'mouse' && onwine?.(w)}
+						onclick={(e) => !(e.target as HTMLElement).closest('a') && onwine?.(w)}
+					>
 						<div class="wine">
 							<div class="line">
 								<span class="end">
@@ -418,5 +432,18 @@
 		font-weight: 600;
 		color: var(--accent);
 		background: var(--accent-soft);
+	}
+	/* a wine that shows itself on a map when pointed at; the one shown marked */
+	li.points {
+		border-radius: 6px;
+		cursor: pointer;
+		transition: background 0.15s;
+	}
+	li.points:hover,
+	li.shown {
+		background: color-mix(in srgb, var(--accent) 8%, transparent);
+	}
+	li.shown {
+		box-shadow: inset 2px 0 0 var(--accent);
 	}
 </style>
