@@ -4,6 +4,8 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import CellarCards from '#lib/components/CellarCards.svelte';
+	import HomeMap from '#lib/components/home/HomeMap.svelte';
+	import type { Bottle } from '#lib/types.ts';
 	import CellarTable from '#lib/components/CellarTable.svelte';
 	import MultiSelect from '#lib/components/MultiSelect.svelte';
 	import ShelfMap from '#lib/components/ShelfMap.svelte';
@@ -21,10 +23,10 @@
 
 	let { data } = $props();
 
+	// Two modes: the storage cards on the map (view=cards, the default), or the tables, wide (the views below)
 	const VIEWS = [
-		{ id: 'cards', label: 'Cards' },
-		{ id: 'shelves', label: 'Shelf map' },
 		{ id: 'list', label: 'List' },
+		{ id: 'shelves', label: 'Shelf map' },
 		{ id: 'vintages', label: 'Vintages' },
 		{ id: 'prices', label: 'Price changes' },
 		{ id: 'bi', label: 'Bordeaux Index', when: 'bordeaux_index' }
@@ -33,6 +35,15 @@
 	const all = $derived(data.cellar.bottles);
 	const filters = $derived(fromParams(page.url.searchParams));
 	const view = $derived(page.url.searchParams.get('view') ?? 'cards');
+	// The storage cards over the map (the whole window behind them, as the home page): a bottle pointed at, its line
+	// or its pip, flies it to its wine; the other views are wide (tables, shelves, grids) and keep the page's width
+	const onMap = $derived(view === 'cards');
+	let pointed = $state<Bottle | null>(null);
+	let pointTimer: ReturnType<typeof setTimeout> | undefined;
+	function point(b: Bottle) {
+		clearTimeout(pointTimer);
+		pointTimer = setTimeout(() => (pointed = b), 180);
+	}
 	// Totals in another currency (?cur=GBP), with the Settings page's rates
 	const currencies = $derived(Object.keys(appSettings.exchange_rates));
 	const cur = $derived(currencies.includes(page.url.searchParams.get('cur') ?? '') ? page.url.searchParams.get('cur')! : appSettings.currency);
@@ -75,9 +86,15 @@
 
 	function setView(id: string) {
 		const p = new URLSearchParams(page.url.searchParams.toString());
-		p.set('view', id);
+		if (id === 'cards') p.delete('view');
+		else p.set('view', id);
 		navigate(p);
 	}
+	// the tables: back on the one last opened (this visit), the list at first
+	let lastTable = $state('list');
+	$effect(() => {
+		if (!onMap) lastTable = view;
+	});
 
 	function toggleLocation(loc: string) {
 		setFilters({ ...filters, group: [], loc: filters.loc.length === 1 && filters.loc[0] === loc ? [] : [loc] });
@@ -124,6 +141,10 @@
 			{#each currencies as c (c)}
 				<button class:on={c === cur} onclick={() => setCurrency(c)}>{c}</button>
 			{/each}
+		</div>
+		<div class="mode" role="group" aria-label="How the cellar is shown">
+			<button class:on={onMap} aria-pressed={onMap} onclick={() => setView('cards')} title="Your storage places as cards, over the map">On the map</button>
+			<button class:on={!onMap} aria-pressed={!onMap} onclick={() => setView(lastTable)} title="The list, the shelves, the vintages and the prices, the page's whole width">Tables</button>
 		</div>
 		<a class="btn" href="{links.wineList()}?{toParams(filters)}">Wine list</a>
 		<button class="btn" onclick={exportMarkdown}>↓ Export</button>
@@ -193,11 +214,19 @@
 </div>
 
 <!-- The storage cards sit on the page itself: not cards in a card -->
-<div class="panel card" class:flat={view === 'cards' && shown.length > 0}>
-	<div class="tabs">
-		{#each VIEWS as v}
-			<button class:on={view === v.id} onclick={() => setView(v.id)} use:intoView={view === v.id}>{v.label}</button>
-		{/each}
+{#if onMap}
+	<HomeMap full by="cellar" focus={pointed ? { wineId: pointed.wine_id, region: pointed.region } : null} />
+{/if}
+
+<div class="panel card" class:flat={view === 'cards' && shown.length > 0 && !onMap}>
+	<div class="tabs" class:bare={onMap}>
+		{#if onMap}
+			<h2>Storage</h2>
+		{:else}
+			{#each VIEWS as v}
+				<button class:on={view === v.id} onclick={() => setView(v.id)} use:intoView={view === v.id}>{v.label}</button>
+			{/each}
+		{/if}
 		<span class="count muted num">{shown.length} lines · {t.qty} bottles</span>
 	</div>
 	<div class="body">
@@ -219,7 +248,7 @@
 		{:else if shown.length === 0}
 			<p class="muted">No bottles match these filters.</p>
 		{:else if view === 'cards'}
-			<CellarCards bottles={shown} regionColors={data.regionColors} />
+			<CellarCards bottles={shown} regionColors={data.regionColors} onwine={point} shown={pointed?.bottle_id ?? null} />
 		{:else if view === 'list'}
 			<CellarTable bottles={shown} regionColors={data.regionColors} />
 		{:else if view === 'prices'}
@@ -241,6 +270,16 @@
 		gap: 10px;
 		flex-wrap: wrap;
 		justify-content: flex-end;
+	}
+	/* in the column over the map: the title, its buttons on a line of their own under it */
+	:global(html.map-full) .page-head {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 10px;
+	}
+	:global(html.map-full) .head-actions {
+		justify-content: flex-start;
+		gap: 8px;
 	}
 	.currency {
 		display: inline-flex;
@@ -386,6 +425,37 @@
 	}
 	.body {
 		padding: 16px;
+	}
+	/* on the map: a heading in place of the tables' tabs */
+	.tabs.bare {
+		align-items: baseline;
+		padding: 12px 16px 10px;
+	}
+	.tabs.bare h2 {
+		margin: 0;
+		font-size: 15px;
+	}
+	.tabs.bare .count {
+		display: inline;
+	}
+	.mode {
+		display: inline-flex;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		overflow: hidden;
+	}
+	.mode button {
+		border: none;
+		background: none;
+		padding: 6px 11px;
+		font: inherit;
+		font-size: 13px;
+		cursor: pointer;
+		color: var(--muted);
+	}
+	.mode button.on {
+		background: var(--accent);
+		color: var(--on-accent);
 	}
 	.panel.flat {
 		background: none;

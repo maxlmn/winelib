@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- **The year replayed on the map**: on the home page, the past year's ribbon points the map at its wines: hover or
+  sweep along it (a finger drags along it on a phone) and the map follows; **▶ Replay** walks through the year wine by
+  wine, a couple of seconds each, the wine's bar raised in the ribbon. The ribbon's first year no longer overlaps the
+  next one's label.
+- **The Cellar page on its map**: two modes, switched in its header. **On the map** (the default): the storage cards
+  over the map, as the home page, a bottle's line or its bottle in the rack flying the map to its wine. **Tables**: the
+  list, the shelf map, the vintages and the price changes, the page's whole width (Cards is no longer one of its
+  tabs).
+  Each storage card now reads like a wine list: by colour (sparkling first, sweet and fortified last), then region,
+  then appellation, a colour's heading over its regions.
+- **The map coloured by what you hold or what you've tasted**: a switch on the home and Cellar maps (Both, Cellar,
+  Tasted; each page remembers its own), each region deeper the more of it you have.
+- A map flown elsewhere by the page drops the hover card of where it was.
 - **The home page on its map**: the map is the page's ground, the whole window behind it, on the latest tasting's
   wine; the greeting, figures, latest tastings, the year's ribbon, what to open and recent purchases a column of cards
   over its left side (over its lower half on a phone, scrolling up over it, as a wine's page). **Pointing at a wine of

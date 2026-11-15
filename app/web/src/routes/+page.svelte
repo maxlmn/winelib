@@ -42,12 +42,15 @@
 	type Pointed = { kind: 'tasting' | 'bottle'; id: number; wine_id: number; region: string | null };
 	let pointed = $state<Pointed | null>(null);
 	let pointTimer: ReturnType<typeof setTimeout> | undefined;
-	function point(p: Pointed) {
+	function point(p: Pointed, wait = 180) {
 		clearTimeout(pointTimer);
 		// a moment's pause first: a pointer crossing a list doesn't send the map flying from wine to wine
-		pointTimer = setTimeout(() => (pointed = p), 180);
+		if (wait) pointTimer = setTimeout(() => (pointed = p), wait);
+		else pointed = p;
 	}
-	const pointTasting = (t: { id: number; wine_id: number; region: string | null }) => point({ kind: 'tasting', id: t.id, wine_id: t.wine_id, region: t.region });
+	const pointTasting = (t: { id: number; wine_id: number; region: string | null }, wait = 180) =>
+		point({ kind: 'tasting', id: t.id, wine_id: t.wine_id, region: t.region }, wait);
+	// along the year's ribbon: quicker (it's swept along), at once for its replay
 	const pointBottle = (b: Bottle) => point({ kind: 'bottle', id: b.bottle_id, wine_id: b.wine_id, region: b.region });
 	const shownWine = $derived(pointed ?? (lastWine ? { kind: 'tasting' as const, id: lastWine.id, wine_id: lastWine.wine_id, region: lastWine.region } : null));
 	const shownTasting = $derived(shownWine?.kind === 'tasting' ? shownWine.id : null);
@@ -134,7 +137,12 @@
 	{/each}
 </section>
 {#if recentTastings.length > 1}
-	<TastingRibbon tastings={recentTastings} label="The past year, a wine per bar: its region’s colour (its own below)" />
+	<TastingRibbon
+		tastings={recentTastings}
+		label="The past year, a wine per bar: its region’s colour (its own below). Sweep it, or replay it, the map following"
+		onwine={(t, now) => pointTasting(t, now ? 0 : 90)}
+		shown={shownTasting}
+	/>
 {/if}
 
 <WhatToOpen bottles={data.cellar.bottles} totals={d.drink_soon.bottles} onwine={pointBottle} shown={shownBottle} />
@@ -154,15 +162,9 @@
 {/if}
 
 <style>
-	/* over the map: the greeting and its buttons on a card like the rest */
+	/* over the map, on a card of its own (app.css: html.map-full main > .page-head) */
 	.page-head {
 		align-items: flex-end;
-		padding: 12px 16px;
-		margin-bottom: 14px;
-		background: var(--surface);
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-		box-shadow: var(--shadow);
 	}
 	h1 {
 		margin: 0;
