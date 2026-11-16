@@ -663,7 +663,7 @@ def _no_map_pack():
 TASKS = {
     "duplicates": {"group": "Clean up", "title": "Duplicate wines", "fn": _duplicates, "preview": True, "writes": True,
                    "params": _duplicates_params,
-                   "description": "Same producer, cuvée, color, appellation, grape, vintage, region and vineyard: move "
+                   "description": "Same producer, cuvée (case and dashes aside), color, appellation, grape, vintage, region and vineyard: move "
                                   "the cellar lines to one wine and delete the others. A preview to tick first."},
     "appellations_apart": {"group": "Clean up", "title": "Cuvées under several appellations", "fn": _appellations_apart,
                            "preview": False, "writes": False,

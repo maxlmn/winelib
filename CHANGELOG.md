@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Duplicate wines whatever the spelling**: Settings › Maintenance › Duplicate wines finds a cuvée entered twice with
+  other capitals or dashes (“Clos-de-Bèze” and “clos de Bèze”) as one wine.
 - **The storage donuts on the Summary**: the market value and the bottles by storage place move from the Cellar page
   (its column over the map is shorter) to the Summary page's cellar inventory.
 - **The places sorted**: the Places page's list (on the map) sorts by visits (the default), by the latest visit or by
