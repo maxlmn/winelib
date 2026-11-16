@@ -1,4 +1,4 @@
-"""Duplicate wines: same producer, cuvée, color, appellation, grape, vintage, disgorgement, region, vineyard and
+"""Duplicate wines: same producer, cuvée (case and dashes aside), color, appellation, grape, vintage, disgorgement, region, vineyard and
 LWIN. Their cellar lines (and so their tasting notes, which point at the lines) move to the oldest wine of the
 group, which takes over what it lacks (critics' scores, grapes, region, LWIN, drinking window...); each emptied
 duplicate is then deleted. The orphan check runs before committing and undoes everything if it finds one.
@@ -10,6 +10,7 @@ The same functions back the Settings page's maintenance section in the app.
 """
 import argparse
 import os
+import re
 import sys
 from collections import defaultdict
 
@@ -22,6 +23,13 @@ from tasks.housekeeping.check_orphans import find_orphans  # noqa: E402
 from tasks.merge_cuvees import carry  # noqa: E402
 from models import Bottle, Wine  # noqa: E402
 
+DASHES = re.compile(r"[-‐-―_]+")
+
+
+def fold_name(text):
+    """A cuvée name as the check compares it: case, dashes and spacing aside ("Clos-de-Bèze", "clos de  bèze")."""
+    return " ".join(DASHES.sub(" ", text or "").lower().split())
+
 
 def find_duplicate_groups(session):
     """[{"label", "primary": wine id, "duplicates": [wine ids], "bottles": {wine id: [bottles]}, "key", "producer"}],
@@ -32,7 +40,7 @@ def find_duplicate_groups(session):
     keys = defaultdict(list)
     for row in session.query(Wine.id, Wine.producer_id, Wine.cuvee, Wine.type, Wine.appellation_id, Wine.varietal_id,
                              Wine.vintage, Wine.disgorgement_date, Wine.region_id, Wine.vineyard_id, Wine.lwin):
-        keys[(row[1], (row[2] or "").strip(), row[3], row[4], row[5], (row[6] or "").strip(), (row[7] or "").strip(),
+        keys[(row[1], fold_name(row[2]), row[3], row[4], row[5], (row[6] or "").strip(), (row[7] or "").strip(),
               row[8], row[9], (row[10] or "").strip())].append(row[0])
     twice = [i for ids in keys.values() if len(ids) > 1 for i in ids]
     if not twice:
@@ -42,10 +50,11 @@ def find_duplicate_groups(session):
         joinedload(Wine.producer), joinedload(Wine.appellation), joinedload(Wine.varietal), lazyload(Wine.scores)).all()
     for w in wines:
         # Color too: a red and a white of one cuvée name are two wines
-        # an empty text and none are the same (older imports left "" where the form leaves nothing)
+        # an empty text and none are the same (older imports left "" where the form leaves nothing), and a cuvée
+        # spelled with other capitals or dashes is the same cuvée
         # and the region, vineyard and LWIN: two unnamed whites of one vintage from two regions are two wines, and
         # so are a wine with one and a wine without (it can't tell them apart)
-        groups[(w.producer_id, (w.cuvee or "").strip(), w.type, w.appellation_id, w.varietal_id,
+        groups[(w.producer_id, fold_name(w.cuvee), w.type, w.appellation_id, w.varietal_id,
                 (w.vintage or "").strip(), (w.disgorgement_date or "").strip(), w.region_id, w.vineyard_id,
                 (w.lwin or "").strip())].append(w)
     out = []
