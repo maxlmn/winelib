@@ -120,6 +120,15 @@
 		</div>
 		<a class="btn icon primary" href={links.newTasting()} title="Add a tasting" aria-label="Add a tasting"><span class="plus">+</span><Icon name="glass" size={15} /></a>
 		<a class="btn icon" href={links.newVisit()} title="Add a restaurant visit" aria-label="Add a restaurant visit"><span class="plus">+</span><Icon name="pin" size={15} /></a>
+		<!-- the latest evening (its last wine, as the map shows it), to write its notes -->
+		{#if latest}
+			<a
+				class="btn icon"
+				href={links.tasting(latest.id)}
+				title="The last evening's notes: {[latest.producer, latest.cuvee, latest.vintage].filter(Boolean).join(' ')}"
+				aria-label="Write the last evening's notes"><Icon name="edit" size={15} /></a
+			>
+		{/if}
 		<button class="btn" onclick={exportMarkdown} disabled={!tastings.length}>↓ Export</button>
 	</div>
 </div>

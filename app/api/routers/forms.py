@@ -772,7 +772,9 @@ def create_tasting(data: TastingCreate, session: Session = Depends(get_session))
         if data.wine is None:
             raise HTTPException(422, "Pick the wine, or create a new one")
         bottle = Bottle(wine=_wine(session, data.wine), qty=0, location=CONSUMED)
-        _fill_bottle_details(bottle, data.bottle or BottleDetails(provenance=AD_HOC, purchase_date=Date.today()))
+        _fill_bottle_details(bottle, data.bottle or BottleDetails(provenance=AD_HOC))
+        # bought for the tasting: the day it was drunk, always (a dinner logged the next morning wasn't bought then)
+        bottle.purchase_date = data.date or Date.today()
         session.add(bottle)
         session.flush()
     tn = TastingNote()
@@ -782,6 +784,18 @@ def create_tasting(data: TastingCreate, session: Session = Depends(get_session))
         tn.took_bottle = data.consume
     session.add(tn)
     return {"id": _commit(session, tn), "bottle_id": bottle.id, "wine_id": bottle.wine_id}
+
+
+class NoteIn(BaseModel):
+    notes: str = ""
+
+
+@router.patch("/api/tastings/{tasting_id}/note")
+def set_tasting_note(tasting_id: int, data: NoteIn, session: Session = Depends(get_session)):
+    """The note alone, as it is written on the evening's page (saved as you type)."""
+    tn = _get(session, TastingNote, tasting_id, "Tasting note")
+    tn.notes = data.notes.strip() or None
+    return {"id": _commit(session, tn), "notes": tn.notes or ""}
 
 
 @router.put("/api/tastings/{tasting_id}")
@@ -796,6 +810,9 @@ def update_tasting(tasting_id: int, data: TastingIn, session: Session = Depends(
             given["currency"] = settings.current.currency
         for field, value in given.items():
             setattr(tn.bottle, field, value)
+    # bought for the tasting: its date follows the tasting's
+    if _is_adhoc(tn.bottle) and tn.date:
+        tn.bottle.purchase_date = tn.date
     return {"id": _commit(session, tn), "bottle_id": tn.bottle_id, "wine_id": tn.bottle.wine_id}
 
 

@@ -3,9 +3,15 @@
 	import MoneyInput from './MoneyInput.svelte';
 	import type { BottleDraft, Options } from '#lib/api/forms.ts';
 
-	/** Size, price, vendor, provenance and purchase date: shared by the bottle and tasting forms. */
-	let { value = $bindable(), options, prefix, errors = {} }: { value: BottleDraft; options: Options; prefix: string; errors?: Record<string, string> } =
-		$props();
+	/** Size, price, vendor, provenance and purchase date: shared by the bottle and tasting forms. `dated: false`: no
+	 * purchase date (a bottle bought for a tasting is bought that day) */
+	let {
+		value = $bindable(),
+		options,
+		prefix,
+		errors = {},
+		dated = true
+	}: { value: BottleDraft; options: Options; prefix: string; errors?: Record<string, string>; dated?: boolean } = $props();
 
 	const sizes = $derived([...new Set([...options.bottle_sizes, value.bottle_size])]);
 </script>
@@ -26,9 +32,11 @@
 			onchange={(p, c) => ((value.price = p), (value.currency = c))}
 		/>
 	</Field>
-	<Field label="Purchase date" for="{prefix}-date" error={errors.purchase_date}>
-		<input id="{prefix}-date" type="date" bind:value={value.purchase_date} />
-	</Field>
+	{#if dated}
+		<Field label="Purchase date" for="{prefix}-date" error={errors.purchase_date}>
+			<input id="{prefix}-date" type="date" bind:value={value.purchase_date} />
+		</Field>
+	{/if}
 	<Field label="Vendor" for="{prefix}-vendor">
 		<input id="{prefix}-vendor" bind:value={value.vendor} />
 	</Field>

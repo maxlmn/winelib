@@ -138,14 +138,14 @@
 		const note = { date, place: toPlaceRef(place), rating, glasses, sequence, tags, notes, styles };
 		if (t) {
 			// a cellar bottle's details are its line's (its other bottles'): edited from the bottle, not here
-			await save('tastings', t.id, t.source === 'other' ? { ...note, bottle: toBottleDetails(details) } : note);
+			await save('tastings', t.id, t.source === 'other' ? { ...note, bottle: { ...toBottleDetails(details), purchase_date: date || null } } : note);
 			await applyPhotoChange(place?.name, date, photo);
 			return links.tasting(t.id);
 		}
 		const body =
 			source === 'cellar'
 				? { ...note, source, bottle_id: bottle?.id, consume }
-				: { ...note, source, wine: wine?.id ?? toWineIn(draft!), bottle: toBottleDetails(details) };
+				: { ...note, source, wine: wine?.id ?? toWineIn(draft!), bottle: { ...toBottleDetails(details), purchase_date: date || null } };
 		const { id } = await save('tastings', null, body);
 		await applyPhotoChange(place?.name, date, photo);
 		return links.tasting(id);
@@ -267,7 +267,8 @@
 
 	{#if t ? t.source === 'other' : source === 'other'}
 		<Section title="Bottle details" collapsible bind:open={detailsOpen} summary={detailsSummary || 'Size, price, vendor, provenance'}>
-			<BottleFields bind:value={details} {options} prefix="t-b" errors={bottleErrors} />
+			<!-- no purchase date: bought for the tasting, it's the tasting's -->
+			<BottleFields bind:value={details} {options} prefix="t-b" errors={bottleErrors} dated={false} />
 		</Section>
 	{/if}
 </FormPage>

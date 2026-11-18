@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **A tasting's page is its evening**: the place and the day, then every wine poured in order with its label and its
+  note, the one opened marked; a note is written right there (saved as you type, a note tapped to change it), over
+  the map (the place; a wine tapped flies to where it comes from). The Tasting Notes page's pencil opens the last
+  evening.
+- **A bottle bought for a tasting is bought that day**: its purchase date is the tasting's, always (no date to set;
+  the tasting moved, it follows), not the day it was logged.
 - **Duplicate wines whatever the spelling**: Settings › Maintenance › Duplicate wines finds a cuvée entered twice with
   other capitals or dashes (“Clos-de-Bèze” and “clos de Bèze”) as one wine.
 - **The storage donuts on the Summary**: the market value and the bottles by storage place move from the Cellar page

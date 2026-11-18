@@ -115,7 +115,7 @@ export interface TastingDetail {
 		drink_from: number | null;
 		drink_to: number | null;
 	};
-	occasion: (WineBrief & { id: number; seq: number | null; glasses: number | null; rating: number | null; notes?: string; score?: string | null; scores?: string | null })[];
+	occasion: (WineBrief & { id: number; seq: number | null; glasses: number | null; rating: number | null; notes?: string; score?: string | null; scores?: string | null; label?: { url: string; from_vintage: string | null } | null })[];
 	history: (WineBrief & { id: number; date: string; place: string | null; place_id: number | null; rating: number | null; score?: string | null; scores?: string | null; notes: string })[];
 }
 

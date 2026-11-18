@@ -237,7 +237,7 @@ export async function lookup<T>(kind: string, params: Record<string, string | nu
 export { RequestError as FormError } from './http.ts';
 
 /** A form's request: its JSON, or a FormError with the server's message (per field when it named them) */
-export async function send<T = { id: number }>(method: 'POST' | 'PUT' | 'DELETE', url: string, body?: unknown): Promise<T> {
+export async function send<T = { id: number }>(method: 'POST' | 'PUT' | 'PATCH' | 'DELETE', url: string, body?: unknown): Promise<T> {
 	const out = await request<T>(url, { method, body });
 	forgetJournal(); // the tasting journal, kept between pages, is read again
 	return out;
@@ -246,6 +246,9 @@ export async function send<T = { id: number }>(method: 'POST' | 'PUT' | 'DELETE'
 /** Create (POST /api/<kind>) or update (PUT /api/<kind>/<id>). */
 export const save = <T = { id: number }>(kind: string, id: number | null, body: unknown) =>
 	send<T>(id ? 'PUT' : 'POST', id ? `/api/${kind}/${id}` : `/api/${kind}`, body);
+
+/** A tasting's note alone (the evening's page, saved as it's written). */
+export const saveNote = (id: number, notes: string) => send<{ id: number; notes: string }>('PATCH', `/api/tastings/${id}/note`, { notes });
 
 export const remove = <T = { deleted: number }>(kind: string, id: number, query = '') =>
 	send<T>('DELETE', `/api/${kind}/${id}${query ? `?${query}` : ''}`);

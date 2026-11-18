@@ -131,6 +131,9 @@ def tasting_detail(tasting_id: int, session: Session = Depends(get_session)):
                .filter(Bottle.wine_id.in_(related.scalar_subquery()), TastingNote.id != t.id)
                .order_by(TastingNote.date.desc(), TastingNote.id.desc()).all())
 
+    import labels as wine_labels
+    label_of = wine_labels.of_wines(session, [o.bottle.wine_id for o in occasion])
+
     vineyard = None
     if w.vineyard:
         v = w.vineyard
@@ -157,7 +160,8 @@ def tasting_detail(tasting_id: int, session: Session = Depends(get_session)):
             "drink_from": w.drink_window_start, "drink_to": w.drink_window_end,
         },
         "occasion": [{"id": o.id, "seq": o.sequence, "glasses": o.glasses, "rating": o.rating,
-                      "notes": (o.notes or "").strip(), **short_wine(o)} for o in occasion],
+                      "notes": (o.notes or "").strip(), "label": label_of.get(o.bottle.wine_id), **short_wine(o)}
+                     for o in occasion],
         "history": [{"id": h.id, "date": iso(h.date), "place": h.place.name if h.place else h.location,
                      "place_id": h.place_id, "rating": h.rating, "notes": (h.notes or "").strip(), **short_wine(h)}
                     for h in history],
