@@ -113,6 +113,8 @@ export interface Occasion {
 	place: Place | null;
 	wines: Tasting[];
 	visit?: Visit;
+	/** the evening's own note (the menu...): the visit logged that day at that place, which then has no card of its own */
+	evening?: Visit;
 	photo?: string;
 }
 
@@ -131,6 +133,11 @@ export function occasions(journal: Journal, tastings: Tasting[], visits: Visit[]
 	for (const o of list) o.wines.sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0));
 	for (const v of visits) {
 		const place = journal.places[v.place_id];
+		const evening = place && list.find((o) => o.date === v.date && o.place?.id === place.id && !o.visit);
+		if (evening) {
+			evening.evening ??= v;
+			continue;
+		}
 		list.push({ key: `visit-${v.id}`, date: v.date, name: place?.name ?? 'Unknown', place: place ?? null, wines: [], visit: v });
 	}
 	for (const o of list) o.photo = journal.photos[`${o.name.toLowerCase()}_${o.date}`];

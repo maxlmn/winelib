@@ -80,6 +80,8 @@ export interface TastingDetail {
 	styles?: string[];
 	location: string | null;
 	place: Place | null;
+	/** the evening's own note (the menu...), kept as that day's visit to the place */
+	evening?: { id: number; notes: string } | null;
 	photo: string | null;
 	bottle: {
 		id: number;

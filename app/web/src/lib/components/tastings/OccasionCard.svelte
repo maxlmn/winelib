@@ -99,6 +99,10 @@
 	<div class="body">
 		{#if o.photo && plain}<img src={photoSrc(o.photo, 'thumb')} alt="{o.name}, {o.date}" loading="lazy" decoding="async" />{/if}
 		<div class="content">
+			<!-- the evening's own note (the menu...): it opens the evening -->
+			{#if o.evening?.notes && o.wines[0]}
+				<a class="evening" href={links.tasting(o.wines[0].id)} title="Open the evening">{o.evening.notes}</a>
+			{/if}
 			<ul>
 				{#each o.wines as w (w.id)}
 					<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
@@ -240,6 +244,21 @@
 	}
 	.content {
 		min-width: 0;
+	}
+	.evening {
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		overflow: hidden;
+		margin: 0 0 8px;
+		font-size: 13px;
+		color: var(--muted);
+		white-space: pre-line;
+		text-decoration: none;
+	}
+	.evening:hover {
+		color: var(--text);
 	}
 	ul {
 		list-style: none;

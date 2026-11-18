@@ -7,6 +7,7 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import HomeMap from '#lib/components/home/HomeMap.svelte';
 	import NoteBox from '#lib/components/tastings/NoteBox.svelte';
+	import { saveEveningNote } from '#lib/api/forms.ts';
 	import { regionColor, regionLabel } from '#lib/regions.svelte.ts';
 	import { appSettings } from '#lib/settings.svelte.ts';
 	import { FALLBACK_REGION } from '#lib/colors.ts';
@@ -59,6 +60,8 @@
 		untrack(() => (writing = new Set()));
 	});
 	const write = (id: number) => (writing = new Set([...writing, id]));
+	// the evening's own note (the menu, who came): 0 in `writing` when opened
+	const EVENING = 0;
 
 	// the opened tasting scrolled to when it's down the evening
 	$effect(() => {
@@ -117,6 +120,27 @@
 		<ShareSticker {...sticker} />
 	</div>
 </div>
+
+<!-- the evening's own note: the menu, who came, the occasion (a day at a place: needs both) -->
+{#if t.place && t.date}
+	<section class="card evening" aria-label="The evening">
+		<div class="kind"><Icon name="edit" size={12} />The evening</div>
+		{#if t.evening?.notes && !writing.has(EVENING)}
+			<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
+			<blockquote title="Tap to change the evening's note" onclick={() => write(EVENING)}>{t.evening.notes}</blockquote>
+		{:else}
+			{#key t.id}
+				<NoteBox
+					id={t.id}
+					notes={t.evening?.notes ?? ''}
+					label="The evening's note"
+					placeholder="The menu, who came, the occasion…"
+					save={(text) => saveEveningNote(t.id, text)}
+				/>
+			{/key}
+		{/if}
+	</section>
+{/if}
 
 <!-- the evening's wines in the order poured, each with its note -->
 <ol class="wines">
@@ -322,6 +346,13 @@
 	}
 	.note {
 		margin: 10px 0 0 22px;
+	}
+	.evening {
+		margin-bottom: 12px;
+		padding: 10px 14px 6px;
+	}
+	.evening .kind {
+		margin-bottom: 6px;
 	}
 	blockquote {
 		margin: 0 0 8px;

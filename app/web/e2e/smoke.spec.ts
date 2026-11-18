@@ -86,6 +86,22 @@ test("the Tasting Notes page's pencil opens the last evening, its notes written 
 	await expect(page.getByText('Saline, long.')).toBeVisible();
 });
 
+test("an evening at a place has its own note (the menu), shown on its card in the journal", async ({ page }) => {
+	const r = await page.request.post('/api/tastings', {
+		data: { source: 'other', wine: ids().plainWine, date: '2026-09-12', place: { name: 'Chez Odette', type: 'Restaurant' } }
+	});
+	expect(r.ok()).toBeTruthy();
+	await page.goto(`/tastings/${(await r.json()).id}`);
+	const evening = page.getByRole('textbox', { name: "The evening's note" });
+	await evening.fill('Lamb, then cheese.');
+	await evening.blur();
+	await expect(page.getByText('Saved')).toBeVisible();
+	await page.reload();
+	await expect(page.getByText('Lamb, then cheese.')).toBeVisible();
+	await page.goto('/tastings');
+	await expect(page.getByRole('link', { name: 'Lamb, then cheese.' })).toBeVisible();
+});
+
 test("deleting a tasting of a cellar bottle offers to put it back, ticked when it took one out", async ({ page }) => {
 	await page.goto(`/tastings/${ids().tasting}/edit`);
 	await page.getByRole('button', { name: 'Delete' }).click();
