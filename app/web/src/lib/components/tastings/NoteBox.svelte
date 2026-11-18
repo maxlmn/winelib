@@ -3,14 +3,23 @@
 	import { messageOf } from '#lib/api/http.ts';
 
 	/** A tasting's note, written in place: saved a moment after you stop typing, and when you leave the box. `save`:
-	 * another note than the wine's (the evening's) */
+	 * another note than the wine's (the evening's). `onclose`: left (and saved), with the text saved, for the page to
+	 * show it as text again */
 	let {
 		id,
 		notes = '',
 		label = 'Tasting note',
 		placeholder = 'Write the note: nose, palate, how it went with the dinner…',
-		save: store = (text: string) => saveNote(id, text)
-	}: { id: number; notes?: string; label?: string; placeholder?: string; save?: (text: string) => Promise<unknown> } = $props();
+		save: store = (text: string) => saveNote(id, text),
+		onclose
+	}: {
+		id: number;
+		notes?: string;
+		label?: string;
+		placeholder?: string;
+		save?: (text: string) => Promise<unknown>;
+		onclose?: (text: string) => void;
+	} = $props();
 
 	// svelte-ignore state_referenced_locally
 	let text = $state(notes);
@@ -37,6 +46,18 @@
 		}
 	}
 
+	// left: saved, then back to text (kept open when it failed, to say so)
+	async function leave() {
+		await save();
+		if (status !== 'error') onclose?.(saved.trim());
+	}
+
+	// opened by a tap: the cursor in it, at the end
+	function focus(el: HTMLTextAreaElement) {
+		el.focus();
+		el.setSelectionRange(el.value.length, el.value.length);
+	}
+
 	function typed() {
 		status = '';
 		clearTimeout(timer);
@@ -56,7 +77,8 @@
 		{placeholder}
 		bind:value={text}
 		oninput={typed}
-		onblur={save}
+		onblur={leave}
+		use:focus
 		rows="2"
 	></textarea>
 	<span class="status" class:err={status === 'error'} aria-live="polite">

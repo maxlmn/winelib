@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Notes written on a tap**: a tasting's page shows the notes as text; a note tapped (or "+ Add a note", "+ The
+  menu, who came, the occasion") opens its box, back to text once left and saved.
 - **The evening's own note**: a tasting's page has a note for the whole evening (the menu, who came, the occasion),
   over its wines, written in place and shown with each of them and on the evening's card in the Tasting Notes. It's
   kept as that day's visit to the place (on the place's page too), and goes with the wines when the evening moves.

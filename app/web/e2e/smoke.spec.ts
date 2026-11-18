@@ -78,10 +78,14 @@ test("the Tasting Notes page's pencil opens the last evening, its notes written 
 	await page.goto('/tastings');
 	await page.getByRole('link', { name: "Write the last evening's notes" }).click();
 	await expect(page).toHaveURL(/\/tastings\/\d+$/);
-	const box = page.getByRole('textbox', { name: /^Note on / }).first();
+	// a note shows as text: "Add a note" opens the box, left it's text again
+	await page.getByRole('button', { name: /^Add a note on / }).first().click();
+	const box = page.getByRole('textbox', { name: /^Note on / });
+	await expect(box).toBeFocused();
 	await box.fill('Saline, long.');
 	await box.blur();
-	await expect(page.getByText('Saved')).toBeVisible();
+	await expect(page.locator('blockquote', { hasText: 'Saline, long.' })).toBeVisible();
+	await expect(box).toHaveCount(0);
 	await page.reload();
 	await expect(page.getByText('Saline, long.')).toBeVisible();
 });
@@ -92,10 +96,11 @@ test("an evening at a place has its own note (the menu), shown on its card in th
 	});
 	expect(r.ok()).toBeTruthy();
 	await page.goto(`/tastings/${(await r.json()).id}`);
+	await page.getByRole('button', { name: /The menu, who came/ }).click();
 	const evening = page.getByRole('textbox', { name: "The evening's note" });
 	await evening.fill('Lamb, then cheese.');
 	await evening.blur();
-	await expect(page.getByText('Saved')).toBeVisible();
+	await expect(page.locator('blockquote', { hasText: 'Lamb, then cheese.' })).toBeVisible();
 	await page.reload();
 	await expect(page.getByText('Lamb, then cheese.')).toBeVisible();
 	await page.goto('/tastings');
