@@ -74,6 +74,18 @@ test("a tasting without a note opens from its pencil (Add a note); the page says
 	await expect(page.locator('.kind').first()).toHaveText(/Tasting/i);
 });
 
+test("the Tasting Notes page's pencil opens the last evening, its notes written in place", async ({ page }) => {
+	await page.goto('/tastings');
+	await page.getByRole('link', { name: "Write the last evening's notes" }).click();
+	await expect(page).toHaveURL(/\/tastings\/\d+$/);
+	const box = page.getByRole('textbox', { name: /^Note on / }).first();
+	await box.fill('Saline, long.');
+	await box.blur();
+	await expect(page.getByText('Saved')).toBeVisible();
+	await page.reload();
+	await expect(page.getByText('Saline, long.')).toBeVisible();
+});
+
 test("deleting a tasting of a cellar bottle offers to put it back, ticked when it took one out", async ({ page }) => {
 	await page.goto(`/tastings/${ids().tasting}/edit`);
 	await page.getByRole('button', { name: 'Delete' }).click();

@@ -251,6 +251,32 @@ def test_tasting_other_wine_with_new_wine_and_producer(client):
     assert tn.location == "Unknown" and tn.place_id is None
 
 
+def test_a_bottle_bought_for_a_tasting_is_bought_the_day_it_was_drunk(client):
+    # no purchase details sent (logged the next morning): bought the tasting's day, not today
+    r = client.post("/api/tastings", json={"source": "other", "wine": IDS["rotie"], "date": "2025-06-17"})
+    _, tn = get(TastingNote, r.json()["id"])
+    assert str(tn.bottle.purchase_date) == "2025-06-17"
+    # another date sent, or none: still the tasting's; the tasting moved, it follows
+    r = client.post("/api/tastings", json={"source": "other", "wine": IDS["rotie"], "date": "2025-06-18",
+                                           "bottle": {"bottle_size": "75cl", "purchase_date": "2025-06-30"}})
+    tid = r.json()["id"]
+    _, tn = get(TastingNote, tid)
+    assert str(tn.bottle.purchase_date) == "2025-06-18"
+    client.put(f"/api/tastings/{tid}", json={"date": "2025-06-16", "bottle": {"purchase_date": "2025-06-30"}})
+    _, tn = get(TastingNote, tid)
+    assert str(tn.bottle.purchase_date) == "2025-06-16"
+
+
+def test_a_note_written_alone(client):
+    tid = client.post("/api/tastings", json={"source": "other", "wine": IDS["red"], "date": "2025-05-02"}).json()["id"]
+    r = client.patch(f"/api/tastings/{tid}/note", json={"notes": "  Saline, long.  "})
+    assert r.status_code == 200 and r.json()["notes"] == "Saline, long."
+    t = client.get(f"/api/tastings/{tid}").json()
+    assert t["notes"] == "Saline, long." and t["occasion"][0]["notes"] == "Saline, long." and "label" in t["occasion"][0]
+    assert client.patch(f"/api/tastings/{tid}/note", json={"notes": ""}).json()["notes"] == ""
+    assert client.patch("/api/tastings/999999/note", json={"notes": "x"}).status_code == 404
+
+
 def test_tasting_validation(client):
     r = client.post("/api/tastings", json={"source": "cellar", "date": "2025-01-01"})
     assert r.status_code == 422 and "bottle" in detail(r)
@@ -307,7 +333,8 @@ def test_tasting_edit_changes_only_the_bottle_details_sent(client):
     client.put(f"/api/tastings/{tid}", json={"date": "2025-05-01", "bottle": {"price": 35}})
     _, tn = get(TastingNote, tid)
     b = tn.bottle
-    assert (b.price, b.currency, b.vendor, b.provenance, b.purchase_date) == (35, "EUR", "Shop", "Gift", date(2025, 4, 1))
+    # (bought the day of the tasting, whatever was sent)
+    assert (b.price, b.currency, b.vendor, b.provenance, b.purchase_date) == (35, "EUR", "Shop", "Gift", date(2025, 5, 1))
 
 
 def test_tasting_delete_puts_the_bottle_back_when_asked(client):

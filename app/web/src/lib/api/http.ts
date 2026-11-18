@@ -55,7 +55,7 @@ export async function loadJson<T>(fetch: Fetch, url: string, what?: string): Pro
  * AbortError as is, for the caller to ignore. */
 export async function request<T = unknown>(
 	url: string,
-	{ method = 'GET', body, signal }: { method?: 'GET' | 'POST' | 'PUT' | 'DELETE'; body?: unknown; signal?: AbortSignal } = {}
+	{ method = 'GET', body, signal }: { method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'; body?: unknown; signal?: AbortSignal } = {}
 ): Promise<T> {
 	let r: Response;
 	try {
