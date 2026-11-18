@@ -13,7 +13,7 @@
 	import { appSettings } from '#lib/settings.svelte.ts';
 	import LabelThumbs from './LabelThumbs.svelte';
 	import { fmtDate, stars } from './wine.ts';
-	import { plainText } from '#lib/notes.ts';
+	import NoteFold from '#lib/components/tastings/NoteFold.svelte';
 
 	interface Props {
 		tastings: Tasting[];
@@ -86,12 +86,21 @@
 					{/if}
 				</div>
 				<div class="what">
-					{#if d.visit}
+					{#if d.visit && d.wines.length}
+						<!-- a day with wines: its visit is the evening's note (the menu...), written on the evening's page -->
+						{#if d.visit.notes}
+							<div class="evening-note">
+								<NoteFold md={d.visit.notes} />
+								<a class="edit" href={links.tasting(d.wines[0].id)}>Open the evening</a>
+							</div>
+						{/if}
+					{:else if d.visit}
 						<div class="visit">
 							<span class="badge">Visit</span>
-							{#if d.visit.notes}<span class="visit-notes" title={plainText(d.visit.notes)}>{plainText(d.visit.notes)}</span>{:else}<span class="muted">No notes.</span>{/if}
+							{#if !d.visit.notes}<span class="muted">No notes.</span>{/if}
 							<a class="edit" href={links.editVisit(d.visit.id)}>Edit</a>
 						</div>
+						{#if d.visit.notes}<div class="evening-note"><NoteFold md={d.visit.notes} /></div>{/if}
 					{/if}
 					{#each d.wines as t (t.id)}
 						<div class="wine">
@@ -190,15 +199,15 @@
 		gap: 8px;
 		margin-bottom: 6px;
 	}
-	/* a menu can be long: three lines of it (all of it on the evening's page) */
-	.visit-notes {
-		font-style: italic;
-		display: -webkit-box;
-		-webkit-box-orient: vertical;
-		-webkit-line-clamp: 3;
-		line-clamp: 3;
-		overflow: hidden;
-		min-width: 0;
+	/* the evening's note (a menu, who came): a few lines of it, unfolded on demand */
+	.evening-note {
+		margin: 0 0 10px;
+		padding-left: 10px;
+		border-left: 2px solid color-mix(in srgb, var(--gold) 55%, var(--border));
+	}
+	.evening-note .edit {
+		margin-left: 12px;
+		font-size: 12px;
 	}
 	.badge {
 		font-size: 10px;

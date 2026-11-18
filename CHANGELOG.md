@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **A place's evenings with their notes**: on a place's page an evening's note (the menu, who came) shows as written,
+  a few lines of it with Show all, and opens the evening; a visit without wine keeps its Visit badge and Edit.
 - **Notes in Markdown**: a tasting's notes and the evening's (a menu's courses, its headings, lists, emphasis, links)
   show as written in Markdown on its page; the journal's cards and a place's visits show a short plain excerpt. Raw
   HTML shows as text, and links only open web pages.
