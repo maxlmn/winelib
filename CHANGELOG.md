@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **The evening's own note**: a tasting's page has a note for the whole evening (the menu, who came, the occasion),
+  over its wines, written in place and shown with each of them and on the evening's card in the Tasting Notes. It's
+  kept as that day's visit to the place (on the place's page too), and goes with the wines when the evening moves.
 - **A tasting's page is its evening**: the place and the day, then every wine poured in order with its label and its
   note, the one opened marked; a note is written right there (saved as you type, a note tapped to change it), over
   the map (the place; a wine tapped flies to where it comes from). The Tasting Notes page's pencil opens the last

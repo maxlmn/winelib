@@ -798,10 +798,56 @@ def set_tasting_note(tasting_id: int, data: NoteIn, session: Session = Depends(g
     return {"id": _commit(session, tn), "notes": tn.notes or ""}
 
 
+def _evening_visit(session, place_id, day):
+    """The evening's note (the menu, who came): the visit logged that day at that place."""
+    if not place_id or not day:
+        return None
+    return (session.query(RestaurantVisit).filter_by(place_id=place_id, date=day)
+            .order_by(RestaurantVisit.id).first())
+
+
+@router.put("/api/tastings/{tasting_id}/evening")
+def set_evening_note(tasting_id: int, data: NoteIn, session: Session = Depends(get_session)):
+    """The note of the tasting's evening, for all its wines: kept as that day's visit to the place. Emptied: the
+    visit is gone (it was only the note; the tastings say it was a day there)."""
+    tn = _get(session, TastingNote, tasting_id, "Tasting note")
+    if not tn.place_id or not tn.date:
+        raise HTTPException(422, "This tasting has no place or date: its evening can't have a note")
+    v = _evening_visit(session, tn.place_id, tn.date)
+    notes = data.notes.strip() or None
+    if notes is None:
+        if v is not None:
+            session.delete(v)
+        session.commit()
+        return {"id": None, "notes": ""}
+    if v is None:
+        v = RestaurantVisit(place_id=tn.place_id, date=tn.date)
+        session.add(v)
+    v.notes = notes
+    return {"id": _commit(session, v), "notes": notes}
+
+
+def _follow_evening(session, tn, was):
+    """A tasting moved to another day or place: when its old evening is left without wine, that evening's note
+    goes with it (unless the new evening has one)."""
+    if was == (tn.place_id, tn.date):
+        return
+    old = _evening_visit(session, *was)
+    if old is None or _evening_visit(session, tn.place_id, tn.date) is not None or not tn.place_id or not tn.date:
+        return
+    left = session.query(TastingNote).filter(TastingNote.place_id == was[0], TastingNote.date == was[1],
+                                             TastingNote.id != tn.id).count()
+    if not left:
+        old.place_id, old.date = tn.place_id, tn.date
+
+
 @router.put("/api/tastings/{tasting_id}")
 def update_tasting(tasting_id: int, data: TastingIn, session: Session = Depends(get_session)):
     tn = _get(session, TastingNote, tasting_id, "Tasting note")
+    was = (tn.place_id, tn.date)
     _fill_tasting(session, tn, data)
+    session.flush()
+    _follow_evening(session, tn, was)
     # A bottle bought for the tasting alone takes the details; a cellar line's are its other bottles' too: left as
     # they are (edited from the bottle). Only the fields sent: one left out keeps its value
     if data.bottle and _is_adhoc(tn.bottle):

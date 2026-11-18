@@ -277,6 +277,28 @@ def test_a_note_written_alone(client):
     assert client.patch("/api/tastings/999999/note", json={"notes": "x"}).status_code == 404
 
 
+def test_the_evening_note_is_the_day_visit(client):
+    home = IDS["home"]
+    a = client.post("/api/tastings", json={"source": "other", "wine": IDS["red"], "date": "2025-07-04", "place": home}).json()["id"]
+    b = client.post("/api/tastings", json={"source": "other", "wine": IDS["rotie"], "date": "2025-07-04", "place": home}).json()["id"]
+    assert client.get(f"/api/tastings/{a}").json()["evening"] is None
+    r = client.put(f"/api/tastings/{a}/evening", json={"notes": "  Lamb, then cheese.  "})
+    assert r.status_code == 200 and r.json()["notes"] == "Lamb, then cheese."
+    # the evening's, for each of its wines; one visit, changed in place
+    assert client.get(f"/api/tastings/{b}").json()["evening"]["notes"] == "Lamb, then cheese."
+    vid = client.put(f"/api/tastings/{b}/evening", json={"notes": "Lamb."}).json()["id"]
+    assert vid == r.json()["id"] and client.get(f"/api/tastings/{a}").json()["evening"]["notes"] == "Lamb."
+    # one wine moved to another day: the note stays with the evening; both moved: it goes with them
+    client.put(f"/api/tastings/{a}", json={"date": "2025-07-05", "place": home})
+    assert client.get(f"/api/tastings/{a}").json()["evening"] is None
+    client.put(f"/api/tastings/{b}", json={"date": "2025-07-05", "place": home})
+    assert client.get(f"/api/tastings/{a}").json()["evening"]["notes"] == "Lamb."
+    # emptied: no visit left
+    assert client.put(f"/api/tastings/{a}/evening", json={"notes": " "}).json()["id"] is None
+    assert client.get(f"/api/tastings/{b}").json()["evening"] is None
+    assert client.put("/api/tastings/999999/evening", json={"notes": "x"}).status_code == 404
+
+
 def test_tasting_validation(client):
     r = client.post("/api/tastings", json={"source": "cellar", "date": "2025-01-01"})
     assert r.status_code == 422 and "bottle" in detail(r)

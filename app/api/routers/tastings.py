@@ -133,6 +133,9 @@ def tasting_detail(tasting_id: int, session: Session = Depends(get_session)):
 
     import labels as wine_labels
     label_of = wine_labels.of_wines(session, [o.bottle.wine_id for o in occasion])
+    # the evening's own note (the menu...): that day's visit to the place
+    evening = (session.query(RestaurantVisit).filter_by(place_id=t.place_id, date=t.date).order_by(RestaurantVisit.id).first()
+               if t.place_id and t.date else None)
 
     vineyard = None
     if w.vineyard:
@@ -143,6 +146,7 @@ def tasting_detail(tasting_id: int, session: Session = Depends(get_session)):
         "notes": (t.notes or "").strip(), "tags": t.tags, "location": t.place.name if t.place else t.location,
         "styles": [s.tag for s in t.styles],
         "place": place_dict(t.place) if t.place else None,
+        "evening": {"id": evening.id, "notes": (evening.notes or "").strip()} if evening else None,
         "photo": photo_url(photo_index(), t.place.name if t.place else t.location, t.date),
         "bottle": {
             "id": b.id, "format": b.bottle_size, "location": b.location, "qty": b.qty, "vendor": b.vendor,

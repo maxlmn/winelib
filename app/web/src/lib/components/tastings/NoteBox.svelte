@@ -2,8 +2,15 @@
 	import { saveNote } from '#lib/api/forms.ts';
 	import { messageOf } from '#lib/api/http.ts';
 
-	/** A tasting's note, written in place: saved a moment after you stop typing, and when you leave the box. */
-	let { id, notes = '', label = 'Tasting note' }: { id: number; notes?: string; label?: string } = $props();
+	/** A tasting's note, written in place: saved a moment after you stop typing, and when you leave the box. `save`:
+	 * another note than the wine's (the evening's) */
+	let {
+		id,
+		notes = '',
+		label = 'Tasting note',
+		placeholder = 'Write the note: nose, palate, how it went with the dinner…',
+		save: store = (text: string) => saveNote(id, text)
+	}: { id: number; notes?: string; label?: string; placeholder?: string; save?: (text: string) => Promise<unknown> } = $props();
 
 	// svelte-ignore state_referenced_locally
 	let text = $state(notes);
@@ -19,7 +26,7 @@
 		if (value.trim() === saved.trim()) return;
 		status = 'saving';
 		try {
-			await saveNote(id, value);
+			await store(value);
 			saved = value;
 			// typed more while it saved: that's saved next
 			status = text.trim() === value.trim() ? 'saved' : 'saving';
@@ -38,7 +45,7 @@
 
 	$effect(() => () => {
 		// leaving the page with a note not yet saved: saved now
-		if (text.trim() !== saved.trim()) void saveNote(id, text).catch(() => {});
+		if (text.trim() !== saved.trim()) void store(text).catch(() => {});
 		clearTimeout(timer);
 	});
 </script>
@@ -46,7 +53,7 @@
 <div class="notebox">
 	<textarea
 		aria-label={label}
-		placeholder="Write the note: nose, palate, how it went with the dinner…"
+		{placeholder}
 		bind:value={text}
 		oninput={typed}
 		onblur={save}

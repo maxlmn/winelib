@@ -248,6 +248,9 @@ export const save = <T = { id: number }>(kind: string, id: number | null, body: 
 	send<T>(id ? 'PUT' : 'POST', id ? `/api/${kind}/${id}` : `/api/${kind}`, body);
 
 /** A tasting's note alone (the evening's page, saved as it's written). */
+/** The note of a tasting's evening (the menu, who came), for all its wines. Empty: none. */
+export const saveEveningNote = (tastingId: number, notes: string) =>
+	send<{ id: number | null; notes: string }>('PUT', `/api/tastings/${tastingId}/evening`, { notes });
 export const saveNote = (id: number, notes: string) => send<{ id: number; notes: string }>('PATCH', `/api/tastings/${id}/note`, { notes });
 
 export const remove = <T = { deleted: number }>(kind: string, id: number, query = '') =>
