@@ -53,15 +53,26 @@
 		else go();
 	}
 
-	// notes opened for writing (a wine with a note shows it; tapped, it's a box to change it)
-	let writing = $state<Set<number>>(new Set());
-	$effect(() => {
-		void t.id;
-		untrack(() => (writing = new Set()));
-	});
-	const write = (id: number) => (writing = new Set([...writing, id]));
+	// notes shown as text; tapped (or "Add a note"), a box to write in, back to text when left. `written`: the notes
+	// saved here since the page loaded (its data has the ones before)
 	// the evening's own note (the menu, who came): 0 in `writing` when opened
 	const EVENING = 0;
+	let writing = $state<number | null>(null);
+	let written = $state<Record<number, string>>({});
+	$effect(() => {
+		void t.id;
+		untrack(() => {
+			writing = null;
+			written = {};
+		});
+	});
+	const write = (id: number) => (writing = id);
+	const wrote = (id: number) => (text: string) => {
+		written = { ...written, [id]: text };
+		if (writing === id) writing = null;
+	};
+	const evening = $derived(written[EVENING] ?? t.evening?.notes ?? '');
+	const noteOf = (o: { id: number; notes?: string | null }) => written[o.id] ?? o.notes ?? '';
 
 	// the opened tasting scrolled to when it's down the evening
 	$effect(() => {
@@ -125,19 +136,20 @@
 {#if t.place && t.date}
 	<section class="card evening" aria-label="The evening">
 		<div class="kind"><Icon name="edit" size={12} />The evening</div>
-		{#if t.evening?.notes && !writing.has(EVENING)}
+		{#if writing === EVENING}
+			<NoteBox
+				id={t.id}
+				notes={evening}
+				label="The evening's note"
+				placeholder="The menu, who came, the occasion…"
+				save={(text) => saveEveningNote(t.id, text)}
+				onclose={wrote(EVENING)}
+			/>
+		{:else if evening}
 			<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-			<blockquote title="Tap to change the evening's note" onclick={() => write(EVENING)}>{t.evening.notes}</blockquote>
+			<blockquote title="Tap to change the evening's note" onclick={() => write(EVENING)}>{evening}</blockquote>
 		{:else}
-			{#key t.id}
-				<NoteBox
-					id={t.id}
-					notes={t.evening?.notes ?? ''}
-					label="The evening's note"
-					placeholder="The menu, who came, the occasion…"
-					save={(text) => saveEveningNote(t.id, text)}
-				/>
-			{/key}
+			<button type="button" class="add-note" onclick={() => write(EVENING)}>+ The menu, who came, the occasion</button>
 		{/if}
 	</section>
 {/if}
@@ -173,11 +185,13 @@
 				{#if !mine}<a class="open muted" href={links.tasting(o.id)} title="Open this tasting" aria-label="Open this tasting">›</a>{/if}
 			</div>
 			<div class="note">
-				{#if o.notes && !writing.has(o.id)}
+				{#if writing === o.id}
+					<NoteBox id={o.id} notes={noteOf(o)} label="Note on {o.producer} {o.cuvee}" onclose={wrote(o.id)} />
+				{:else if noteOf(o)}
 					<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-					<blockquote title="Tap to change the note" onclick={() => write(o.id)}>{o.notes}</blockquote>
+					<blockquote title="Tap to change the note" onclick={() => write(o.id)}>{noteOf(o)}</blockquote>
 				{:else}
-					<NoteBox id={o.id} notes={o.notes ?? ''} label="Note on {o.producer} {o.cuvee}" />
+					<button type="button" class="add-note" aria-label="Add a note on {o.producer} {o.cuvee}" onclick={() => write(o.id)}>+ Add a note</button>
 				{/if}
 			</div>
 			{#if mine}
@@ -346,6 +360,18 @@
 	}
 	.note {
 		margin: 10px 0 0 22px;
+	}
+	.add-note {
+		padding: 2px 0;
+		border: none;
+		background: none;
+		color: var(--muted);
+		font: inherit;
+		font-size: 13px;
+		cursor: pointer;
+	}
+	.add-note:hover {
+		color: var(--accent);
 	}
 	.evening {
 		margin-bottom: 12px;
