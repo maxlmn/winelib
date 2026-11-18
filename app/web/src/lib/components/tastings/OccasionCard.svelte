@@ -13,6 +13,7 @@
 	import { photoSrc } from '#lib/api/photos.ts';
 	import { opensImage } from '#lib/lightbox.svelte.ts';
 	import { fmtDay, stars } from './journal.ts';
+	import { plainText } from '#lib/notes.ts';
 	import type { Occasion } from './journal.ts';
 
 	/** plain: a row in a list (the home page's latest tastings), not a card: its day and place small on a line,
@@ -59,7 +60,7 @@
 				{#if o.place?.stars}<span class="stars" title="{o.place.stars} Michelin star{o.place.stars > 1 ? 's' : ''}">{stars(o.place.stars)}</span>{/if}
 				<span class="tag">Visit</span>
 				{#if meta}<span class="muted meta-inline">{meta}</span>{/if}
-				{#if o.visit.notes}<span class="visit-notes" title={o.visit.notes}>{o.visit.notes}</span>{/if}
+				{#if o.visit.notes}<span class="visit-notes" title={plainText(o.visit.notes)}>{plainText(o.visit.notes)}</span>{/if}
 			</div>
 			<a class="action" href={links.editVisit(o.visit.id)}>Edit</a>
 			<span class="date num">{fmtDay(o.date)}</span>
@@ -101,7 +102,7 @@
 		<div class="content">
 			<!-- the evening's own note (the menu...): it opens the evening -->
 			{#if o.evening?.notes && o.wines[0]}
-				<a class="evening" href={links.tasting(o.wines[0].id)} title="Open the evening">{o.evening.notes}</a>
+				<a class="evening" href={links.tasting(o.wines[0].id)} title="Open the evening">{plainText(o.evening.notes)}</a>
 			{/if}
 			<ul>
 				{#each o.wines as w (w.id)}

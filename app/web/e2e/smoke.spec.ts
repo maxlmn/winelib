@@ -98,13 +98,18 @@ test("an evening at a place has its own note (the menu), shown on its card in th
 	await page.goto(`/tastings/${(await r.json()).id}`);
 	await page.getByRole('button', { name: /The menu, who came/ }).click();
 	const evening = page.getByRole('textbox', { name: "The evening's note" });
-	await evening.fill('Lamb, then cheese.');
+	// written in Markdown, shown as such (the journal's card: its plain text)
+	await evening.fill(['## Menu', '- Lamb, then **cheese**.', '<b>raw</b>'].join(String.fromCharCode(10)));
 	await evening.blur();
-	await expect(page.locator('blockquote', { hasText: 'Lamb, then cheese.' })).toBeVisible();
+	const shown = page.locator('blockquote', { hasText: 'Lamb, then cheese.' });
+	await expect(shown).toBeVisible();
+	await expect(shown.locator('h2')).toHaveText('Menu');
+	await expect(shown.locator('li strong')).toHaveText('cheese');
+	await expect(shown.locator('b')).toHaveCount(0);
 	await page.reload();
-	await expect(page.getByText('Lamb, then cheese.')).toBeVisible();
+	await expect(page.locator('blockquote li', { hasText: 'Lamb, then cheese.' })).toBeVisible();
 	await page.goto('/tastings');
-	await expect(page.getByRole('link', { name: 'Lamb, then cheese.' })).toBeVisible();
+	await expect(page.getByRole('link', { name: /^Menu · Lamb, then cheese\. · <b>raw<\/b>$/ })).toBeVisible();
 });
 
 test("deleting a tasting of a cellar bottle offers to put it back, ticked when it took one out", async ({ page }) => {

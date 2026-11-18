@@ -13,6 +13,7 @@
 	import { appSettings } from '#lib/settings.svelte.ts';
 	import LabelThumbs from './LabelThumbs.svelte';
 	import { fmtDate, stars } from './wine.ts';
+	import { plainText } from '#lib/notes.ts';
 
 	interface Props {
 		tastings: Tasting[];
@@ -88,7 +89,7 @@
 					{#if d.visit}
 						<div class="visit">
 							<span class="badge">Visit</span>
-							{#if d.visit.notes}<span class="visit-notes">{d.visit.notes}</span>{:else}<span class="muted">No notes.</span>{/if}
+							{#if d.visit.notes}<span class="visit-notes" title={plainText(d.visit.notes)}>{plainText(d.visit.notes)}</span>{:else}<span class="muted">No notes.</span>{/if}
 							<a class="edit" href={links.editVisit(d.visit.id)}>Edit</a>
 						</div>
 					{/if}
@@ -189,8 +190,15 @@
 		gap: 8px;
 		margin-bottom: 6px;
 	}
+	/* a menu can be long: three lines of it (all of it on the evening's page) */
 	.visit-notes {
 		font-style: italic;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		overflow: hidden;
+		min-width: 0;
 	}
 	.badge {
 		font-size: 10px;

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Notes in Markdown**: a tasting's notes and the evening's (a menu's courses, its headings, lists, emphasis, links)
+  show as written in Markdown on its page; the journal's cards and a place's visits show a short plain excerpt. Raw
+  HTML shows as text, and links only open web pages.
 - **Notes written on a tap**: a tasting's page shows the notes as text; a note tapped (or "+ Add a note", "+ The
   menu, who came, the occasion") opens its box, back to text once left and saved.
 - **The evening's own note**: a tasting's page has a note for the whole evening (the menu, who came, the occasion),

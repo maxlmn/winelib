@@ -7,6 +7,7 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import HomeMap from '#lib/components/home/HomeMap.svelte';
 	import NoteBox from '#lib/components/tastings/NoteBox.svelte';
+	import NoteText from '#lib/components/tastings/NoteText.svelte';
 	import { saveEveningNote } from '#lib/api/forms.ts';
 	import { regionColor, regionLabel } from '#lib/regions.svelte.ts';
 	import { appSettings } from '#lib/settings.svelte.ts';
@@ -147,7 +148,7 @@
 			/>
 		{:else if evening}
 			<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-			<blockquote title="Tap to change the evening's note" onclick={() => write(EVENING)}>{evening}</blockquote>
+			<blockquote title="Tap to change the evening's note" onclick={(e) => !(e.target as HTMLElement).closest('a') && write(EVENING)}><NoteText md={evening} /></blockquote>
 		{:else}
 			<button type="button" class="add-note" onclick={() => write(EVENING)}>+ The menu, who came, the occasion</button>
 		{/if}
@@ -189,7 +190,7 @@
 					<NoteBox id={o.id} notes={noteOf(o)} label="Note on {o.producer} {o.cuvee}" onclose={wrote(o.id)} />
 				{:else if noteOf(o)}
 					<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-					<blockquote title="Tap to change the note" onclick={() => write(o.id)}>{noteOf(o)}</blockquote>
+					<blockquote title="Tap to change the note" onclick={(e) => !(e.target as HTMLElement).closest('a') && write(o.id)}><NoteText md={noteOf(o)} /></blockquote>
 				{:else}
 					<button type="button" class="add-note" aria-label="Add a note on {o.producer} {o.cuvee}" onclick={() => write(o.id)}>+ Add a note</button>
 				{/if}
@@ -386,7 +387,6 @@
 		border-left: 3px solid var(--accent);
 		font-size: 15px;
 		line-height: 1.55;
-		white-space: pre-line;
 		cursor: text;
 	}
 	.mine {
