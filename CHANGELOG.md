@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **A phone's map card in view**: a shape tapped on a phone's map shows its card just above the page's cards, wherever
+  they're scrolled; scrolled up too high for it, they slide down to show all of it (it was left under them).
 - **A place's evenings with their notes**: on a place's page an evening's note (the menu, who came) shows as written,
   a few lines of it with Show all, and opens the evening; a visit without wine keeps its Visit badge and Edit.
 - **Notes in Markdown**: a tasting's notes and the evening's (a menu's courses, its headings, lists, emphasis, links)

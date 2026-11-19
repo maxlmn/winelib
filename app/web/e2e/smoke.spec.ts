@@ -290,6 +290,39 @@ test('a phone, the map full size: the cards over it scroll, up over its legend',
 	expect(over).toBe(true);
 });
 
+test.describe('a phone', () => {
+	test.use({ viewport: { width: 390, height: 700 } });
+	test("a shape tapped on the map shows its whole card, the cards scrolled up over the map sliding down for it", async ({ page }) => {
+		await page.goto(`/wines/${ids().wine}`);
+		const head = page.locator('main header.head');
+		await expect(head).toBeVisible();
+		// the cards scrolled up over the map (it stays): the card used to stay where it was, under them
+		await page.evaluate(() => scrollTo(0, 150));
+		await expect.poll(() => page.evaluate(() => Math.round(scrollY))).toBe(150);
+		const top = (await head.boundingBox())!.y;
+		expect(top).toBeGreaterThan(165);
+		// the vineyard's shape, under the map's controls and above the cards
+		const card = page.locator('.hover.card.pinned');
+		// (tapped again till the map has drawn its shapes)
+		await expect
+			.poll(async () => {
+				if (!(await card.count())) {
+					await page.mouse.click(195, 155);
+					// (a finger leaves: no hover)
+					await page.mouse.move(195, 690);
+				}
+				return card.count();
+			}, { timeout: 10_000 })
+			.toBe(1);
+		await expect
+			.poll(async () => {
+				const box = (await card.boundingBox())!;
+				return box.y >= 100 && box.y + box.height <= (await head.boundingBox())!.y + 1;
+			})
+			.toBe(true);
+	});
+});
+
 test("a grape's page: its description in its one card, the family beside it, the sources' credits", async ({ page }) => {
 	const errors = errorsOf(page);
 	await page.goto('/grapes/Cabernet%20Sauvignon');

@@ -16,7 +16,7 @@
 </script>
 
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import 'maplibre-gl/dist/maplibre-gl.css';
 	import type { ExpressionSpecification, GeoJSONSource, Map as MlMap } from 'maplibre-gl';
 	import type { MapCollection, MapProps, RegionProps } from '#lib/types.ts';
@@ -135,6 +135,12 @@
 	// a clicked lieu-dit's card stays (its buttons within reach) while the pointer crosses others on the way to it
 	const lieu = $derived(pinnedLieu ?? hoveredLieu);
 	const framing = () => ({ top: 40, right: 40, bottom: 40 + padBottom, left: 40 + padLeft });
+	// A phone's card (padBottom: the page's cards over the map's bottom): just above those cards, wherever they are
+	// scrolled to (they come up over the map, which stays)
+	let scrollY = $state(0);
+	let wrapHeight = $state(0);
+	let cardHeight = $state(0);
+	const lowBottom = $derived(padBottom + 36 + scrollY);
 	// the clicked one (its card keeps its buttons while the pointer is still over it)
 	const lieuPinned = $derived(!!lieu && !!pinnedLieu && lieu.id === pinnedLieu.id);
 	const LIEUX_ZOOM = 12;
@@ -156,6 +162,14 @@
 	});
 	const card = $derived(hovered ?? pinned);
 	const isPinned = $derived(!!card && card === pinned && !hovered);
+	// a shape tapped with the cards scrolled up too high for its card: they slide down just enough to show it, under
+	// the map's controls
+	const tappedCard = $derived(regionPinned || lieuPinned || (!!pinned && !!card && card.kind === pinned.kind && card.id === pinned.id));
+	$effect(() => {
+		if (!padBottom || !tappedCard || !cardHeight || !wrapHeight) return;
+		const top = wrapHeight - untrack(() => lowBottom) - cardHeight;
+		if (top < 64) window.scrollBy({ top: top - 64, behavior: 'smooth' });
+	});
 	const detailsUrl = (p: MapProps) => (p.kind === 'appellation' ? links.appellation(p.id) : links.vineyard(p.id));
 
 	/** Fly to one appellation or vineyard (to `fallback` while its shape isn't drawn yet). */
@@ -478,10 +492,12 @@
 	});
 </script>
 
-<div class="wrap">
+<svelte:window bind:scrollY />
+
+<div class="wrap" bind:clientHeight={wrapHeight}>
 	<div class="canvas" bind:this={container}></div>
 	{#if regionCard}
-		<div class="hover card" class:right={cardSide === 'right'} class:low={padBottom > 0} style:bottom={padBottom > 0 ? `${padBottom + 36}px` : null} class:pinned={regionPinned}>
+		<div class="hover card" class:right={cardSide === 'right'} class:low={padBottom > 0} style:bottom={padBottom > 0 ? `${lowBottom}px` : null} bind:clientHeight={cardHeight} class:pinned={regionPinned}>
 			{#if regionPinned}<button class="close" onclick={() => (pinnedRegion = null)} aria-label="Close">✕</button>{/if}
 			<div class="kind">region{regionCard.country && regionCard.country !== regionCard.name ? ` · ${regionCard.country}` : ''}</div>
 			<b>{regionCard.name}</b>
@@ -495,7 +511,7 @@
 			{:else}<div class="muted hint">Click to explore</div>{/if}
 		</div>
 	{:else if lieu}
-		<div class="hover card" class:right={cardSide === 'right'} class:low={padBottom > 0} style:bottom={padBottom > 0 ? `${padBottom + 36}px` : null} class:pinned={lieuPinned}>
+		<div class="hover card" class:right={cardSide === 'right'} class:low={padBottom > 0} style:bottom={padBottom > 0 ? `${lowBottom}px` : null} bind:clientHeight={cardHeight} class:pinned={lieuPinned}>
 			{#if lieuPinned}<button class="close" onclick={() => (pinnedLieu = null)} aria-label="Close">✕</button>{/if}
 			<div class="kind">lieu-dit · cadastre</div>
 			<b>{lieu.name}</b>
@@ -509,7 +525,7 @@
 			{/if}
 		</div>
 	{:else if card}
-		<div class="hover card" class:right={cardSide === 'right'} class:low={padBottom > 0} style:bottom={padBottom > 0 ? `${padBottom + 36}px` : null} class:pinned={isPinned}>
+		<div class="hover card" class:right={cardSide === 'right'} class:low={padBottom > 0} style:bottom={padBottom > 0 ? `${lowBottom}px` : null} bind:clientHeight={cardHeight} class:pinned={isPinned}>
 			{#if isPinned}<button class="close" onclick={() => onselect(null)} aria-label="Close">✕</button>{/if}
 			<div class="kind">{card.kind}</div>
 			<b>{card.name}</b>
