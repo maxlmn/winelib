@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.8.3
 
 - **A phone's map card in view**: a shape tapped on a phone's map shows its card just above the page's cards, wherever
   they're scrolled; scrolled up too high for it, they slide down to show all of it (it was left under them).
