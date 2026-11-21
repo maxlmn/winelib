@@ -245,6 +245,10 @@
 		background: var(--surface);
 		box-shadow: var(--shadow);
 	}
+	/* a shape's card (not a phone's, at the bottom) below the switch, not under it */
+	.home-map:has(.by) :global(.hover:not(.low)) {
+		top: 48px;
+	}
 	.by button {
 		border: none;
 		background: none;

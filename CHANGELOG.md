@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **The home map's card below its switch**: a place's card on the full-size home map starts below the Both / Cellar /
+  Tasted switch (the switch hid its top line).
+
 ## v0.8.3
 
 - **A phone's map card in view**: a shape tapped on a phone's map shows its card just above the page's cards, wherever

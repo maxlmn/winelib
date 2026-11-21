@@ -323,6 +323,27 @@ test.describe('a phone', () => {
 	});
 });
 
+test("the home map: a shape's card below the switch of what colours the regions, not under it", async ({ page }) => {
+	await page.setViewportSize({ width: 1280, height: 800 });
+	await page.goto('/');
+	const by = page.locator('.home-map .by');
+	await expect(by).toBeVisible();
+	const card = page.locator('.home-map .hover.card');
+	// (pointed at around the map till it has drawn a shape under the pointer)
+	const spots = [...Array(48).keys()].map((i) => [300 + (i % 8) * 110, 120 + Math.floor(i / 8) * 110]);
+	await expect
+		.poll(async () => {
+			for (const [x, y] of spots.splice(0, 4)) {
+				await page.mouse.move(x, y);
+				if (await card.count()) break;
+			}
+			return card.count();
+		}, { timeout: 15_000 })
+		.toBe(1);
+	const switchBox = (await by.boundingBox())!;
+	expect((await card.boundingBox())!.y).toBeGreaterThanOrEqual(switchBox.y + switchBox.height);
+});
+
 test("a grape's page: its description in its one card, the family beside it, the sources' credits", async ({ page }) => {
 	const errors = errorsOf(page);
 	await page.goto('/grapes/Cabernet%20Sauvignon');
