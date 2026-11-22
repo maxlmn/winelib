@@ -2,8 +2,9 @@
 
 ## Unreleased
 
-- **The home map's card below its switch**: a place's card on the full-size home map starts below the Both / Cellar /
-  Tasted switch (the switch hid its top line).
+- **No Both / Cellar / Tasted switch on the map**: each page colours its map by its own (the home page by your bottles
+  and tastings, the cellar by its bottles, the tastings by them); a place's card is back at the map's top (the switch
+  hid its top line).
 
 ## v0.8.3
 

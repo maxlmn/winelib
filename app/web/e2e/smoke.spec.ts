@@ -323,11 +323,12 @@ test.describe('a phone', () => {
 	});
 });
 
-test("the home map: a shape's card below the switch of what colours the regions, not under it", async ({ page }) => {
+test("the home map: each page colours it by its own (no switch over it), a shape's card at its top", async ({ page }) => {
 	await page.setViewportSize({ width: 1280, height: 800 });
 	await page.goto('/');
-	const by = page.locator('.home-map .by');
-	await expect(by).toBeVisible();
+	const map = page.locator('.home-map');
+	await expect(map).toBeVisible();
+	await expect(page.getByRole('group', { name: 'What colours the regions' })).toHaveCount(0);
 	const card = page.locator('.home-map .hover.card');
 	// (pointed at around the map till it has drawn a shape under the pointer)
 	const spots = [...Array(48).keys()].map((i) => [300 + (i % 8) * 110, 120 + Math.floor(i / 8) * 110]);
@@ -340,8 +341,8 @@ test("the home map: a shape's card below the switch of what colours the regions,
 			return card.count();
 		}, { timeout: 15_000 })
 		.toBe(1);
-	const switchBox = (await by.boundingBox())!;
-	expect((await card.boundingBox())!.y).toBeGreaterThanOrEqual(switchBox.y + switchBox.height);
+	const top = (await map.boundingBox())!.y;
+	expect((await card.boundingBox())!.y - top).toBeLessThan(20);
 });
 
 test("a grape's page: its description in its one card, the family beside it, the sources' credits", async ({ page }) => {
