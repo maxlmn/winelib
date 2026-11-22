@@ -20,49 +20,24 @@
 		| { point: [number, number]; wineId?: undefined; producerId?: undefined; region?: undefined };
 	/** full: the whole window behind the page (html.map-full in app.css), the page's cards over its left side (over
 	 * its lower half on a phone) */
-	/** by: what colours the regions, deeper where there's more of it: your bottles, your tastings, or both (a switch on
-	 * the map, remembered on this device) */
+	/** by: what colours the regions, deeper where there's more of it: your bottles, your tastings, or both (the page's
+	 * own: the cellar's bottles, the tastings' tastings) */
 	let {
 		minHeight = 440,
 		focus = null,
 		full = false,
-		by: byDefault = 'both',
+		by = 'both',
 		counts = null
 	}: {
 		minHeight?: number;
 		focus?: Focus | null;
 		full?: boolean;
 		by?: By;
-		/** what colours the regions instead of your bottles and tastings (a list's entries, by region name): no switch */
+		/** what colours the regions instead of your bottles and tastings (a list's entries, by region name) */
 		counts?: Record<string, number> | null;
 	} = $props();
 
 	type By = 'both' | 'cellar' | 'tasted';
-	// remembered per kind of page (the home page's both, the cellar's cellar)
-	const byKey = () => `winelib.mapBy.${byDefault}`;
-	const read = (): By | null => {
-		try {
-			const v = localStorage.getItem(byKey());
-			return v === 'both' || v === 'cellar' || v === 'tasted' ? v : null;
-		} catch {
-			return null;
-		}
-	};
-	let chosen = $state<By | null>(read());
-	const by = $derived(chosen ?? byDefault);
-	function choose(v: By) {
-		chosen = v;
-		try {
-			localStorage.setItem(byKey(), v);
-		} catch {
-			// not kept: this visit only
-		}
-	}
-	const BY: [By, string, string][] = [
-		['both', 'Both', 'Your bottles and your tastings'],
-		['cellar', 'Cellar', 'The bottles in your cellar'],
-		['tasted', 'Tasted', 'The wines you’ve tasted']
-	];
 
 	$effect(() => {
 		document.documentElement.classList.toggle('map-full', full);
@@ -124,7 +99,7 @@
 	}
 	onMount(load);
 
-	// The regions with something of the chosen kind, each with its depth: its share of the most any region has (eased a
+	// The regions with something of the page's kind, each with its depth: its share of the most any region has (eased a
 	// little, so a region with a few bottles still shows beside the one with hundreds)
 	const amount = (p: RegionProps) =>
 		counts ? (counts[p.name] ?? 0) : by === 'cellar' ? p.bottles : by === 'tasted' ? p.tastings : p.bottles + p.tastings;
@@ -187,11 +162,6 @@
 			padLeft={full && !phone ? 560 : 0}
 			padBottom={full && phone ? Math.round(winHeight * 0.45) : 0}
 		/>
-		{#if !counts}<div class="by" role="group" aria-label="What colours the regions">
-			{#each BY as [id, label, title] (id)}
-				<button class:on={by === id} aria-pressed={by === id} {title} onclick={() => choose(id)}>{label}</button>
-			{/each}
-		</div>{/if}
 	{:else if failed}
 		<div class="loading muted">The map couldn’t be loaded. <button type="button" class="link" onclick={load}>Try again</button></div>
 	{:else}
@@ -231,36 +201,6 @@
 		flex: 1;
 		border-radius: calc(var(--radius) - 2px);
 		overflow: hidden;
-	}
-	/* the switch: what colours the regions, at the map's top right beside its zoom */
-	.by {
-		position: absolute;
-		top: 10px;
-		right: 50px;
-		z-index: 2;
-		display: inline-flex;
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		overflow: hidden;
-		background: var(--surface);
-		box-shadow: var(--shadow);
-	}
-	/* a shape's card (not a phone's, at the bottom) below the switch, not under it */
-	.home-map:has(.by) :global(.hover:not(.low)) {
-		top: 48px;
-	}
-	.by button {
-		border: none;
-		background: none;
-		padding: 5px 10px;
-		font: inherit;
-		font-size: 12px;
-		color: var(--muted);
-		cursor: pointer;
-	}
-	.by button.on {
-		background: var(--accent);
-		color: var(--on-accent);
 	}
 	.link {
 		background: none;
