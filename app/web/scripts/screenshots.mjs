@@ -24,10 +24,22 @@ const wine = await first('Gravières Blanc 2022', 'wine');
 const rouge = await first('Gravières Rouge 2022', 'wine'); // a wine with its vineyard: the lieux-dits around it
 const santenay = await first('Santenay', 'appellation');
 const list = (await api('/api/lists')).find((l) => /Atlas/.test(l.name)) ?? (await api('/api/lists'))[0];
+const poyeux = await first('Rougeard Les Poyeux 2010', 'wine'); // the website's background: its vineyard, the lieu-dit Les Poyeux
 const note = (await api('/api/tastings')).tastings.find((t) => /Turque/.test(t.cuvee) && t.notes) ?? (await api('/api/tastings')).tastings.find((t) => t.notes);
 
-/** name, the page, what to do on it before the picture; phone: the phone's size (the composed "mobile" picture) */
+/** name, the page, what to do on it before the picture; phone: the phone's size (the composed "mobile" picture);
+ * hero: the website's background (its map alone, wide, a JPEG) */
 const SHOTS = [
+	{
+		name: 'hero', path: `/wines/${poyeux.id}`, wait: 3000, hero: true,
+		prep: async (p) => {
+			// the lieux-dits filled in, on IGN's aerial photo; the map alone, its legend kept (it names the vineyard)
+			const b = p.getByRole('button', { name: /Lieux-dits/ }).first(); await b.click(); await b.click();
+			await p.getByRole('button', { name: 'Satellite' }).first().click();
+			await settle(p, 5000);
+			await p.addStyleTag({ content: 'main, .maplibregl-ctrl { visibility: hidden !important }' });
+		}
+	},
 	{ name: 'home', path: '/', wait: 3500 },
 	{ name: 'cellar', path: '/cellar', wait: 3500 },
 	{ name: 'lists', path: '/lists', wait: 3500 },
@@ -78,8 +90,8 @@ const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=sw
 for (const dark of [false, true]) {
 	for (const s of SHOTS) {
 		const ctx = await browser.newContext({
-			viewport: s.phone ? { width: 390, height: 800 } : { width: 1280, height: 673 },
-			deviceScaleFactor: s.phone ? 2 : 1.5, colorScheme: dark ? 'dark' : 'light', isMobile: !!s.phone, hasTouch: !!s.phone
+			viewport: s.phone ? { width: 390, height: 800 } : s.hero ? { width: 1920, height: 1080 } : { width: 1280, height: 673 },
+			deviceScaleFactor: s.phone ? 2 : s.hero ? 1 : 1.5, colorScheme: dark ? 'dark' : 'light', isMobile: !!s.phone, hasTouch: !!s.phone
 		});
 		const page = await ctx.newPage();
 		await page.goto(root + s.path);
@@ -90,8 +102,9 @@ for (const dark of [false, true]) {
 			console.log(`  ${s.name}: ${String(e.message).split('\n')[0]}`);
 		}
 		await page.waitForTimeout(400);
-		const file = join(out, `${s.name}${dark ? '-dark' : ''}.png`);
-		await page.screenshot({ path: file });
+		const file = join(out, `${s.name}${dark ? '-dark' : ''}.${s.hero ? 'jpg' : 'png'}`);
+		// the hero: the map beside the sidebar
+		await page.screenshot(s.hero ? { path: file, type: 'jpeg', quality: 82, clip: { x: 200, y: 0, width: 1720, height: 1080 } } : { path: file });
 		console.log(file);
 		await ctx.close();
 	}
