@@ -56,29 +56,59 @@
 	max-width: 36rem;
 }
 
-/* The hero's picture: the app's window, whole, framed like the screenshots below */
+/* The hero over a map, the window's whole width: a vineyard on the aerial photo (screenshots/hero.jpg), the page's
+   ground fading in from the left under the title */
+html {
+	overflow-x: clip;
+}
+.hero {
+	position: relative;
+	isolation: isolate;
+	grid-template-columns: 1fr;
+	align-content: center;
+	min-height: min(78vh, 44rem);
+	padding-block: 4rem;
+}
+.hero > .stack {
+	max-width: 34rem;
+}
 .hero > .hero-html {
-	width: 100%;
+	position: absolute;
+	z-index: -1;
+	top: calc(-1 * var(--sl-content-pad-y, 2rem));
+	bottom: 0;
+	left: 50%;
+	width: 100vw;
+	transform: translateX(-50%);
 }
-.hero-shot {
+.hero-map,
+.hero-map img {
+	width: 100%;
+	height: 100%;
+}
+.hero-map img {
 	display: block;
-	width: 100%;
-	height: auto;
-	border-radius: 0.75rem;
-	border: 1px solid var(--sl-color-hairline);
-	box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.12);
+	object-fit: cover;
+	object-position: 70% 100%;
 }
-:root[data-theme='light'] .hero-shot.dark,
-:root:not([data-theme='light']) .hero-shot.light {
+.hero-map::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background:
+		linear-gradient(90deg, var(--sl-color-black) 0, color-mix(in srgb, var(--sl-color-black) 88%, transparent) 32rem,
+			transparent 58rem),
+		linear-gradient(0deg, var(--sl-color-black) 0, transparent 1.5rem);
+}
+/* narrow: the map under the whole text, paler */
+@media (max-width: 50rem) {
+	.hero-map::after {
+		background: color-mix(in srgb, var(--sl-color-black) 78%, transparent);
+	}
+}
+:root[data-theme='light'] .hero-map .dark,
+:root:not([data-theme='light']) .hero-map .light {
 	display: none;
-}
-@media (min-width: 50rem) {
-	.hero {
-		grid-template-columns: 5fr 6fr;
-	}
-	.hero > .hero-html {
-		width: 100%;
-	}
 }
 
 /* The name WineLib as the app sets it: its serif, in the text's colour, beside the mark */
