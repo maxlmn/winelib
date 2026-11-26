@@ -380,6 +380,7 @@ class Relief(Base):
     aspect = Column(Float)  # degrees from north the hillside faces; null when flat or facing every way
     zoom = Column(Integer, nullable=False)
     computed = Column(DateTime, nullable=False)
+    contours = Column(Text)  # JSON {"lines", "bands"} inside the outline (relief.contours); null: worked out before
 
 
 class Geology(Base):

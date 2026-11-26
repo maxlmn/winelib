@@ -1,5 +1,6 @@
 """A vineyard's relief (relief.py): its elevation, slope and aspect, worked out the first time its page asks (or by the
 Maintenance task) and kept in `reliefs`, keyed by its outline."""
+import json
 import logging
 from datetime import datetime
 
@@ -45,7 +46,7 @@ def work_out(session, boundary, get=None):
     """The Relief row for an outline, worked out (and saved, not committed) if missing or stale; None when there's no
     outline or nothing to work out (too big). Raises OSError when the terrain tiles can't be reached."""
     row = session.get(Relief, boundary)
-    if row is not None and not stale(session, row):
+    if row is not None and (row.contours or "").startswith("{") and not stale(session, row):
         return row
     g = outline(session, boundary)
     if g is None or g.is_empty:
@@ -57,6 +58,7 @@ def work_out(session, boundary, get=None):
     row.elevation_min, row.elevation_mean, row.elevation_max = (found["elevation"][k] for k in ("min", "mean", "max"))
     row.slope_median, row.slope_steep = found["slope"]["median"], found["slope"]["steep"]
     row.aspect, row.zoom, row.computed = found["aspect"], found["zoom"], datetime.now()
+    row.contours = json.dumps(found["contours"])
     session.add(row)
     return row
 
@@ -81,12 +83,35 @@ def vineyard_relief(vineyard_id: int, session: Session = Depends(get_session)):
     return public(row) if row else None
 
 
+@router.get("/api/map/vineyard-contours")
+def vineyard_contours(ids: str = "", session: Session = Depends(get_session)):
+    """The contour lines and height bands inside some vineyards' outlines (ids "1,2,3"), as one GeoJSON
+    FeatureCollection: bands ("kind": "band", "t" from 0 at the bottom to 1 at the top) then lines ("kind": "line"),
+    each with its vineyard and elevation ("ele"). Only those already worked out (a vineyard's page, the Maintenance task):
+    nothing is fetched here."""
+    wanted = [int(i) for i in ids.split(",") if i.strip().isdigit()][:2000]
+    rows = (session.query(Vineyard.id, Relief.contours).join(Relief, Relief.boundary == Vineyard.boundary)
+            .filter(Vineyard.id.in_(wanted), Relief.contours.isnot(None)).all()) if wanted else []
+    features = []
+    for vid, text in rows:
+        found = json.loads(text)
+        if not isinstance(found, dict):  # worked out before the bands: the next run of the task redoes it
+            continue
+        features += [{"type": "Feature", "geometry": b["area"], "properties": {"vineyard": vid, "kind": "band",
+                                                                              "ele": b["ele"], "t": b["t"]}}
+                     for b in found.get("bands", [])]
+        features += [{"type": "Feature", "geometry": c["line"], "properties": {"vineyard": vid, "kind": "line",
+                                                                              "ele": c["ele"]}}
+                     for c in found.get("lines", [])]
+    return {"type": "FeatureCollection", "features": features}
+
+
 def missing(session):
     """The vineyards your wines use that have an outline but no relief yet (one per outline)"""
     from db import Wine
     rows = (session.query(Vineyard).join(Wine, Wine.vineyard_id == Vineyard.id)
             .filter(Vineyard.boundary.isnot(None)).distinct().order_by(Vineyard.name).all())
-    done = {b for (b,) in session.query(Relief.boundary)}
+    done = {b for (b,) in session.query(Relief.boundary).filter(Relief.contours.like("{%"))}
     seen, out = set(), []
     for v in rows:
         if v.boundary not in done and v.boundary not in seen:

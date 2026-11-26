@@ -9,6 +9,9 @@ appellations and vineyards; tick the ones to draw. **My cellar** and **My tastin
 from. **Plain** and **Satellite** change the background. Satellite is IGN's aerial photos in France; elsewhere it
 needs a free Esri key (`ESRI_API_KEY` in `.secrets.env`, see Settings › Integrations), else the map stays plain
 there.
+**Contours**, in the legend beside Vineyards: each vineyard's slope shaded from the bottom (darker) to the top (lighter), and the contour lines inside it, a handful of them (every 1 to
+100 m, from its range of elevation), their height along them when zoomed in close. Worked out with the vineyard's
+relief, the first time its page opens or by Settings › Maintenance › *Relief of your vineyards*.
 **Relief** shades the hills on the Plain map (Mapterhorn's open terrain tiles: IGN's survey in France, to a metre
 or finer in places); it's on until you turn it off, and every map follows.
 

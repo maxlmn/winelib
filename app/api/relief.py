@@ -7,9 +7,12 @@ elevation smoothed over ~10 m (the vine rows and terraces of a 0.5 m model aren'
 - elevation: lowest and highest (the 1st and 99th percentiles: a stray pixel isn't the vineyard) and the mean;
 - slope: the median and the steepest tenth (90th percentile), in degrees;
 - aspect: where the hillside faces, the slope-weighted mean of the downhill directions (0 north, 90 east), None
-  when it's flat (median slope under 2 degrees) or faces every way (the directions cancel out).
+  when it's flat (median slope under 2 degrees) or faces every way (the directions cancel out);
+- contour lines inside the outline, a handful (the interval from its elevation range), and the outline cut into
+  bands of height (its shading from the bottom of the slope to the top), for the maps.
 """
 import io
+import json
 import math
 from concurrent.futures import ThreadPoolExecutor
 from urllib.error import HTTPError
@@ -88,6 +91,109 @@ def _smooth(a, r):
     return (s / (k * k)).astype(np.float32)
 
 
+INTERVALS = [1, 2, 5, 10, 20, 25, 50, 100]  # metres between contour lines: the smallest giving at most MAX_LINES
+MAX_LINES = 8
+CONTOUR_SIMPLIFY_M = 2
+
+
+def interval_for(low, high):
+    """The contour interval for an elevation range: a handful of lines over the vineyard, never a crowd"""
+    return next((i for i in INTERVALS if (high - low) / i <= MAX_LINES), INTERVALS[-1])
+
+
+def _segments(z, level, xs, ys):
+    """Marching squares: the [(x1, y1, x2, y2)] pieces of the `level` contour across a grid z (rows from north to
+    south), with each column's x and each row's y; crossings placed linearly along the cell edges"""
+    import numpy as np
+    a, b, c, d = z[:-1, :-1], z[:-1, 1:], z[1:, 1:], z[1:, :-1]  # a cell's corners: top left, top right, ...
+    above = [v >= level for v in (a, b, c, d)]
+    x0, x1 = xs[:-1][None, :], xs[1:][None, :]
+    y0, y1 = ys[:-1][:, None], ys[1:][:, None]
+
+    def at(v1, v2):  # where along an edge, 0 to 1
+        with np.errstate(divide="ignore", invalid="ignore"):
+            return np.clip(np.nan_to_num((level - v1) / (v2 - v1), nan=0.5), 0, 1)
+    # each edge: crossed?, the crossing's x and y
+    edges = [
+        (above[0] != above[1], x0 + (x1 - x0) * at(a, b), np.broadcast_to(y0, a.shape)),  # top
+        (above[1] != above[2], np.broadcast_to(x1, a.shape), y0 + (y1 - y0) * at(b, c)),  # right
+        (above[3] != above[2], x0 + (x1 - x0) * at(d, c), np.broadcast_to(y1, a.shape)),  # bottom
+        (above[0] != above[3], np.broadcast_to(x0, a.shape), y0 + (y1 - y0) * at(a, d)),  # left
+    ]
+    crossed = np.stack([e[0] for e in edges])
+    count = crossed.sum(axis=0)
+    out = []
+    # two crossings: one piece between them; four (a saddle): top with left, right with bottom
+    for i, j in [(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)]:
+        m = (count == 2) & crossed[i] & crossed[j]
+        if m.any():
+            out.append(np.stack([edges[i][1][m], edges[i][2][m], edges[j][1][m], edges[j][2][m]], axis=1))
+    m = count == 4
+    for i, j in [(0, 3), (1, 2)]:
+        if m.any():
+            out.append(np.stack([edges[i][1][m], edges[i][2][m], edges[j][1][m], edges[j][2][m]], axis=1))
+    return np.concatenate(out) if out else np.empty((0, 4))
+
+
+BANDS = 10  # the shading from the bottom of the slope to the top: about this many bands
+
+
+def _levels(low, high, step):
+    import numpy as np
+    return np.arange(math.ceil(low / step) * step, high + 0.01, step)
+
+
+def contours(geom, smooth, px, py, low, high):
+    """{"lines": [{"ele", "line": GeoJSON}] the contour lines inside a vineyard's outline (interval_for its range),
+    "bands": [{"ele", "t", "area": GeoJSON}] its outline cut by finer contours (about BANDS of them), each with its
+    height in the vineyard from 0 (the bottom) to 1 (the top), for the maps' shading}; simplified to a couple of
+    metres. Both from its smoothed elevations."""
+    import numpy as np
+    import shapely
+    from shapely.ops import linemerge
+    # the grid cut to the outline (and a pixel around it): a vineyard is a few hundred pixels, not three tiles
+    w, s, e, n = geom.bounds
+    cols = np.where((px >= w) & (px <= e))[0]
+    rows = np.where((py >= s) & (py <= n))[0]
+    if len(cols) < 2 or len(rows) < 2 or high - low < 0.5:
+        return {"lines": [], "bands": []}
+    c0, c1 = max(cols[0] - 1, 0), min(cols[-1] + 2, len(px))
+    r0, r1 = max(rows[0] - 1, 0), min(rows[-1] + 2, len(py))
+    z, xs, ys = smooth[r0:r1, c0:c1], px[c0:c1], py[r0:r1]
+    tolerance = CONTOUR_SIMPLIFY_M / (111_320 * math.cos(math.radians(geom.centroid.y)))
+
+    def traced(level):
+        seg = _segments(z, level, xs, ys)
+        if not len(seg):
+            return None
+        return linemerge(shapely.MultiLineString([[(x1, y1), (x2, y2)] for x1, y1, x2, y2 in seg])).simplify(tolerance)
+
+    lines = []
+    for level in _levels(low, high, interval_for(low, high)):
+        line = traced(level)
+        inside = shapely.set_precision(shapely.intersection(line, geom), 1e-6) if line is not None else None
+        if inside is not None and not inside.is_empty and inside.length > 0:
+            lines.append({"ele": int(level), "line": json.loads(shapely.to_geojson(inside))})
+    # bands: the outline cut along finer contours, each piece's height read at a point inside it
+    step = (high - low) / BANDS
+    cuts = [c for level in _levels(low + step / 2, high, step) if (c := traced(level)) is not None]
+    pieces = shapely.get_parts(shapely.polygonize([shapely.union_all([geom.boundary, *cuts])]).geoms) if cuts else [geom]
+    bands = []
+    for piece in pieces:
+        p = piece.representative_point()
+        if not geom.contains(p):
+            continue
+        part = shapely.set_precision(shapely.intersection(piece, geom), 1e-6)
+        if part.is_empty or part.area == 0:
+            continue
+        ci = int(np.clip(np.searchsorted(xs, p.x), 0, len(xs) - 1))
+        ri = int(np.clip(np.searchsorted(-ys, -p.y), 0, len(ys) - 1))
+        ele = float(z[ri, ci])
+        bands.append({"ele": round(ele), "t": round(min(max((ele - low) / (high - low), 0), 1), 2),
+                      "area": json.loads(shapely.to_geojson(part))})
+    return {"lines": lines, "bands": bands}
+
+
 def compute(geom, get=None):
     """{"elevation": {"min", "mean", "max"}, "slope": {"median", "steep"}, "aspect": degrees or None, "zoom"} for a
     shapely (Multi)Polygon in lon/lat; None when it's too big or no pixel falls inside. `get(z, x, y)` gives a
@@ -131,7 +237,8 @@ def compute(geom, get=None):
     median = float(np.median(slope))
     together = math.hypot(east, north) / max(float(steepness.sum()), 1e-9)
     aspect = None if median < FLAT_DEG or together < 0.2 else round(math.degrees(math.atan2(east, north))) % 360
-    return {"elevation": {"min": round(float(np.percentile(elev, 1))), "mean": round(float(elev.mean())),
-                          "max": round(float(np.percentile(elev, 99)))},
+    low, high = round(float(np.percentile(elev, 1))), round(float(np.percentile(elev, 99)))
+    return {"elevation": {"min": low, "mean": round(float(elev.mean())), "max": high},
             "slope": {"median": round(median, 1), "steep": round(float(np.percentile(slope, 90)), 1)},
-            "aspect": aspect, "zoom": z}
+            "aspect": aspect, "zoom": z,
+            "contours": contours(geom, smooth, px, py, float(elev.min()), float(elev.max()))}
