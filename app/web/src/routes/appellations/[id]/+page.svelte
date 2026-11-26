@@ -6,6 +6,7 @@
 	import DetailHeader from '#lib/components/details/DetailHeader.svelte';
 	import DetailMap from '#lib/components/details/DetailMap.svelte';
 	import Facts from '#lib/components/details/Facts.svelte';
+	import VarietyChips from '#lib/components/details/VarietyChips.svelte';
 	import Tabs from '#lib/components/details/Tabs.svelte';
 	import TastingHistory from '#lib/components/details/TastingHistory.svelte';
 	import { fmtDate, splitList } from '#lib/components/details/wine.ts';
@@ -15,7 +16,7 @@
 
 	let { data } = $props();
 	const a = $derived(data.detail);
-	const varieties = $derived(splitList(a.varieties));
+	const varieties = $derived(a.grapes ?? []);
 	const yields = $derived([a.max_yield_hl && `${a.max_yield_hl} hl/ha`, a.max_yield_kg && `${a.max_yield_kg} kg/ha`].filter(Boolean).join(', '));
 	const colors = $derived([...new Set(splitList(a.colors))].join(', '));
 
@@ -73,7 +74,7 @@
 		{#if varieties.length}
 			<details class="fold" open>
 				<summary>Authorized varieties ({varieties.length})</summary>
-				<div class="chips">{#each varieties as v, i (i)}<span class="chip">{v}</span>{/each}</div>
+				<VarietyChips {varieties} />
 			</details>
 		{/if}
 		{#if a.details}
@@ -141,19 +142,6 @@
 		max-height: 220px;
 		overflow-y: auto;
 		font-size: 13px;
-	}
-	.chips {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 5px;
-		margin-top: 8px;
-	}
-	.chip {
-		padding: 1px 9px;
-		border-radius: 10px;
-		background: var(--surface-2);
-		border: 1px solid var(--border);
-		font-size: 12px;
 	}
 	.more {
 		display: inline-block;

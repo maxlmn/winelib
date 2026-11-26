@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { relief, setRelief } from '#lib/relief.svelte.ts';
+	import VarietyChips from '#lib/components/details/VarietyChips.svelte';
+	import type { Variety } from '#lib/api/details.ts';
 	import { setParams } from '#lib/url.ts';
 	import { messageOf, request } from '#lib/api/http.ts';
 	import RegionName from '#lib/components/RegionName.svelte';
@@ -338,7 +340,7 @@
 							{/each}
 						</dl>
 						{#if detail.varieties}
-							<details><summary>Authorized varieties</summary><p>{detail.varieties}</p></details>
+							<details><summary>Authorized varieties</summary>{#if (detail.grapes as Variety[] | undefined)?.length}<VarietyChips varieties={detail.grapes as Variety[]} />{:else}<p>{detail.varieties}</p>{/if}</details>
 						{/if}
 						{#if detail.details}
 							<details><summary>Notes</summary><p>{detail.details}</p></details>

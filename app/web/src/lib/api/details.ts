@@ -5,6 +5,9 @@ import type { Bottle, MapCollection, RegionCollection, RegionColors } from '#lib
 
 type Fetch = typeof fetch;
 
+/** An authorized variety: as the register names it, its berries' colour, the database's grape (null: none) */
+export type Variety = { name: string; colour: 'white' | 'red' | 'grey' | 'pink' | null; grape: string | null };
+
 export interface Ref {
 	id: number;
 	name: string;
@@ -251,6 +254,8 @@ export interface AppellationDetail extends RegionInfo {
 	max_yield_hl: number | null;
 	max_yield_kg: number | null;
 	varieties: string | null;
+	/** the same read as the database's grapes (varieties.py) */
+	grapes?: Variety[];
 	details: string | null;
 	/** other names it goes by, comma separated */
 	aliases: string | null;

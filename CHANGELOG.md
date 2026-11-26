@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **An appellation's authorized varieties are your grapes**: INAO's names (with their colour codes, "Cinsaut N",
+  "Maccabeu B", "Nielluccio N") read as the database's grapes, each chip linked to its grape's page with a dot in its
+  berries' colour (Cinsault, Macabeo, Sangiovese; the specification's spelling in the tooltip), on the appellation's
+  page and the map's panel. Found by a grape's name or alias, a short list checked by hand
+  (`data/reference/inao_varieties.json`), or as a grey or pink mutation of a grape (Grolleau Gris); a variety WineLib
+  has no grape for is shown as the register names it, unlinked. The register's text itself is unchanged.
 - **Relief on the maps**: the hills shaded on the Plain map, from Mapterhorn's open terrain tiles (IGN's survey in
   France, to a metre or finer in places; 30 m worldwide). A **Relief** button beside Plain / Satellite turns it off or
   on, on every map at once.
