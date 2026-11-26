@@ -28,6 +28,10 @@ The lieux-dits are the cadastre's as published: its coverage is uneven (some vil
 in a few broad places with large unnamed areas), and its unnamed places are left out. See the Maps guide's *The
 lieux-dits, and their limits*.
 
+**The outlines are informational, not legally binding.** They are copies of the registers' published data, shown
+for information. Only INAO's own plans (and each country's official texts) say which parcels may carry an
+appellation.
+
 ## Looked up while you use the app
 
 - **OpenStreetMap Nominatim**: a place's coordinates from its address or a Google Maps link (© OpenStreetMap
