@@ -64,7 +64,6 @@ id,name,aliases,color,origin,vivc,parents,climate,depth,acidity,acid_shape,acid_
 65,Croatina,Hrvatica,Red,Italy,3251,,,,,,,,,,,,Oltrepò Pavese region of Lombardy
 67,Arbanne,,White,France,554,,,,,,,,,,,,France: Champagne
 68,Petit Meslier,Meslier Petit,White,France,7675,"Gouais Blanc, Savagnin",,,,,,,,,,,France: Champagne
-69,Roussette,,White,France,10264,,Cool,,,,,,,,,,France: Savoie
 70,Gringet,,White,France,5061,,Cool,,,,,,,,,,France: Savoie
 71,Palomino,Palomino Fino,White,Spain,8888,,Warm,Pale,,,,,,,,,"Sherry (Fino, Amontadillo, Oloroso)"
 72,Vermentino,"Rolle, Favorita, Pigato, Vermentinu",White,Italy,12989,,,,High,Linear,"Firm, zesty",,,,,,"Italy, Languedoc, Corse"
@@ -123,7 +122,7 @@ id,name,aliases,color,origin,vivc,parents,climate,depth,acidity,acid_shape,acid_
 129,Alexandrouli,Alexandroouli,Red,Georgia,263,,,,,,,,,,,,
 130,Alfrocheiro Preto,Alfrocheiro,Red,Portugal,277,Savagnin,Warm,,,,,,,,"Blackberry, spice",,Portugal
 131,Alionza,,White,Italy,318,Garganega,,,,,,,,,,,
-132,Altesse,,White,France,354,,,,,,,,,,,,
+132,Altesse,"Roussette, Roussette de Savoie",White,France,354,,Cool,,,,,,,,,,France: Savoie
 133,Alvarelhão,Brancelho,Red,Portugal,1650,,,,,,,,,,,,
 134,Amigne,,White,Switzerland,425,,,,,,,,,,,,
 135,Amlakhu,,White,Georgia,20811,,,,,,,,,,,,

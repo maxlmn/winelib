@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Roussette is Altesse**: the grape list had a separate "Roussette" (VIVC 10264, an unrelated variety) where Savoie's
+  Roussette, Altesse, was meant. Migration 0017 moves its wines to Altesse (their grapes, never one twice) and deletes
+  it; Altesse takes "Roussette" and "Roussette de Savoie" among its aliases, so imports and Fill from photos file them
+  there. (Roussette d'Ayze, a variety of its own, is unchanged.)
 - **Contour lines inside the vineyards**: on the maps, each vineyard's slope shaded from the bottom (a shadow) to the
   top (a little light), band by band of height, and a handful of contour lines, inside its outline only (the interval from its range of elevation: 20 m on La Landonne, 5 m on a gentle slope), their height along
   them up close; traced from the terrain tiles with the vineyard's relief and kept with it (`reliefs.contours`,
