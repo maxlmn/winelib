@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **A vineyard's geology**: the rock formations under its outline, with each one's share, as a bar in the geological
+  map's own colours and a list (notation, description, age), on the vineyard's page and its wines'. In France from
+  BRGM's 1:50,000 geological maps (Licence Ouverte 2.0), cut to the land around the wine lieux-dits and shipped in the
+  map pack; elsewhere from Macrostrat (CC BY 4.0), its most detailed map at the vineyard, asked once and kept (a new
+  `geologies` table, migration 0015). Credited in About the data. A new guide, Help › *Reading the geology*, linked
+  from the card: the colours as a timeline of the periods (BRGM's own swatches, with wine examples), the notations and
+  the French words.
 - **An appellation's authorized varieties are your grapes**: INAO's names (with their colour codes, "Cinsaut N",
   "Maccabeu B", "Nielluccio N") read as the database's grapes, each chip linked to its grape's page with a dot in its
   berries' colour (Cinsault, Macabeo, Sangiovese; the specification's spelling in the tooltip), on the appellation's

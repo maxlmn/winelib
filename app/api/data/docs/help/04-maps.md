@@ -32,6 +32,9 @@ or finer in places); it's on until you turn it off, and every map follows.
 - A **vineyard** also says which way it faces, how high it lies and how steep it is ("Faces SE · 176–279 m · 29°
   slope"), worked out from its outline over the terrain tiles the first time its page opens (Settings › Maintenance ›
   *Relief of your vineyards* does them all).
+- A **vineyard** (and its wines) also shows its **geology**: the rock formations under its outline, each with its share,
+  in the geological map's colours. In France from BRGM's 1:50,000 maps (in the map pack, their descriptions in
+  French as published); elsewhere Macrostrat's map at the vineyard, often regional.
 - An **appellation** or a **vineyard** shows its own outline; **Full detail** draws it as the source does (INAO's
   vine parcels one by one) instead of simplified.
 
