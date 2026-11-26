@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **Relief on the maps**: the hills shaded on the Plain map, from Mapterhorn's open terrain tiles (IGN's survey in
+  France, to a metre or finer in places; 30 m worldwide). A **Relief** button beside Plain / Satellite turns it off or
+  on, on every map at once.
+- **A vineyard's lie of the land**: its page says which way it faces, how high it lies and how steep it is ("Faces SE ·
+  176–279 m · 29° slope, 35° at its steepest"), worked out from its outline over the terrain tiles the first time it's
+  opened and kept (a new `reliefs` table, migration 0014). Maintenance › *Relief of your vineyards* does every
+  vineyard your wines use. A small compass and the hillside drawn side on at its slope show it beside the
+  words, on the vineyard's page and on its wines'. On the maps, the vineyards' colours are shaded with their hillsides.
 - About the data says what the map outlines are: informational, not legally binding; only INAO's plans
   (and each country's official texts) say which parcels may carry an appellation.
 

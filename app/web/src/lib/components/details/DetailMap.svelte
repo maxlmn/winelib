@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { relief, setRelief } from '#lib/relief.svelte.ts';
 	import WineMap from '#lib/components/WineMap.svelte';
 	import type { Basemap, Selection } from '#lib/components/WineMap.svelte';
 	import type { Shapes } from '#lib/api/details.ts';
@@ -269,6 +270,10 @@
 					{#each [['plain', 'Plain'], ['satellite', 'Satellite']] as [id, label]}
 						<button class:on={basemap === id} aria-pressed={basemap === id} onclick={() => (basemap = id as Basemap)}>{label}</button>
 					{/each}
+				</div>
+				<div class="seg detail">
+						<button class:on={relief.on} aria-pressed={relief.on} disabled={basemap !== 'plain'} onclick={() => setRelief(!relief.on)}
+							title={basemap === 'plain' ? 'The hills shaded on the map' : 'Relief shows on the Plain map'}>Relief</button>
 				</div>
 				{#if big && phone}
 					<button class="fold alone" class:on={mapOnly} aria-pressed={mapOnly} onclick={toggleMapOnly}>{mapOnly ? 'Show the page' : 'Full map'}</button>

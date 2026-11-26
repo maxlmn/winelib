@@ -367,3 +367,15 @@ test("a grape's page: its description in its one card, the family beside it, the
 	if (process.env.SHOT) await page.screenshot({ path: process.env.SHOT, fullPage: true });
 	expect(errors).toEqual([]);
 });
+
+test('Relief: on by default on the Plain map, turned off on one map, off on the others; not offered on Satellite', async ({ page }) => {
+	await page.goto('/map');
+	const relief = page.getByRole('button', { name: 'Relief', exact: true });
+	await expect(relief).toHaveAttribute('aria-pressed', 'true');
+	await relief.click();
+	await expect(relief).toHaveAttribute('aria-pressed', 'false');
+	await page.getByRole('button', { name: 'Satellite', exact: true }).click();
+	await expect(relief).toBeDisabled();
+	await page.goto(`/wines/${ids().wine}`);
+	await expect(page.getByRole('button', { name: 'Relief', exact: true })).toHaveAttribute('aria-pressed', 'false');
+});

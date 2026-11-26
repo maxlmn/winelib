@@ -250,6 +250,9 @@
 						'line-width': ['interpolate', ['linear'], ['zoom'], 9, ['case', sel, 2, 0.3], 15, ['case', sel, 3.5, 1.2]]
 					}
 				});
+				// The relief (basemap.ts) over the fills, under the vineyards' outlines: a vineyard's colour follows its
+				// hillside (the base map's roads and names, under the fills, are shaded with them)
+				if (mm.getLayer('relief')) mm.moveLayer('relief', 'vines-line');
 
 				let hoverRef: { source: string; id: number } | null = null;
 				const setHover = (ref: typeof hoverRef) => {

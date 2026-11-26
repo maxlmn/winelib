@@ -10,6 +10,7 @@
 	import DetailHeader from './DetailHeader.svelte';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
 	import DetailMap from './DetailMap.svelte';
+	import ReliefSchema from './ReliefSchema.svelte';
 	import WineStyle from './WineStyle.svelte';
 	import CriticScores from './CriticScores.svelte';
 	import Tabs from './Tabs.svelte';
@@ -186,6 +187,10 @@
 			{#if drink}<button type="button" class="btn" onclick={() => saveDrink(null, null)}>Clear</button>{/if}
 			{#if drinkError}<span class="error">{drinkError}</span>{/if}
 		</form>
+	{/if}
+	{#if wine.vineyard}
+		<!-- its vineyard's lie of the land (nothing when it has no outline) -->
+		<ReliefSchema vineyardId={wine.vineyard.id} name={wine.vineyard.name} color={wine.region_color} />
 	{/if}
 	<WineStyle wineId={wine.id} tags={wine.tags ?? []} cuvee={wine.cuvee_tags ?? []} bind:editing={editingStyle} />
 {/snippet}

@@ -366,6 +366,17 @@ def _places(session, job):
                        f"OpenStreetMap.", "items": items}
 
 
+def _reliefs(session, job):
+    from routers.relief import describe, fill, missing
+    limit = job.params.get("limit") or 50
+    total = len(missing(session))
+    done = fill(session, limit, job.commit, log=job.log)
+    items = [_item(v.name, describe(row) if row else (err or "to work out"), f"/vineyards/{v.id}") for v, row, err in done]
+    saved = sum(1 for _, row, _ in done if row)
+    tail = f"{saved} of {len(done)} worked out." if job.commit else f"{len(done)} to work out in a run."
+    return {"summary": f"{_n(total, 'vineyard')} of your wines without their relief; {tail}", "items": items}
+
+
 def _kind(match):
     return match.lower().replace("(", "").replace(")", "")  # "FUZZY (91%)" -> "fuzzy 91%"
 
@@ -715,6 +726,11 @@ TASKS = {
                                   "linked to it as their vineyard, its outline from the cadastre. A preview to tick "
                                   "first; a name found in several villages is yours to choose. Those Vineyards for "
                                   "your wines finds are left to it."},
+    "reliefs": {"group": "Maps and places", "title": "Relief of your vineyards", "fn": _reliefs, "preview": True,
+                "writes": True, "limit": 50, "unit": "vineyards",
+                "description": "Elevation, slope and the way it faces for each vineyard your wines use, worked out "
+                               "from its outline over Mapterhorn's open terrain tiles (a vineyard's page also works "
+                               "out its own the first time it's opened)."},
     "shape_links": {"group": "Maps and places", "title": "Shape links", "fn": _shape_links, "preview": True, "writes": True,
                     "description": "Link appellations and vineyards to their outline in the shape store (after "
                                    "adding some, or a rebuilt store): what changes, and what has no outline."},

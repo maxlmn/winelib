@@ -6,6 +6,7 @@
 	import CellarSection from '#lib/components/details/CellarSection.svelte';
 	import DetailHeader from '#lib/components/details/DetailHeader.svelte';
 	import DetailMap from '#lib/components/details/DetailMap.svelte';
+	import ReliefSchema from '#lib/components/details/ReliefSchema.svelte';
 	import Tabs from '#lib/components/details/Tabs.svelte';
 	import TastingHistory from '#lib/components/details/TastingHistory.svelte';
 	import WineCatalog from '#lib/components/details/WineCatalog.svelte';
@@ -76,6 +77,8 @@
 				<div class="muted note">Outline from the cadastre (Etalab, DGFiP), the appellations from INAO's delimitation: informational, not legally binding.</div>
 			</div>
 		{/if}
+		<!-- its lie of the land: the way it faces, its slope, how high it lies -->
+		<ReliefSchema vineyardId={v.id} color={v.region_color} rev={mapRev} />
 		{#if v.appellations.length}
 			<div class="apps">
 				<span class="muted"><Icon name="map" size={13} /> Appellations</span>
