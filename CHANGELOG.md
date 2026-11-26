@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- **Fixes from a review of the relief, contours and geology**:
+  - A vineyard's contours appear on its first visit (they waited for a reload); a redrawn outline's old relief,
+    contours and geology are dropped at once (the maps showed the old ones meanwhile).
+  - An outline with a spike, or crossing itself, is repaired once for all (`geo.outline`): its shading bands no
+    longer vanish, its slope and contours are worked out on the same shape; an outline that still can't be worked
+    with gives no card rather than an error, and a zero-area one no geology.
+  - An outline with nothing to work out (too big, too small, not in the store) is kept as such (`reliefs.none_reason`,
+    migration 0018): not fetched again on every visit, and the Maintenance task no longer comes back to it first.
+  - Two first visits at once no longer fail; a damaged row doesn't take the other vineyards' contours away.
+  - The contours draw under the vineyards' outlines (and the selection), follow a light/dark switch, and on a map
+    whose vineyards arrive in batches are asked for per vineyard, a hundred at a time, without blinking.
+  - The slope and geology cards never show an answer for an earlier outline; unexpected errors are logged.
+  - The compass reads NNE as north-north-east to a screen reader; the appellation page shows the register's text
+    when its varieties can't be read as grapes; contour spacing and shading ignore a stray elevation pixel.
+  - Tidier code: one outline lookup and staleness check, one contours format test, the contour layers in
+    `mapContours.ts`, shared toggles (`PillToggle`, `persistedFlag`, the Relief button), one name-folding helper.
 - **Roussette is Altesse**: the grape list had a separate "Roussette" (VIVC 10264, an unrelated variety) where Savoie's
   Roussette, Altesse, was meant. Migration 0017 moves its wines to Altesse (their grapes, never one twice) and deletes
   it; Altesse takes "Roussette" and "Roussette de Savoie" among its aliases, so imports and Fill from photos file them

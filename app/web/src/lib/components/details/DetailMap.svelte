@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { relief, setRelief } from '#lib/relief.svelte.ts';
+	import { relief, reliefButton, setRelief } from '#lib/relief.svelte.ts';
 	import ContourToggle from '#lib/components/ContourToggle.svelte';
 	import WineMap from '#lib/components/WineMap.svelte';
 	import type { Basemap, Selection } from '#lib/components/WineMap.svelte';
@@ -210,6 +210,8 @@
 	// Each kind filled, outlined or hidden (LayerToggle)
 	let layers = $state<Layers>({ ...DEFAULT_LAYERS });
 	const appColor = $derived(shapes?.appellations.features[0]?.properties.color ?? FALLBACK_REGION);
+	// the Relief button beside Plain / Satellite
+	const rb = $derived(reliefButton(basemap));
 </script>
 
 <svelte:window bind:innerWidth={winWidth} bind:innerHeight={winHeight} />
@@ -274,8 +276,7 @@
 					{/each}
 				</div>
 				<div class="seg detail">
-						<button class:on={relief.on} aria-pressed={relief.on} disabled={basemap !== 'plain'} onclick={() => setRelief(!relief.on)}
-							title={basemap === 'plain' ? 'The hills shaded on the map' : 'Relief shows on the Plain map'}>Relief</button>
+						<button class:on={rb.pressed} aria-pressed={rb.pressed} disabled={rb.disabled} title={rb.title} onclick={() => setRelief(!relief.on)}>Relief</button>
 				</div>
 				{#if big && phone}
 					<button class="fold alone" class:on={mapOnly} aria-pressed={mapOnly} onclick={toggleMapOnly}>{mapOnly ? 'Show the page' : 'Full map'}</button>

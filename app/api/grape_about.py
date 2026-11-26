@@ -6,9 +6,8 @@ licence, CC BY-NC-SA 4.0 (data/grapes/LICENSE), not the code's MIT: without it, 
 """
 import json
 import os
-import re
 import threading
-import unicodedata
+from textsearch import words
 
 PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "grapes", "grapes.json")
 
@@ -19,9 +18,7 @@ _lock = threading.Lock()
 _loaded = None  # ({vivc: grape}, {folded name: grape}, the file's sources)
 
 
-def _fold(name):
-    plain = unicodedata.normalize("NFKD", name or "").encode("ascii", "ignore").decode().lower()
-    return " ".join(re.findall(r"[a-z0-9]+", plain))
+_fold = words  # names matched whatever their accents, case and punctuation
 
 
 def reset():

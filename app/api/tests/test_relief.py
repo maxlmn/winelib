@@ -166,3 +166,63 @@ def test_an_outline_crossing_itself():
     assert not bow.is_valid
     found = relief.compute(bow, get=plane(15, 90))
     assert found["slope"]["median"] == pytest.approx(15, abs=1) and found["contours"]["bands"]
+
+
+def test_an_outline_with_a_spike_gets_its_bands():
+    """A spike (one edge out and back): repaired to its polygon, its bands still cover it"""
+    import json
+    import shapely
+    x, y, d = 4.783, 45.488, 0.003
+    spiked = shapely.Polygon([(x, y), (x + d, y), (x + d, y + d), (x, y + d), (x, y + d / 2), (x - d / 2, y + d / 2),
+                              (x, y + d / 2), (x, y)])
+    found = relief.compute(spiked, get=plane(10, 90))
+    bands = found["contours"]["bands"]
+    square = shapely.box(x, y, x + d, y + d)
+    assert bands and sum(shapely.from_geojson(json.dumps(b["area"])).area for b in bands) == pytest.approx(square.area, rel=0.01)
+
+
+def test_redrawing_an_outline_forgets_its_contours(client, monkeypatch):
+    monkeypatch.setattr(relief, "fetch", plane(10, 90))
+    client.put("/api/vineyards/1/outline", json={"geometry": OUTLINE})
+    client.get("/api/vineyards/1/relief")
+    assert client.get("/api/map/vineyard-contours?ids=1").json()["features"]
+    client.put("/api/vineyards/1/outline", json={"geometry": square(4.784, 45.488, 0.002)})
+    assert client.get("/api/map/vineyard-contours?ids=1").json()["features"] == []  # not the old outline's
+    client.get("/api/vineyards/1/relief")
+    assert client.get("/api/map/vineyard-contours?ids=1").json()["features"]
+
+
+def test_nothing_to_work_out_is_kept_not_fetched_again(client, monkeypatch):
+    """An outline too big to work out: a marker kept, the page answers null, the task doesn't take it again"""
+    import json
+    from routers.relief import missing
+    calls = []
+    monkeypatch.setattr(relief, "fetch", lambda z, x, y: calls.append(z) or plane(10, 90)(z, x, y))
+    monkeypatch.setattr(relief, "zoom_for", lambda bounds: None)  # "too big"
+    client.put("/api/vineyards/1/outline", json={"geometry": OUTLINE})
+    assert client.get("/api/vineyards/1/relief").json() is None
+    assert client.get("/api/vineyards/1/relief").json() is None
+    from db import Relief
+    import db
+    gen = client.app.dependency_overrides[db.get_session]()
+    s = next(gen)
+    row = s.get(Relief, s.get(db.Vineyard, 1).boundary)
+    assert row.none_reason == "too big or too small to work out"
+    assert missing(s) == []
+    assert json.dumps(calls) == "[]"
+
+
+def test_two_first_visits_at_once(client, monkeypatch):
+    """The second request to save the same outline finds the first one's row: no error"""
+    import db
+    from sqlalchemy.exc import IntegrityError
+    from routers.relief import save, work_out
+    monkeypatch.setattr(relief, "fetch", plane(10, 90))
+    client.put("/api/vineyards/1/outline", json={"geometry": OUTLINE})
+    s = next(client.app.dependency_overrides[db.get_session]())
+    boundary = s.get(db.Vineyard, 1).boundary
+    save(s, boundary, lambda: work_out(s, boundary))  # the first visit's
+
+    def clash():
+        raise IntegrityError("INSERT", {}, Exception("duplicate key"))
+    assert save(s, boundary, clash).boundary == boundary  # the second one's: read back

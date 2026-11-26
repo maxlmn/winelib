@@ -77,3 +77,9 @@ def test_invalid_shapes_are_repaired(client):
     assert not bow.is_valid
     units = geology.brgm(bow)
     assert units and abs(sum(u["share"] for u in units) - 1) < 0.02
+
+
+def test_an_outline_without_area():
+    import shapely
+    flat = shapely.Polygon([(4.86, 47.07), (4.861, 47.07), (4.862, 47.07), (4.86, 47.07)])
+    assert geology.brgm(flat) is None

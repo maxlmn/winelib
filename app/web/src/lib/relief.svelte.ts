@@ -1,17 +1,10 @@
 /** Relief on the Plain map (hillshading from Mapterhorn's terrain tiles, basemap.ts): a per-browser choice, on unless
- * turned off; every open map follows it at once. */
+ * turned off; every open map follows it at once (also those without an effect of their own: PointMap, the place
+ * picker). */
+import { persistedFlag } from '#lib/flag.svelte.ts';
 
-const KEY = 'winelib-relief';
-
-function saved() {
-	try {
-		return localStorage.getItem(KEY) !== 'off';
-	} catch {
-		return true;
-	}
-}
-
-export const relief = $state({ on: typeof localStorage === 'undefined' ? true : saved() });
+const flag = persistedFlag('winelib-relief');
+export const relief = flag.state;
 
 const listeners = new Set<(on: boolean) => void>();
 
@@ -22,11 +15,16 @@ export function onRelief(fn: (on: boolean) => void) {
 }
 
 export function setRelief(on: boolean) {
-	relief.on = on;
-	try {
-		localStorage.setItem(KEY, on ? 'on' : 'off');
-	} catch {
-		/* private window: kept for this visit only */
-	}
+	flag.set(on);
 	for (const fn of listeners) fn(on);
+}
+
+/** The Relief button beside Plain / Satellite (a detail page's map, the Map page): pressed only where it shows */
+export function reliefButton(basemap: string) {
+	const plain = basemap === 'plain';
+	return {
+		pressed: plain && relief.on,
+		disabled: !plain,
+		title: plain ? 'The hills shaded on the map' : 'Relief shows on the Plain map'
+	};
 }

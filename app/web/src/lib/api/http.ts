@@ -84,3 +84,11 @@ export const messageOf = (e: unknown) => (e instanceof Error && e.message ? e.me
 
 /** Aborted on purpose (a newer search started): not an error to show */
 export const aborted = (e: unknown) => e instanceof DOMException && e.name === 'AbortError';
+
+/** For a request whose failure the page can live with (a card left out, a map layer empty): an abort or an expected
+ * "not there / not reachable" (404, 503) said nothing about; anything else logged, not lost */
+export function quietly(e: unknown) {
+	if (aborted(e)) return;
+	if (e instanceof RequestError && (e.status === 404 || e.status === 503)) return;
+	console.warn(e);
+}

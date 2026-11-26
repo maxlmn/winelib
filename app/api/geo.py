@@ -85,6 +85,51 @@ def custom_id(boundary):
     return int(b[7:]) if b.startswith("custom:") and b[7:].isdigit() else None
 
 
+def custom_updated(session, boundary):
+    """When an outline drawn in the app ("custom:<id>") was last saved, else None: what's worked out from an outline
+    (its relief, its geology) is stale when older"""
+    cid = custom_id(boundary)
+    if cid is None or session is None:
+        return None
+    from db import CustomShape
+    custom = session.get(CustomShape, cid)
+    return custom.updated if custom else None
+
+
+def outline(session, boundary):
+    """The outline behind a boundary link as a valid shapely (Multi)Polygon in lon/lat (the store's full detail when
+    it has it), or None. Repaired once here: an outline crossing itself or with a spike made valid, only its polygon
+    parts kept (a spike's line would otherwise leave a GeometryCollection, whose boundary is None)."""
+    import shapely
+    cid = custom_id(boundary)
+    g = None
+    if cid is not None:
+        from db import CustomShape
+        custom = session.get(CustomShape, cid) if session is not None else None
+        g = shapely.from_geojson(custom.geometry) if custom else None
+    else:
+        found = detail(boundary)
+        if found is not None:
+            g = shapely.from_geojson(found[0])
+        else:
+            found = _lookup(boundary, session)
+            g = shapely.from_wkb(found[0]) if found else None
+    return polygonal(g)
+
+
+def polygonal(g):
+    """A geometry as a valid (Multi)Polygon: made valid if it isn't, only its polygon parts kept; None if nothing's left"""
+    import shapely
+    if g is None or g.is_empty:
+        return None
+    if not g.is_valid:
+        g = shapely.make_valid(g)
+    polygons = [p for p in shapely.get_parts(g) if p.geom_type in ("Polygon", "MultiPolygon") and p.area > 0]
+    if not polygons:
+        return None
+    return polygons[0] if len(polygons) == 1 else shapely.union_all(polygons)
+
+
 def custom_changed(shape_id):
     """An outline drawn in the app was saved or deleted: its GeoJSON is read again next time."""
     with _lock:

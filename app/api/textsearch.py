@@ -1,5 +1,6 @@
 """Accent- and case-insensitive matching for type-aheads and global search: "cote rotie" finds "Côte-Rôtie",
 "evangile" finds "L'Évangile". Done in Python so it behaves the same on SQLite and Postgres."""
+import re
 import unicodedata
 from functools import lru_cache
 
@@ -9,6 +10,12 @@ def fold(s):
     """Lowercase without accents; hyphens and apostrophes become spaces."""
     s = unicodedata.normalize("NFKD", str(s or "")).encode("ascii", "ignore").decode().lower()
     return s.replace("-", " ").replace("'", " ").replace("’", " ")
+
+
+def words(s):
+    """fold(), then only its letters and digits, one space apart: "Muscat À Petits-Grains" -> "muscat a petits grains"
+    (names matched whatever their punctuation)"""
+    return " ".join(re.findall(r"[a-z0-9]+", fold(s)))
 
 
 def matches(q, *fields):

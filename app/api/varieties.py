@@ -10,9 +10,9 @@ Each name loses INAO's colour code (B blanc, N noir, G gris, Rs rose, Rg rouge),
 import json
 import os
 import re
-import unicodedata
 
 from db import Varietal
+from textsearch import words
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 NAMES = os.path.join(HERE, "data", "reference", "inao_varieties.json")
@@ -24,9 +24,7 @@ COLOURS = {"B": "white", "N": "red", "G": "grey", "Gr": "grey", "Rs": "pink", "R
 _names = None
 
 
-def _fold(name):
-    plain = unicodedata.normalize("NFKD", name or "").encode("ascii", "ignore").decode().lower()
-    return " ".join(re.findall(r"[a-z0-9]+", plain))
+_fold = words  # names matched whatever their accents, case and punctuation
 
 
 def _by_hand():

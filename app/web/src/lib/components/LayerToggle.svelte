@@ -1,4 +1,5 @@
 <script lang="ts">
+	import PillToggle from './PillToggle.svelte';
 	import type { LayerMode } from '#lib/components/WineMap.svelte';
 
 	/** A kind of shape on a map (appellations, vineyards, lieux-dits): a click cycles filled → outline only →
@@ -19,36 +20,13 @@
 	const says: Record<LayerMode, string> = { fill: 'filled', outline: 'outline only', off: 'hidden' };
 </script>
 
-<button class="toggle {mode}" onclick={() => (mode = next[mode])} aria-label="{label}: {says[mode]}"
+<PillToggle off={mode === 'off'} onclick={() => (mode = next[mode])} label="{label}: {says[mode]}"
 	title="{label}: {says[mode]} (click: {says[next[mode]]})">
-	<span class="sw" class:dashed style:--sw={swatch}></span>
+	<span class="sw {mode}" class:dashed style:--sw={swatch}></span>
 	{label}{#if note}<span class="muted note">{note}</span>{/if}
-</button>
+</PillToggle>
 
 <style>
-	.toggle {
-		display: inline-flex;
-		align-items: center;
-		gap: 6px;
-		padding: 4px 9px;
-		border: 1px solid var(--border);
-		border-radius: 999px;
-		background: var(--surface);
-		color: inherit;
-		font: inherit;
-		font-size: 12px;
-		cursor: pointer;
-		white-space: nowrap;
-	}
-	.toggle:hover {
-		border-color: var(--accent);
-	}
-	.toggle.off {
-		color: var(--muted);
-	}
-	.toggle.off .sw {
-		opacity: 0.35;
-	}
 	.sw {
 		width: 11px;
 		height: 11px;
@@ -58,7 +36,7 @@
 		border: 1.5px solid transparent;
 	}
 	/* outline only: the swatch's colour as its edge, nothing inside */
-	.outline .sw {
+	.sw.outline {
 		background: none;
 		border: 2px solid var(--sw);
 	}
@@ -66,10 +44,11 @@
 		background: none;
 		border: 1.5px dashed currentColor;
 	}
-	.fill .sw.dashed {
+	.sw.fill.dashed {
 		background: color-mix(in srgb, currentColor 30%, transparent);
 	}
-	.off .sw {
+	.sw.off {
+		opacity: 0.35;
 		background:
 			linear-gradient(to top right, transparent calc(50% - 1px), currentColor calc(50% - 1px), currentColor calc(50% + 1px), transparent calc(50% + 1px));
 		border: 1.5px solid currentColor;
