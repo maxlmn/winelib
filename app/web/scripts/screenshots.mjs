@@ -25,6 +25,11 @@ const rouge = await first('Gravières Rouge 2022', 'wine'); // a wine with its v
 const santenay = await first('Santenay', 'appellation');
 const list = (await api('/api/lists')).find((l) => /Atlas/.test(l.name)) ?? (await api('/api/lists'))[0];
 const poyeux = await first('Rougeard Les Poyeux 2010', 'wine'); // the website's background: its vineyard, the lieu-dit Les Poyeux
+// the lie of the land: a steep vineyard's slope, geology, contours and shading. Its relief worked out first (as its
+// page's first visit would), so the map has its contours when the picture is taken
+const landonne = await first('Landonne 2019', 'wine');
+const landonneVineyard = landonne && (await api(`/api/wines/${landonne.id}`)).vineyard?.id;
+if (landonneVineyard) await Promise.all([api(`/api/vineyards/${landonneVineyard}/relief`), api(`/api/vineyards/${landonneVineyard}/geology`)]);
 const note = (await api('/api/tastings')).tastings.find((t) => /Turque/.test(t.cuvee) && t.notes) ?? (await api('/api/tastings')).tastings.find((t) => t.notes);
 
 /** name, the page, what to do on it before the picture; phone: the phone's size (the composed "mobile" picture);
@@ -51,6 +56,17 @@ const SHOTS = [
 		name: 'lieux-dits', path: `/wines/${rouge.id}`, wait: 3000,
 		// the lieux-dits filled in (the toggle goes outline, hidden, filled)
 		prep: async (p) => { const b = p.getByRole('button', { name: /Lieux-dits/ }).first(); await b.click(); await b.click(); await settle(p, 3000); }
+	},
+	{
+		// zoomed in on the vineyard: its contours and shading
+		name: 'terroir', path: `/wines/${landonne?.id}`, wait: 3000,
+		prep: async (p) => {
+			// the map opens on the appellation, the vineyard a sliver on it: zoomed in around it with the wheel
+			const at = { x: 1020, y: 340 };
+			await p.mouse.move(at.x, at.y);
+			for (let i = 0; i < 6; i++) { await p.mouse.wheel(0, -240); await p.waitForTimeout(350); }
+			await settle(p, 3500);
+		}
 	},
 	{
 		name: 'draw', path: `/appellations/${santenay.id}`, wait: 2500,
