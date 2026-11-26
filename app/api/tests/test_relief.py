@@ -157,3 +157,12 @@ def test_interval_for():
     assert relief.interval_for(100, 104) == 1
     assert relief.interval_for(176, 279) == 20
     assert relief.interval_for(43, 70) == 5
+
+
+def test_an_outline_crossing_itself():
+    """A bow tie (an invalid outline, as some published ones are): repaired, its relief and contours worked out"""
+    import shapely
+    bow = shapely.Polygon([(4.783, 45.488), (4.786, 45.491), (4.786, 45.488), (4.783, 45.491), (4.783, 45.488)])
+    assert not bow.is_valid
+    found = relief.compute(bow, get=plane(15, 90))
+    assert found["slope"]["median"] == pytest.approx(15, abs=1) and found["contours"]["bands"]
