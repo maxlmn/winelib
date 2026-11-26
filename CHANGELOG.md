@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- About the data says what the map outlines are: informational, not legally binding; only INAO's plans
+  (and each country's official texts) say which parcels may carry an appellation.
+
 ## v0.8.4
 
 - **No Both / Cellar / Tasted switch on the map**: each page colours its map by its own (the home page by your bottles

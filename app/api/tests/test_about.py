@@ -20,6 +20,7 @@ def seed(s):
 def test_about_the_data(client):
     d = client.get("/api/about/data").json()
     assert "## Reference data" in d["sources"] and "INAO" in d["sources"] and "## How it was built" in d["built"]
+    assert "informational, not legally binding" in d["sources"]
     assert d["counts"] == {"regions": 2, "countries": 2, "appellations": 3, "appellations_outlined": 2,
                            "vineyards": 1, "vineyards_outlined": 1, "grapes": 3,
                            "grapes_vivc": 1, "grapes_parents": 1, "grapes_profile": 1}
