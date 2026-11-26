@@ -3,6 +3,7 @@ import { GLYPHS, VECTOR_IDS, VECTOR_SOURCE, vectorLayers, vectorPaint } from '#l
 // MapLibre resolves its worker next to its own module, which bundling breaks: point it at Vite's copy
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import { integrations } from './settings.svelte.ts';
+import { onRelief, relief } from './relief.svelte.ts';
 
 export type Basemap = 'plain' | 'satellite';
 
@@ -20,6 +21,20 @@ const satCredit = () =>
 		: '© IGN — BD ORTHO (France)';
 
 type RasterPaint = NonNullable<RasterLayerSpecification['paint']>;
+
+/** Relief: Mapterhorn's open terrain tiles (Terrarium, 512 px; IGN's 5 m to 0.5 m in France, 30 m worldwide; each
+ * source's own open licence, listed at mapterhorn.com/attribution), drawn as faint hillshading on the Plain map,
+ * under the roads and the names. Asked for up to z15 (about 2 m a pixel in France), finer zooms drawn from those. */
+const RELIEF_TILES = ['https://tiles.mapterhorn.com/{z}/{x}/{y}.webp'];
+const RELIEF_CREDIT = '<a href="https://mapterhorn.com/attribution" target="_blank" rel="noreferrer">© Mapterhorn</a>';
+/** The vector layer the hillshading goes under: the first line drawn (paths), so it shades the land, woods, vines,
+ * water and buildings, not the roads or the names. A map with shapes (WineMap) then moves it over their fills */
+const RELIEF_BEFORE = 'v-path';
+function reliefPaint(dark: boolean) {
+	return dark
+		? { 'hillshade-exaggeration': 0.8, 'hillshade-shadow-color': 'rgba(0, 0, 0, 0.6)', 'hillshade-highlight-color': 'rgba(255, 240, 225, 0.4)', 'hillshade-accent-color': 'rgba(0, 0, 0, 0.3)' }
+		: { 'hillshade-exaggeration': 0.75, 'hillshade-shadow-color': 'rgba(60, 45, 30, 0.75)', 'hillshade-highlight-color': 'rgba(255, 255, 255, 0.6)', 'hillshade-accent-color': 'rgba(60, 45, 30, 0.4)' };
+}
 
 /** The raster fallback for Plain is a muted OpenStreetMap: mostly grey in light mode, inverted (min > max) and
  * hue-turned back in dark mode. */
@@ -124,7 +139,7 @@ let satRegistered = false;
  * OpenStreetMap's raster tiles in its place when OpenFreeMap is down; the photos on Satellite */
 function shownLayers(kind: Basemap, vectorDown: boolean) {
 	const vector = (kind === 'plain' || !esriKey()) && !vectorDown;
-	return { vector, osm: kind === 'plain' && vectorDown, sat: kind === 'satellite' };
+	return { vector, osm: kind === 'plain' && vectorDown, sat: kind === 'satellite', relief: kind === 'plain' && !vectorDown && relief.on };
 }
 
 // Per map: the basemap shown, and whether OpenFreeMap failed (Plain then falls back to raster tiles)
@@ -143,6 +158,8 @@ export function setBasemap(map: MlMap, kind: Basemap, dark: boolean) {
 	show('base', on.osm);
 	if (on.osm) for (const [k, v] of Object.entries(osmPaint(dark))) map.setPaintProperty('base', k as keyof RasterPaint, v);
 	show('sat', on.sat);
+	show('relief', on.relief);
+	if (on.relief) for (const [k, v] of Object.entries(reliefPaint(dark))) map.setPaintProperty('relief', k as 'hillshade-exaggeration', v as number);
 }
 
 /** The resolved app theme (see theme.svelte.ts), not just the OS preference. */
@@ -181,10 +198,16 @@ export async function createMap(
 				sat: {
 					type: 'raster', tileSize: 256, maxzoom: 19, tiles: ['sat://{z}/{x}/{y}'], attribution: satCredit(),
 					...(esriKey() ? {} : { bounds: IGN_BOUNDS })
-				}
+				},
+				relief: { type: 'raster-dem', encoding: 'terrarium', tileSize: 512, maxzoom: 15, tiles: RELIEF_TILES, attribution: RELIEF_CREDIT }
 			},
 			layers: [
-				...vectorLayers(dark).map((l) => ({ ...l, layout: { ...l.layout, ...shown(on.vector) } }) as LayerSpecification),
+				...vectorLayers(dark).flatMap((l) => [
+					...(l.id === RELIEF_BEFORE
+						? [{ id: 'relief', type: 'hillshade', source: 'relief', paint: reliefPaint(dark), layout: shown(on.relief) } as LayerSpecification]
+						: []),
+					{ ...l, layout: { ...l.layout, ...shown(on.vector) } } as LayerSpecification
+				]),
 				{ id: 'base', type: 'raster', source: 'base', paint: osmPaint(dark), layout: shown(on.osm) },
 				{ id: 'sat', type: 'raster', source: 'sat', layout: shown(on.sat) }
 			]
@@ -193,6 +216,12 @@ export async function createMap(
 		attributionControl: false
 	}) as unknown as MlMap;
 	state.set(map, { kind: basemap, dark, vectorDown: false });
+	// Relief turned on or off (any map's button, relief.svelte.ts): this map follows
+	const unRelief = onRelief(() => {
+		const st = state.get(map);
+		if (st && map.getLayer('relief')) setBasemap(map, st.kind, st.dark);
+	});
+	map.on('remove', unRelief);
 	// OpenFreeMap unreachable (its TileJSON or first tiles failing): Plain falls back to OpenStreetMap France's tiles
 	let vectorTiles = false;
 	map.on('sourcedata', (e) => {

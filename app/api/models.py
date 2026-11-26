@@ -366,6 +366,22 @@ class RestaurantVisit(Base):
     place = relationship("Place", back_populates="visits")
 
 
+class Relief(Base):
+    """A vineyard outline's elevation, slope and aspect (relief.py), worked out once from Mapterhorn's terrain tiles.
+    Keyed by the outline (the vineyard's boundary link), so a new outline gets its own; a drawn one ("custom:<id>")
+    is worked out again when it was saved after `computed`."""
+    __tablename__ = 'reliefs'
+    boundary = Column(String, primary_key=True)
+    elevation_min = Column(Float, nullable=False)
+    elevation_mean = Column(Float, nullable=False)
+    elevation_max = Column(Float, nullable=False)
+    slope_median = Column(Float, nullable=False)
+    slope_steep = Column(Float, nullable=False)  # the steepest tenth (90th percentile)
+    aspect = Column(Float)  # degrees from north the hillside faces; null when flat or facing every way
+    zoom = Column(Integer, nullable=False)
+    computed = Column(DateTime, nullable=False)
+
+
 class CustomShape(Base):
     """An outline drawn or imported in the app for one appellation or vineyard, which links to it as
     boundary = 'custom:<id>' (user data, unlike the shape store's official outlines)."""

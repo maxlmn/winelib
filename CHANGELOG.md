@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- **Relief on the maps**: the hills shaded on the Plain map, from Mapterhorn's open terrain tiles (IGN's survey in
+  France, to a metre or finer in places; 30 m worldwide). A **Relief** button beside Plain / Satellite turns it off or
+  on, on every map at once.
+- **A vineyard's lie of the land**: its page says which way it faces, how high it lies and how steep it is ("Faces SE ·
+  176–279 m · 29° slope, 35° at its steepest"), worked out from its outline over the terrain tiles the first time it's
+  opened and kept (a new `reliefs` table, migration 0014). Maintenance › *Relief of your vineyards* does every
+  vineyard your wines use. A small compass and the hillside drawn side on at its slope show it beside the
+  words, on the vineyard's page and on its wines'. On the maps, the vineyards' colours are shaded with their hillsides.
+
 ## v0.8.4
 
 - **No Both / Cellar / Tasted switch on the map**: each page colours its map by its own (the home page by your bottles

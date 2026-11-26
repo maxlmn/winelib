@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { relief, setRelief } from '#lib/relief.svelte.ts';
 	import { setParams } from '#lib/url.ts';
 	import { messageOf, request } from '#lib/api/http.ts';
 	import RegionName from '#lib/components/RegionName.svelte';
@@ -240,10 +241,16 @@
 		{#if region}<button class="crumb" onclick={() => openRegion(null)}>Map</button> <span class="muted">/</span> {regionLabel(region.name)}
 			<a class="region-page" href={links.region(region.name)}>Region page →</a>{:else}Map{/if}
 	</h1>
+	<div class="switches">
 	<div class="seg small">
 		{#each [['plain', 'Plain'], ['satellite', 'Satellite']] as [id, label]}
 			<button class:on={basemap === id} aria-pressed={basemap === id} onclick={() => (basemap = id as Basemap)}>{label}</button>
 		{/each}
+	</div>
+	<div class="seg small">
+		<button class:on={relief.on} aria-pressed={relief.on} disabled={basemap !== 'plain'} onclick={() => setRelief(!relief.on)}
+			title={basemap === 'plain' ? 'The hills shaded on the map' : 'Relief shows on the Plain map'}>Relief</button>
+	</div>
 	</div>
 </div>
 
@@ -417,6 +424,10 @@
 </div>
 
 <style>
+	.switches {
+		display: flex;
+		gap: 8px;
+	}
 	.crumb {
 		border: none;
 		background: none;

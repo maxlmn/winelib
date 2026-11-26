@@ -9,6 +9,8 @@ appellations and vineyards; tick the ones to draw. **My cellar** and **My tastin
 from. **Plain** and **Satellite** change the background. Satellite is IGN's aerial photos in France; elsewhere it
 needs a free Esri key (`ESRI_API_KEY` in `.secrets.env`, see Settings › Integrations), else the map stays plain
 there.
+**Relief** shades the hills on the Plain map (Mapterhorn's open terrain tiles: IGN's survey in France, to a metre
+or finer in places); it's on until you turn it off, and every map follows.
 
 ## On every map
 
@@ -27,6 +29,9 @@ there.
 - A **wine** shows its appellation and its vineyard.
 - A **producer** shows every appellation and vineyard of its wines.
 - A **region** shows where what you drink comes from, its top appellations and producers.
+- A **vineyard** also says which way it faces, how high it lies and how steep it is ("Faces SE · 176–279 m · 29°
+  slope"), worked out from its outline over the terrain tiles the first time its page opens (Settings › Maintenance ›
+  *Relief of your vineyards* does them all).
 - An **appellation** or a **vineyard** shows its own outline; **Full detail** draws it as the source does (INAO's
   vine parcels one by one) instead of simplified.
 

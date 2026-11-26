@@ -34,6 +34,10 @@ lieux-dits, and their limits*.
   contributors, ODbL).
 - **OpenFreeMap**: the Plain base map's vector tiles (© OpenMapTiles, data © OpenStreetMap contributors, ODbL);
   OpenStreetMap France's tiles when it can't be reached.
+- **Mapterhorn** ([mapterhorn.com](https://mapterhorn.com)): the open terrain tiles behind the maps' relief and a
+  vineyard's elevation, slope and aspect. Each area from its own open source, under its licence (IGN's RGE ALTI and
+  LiDAR HD in France, Licence Ouverte 2.0; the full list at
+  [mapterhorn.com/attribution](https://mapterhorn.com/attribution)).
 - **IGN's aerial photos** (BD ORTHO, through the Géoplateforme, Licence Ouverte 2.0): the satellite base map in
   France.
 - **Esri World Imagery** (with your own key, `ESRI_API_KEY`: Esri's terms ask for one): the satellite base map
