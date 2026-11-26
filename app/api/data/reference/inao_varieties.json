@@ -1,0 +1,17 @@
+{
+  "about": "INAO's variety names (as in the AOC specifications, without the colour code) that don't match a grape's name or alias by spelling: the grape they are. Checked against VIVC's synonyms. Names left out are distinct varieties WineLib has no grape for (Gamay de Bouze, Lledoner Pelut, Picardan...): shown as INAO names them, unlinked. Colour mutations (Grolleau Gris, Mauzac Rose...) go to their grape by varieties.py's rule, not listed here.",
+  "names": {
+    "Muscat À Petits Grains Roses": "Muscat Rose À Petits Grains",
+    "Piquepoul Blanc": "Piquepoul",
+    "Piquepoul Gris": "Piquepoul",
+    "Piquepoul Noir": "Piquepoul",
+    "Auxerrois": "Auxerrois Blanc",
+    "Courbu": "Hondarrabi Zuri",
+    "Maccabeu": "Macabeo",
+    "Mueller Thurgau": "Müller-Thurgau",
+    "Pascal": "Pascal Blanc",
+    "Aubin": "Aubin Blanc",
+    "Rivairenc": "Aspiran Noir",
+    "Brachet": "Brachetto"
+  }
+}
