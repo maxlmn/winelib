@@ -13,6 +13,7 @@ from routers.map import MAPPABLE_APP, MAPPABLE_VINE, lieu_shapes_response, map_s
 from cellar import cellar_lines, location_group, maturity, to_base
 from display import iso, vineyard_label, vintage_label
 import labels as wine_labels
+import varieties
 import photos
 from photos import photo_index, photo_url
 import geo
@@ -347,6 +348,8 @@ def appellation_detail(appellation_id: int, session: Session = Depends(get_sessi
         "registration_date": iso(a.registration_date),
         "max_yield_hl": a.max_yield_hl, "max_yield_kg": a.max_yield_kg,
         "varieties": a.varieties_text, "details": a.details, "aliases": a.aliases,
+        # the same as the database's grapes, linked where there's one (varieties.py)
+        "grapes": varieties.read(a.varieties_text, varieties.index(session)) if a.varieties_text else [],
         "bottles": _cellar_totals(lines)["bottles"],
         # Detail page
         "region_color": a.region_obj.color if a.region_obj else None,
