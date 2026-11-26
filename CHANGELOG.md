@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- On a place's page, each day's photo sits above its wines, centred (it stood beside them, squeezing the list).
 - **Fixes from a review of the relief, contours and geology**:
   - A vineyard's contours appear on its first visit (they waited for a reload); a redrawn outline's old relief,
     contours and geology are dropped at once (the maps showed the old ones meanwhile).
