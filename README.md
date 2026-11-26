@@ -70,6 +70,16 @@ Maintenance finds your cuvées named after one and links them, after your tick.
   <img alt="Les Gravières, a Santenay premier cru, on its vineyard, the neighbouring lieux-dits around it" src="screenshots/lieux-dits.png">
 </picture>
 
+**The lie of the land.** Each vineyard's slope, the way it faces and how high it lies, worked out from the terrain
+under its outline (Mapterhorn's open elevation tiles: IGN's survey in France, to a metre or finer); the rock beneath
+it, from BRGM's 1:50,000 geological maps in France (Macrostrat elsewhere); and on the map, its contour lines and its
+slope shaded from the foot to the top, the hills shaded around it.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshots/terroir-dark.png">
+  <img alt="La Landonne, Côte-Rôtie: its slope, aspect and geology beside its contour lines on the map" src="screenshots/terroir.png">
+</picture>
+
 **Draw what the map doesn't have.** A monopole, a parcel, an appellation without an official outline: draw it on
 the satellite view, start from the official outline and refine it, or import a GeoJSON or KML file.
 
