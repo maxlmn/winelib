@@ -144,4 +144,7 @@ def fill(session, limit, commit, log=print):
         except (OSError, ValueError) as e:
             session.rollback()
             out.append((v, None, f"tiles unreachable ({e})"))
+        except Exception as e:  # one vineyard's outline that can't be worked out doesn't stop the others
+            session.rollback()
+            out.append((v, None, f"couldn't be worked out ({type(e).__name__})"))
     return out

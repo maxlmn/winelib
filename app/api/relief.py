@@ -151,6 +151,7 @@ def contours(geom, smooth, px, py, low, high):
     import numpy as np
     import shapely
     from shapely.ops import linemerge
+    geom = shapely.make_valid(geom)  # an outline crossing itself (a bow tie): repaired, or the cuts fail
     # the grid cut to the outline (and a pixel around it): a vineyard is a few hundred pixels, not three tiles
     w, s, e, n = geom.bounds
     cols = np.where((px >= w) & (px <= e))[0]
