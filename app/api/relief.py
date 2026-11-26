@@ -12,6 +12,7 @@ elevation smoothed over ~10 m (the vine rows and terraces of a 0.5 m model aren'
 import io
 import math
 from concurrent.futures import ThreadPoolExecutor
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 TILES = "https://tiles.mapterhorn.com/{z}/{x}/{y}.webp"
@@ -94,13 +95,21 @@ def compute(geom, get=None):
     import numpy as np
     import shapely
     get = get or fetch
-    z = zoom_for(geom.bounds)
-    if z is None:
+    top = zoom_for(geom.bounds)
+    if top is None:
         return None
-    x0, y0, x1, y1 = tiles_for(geom.bounds, z)
-    keys = [(x, y) for y in range(y0, y1 + 1) for x in range(x0, x1 + 1)]
-    with ThreadPoolExecutor(4) as pool:
-        got = dict(zip(keys, pool.map(lambda k: get(z, *k), keys)))
+    # The finest zoom there is there: Mapterhorn's fine tiles cover France and some other places; elsewhere its 30 m
+    # model stops lower (z14 in Piedmont), a missing tile a 404: a zoom lower then
+    for z in range(top, MIN_ZOOM - 1, -1):
+        x0, y0, x1, y1 = tiles_for(geom.bounds, z)
+        keys = [(x, y) for y in range(y0, y1 + 1) for x in range(x0, x1 + 1)]
+        try:
+            with ThreadPoolExecutor(4) as pool:
+                got = dict(zip(keys, pool.map(lambda k: get(z, *k), keys)))
+            break
+        except HTTPError as e:
+            if e.code != 404 or z == MIN_ZOOM:
+                raise
     grid = np.block([[got[(x, y)] for x in range(x0, x1 + 1)] for y in range(y0, y1 + 1)])
     # each pixel's centre in lon/lat
     n = 2 ** z * SIZE
