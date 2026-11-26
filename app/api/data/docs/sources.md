@@ -32,6 +32,14 @@ lieux-dits, and their limits*.
 for information. Only INAO's own plans (and each country's official texts) say which parcels may carry an
 appellation.
 
+## Geology
+
+- **France**: BRGM's geological maps at 1:50,000, vectorised and harmonised by département (BD Charm-50, InfoTerre,
+  [infoterre.brgm.fr](https://infoterre.brgm.fr)), Licence Ouverte 2.0 (Etalab): the formations around the wine
+  lieux-dits, in the map pack, their descriptions as BRGM publishes them (in French). © BRGM.
+- **Elsewhere**: [Macrostrat](https://macrostrat.org) (CC BY 4.0), its most detailed map at the vineyard, often
+  regional (the 1:1,000,000 EGDI map in Europe), asked for once and kept.
+
 ## Looked up while you use the app
 
 - **OpenStreetMap Nominatim**: a place's coordinates from its address or a Google Maps link (© OpenStreetMap

@@ -382,6 +382,15 @@ class Relief(Base):
     computed = Column(DateTime, nullable=False)
 
 
+class Geology(Base):
+    """A vineyard outline's geology from Macrostrat (geology.py: outside France, where the map pack has none), asked
+    once and kept, keyed by the outline like `reliefs`."""
+    __tablename__ = 'geologies'
+    boundary = Column(String, primary_key=True)
+    data = Column(Text, nullable=False)  # JSON: {"units": [...], "scale"}; {} when Macrostrat has nothing there
+    computed = Column(DateTime, nullable=False)
+
+
 class CustomShape(Base):
     """An outline drawn or imported in the app for one appellation or vineyard, which links to it as
     boundary = 'custom:<id>' (user data, unlike the shape store's official outlines)."""

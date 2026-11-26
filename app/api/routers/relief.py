@@ -97,7 +97,8 @@ def missing(session):
 
 def describe(row):
     """'ESE · 262-301 m · 5°'"""
-    facing = relief.compass(row.aspect) if row.aspect is not None else "flat"
+    facing = (relief.compass(row.aspect) if row.aspect is not None
+              else "flat" if row.slope_median < relief.FLAT_DEG else "several ways")
     return f"{facing} · {row.elevation_min:.0f}-{row.elevation_max:.0f} m · {row.slope_median:g}°"
 
 

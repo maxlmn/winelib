@@ -111,6 +111,8 @@ def warm():
         return
     for name in names:
         try:
+            if name == "geology":  # not outlines: geology.py reads it
+                continue
             _lieux_dits() if name == "lieu_dit" else _source(name)  # the lieux-dits read their own way
         except Exception:  # a bad file: the request that needs it reports it
             log.exception("Couldn't read the %s shapes", name)
