@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { relief, setRelief } from '#lib/relief.svelte.ts';
+	import ContourToggle from '#lib/components/ContourToggle.svelte';
 	import WineMap from '#lib/components/WineMap.svelte';
 	import type { Basemap, Selection } from '#lib/components/WineMap.svelte';
 	import type { Shapes } from '#lib/api/details.ts';
@@ -264,6 +265,7 @@
 				<div class="kinds">
 					<LayerToggle label="Appellations" bind:mode={layers.appellation} swatch={appColor} />
 					<LayerToggle label="Vineyards" bind:mode={layers.vineyard} swatch={darken(appColor, 1)} />
+					<ContourToggle />
 					<LayerToggle label="Lieux-dits" bind:mode={layers.lieu} dashed />
 				</div>
 				<div class="seg">

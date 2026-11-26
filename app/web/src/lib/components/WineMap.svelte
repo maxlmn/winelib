@@ -29,6 +29,8 @@
 	import { createMap, setBasemap } from '#lib/basemap.ts';
 	import { cruShade, darken } from '#lib/cru.ts';
 	import { accentColor, theme } from '#lib/theme.svelte.ts';
+	import { contours } from '#lib/contours.svelte.ts';
+	import { request } from '#lib/api/http.ts';
 	import type { Basemap } from '#lib/basemap.ts';
 
 	interface Props {
@@ -250,6 +252,27 @@
 						'line-width': ['interpolate', ['linear'], ['zoom'], 9, ['case', sel, 2, 0.3], 15, ['case', sel, 3.5, 1.2]]
 					}
 				});
+				// Contour lines and height bands inside the vineyards (worked out with their relief, routers/relief.py),
+				// over their colours, under their outlines; the elevation along the lines when close
+				mm.addSource('vine-contours', { type: 'geojson', data: EMPTY });
+				// its slope shaded from the bottom (a shadow) to the top (a little light), band by band of height
+				mm.addLayer({
+					id: 'vines-band', type: 'fill', source: 'vine-contours', filter: ['==', ['get', 'kind'], 'band'],
+					paint: {
+						'fill-color': ['interpolate', ['linear'], ['get', 't'], 0, 'rgba(20, 10, 5, 0.4)', 0.5, 'rgba(20, 10, 5, 0.12)', 1, 'rgba(255, 250, 240, 0.2)'],
+						'fill-antialias': false
+					}
+				});
+				mm.addLayer({
+					id: 'vines-contour', type: 'line', source: 'vine-contours', filter: ['==', ['get', 'kind'], 'line'],
+					layout: { 'line-join': 'round', 'line-cap': 'round' },
+					paint: { 'line-color': theme.dark ? 'rgba(255, 245, 235, 0.55)' : 'rgba(40, 25, 15, 0.55)', 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 0.5, 16, 1.2] }
+				});
+				mm.addLayer({
+					id: 'vines-contour-label', type: 'symbol', source: 'vine-contours', minzoom: 14.5, filter: ['==', ['get', 'kind'], 'line'],
+					layout: { 'symbol-placement': 'line', 'symbol-spacing': 300, 'text-field': ['concat', ['to-string', ['get', 'ele']], ' m'], 'text-font': ['Noto Sans Regular'], 'text-size': 9.5 },
+					paint: { 'text-color': theme.dark ? '#f3ece6' : '#3a2a20', 'text-halo-color': theme.dark ? 'rgba(20, 18, 22, 0.85)' : 'rgba(255, 255, 255, 0.85)', 'text-halo-width': 1.2 }
+				});
 				// The relief (basemap.ts) over the fills, under the vineyards' outlines: a vineyard's colour follows its
 				// hillside (the base map's roads and names, under the fills, are shaded with them)
 				if (mm.getLayer('relief')) mm.moveLayer('relief', 'vines-line');
@@ -394,6 +417,25 @@
 	// The shapes, coloured once per change of the data (not again when only the framing changes: a legend click)
 	const shadedApps = $derived(appellations ? shadeAppellations(appellations) : EMPTY);
 	const shadedVines = $derived(vineyards ? shadeVineyards(vineyards) : EMPTY);
+	// the shown vineyards' contour lines: asked for once per set of vineyards, while the contours are on
+	let contourLines = $state<FeatureCollection | null>(null);
+	const vineIds = $derived(contours.on && vineyards ? vineyards.features.filter((f) => f.geometry).map((f) => f.id).join(',') : '');
+	$effect(() => {
+		const ids = vineIds;
+		contourLines = null;
+		if (!ids) return;
+		request<FeatureCollection>(`/api/map/vineyard-contours?ids=${ids}`)
+			.then((fc) => {
+				if (ids === vineIds) contourLines = fc;
+			})
+			.catch(() => {});
+	});
+	$effect(() => {
+		const fc = contourLines;
+		const on = contours.on && layers.vineyard !== 'off';
+		if (!map?.getSource('vine-contours')) return;
+		(map.getSource('vine-contours') as GeoJSONSource).setData(on && fc ? fc : EMPTY);
+	});
 	$effect(() => {
 		if (!ready || !map) return;
 		(map.getSource('apps') as GeoJSONSource).setData(shadedApps);

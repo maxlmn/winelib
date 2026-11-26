@@ -379,3 +379,13 @@ test('Relief: on by default on the Plain map, turned off on one map, off on the 
 	await page.goto(`/wines/${ids().wine}`);
 	await expect(page.getByRole('button', { name: 'Relief', exact: true })).toHaveAttribute('aria-pressed', 'false');
 });
+
+test('Contours: a toggle in the map legend beside Vineyards, on by default, remembered', async ({ page }) => {
+	await page.goto(`/wines/${ids().wine}`);
+	const toggle = page.getByRole('button', { name: 'Contours' });
+	await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+	await toggle.click();
+	await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+	await page.reload();
+	await expect(page.getByRole('button', { name: 'Contours' })).toHaveAttribute('aria-pressed', 'false');
+});

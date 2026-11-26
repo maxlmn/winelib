@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Contour lines inside the vineyards**: on the maps, each vineyard's slope shaded from the bottom (a shadow) to the
+  top (a little light), band by band of height, and a handful of contour lines, inside its outline only (the interval from its range of elevation: 20 m on La Landonne, 5 m on a gentle slope), their height along
+  them up close; traced from the terrain tiles with the vineyard's relief and kept with it (`reliefs.contours`,
+  migration 0016; `GET /api/map/vineyard-contours`). A **Contours** toggle in the legend beside Vineyards, on by
+  default, remembered per browser. Run Maintenance › *Relief of your vineyards* once to trace them for the vineyards
+  worked out before.
 - **A vineyard's geology**: the rock formations under its outline, with each one's share, as a bar in the geological
   map's own colours and a list (notation, description, age), on the vineyard's page and its wines'. In France from
   BRGM's 1:50,000 geological maps (Licence Ouverte 2.0), cut to the land around the wine lieux-dits and shipped in the

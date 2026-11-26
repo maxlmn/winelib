@@ -728,7 +728,7 @@ TASKS = {
                                   "your wines finds are left to it."},
     "reliefs": {"group": "Maps and places", "title": "Relief of your vineyards", "fn": _reliefs, "preview": True,
                 "writes": True, "limit": 50, "unit": "vineyards",
-                "description": "Elevation, slope and the way it faces for each vineyard your wines use, worked out "
+                "description": "Elevation, slope, the way it faces and its contour lines for each vineyard your wines use, worked out "
                                "from its outline over Mapterhorn's open terrain tiles (a vineyard's page also works "
                                "out its own the first time it's opened)."},
     "shape_links": {"group": "Maps and places", "title": "Shape links", "fn": _shape_links, "preview": True, "writes": True,

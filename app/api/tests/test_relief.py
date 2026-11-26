@@ -121,3 +121,39 @@ def test_a_lower_zoom_where_the_fine_tiles_stop():
     found = relief.compute(shapely.from_geojson(json.dumps(OUTLINE)), get=get)
     assert found["zoom"] == 14 and relief.compass(found["aspect"]) == "S"
     assert found["slope"]["median"] == pytest.approx(15, abs=0.5)
+
+
+def test_contours_inside_the_outline(client, monkeypatch):
+    """A hillside tilted 10° towards the east: north-south contour lines inside the outline, a handful of them,
+    served for the maps"""
+    import json
+    import shapely
+    found = relief.compute(shapely.from_geojson(json.dumps(OUTLINE)), get=plane(10, 90))
+    lines = found["contours"]["lines"]
+    bands = found["contours"]["bands"]
+    whole = shapely.from_geojson(json.dumps(OUTLINE))
+    assert len(bands) >= 8 and sum(shapely.from_geojson(json.dumps(b["area"])).area for b in bands) == pytest.approx(
+        whole.area, rel=0.01)  # the outline cut into bands, all of it
+    assert min(b["t"] for b in bands) < 0.15 and max(b["t"] for b in bands) > 0.85
+    assert 2 <= len(lines) <= relief.MAX_LINES + 1
+    steps = {b["ele"] - a["ele"] for a, b in zip(lines, lines[1:])}
+    assert steps == {relief.interval_for(found["elevation"]["min"], found["elevation"]["max"])} or len(steps) == 1
+    outline = shapely.from_geojson(json.dumps(OUTLINE)).buffer(1e-6)
+    for c in lines:
+        g = shapely.from_geojson(json.dumps(c["line"]))
+        assert outline.contains(g)  # only inside the vineyard
+        w, s, e, n = g.bounds
+        assert e - w < 1e-5  # running north-south
+    monkeypatch.setattr(relief, "fetch", plane(10, 90))
+    client.put("/api/vineyards/1/outline", json={"geometry": OUTLINE})
+    client.get("/api/vineyards/1/relief")
+    fc = client.get("/api/map/vineyard-contours?ids=1,999").json()
+    kinds = [f["properties"]["kind"] for f in fc["features"]]
+    assert fc["type"] == "FeatureCollection" and kinds.count("line") == len(lines) and kinds.count("band") == len(bands)
+    assert {f["properties"]["vineyard"] for f in fc["features"]} == {1}
+
+
+def test_interval_for():
+    assert relief.interval_for(100, 104) == 1
+    assert relief.interval_for(176, 279) == 20
+    assert relief.interval_for(43, 70) == 5

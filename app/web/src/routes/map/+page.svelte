@@ -13,6 +13,7 @@
 	import type { Basemap, Layers, Selection } from '#lib/components/WineMap.svelte';
 	import { DEFAULT_LAYERS } from '#lib/components/WineMap.svelte';
 	import LayerToggle from '#lib/components/LayerToggle.svelte';
+	import ContourToggle from '#lib/components/ContourToggle.svelte';
 	import { darken } from '#lib/cru.ts';
 	import { links } from '#lib/links.ts';
 	import { appSettings } from '#lib/settings.svelte.ts';
@@ -323,6 +324,7 @@
 				<LayerToggle label="Appellations" bind:mode={layers.appellation} swatch={region.color ?? undefined}
 					note="{drawAppIds.length} of {idx?.appellations.length ?? 0} drawn" />
 				<LayerToggle label="Vineyards" bind:mode={layers.vineyard} swatch={darken(region.color ?? '#9a9893', 1)} note="{drawIds.length} of {vineyardIndex.length} drawn" />
+				<ContourToggle />
 				<LayerToggle label="Lieux-dits" bind:mode={layers.lieu} dashed note="from close zoom" />
 			</div>
 
