@@ -9,6 +9,9 @@
   `geologies` table, migration 0015). Credited in About the data. A new guide, Help › *Reading the geology*, linked
   from the card: the colours as a timeline of the periods (BRGM's own swatches, with wine examples), the notations and
   the French words.
+- Geology reads only the few blocks of the geology file around a vineyard (10-20 ms, then cached), instead of keeping
+  BRGM's whole map in memory (~340 MB on a NAS); an outline or a piece of the map that isn't a valid shape is
+  repaired first (a vineyard's geology no longer fails on an outline crossing itself).
 - **An appellation's authorized varieties are your grapes**: INAO's names (with their colour codes, "Cinsaut N",
   "Maccabeu B", "Nielluccio N") read as the database's grapes, each chip linked to its grape's page with a dot in its
   berries' colour (Cinsault, Macabeo, Sangiovese; the specification's spelling in the tooltip), on the appellation's

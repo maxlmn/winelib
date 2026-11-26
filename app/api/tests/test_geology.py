@@ -68,3 +68,12 @@ def test_macrostrat_unreachable(client, monkeypatch):
     client.put("/api/vineyards/2/outline", json={"geometry": square(7.933, 44.615, 0.002)})
     assert client.get("/api/vineyards/2/geology").status_code == 503
     assert client.get("/api/vineyards/999/geology").status_code == 404
+
+
+def test_invalid_shapes_are_repaired(client):
+    """An outline crossing itself (a bow tie) and an invalid piece of the map: shares still worked out"""
+    import shapely
+    bow = shapely.Polygon([(4.86, 47.07), (4.861, 47.071), (4.861, 47.07), (4.86, 47.071), (4.86, 47.07)])
+    assert not bow.is_valid
+    units = geology.brgm(bow)
+    assert units and abs(sum(u["share"] for u in units) - 1) < 0.02
