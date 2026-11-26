@@ -71,7 +71,8 @@
 			{@const photo = d.wines.find((w) => w.photo)?.photo ?? d.visit?.photo}
 			<!-- a column of labels at the right of the day's wines when one has a label (empty on the others) -->
 			{@const withLabels = appSettings.wine_labels !== 'off' && d.wines.some((w) => labels[w.wine_id])}
-			<li class="day">
+			<!-- on a place's own page, the day's photo above its wines, centred (elsewhere beside them) -->
+			<li class="day" class:photo-first={!!place}>
 				<div class="when">
 					{#if d.date && d.wines.length}
 						<!-- the occasion in the journal: every wine of that day there -->
@@ -311,6 +312,27 @@
 	.more {
 		margin-top: 12px;
 	}
+	/* A place's page: the photo above the day's wines, centred in their column */
+	.day.photo-first .when {
+		grid-row: 1 / span 2;
+	}
+	.day.photo-first .photo {
+		grid-column: 2 / -1;
+		grid-row: 1;
+		justify-self: center;
+		max-width: 100%;
+		min-width: 0;
+		margin-bottom: 6px;
+	}
+	.day.photo-first .photo img {
+		width: auto;
+		max-width: 100%;
+		max-height: 320px;
+	}
+	.day.photo-first .what {
+		grid-column: 2 / -1;
+		grid-row: 2;
+	}
 	/* A phone: when and where on one line above the wines */
 	@media (max-width: 760px) {
 		.day {
@@ -329,6 +351,21 @@
 		.photo img {
 			width: 100%;
 			max-height: 320px;
+		}
+		/* a place's page: when, then the photo, then the wines */
+		.day.photo-first .when {
+			grid-row: 1;
+		}
+		.day.photo-first .photo {
+			grid-column: 1 / -1;
+			grid-row: 2;
+		}
+		.day.photo-first .photo img {
+			width: auto;
+		}
+		.day.photo-first .what {
+			grid-column: 1 / -1;
+			grid-row: 3;
 		}
 	}
 </style>
