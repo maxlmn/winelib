@@ -10,6 +10,8 @@
   opened and kept (a new `reliefs` table, migration 0014). Maintenance › *Relief of your vineyards* does every
   vineyard your wines use. A small compass and the hillside drawn side on at its slope show it beside the
   words, on the vineyard's page and on its wines'. On the maps, the vineyards' colours are shaded with their hillsides.
+  Outside the fine terrain models (Barolo, Bolgheri), a vineyard's relief is worked out from the finest tiles there
+  are (z14 in Piedmont) instead of failing.
 - About the data says what the map outlines are: informational, not legally binding; only INAO's plans
   (and each country's official texts) say which parcels may carry an appellation.
 

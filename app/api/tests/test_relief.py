@@ -105,3 +105,19 @@ def test_the_maintenance_task(client, monkeypatch):
     assert "1 vineyard" in job["result"]["summary"], job
     assert job["result"]["items"][0]["detail"].startswith("W ·")
     assert client.get("/api/vineyards/1/relief").json()["facing"] == "W"
+
+
+def test_a_lower_zoom_where_the_fine_tiles_stop():
+    """Outside the fine models (Piedmont), z15 is a 404: worked out at z14"""
+    import json
+    from urllib.error import HTTPError
+    import shapely
+    hill = plane(15, 180)
+
+    def get(z, x, y):
+        if z > 14:
+            raise HTTPError("u", 404, "Not Found", None, None)
+        return hill(z, x, y)
+    found = relief.compute(shapely.from_geojson(json.dumps(OUTLINE)), get=get)
+    assert found["zoom"] == 14 and relief.compass(found["aspect"]) == "S"
+    assert found["slope"]["median"] == pytest.approx(15, abs=0.5)
