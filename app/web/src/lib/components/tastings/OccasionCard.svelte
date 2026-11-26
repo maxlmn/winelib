@@ -338,6 +338,10 @@
 		header {
 			padding: 12px 16px 0;
 		}
+		/* the photo centred above the wines */
+		.photo {
+			align-self: center;
+		}
 		.photo img {
 			max-height: 220px;
 		}
@@ -358,6 +362,9 @@
 	}
 	:global(html.map-full) .occ:not(.plain) header {
 		padding: 12px 16px 0;
+	}
+	:global(html.map-full) .occ:not(.plain) .photo {
+		align-self: center;
 	}
 	:global(html.map-full) .occ:not(.plain) .photo img {
 		max-height: 220px;
