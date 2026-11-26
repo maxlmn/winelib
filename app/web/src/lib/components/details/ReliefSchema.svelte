@@ -3,7 +3,8 @@
 	 * side on at its true slope, between its lowest and highest points; the same in words beside them. Asked for once
 	 * shown (worked out from the outline the first time, then kept); nothing shown without an outline, or when the
 	 * terrain tiles can't be reached. */
-	import { request } from '#lib/api/http.ts';
+	import { quietly, request } from '#lib/api/http.ts';
+	import { reliefWorkedOut } from '#lib/contours.svelte.ts';
 	import { links } from '#lib/links.ts';
 
 	type Relief = { elevation: { min: number; mean: number; max: number }; slope: { median: number; steep: number }; aspect: number | null; facing: string | null };
@@ -15,15 +16,19 @@
 		const id = vineyardId;
 		void rev;
 		relief = null;
-		request<Relief | null>(`/api/vineyards/${id}/relief`)
+		const abort = new AbortController(); // an answer for an earlier vineyard or outline never lands
+		request<Relief | null>(`/api/vineyards/${id}/relief`, { signal: abort.signal })
 			.then((r) => {
-				if (id === vineyardId) relief = r;
+				relief = r;
+				if (r) reliefWorkedOut(id); // the maps showing it ask for its contours (now there) again
 			})
-			.catch(() => {});
+			.catch(quietly);
+		return () => abort.abort();
 	});
 
 	const WORDS: Record<string, string> = { N: 'north', E: 'east', S: 'south', W: 'west' };
-	const spelled = (p: string) => p.split('').map((c) => WORDS[c]).join('-').replace(/^(\w+)-\1-/, '$1-');
+	// "NNE": north-north-east (a three-letter point is one 22.5° step from its two-letter neighbour)
+	const spelled = (p: string) => p.split('').map((c) => WORDS[c]).join('-');
 	const facing = (r: Relief) => (r.facing ? `Faces ${r.facing}` : r.slope.median < 2 ? 'Flat' : 'Faces several ways');
 
 	// The compass: a wedge 45° wide on the way it faces (0 north, clockwise), in SVG's y-down coordinates

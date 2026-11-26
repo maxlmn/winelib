@@ -2,6 +2,7 @@
 	import ActionMenu from '#lib/components/ActionMenu.svelte';
 	import Icon from '#lib/components/Icon.svelte';
 	import { shapesUrl } from '#lib/api/details.ts';
+	import type { Variety } from '#lib/api/details.ts';
 	import CellarSection from '#lib/components/details/CellarSection.svelte';
 	import DetailHeader from '#lib/components/details/DetailHeader.svelte';
 	import DetailMap from '#lib/components/details/DetailMap.svelte';
@@ -16,7 +17,8 @@
 
 	let { data } = $props();
 	const a = $derived(data.detail);
-	const varieties = $derived(a.grapes ?? []);
+	// its varieties as the database's grapes; the register's text as it is when they aren't there (an older answer)
+	const varieties = $derived<Variety[]>(a.grapes ?? splitList(a.varieties).map((name) => ({ name, colour: null, grape: null })));
 	const yields = $derived([a.max_yield_hl && `${a.max_yield_hl} hl/ha`, a.max_yield_kg && `${a.max_yield_kg} kg/ha`].filter(Boolean).join(', '));
 	const colors = $derived([...new Set(splitList(a.colors))].join(', '));
 

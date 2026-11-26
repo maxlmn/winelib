@@ -381,6 +381,7 @@ class Relief(Base):
     zoom = Column(Integer, nullable=False)
     computed = Column(DateTime, nullable=False)
     contours = Column(Text)  # JSON {"lines", "bands"} inside the outline (relief.contours); null: worked out before
+    none_reason = Column(String)  # nothing to work out (too big, no outline...): a marker, its figures zeros
 
 
 class Geology(Base):

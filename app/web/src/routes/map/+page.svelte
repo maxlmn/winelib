@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { relief, setRelief } from '#lib/relief.svelte.ts';
+	import { relief, reliefButton, setRelief } from '#lib/relief.svelte.ts';
 	import VarietyChips from '#lib/components/details/VarietyChips.svelte';
 	import type { Variety } from '#lib/api/details.ts';
 	import { setParams } from '#lib/url.ts';
@@ -25,7 +25,7 @@
 	import { buildTree, decodePicks, encodePicks } from '#lib/vineyards.ts';
 	import type { VineyardRow } from '#lib/vineyards.ts';
 
-	type Detail = Record<string, string | number | null | object>;
+	type Detail = Record<string, string | number | null | object> & { grapes?: Variety[] };
 	/** A region's page: names and figures for the pickers, its outline and extent. No appellation or
 	 *  vineyard geometry: shapes come only for what's picked (see lib/api/mapShapes.ts) */
 	interface RegionIndex {
@@ -230,6 +230,8 @@
 	const detailTastings = $derived(((detail?.stats ?? null) as { tastings?: number } | null)?.tastings ?? 0);
 	const fmtYield = (d: Detail) =>
 		[d.max_yield_hl && `${d.max_yield_hl} hl/ha`, d.max_yield_kg && `${d.max_yield_kg} kg/ha`].filter(Boolean).join(' · ');
+	// the Relief button beside Plain / Satellite
+	const rb = $derived(reliefButton(basemap));
 </script>
 
 <svelte:head><title>{region ? `${regionLabel(region.name)} · ` : ''}Map · WineLib</title></svelte:head>
@@ -251,8 +253,7 @@
 		{/each}
 	</div>
 	<div class="seg small">
-		<button class:on={relief.on} aria-pressed={relief.on} disabled={basemap !== 'plain'} onclick={() => setRelief(!relief.on)}
-			title={basemap === 'plain' ? 'The hills shaded on the map' : 'Relief shows on the Plain map'}>Relief</button>
+		<button class:on={rb.pressed} aria-pressed={rb.pressed} disabled={rb.disabled} title={rb.title} onclick={() => setRelief(!relief.on)}>Relief</button>
 	</div>
 	</div>
 </div>
@@ -342,7 +343,7 @@
 							{/each}
 						</dl>
 						{#if detail.varieties}
-							<details><summary>Authorized varieties</summary>{#if (detail.grapes as Variety[] | undefined)?.length}<VarietyChips varieties={detail.grapes as Variety[]} />{:else}<p>{detail.varieties}</p>{/if}</details>
+							<details><summary>Authorized varieties</summary>{#if detail.grapes?.length}<VarietyChips varieties={detail.grapes} />{:else}<p>{detail.varieties}</p>{/if}</details>
 						{/if}
 						{#if detail.details}
 							<details><summary>Notes</summary><p>{detail.details}</p></details>

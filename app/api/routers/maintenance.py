@@ -369,10 +369,12 @@ def _places(session, job):
 def _reliefs(session, job):
     from routers.relief import describe, fill, missing
     limit = job.params.get("limit") or 50
-    total = len(missing(session))
-    done = fill(session, limit, job.commit, log=job.log)
-    items = [_item(v.name, describe(row) if row else (err or "to work out"), f"/vineyards/{v.id}") for v, row, err in done]
-    saved = sum(1 for _, row, _ in done if row)
+    todo = missing(session)
+    total = len(todo)
+    done = fill(session, todo[:limit], job.commit, log=job.log)
+    items = [_item(v.name, describe(row) if row is not None else (err or "to work out"), f"/vineyards/{v.id}")
+             for v, row, err in done]
+    saved = sum(1 for _, row, _ in done if row is not None and not row.none_reason)
     tail = f"{saved} of {len(done)} worked out." if job.commit else f"{len(done)} to work out in a run."
     return {"summary": f"{_n(total, 'vineyard')} of your wines without their relief; {tail}", "items": items}
 

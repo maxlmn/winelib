@@ -74,9 +74,13 @@ def decode(data):
 
 def fetch(z, x, y):
     """One tile's elevations from Mapterhorn"""
-    req = Request(TILES.format(z=z, x=x, y=y), headers={"User-Agent": "WineLib"})
+    from tasks import USER_AGENT
+    req = Request(TILES.format(z=z, x=x, y=y), headers={"User-Agent": USER_AGENT})
     with urlopen(req, timeout=20) as r:
-        return decode(r.read())
+        tile = decode(r.read())
+    if tile.shape != (SIZE, SIZE):  # not a terrain tile (an error page as an image): no relief from it
+        raise ValueError(f"a {tile.shape[1]}x{tile.shape[0]} tile, not {SIZE}x{SIZE}")
+    return tile
 
 
 def _smooth(a, r):
@@ -151,7 +155,6 @@ def contours(geom, smooth, px, py, low, high):
     import numpy as np
     import shapely
     from shapely.ops import linemerge
-    geom = shapely.make_valid(geom)  # an outline crossing itself (a bow tie): repaired, or the cuts fail
     # the grid cut to the outline (and a pixel around it): a vineyard is a few hundred pixels, not three tiles
     w, s, e, n = geom.bounds
     cols = np.where((px >= w) & (px <= e))[0]
@@ -201,7 +204,11 @@ def compute(geom, get=None):
     tile's elevations (the tests' made-up ones)."""
     import numpy as np
     import shapely
+    import geo
     get = get or fetch
+    geom = geo.polygonal(geom)  # an outline crossing itself, or with a spike: repaired (geo.outline already does)
+    if geom is None:
+        return None
     top = zoom_for(geom.bounds)
     if top is None:
         return None
@@ -227,7 +234,7 @@ def compute(geom, get=None):
     if inside.sum() < 4:
         return None
     m = pixel_m(z, geom.centroid.y)
-    smooth = _smooth(grid, max(1, round(SMOOTH_M / m / 2)))
+    smooth = _smooth(grid, round(SMOOTH_M / m / 2))  # none where a pixel is already coarser than SMOOTH_M
     d_south, d_east = np.gradient(smooth, m)  # rows run south, columns east
     gx, gy = d_east[inside], d_south[inside]
     steepness = np.hypot(gx, gy)
@@ -242,4 +249,5 @@ def compute(geom, get=None):
     return {"elevation": {"min": low, "mean": round(float(elev.mean())), "max": high},
             "slope": {"median": round(median, 1), "steep": round(float(np.percentile(slope, 90)), 1)},
             "aspect": aspect, "zoom": z,
-            "contours": contours(geom, smooth, px, py, float(elev.min()), float(elev.max()))}
+            # between the same lowest and highest points as reported: a stray pixel spreads neither the lines nor the bands
+            "contours": contours(geom, smooth, px, py, float(low), float(high))}

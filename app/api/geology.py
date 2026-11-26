@@ -54,8 +54,7 @@ def _index():
                     geoms = shapely.from_wkb(f.read_row_group(g, columns=["display"]).column(0).to_numpy(
                         zero_copy_only=False))
                     boxes.append(tuple(shapely.total_bounds(geoms)))
-            _loaded.update(stamp=stamp, boxes=boxes)
-            _group.cache_clear()
+            _loaded.update(stamp=stamp, boxes=boxes)  # _group's cache is keyed by the stamp too
         return path, stamp, _loaded["boxes"]
 
 
@@ -81,11 +80,15 @@ def brgm(outline):
     if found_index is None:
         return None
     path, stamp, boxes = found_index
-    outline = shapely.make_valid(outline)  # a drawn or published outline crossing itself (a bow tie)
+    outline = geo.polygonal(outline)  # an outline crossing itself, or with a spike: repaired (geo.outline already does)
+    if outline is None:
+        return None
     w, s_, e, n = outline.bounds
     # areas in degrees² are fine for shares within one small outline once longitudes are scaled to latitude's
     k = math.cos(math.radians(outline.centroid.y))
     total = outline.area * k
+    if total <= 0:  # no area (a drawn outline flattened to a line): no shares to give
+        return None
     found = {}
     for g, (bw, bs, be, bn) in enumerate(boxes):
         if bw > e or be < w or bs > n or bn < s_:
@@ -109,7 +112,8 @@ def brgm(outline):
 def macrostrat(lat, lng):
     """{"units": [{"name", "lithology", "age", "colour", "share": 1}], "scale"} from Macrostrat's most detailed map at
     a point, or None where it has none. Raises OSError when it can't be reached."""
-    req = Request(MACROSTRAT.format(lat=lat, lng=lng), headers={"User-Agent": "WineLib"})
+    from tasks import USER_AGENT
+    req = Request(MACROSTRAT.format(lat=lat, lng=lng), headers={"User-Agent": USER_AGENT})
     with urlopen(req, timeout=20) as r:
         data = json.load(r).get("success", {}).get("data") or []
     order = ["large", "medium", "small", "tiny"]

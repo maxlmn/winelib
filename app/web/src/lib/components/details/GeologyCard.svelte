@@ -2,7 +2,7 @@
 	/** A vineyard's geology (routers/geology.py): the formations under its outline, a bar in the geological map's own
 	 * colours sized by their shares, then each named as the map publishes it; the map and its scale under them.
 	 * Nothing shown without an outline or a map there. */
-	import { request } from '#lib/api/http.ts';
+	import { quietly, request } from '#lib/api/http.ts';
 	import { links } from '#lib/links.ts';
 
 	type Unit = { notation: string | null; name: string; colour: string | null; share: number; lithology?: string | null; age?: string | null };
@@ -17,11 +17,11 @@
 		void rev;
 		geology = null;
 		all = false;
-		request<Geology | null>(`/api/vineyards/${id}/geology`)
-			.then((g) => {
-				if (id === vineyardId) geology = g;
-			})
-			.catch(() => {});
+		const abort = new AbortController(); // an answer for an earlier vineyard or outline never lands
+		request<Geology | null>(`/api/vineyards/${id}/geology`, { signal: abort.signal })
+			.then((g) => (geology = g))
+			.catch(quietly);
+		return () => abort.abort();
 	});
 
 	const SHOWN = 4;

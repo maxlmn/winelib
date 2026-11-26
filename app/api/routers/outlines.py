@@ -179,6 +179,14 @@ def create_vineyard(body: NewVineyard, session: Session = Depends(get_session)):
     return {"id": v.id, "wines_linked": len({w, *family})}
 
 
+def _forget_worked_out(session, boundary):
+    """What was worked out from an outline (its relief and contours, its geology), dropped when it's redrawn or
+    deleted: worked out again from the new one, never shown for the old one meanwhile"""
+    from db import Geology, Relief
+    session.query(Relief).filter(Relief.boundary == boundary).delete()
+    session.query(Geology).filter(Geology.boundary == boundary).delete()
+
+
 def _link(session, row, label, g):
     """Saves outline g for the row (creating its custom shape, or replacing the one it has) and links the row to
     it, without committing."""
@@ -200,6 +208,7 @@ def save_outline(kind: str, row_id: int, body: Outline, session: Session = Depen
     """Saves the drawn outline (creating it, or replacing the one the row has) and links the row to it."""
     row, label = _row(session, kind, row_id)
     custom, bbox = _link(session, row, label, to_shape(body.geometry))
+    _forget_worked_out(session, f"custom:{custom.id}")
     session.commit()
     geo.custom_changed(custom.id)
     return {"boundary": row.boundary, "bbox": [float(b) for b in bbox.split(",")]}
@@ -214,6 +223,7 @@ def delete_outline(kind: str, row_id: int, session: Session = Depends(get_sessio
         raise HTTPException(404, "No outline drawn for this one")
     row.boundary = custom.replaces
     shape_id = custom.id
+    _forget_worked_out(session, f"custom:{shape_id}")
     session.delete(custom)
     session.commit()
     geo.custom_changed(shape_id)

@@ -1,22 +1,17 @@
-/** Contour lines inside the vineyards on the maps (GET /api/map/vineyard-contours: worked out with each vineyard's
- * relief, relief.py): a per-browser choice, on unless turned off from a map's legend. */
-const KEY = 'winelib-contours';
+/** Contour lines and slope shading inside the vineyards on the maps (mapContours.ts): a per-browser choice, on unless
+ * turned off from a map's legend; `rev` moves when a vineyard's relief has just been worked out (its page's first
+ * visit), so the maps showing it ask for its contours again. */
+import { persistedFlag } from '#lib/flag.svelte.ts';
+import { forgetContours } from '#lib/mapContours.ts';
 
-function saved() {
-	try {
-		return localStorage.getItem(KEY) !== 'off';
-	} catch {
-		return true;
-	}
-}
+const flag = persistedFlag('winelib-contours');
+export const contours = flag.state;
+export const contourRev = $state({ rev: 0 });
 
-export const contours = $state({ on: typeof localStorage === 'undefined' ? true : saved() });
+export const setContours = (on: boolean) => flag.set(on);
 
-export function setContours(on: boolean) {
-	contours.on = on;
-	try {
-		localStorage.setItem(KEY, on ? 'on' : 'off');
-	} catch {
-		/* private window: for this visit only */
-	}
+/** A vineyard's relief was just worked out (or again, its outline redrawn): its contours asked for afresh */
+export function reliefWorkedOut(vineyardId: number) {
+	forgetContours(vineyardId);
+	contourRev.rev++;
 }
