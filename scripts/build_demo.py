@@ -39,6 +39,28 @@ def call(url, body=None):
         return json.load(r)
 
 
+def task(url, name, **params):
+    """A Maintenance task run (committing) and waited for: its last job"""
+    call(f"{url}/api/maintenance/{name}", {"commit": True, **params})
+    while (job := call(url + "/api/maintenance/job")).get("status") == "running":
+        time.sleep(3)
+    return job
+
+
+def reliefs(url, batch=200):
+    """Maintenance › Relief of your vineyards, again until none is left (or none more can be done: tiles
+    unreachable, it's tried again on the vineyard's page); a demo without contours rather than no demo"""
+    left = None
+    while True:
+        job = task(url, "reliefs", limit=batch)
+        summary = (job.get("result") or {}).get("summary") or job.get("status")
+        print("relief:", summary, flush=True)
+        n = int(m.group(1)) if (m := re.match(r"(\d+) ", summary or "")) else 0
+        if job.get("status") != "done" or n <= batch or n == left:
+            return
+        left = n
+
+
 def run(cmd, **kw):
     print("$", re.sub(r"://([^:/@]+):[^@]+@", r"://\1:***@", " ".join(cmd)), flush=True)  # no password in the log
     subprocess.run(cmd, check=True, **kw)
@@ -75,12 +97,13 @@ def build(db, out, base="/winelib/demo", pack=PACK_URL, max_pages=6000, tabs=6, 
             else:
                 sys.exit("The app didn't start")
             # The published map pack, installed and linked
-            call(url + "/api/maintenance/map_pack", {"commit": True})
-            while (job := call(url + "/api/maintenance/job")).get("status") == "running":
-                time.sleep(3)
+            job = task(url, "map_pack")
             print("map pack:", (job.get("result") or {}).get("summary") or job.get("status"), flush=True)
             if job.get("status") != "done":
                 sys.exit("The map pack wasn't installed")
+            # The vineyards' relief and contours, worked out before the crawl: the maps ask for their contours
+            # before a vineyard's page would work them out, and the demo keeps only what the crawl saw
+            reliefs(url)
             # Every page, its API answers saved
             run([node, os.path.join(WEB, "scripts", "crawl-demo.mjs"), "--url", url, "--out",
                  os.path.join(site, "demo-data"), "--max", str(max_pages), "--tabs", str(tabs)], cwd=WEB)
