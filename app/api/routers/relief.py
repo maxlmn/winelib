@@ -91,6 +91,19 @@ def save(session, boundary, work):
         return session.get(Relief, boundary)
 
 
+def work_out_later(bind, boundary):
+    """A vineyard's outline just saved (routers/outlines.py, run after the answer): its relief worked out on a session
+    of its own, so its page and the map's contours have it at once; tiles unreachable or anything else, it's left for
+    the page or the Maintenance task to try again"""
+    from sqlalchemy.orm import Session as Own
+    with Own(bind=bind) as session:
+        try:
+            save(session, boundary, lambda: work_out(session, boundary))
+        except Exception as e:  # noqa: BLE001 (never the saving's error: it has answered already)
+            session.rollback()
+            log.warning("relief of %s, after saving it: %s", boundary, e)
+
+
 @router.get("/api/vineyards/{vineyard_id}/relief")
 def vineyard_relief(vineyard_id: int, session: Session = Depends(get_session)):
     """{"elevation": {"min", "mean", "max"} (m), "slope": {"median", "steep"} (degrees), "aspect" (degrees from north,

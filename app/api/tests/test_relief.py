@@ -98,8 +98,11 @@ def test_unreachable_tiles(client, monkeypatch):
 
 
 def test_the_maintenance_task(client, monkeypatch):
-    monkeypatch.setattr(relief, "fetch", plane(8, 270))
+    def down(z, x, y):
+        raise OSError("no network")
+    monkeypatch.setattr(relief, "fetch", down)  # nothing worked out when it's saved: left for the task
     client.put("/api/vineyards/1/outline", json={"geometry": OUTLINE})
+    monkeypatch.setattr(relief, "fetch", plane(8, 270))
     client.post("/api/maintenance/reliefs", json={"commit": True})
     job = wait(client)
     assert "1 vineyard" in job["result"]["summary"], job
@@ -186,8 +189,17 @@ def test_redrawing_an_outline_forgets_its_contours(client, monkeypatch):
     client.put("/api/vineyards/1/outline", json={"geometry": OUTLINE})
     client.get("/api/vineyards/1/relief")
     assert client.get("/api/map/vineyard-contours?ids=1").json()["features"]
+    before = client.get("/api/map/vineyard-contours?ids=1").json()["features"]
     client.put("/api/vineyards/1/outline", json={"geometry": square(4.784, 45.488, 0.002)})
-    assert client.get("/api/map/vineyard-contours?ids=1").json()["features"] == []  # not the old outline's
+    after = client.get("/api/map/vineyard-contours?ids=1").json()["features"]
+    assert after and after != before  # the new outline's, worked out once it was saved
+
+    def down(z, x, y):
+        raise OSError("no network")
+    monkeypatch.setattr(relief, "fetch", down)
+    client.put("/api/vineyards/1/outline", json={"geometry": OUTLINE})
+    assert client.get("/api/map/vineyard-contours?ids=1").json()["features"] == []  # never the old outline's
+    monkeypatch.setattr(relief, "fetch", plane(10, 90))
     client.get("/api/vineyards/1/relief")
     assert client.get("/api/map/vineyard-contours?ids=1").json()["features"]
 
@@ -226,3 +238,19 @@ def test_two_first_visits_at_once(client, monkeypatch):
     def clash():
         raise IntegrityError("INSERT", {}, Exception("duplicate key"))
     assert save(s, boundary, clash).boundary == boundary  # the second one's: read back
+
+
+def test_worked_out_as_soon_as_the_outline_is_saved(client, monkeypatch):
+    calls = []
+
+    def fake(z, x, y):
+        calls.append((z, x, y))
+        return plane(12, 112)(z, x, y)
+    monkeypatch.setattr(relief, "fetch", fake)
+    client.put("/api/vineyards/1/outline", json={"geometry": OUTLINE})
+    n = len(calls)
+    assert n > 0  # worked out after the save answered
+    assert client.get("/api/vineyards/1/relief").json()["facing"] == "ESE"
+    assert len(calls) == n  # the page only reads it
+    ids = client.get("/api/map/vineyard-contours?ids=1").json()["features"]
+    assert ids and {f["properties"]["vineyard"] for f in ids} == {1}

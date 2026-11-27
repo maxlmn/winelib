@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- A vineyard drawn or redrawn has its relief and contours worked out as soon as its outline is saved, not on its
+  page's first visit (a vineyard drawn from a wine's page too); with the terrain tiles unreachable, it's left for the
+  page or the Maintenance task, as before.
+- Turning Relief on or off redraws each map once (it was twice).
 - On a place's page, each day's photo sits above its wines, centred (it stood beside them, squeezing the list).
 - On the Tasting Notes page, an occasion's photo is centred above its wines (it sat against the left edge).
 - **Fixes from a review of the relief, contours and geology**:
