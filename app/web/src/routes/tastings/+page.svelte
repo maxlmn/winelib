@@ -101,10 +101,11 @@
 		URL.revokeObjectURL(a.href);
 	}
 
-	const kpis = $derived([
-		{ label: 'Wines tasted', value: s.wines, all: sAll.wines },
-		{ label: 'Producers', value: s.producers, all: sAll.producers },
-		{ label: 'Unique wines', value: s.unique, all: sAll.unique },
+	// the figures of what's shown (the filters'), as one line; "of" the whole journal's when filtered
+	const figures = $derived([
+		{ label: 'wines tasted', value: s.wines, all: sAll.wines },
+		{ label: 'producers', value: s.producers, all: sAll.producers },
+		{ label: 'unique wines', value: s.unique, all: sAll.unique },
 		{ label: 'Michelin stars', value: s.stars, all: sAll.stars, gold: true }
 	]);
 </script>
@@ -112,7 +113,14 @@
 <svelte:head><title>Tasting Notes · WineLib</title></svelte:head>
 
 <div class="page-head">
-	<h1>Tasting Notes</h1>
+	<div>
+		<h1>Tasting Notes</h1>
+		<p class="stats">
+			{#each figures as k (k.label)}
+				<span><b class="num" class:gold={k.gold && k.value}>{k.value}{k.gold && k.value ? ' ★' : ''}</b> {k.label}{#if k.value !== k.all}<span class="muted">&nbsp;of {k.all}</span>{/if}</span>
+			{/each}
+		</p>
+	</div>
 	<div class="actions">
 		<div class="mode" role="group" aria-label="How the notes are shown">
 			<button class:on={onMap} aria-pressed={onMap} onclick={() => setParams({ view: null })} title="The notes as cards, over the map">On the map</button>
@@ -131,16 +139,6 @@
 		{/if}
 		<button class="btn" onclick={exportMarkdown} disabled={!tastings.length}>↓ Export</button>
 	</div>
-</div>
-
-<div class="kpis">
-	{#each kpis as k}
-		<div class="kpi card">
-			<div class="label">{k.label}</div>
-			<div class="value num" class:gold={k.gold && k.value}>{k.value}{k.gold && k.value ? ' ★' : ''}</div>
-			<div class="sub muted num">{k.value !== k.all ? `of ${k.all}` : 'all notes'}</div>
-		</div>
-	{/each}
 </div>
 
 {#if onMap}
@@ -249,10 +247,6 @@
 </div>
 
 <style>
-	/* in the column over the map: the four figures two by two */
-	:global(html.map-full) .kpis {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-	}
 	/* on the map: a heading in place of the tables' tabs */
 	.tabs.bare {
 		align-items: baseline;
@@ -300,30 +294,23 @@
 		opacity: 0.5;
 		cursor: default;
 	}
-	.kpis {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-		gap: 12px;
-		margin-bottom: 14px;
+	.page-head h1 {
+		margin: 0;
 	}
-	.kpi {
-		padding: 14px 16px;
-	}
-	.label {
-		font-size: 12px;
+	.stats {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 2px 14px;
+		margin: 4px 0 0;
+		font-size: 13px;
 		color: var(--muted);
 	}
-	.value {
-		font-size: 22px;
-		font-weight: 650;
-		letter-spacing: -0.01em;
-		margin: 2px 0;
+	.stats b {
+		color: var(--text);
+		font-weight: 600;
 	}
-	.value.gold {
+	.stats b.gold {
 		color: var(--gold-text);
-	}
-	.sub {
-		font-size: 12px;
 	}
 	.filters {
 		padding: 12px;

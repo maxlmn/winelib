@@ -417,7 +417,7 @@ button.sort {
 html.map-full main {
 	position: relative;
 	z-index: 41;
-	width: min(540px, 100%);
+	width: min(var(--map-column, 540px), 100%);
 	padding: 14px 0 90px 14px;
 }
 html.map-full main :is(.body.split, .about.has-image, .top, .map-card) {

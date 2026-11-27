@@ -2,42 +2,25 @@
 	import Icon from '#lib/components/Icon.svelte';
 	import { fmtDate } from '#lib/components/details/wine.ts';
 	import { links } from '#lib/links.ts';
-	import Change from '#lib/components/Change.svelte';
-	import { pct, plural, money } from '#lib/format.ts';
+	import { money } from '#lib/format.ts';
 	import WhatToOpen from '#lib/components/home/WhatToOpen.svelte';
-	import CellarSection from '#lib/components/details/CellarSection.svelte';
 	import HomeMap from '#lib/components/home/HomeMap.svelte';
 	import GettingStarted from '#lib/components/home/GettingStarted.svelte';
 	import { DEMO } from '#lib/demo.ts';
 	import { integrations } from '#lib/settings.svelte.ts';
 	import OccasionCard from '#lib/components/tastings/OccasionCard.svelte';
-	import TastingRibbon from '#lib/components/tastings/TastingRibbon.svelte';
 	import { occasions } from '#lib/components/tastings/journal.ts';
 	import { goto } from '$app/navigation';
 	import type { Bottle } from '#lib/types.ts';
 
 	let { data } = $props();
 	const d = $derived(data.dashboard);
-	const gain = $derived(pct(d.cellar.cost, d.cellar.market));
 	const year = $derived(d.today.slice(0, 4));
 
-	// The latest evenings, as rows: the last one, and the ones before while they stay short
-	// (about 8 wines in all)
-	const latest = $derived.by(() => {
-		const out = [];
-		let wines = 0;
-		for (const o of occasions(data.journal, data.journal.tastings, [])) {
-			if (!o.wines.length) continue;
-			if (out.length && wines + o.wines.length > 8) break;
-			out.push(o);
-			wines += o.wines.length;
-			if (out.length === 3) break;
-		}
-		return out;
-	});
-	// The latest tasting: the latest evening's last wine (the home map opens on it). A wine of the latest tastings
-	// pointed at (hovered a moment, or tapped) takes its place on the map
-	const lastWine = $derived(latest[0]?.wines.at(-1) ?? null);
+	// The latest evening (the home map opens on its wines' vineyards). A wine of it pointed at (hovered a moment, or
+	// tapped) takes its place on the map, as does the bottle suggested
+	const evening = $derived(occasions(data.journal, data.journal.tastings, []).find((o) => o.wines.length) ?? null);
+	const lastWine = $derived(evening?.wines.at(-1) ?? null);
 	// ...as does a bottle of what to open or of the recent purchases: the one shown marked in its list
 	type Pointed = { kind: 'tasting' | 'bottle'; id: number; wine_id: number; region: string | null };
 	let pointed = $state<Pointed | null>(null);
@@ -48,10 +31,19 @@
 		if (wait) pointTimer = setTimeout(() => (pointed = p), wait);
 		else pointed = p;
 	}
-	const pointTasting = (t: { id: number; wine_id: number; region: string | null }, wait = 180) =>
+	// the name of what's pointed at, for the map's label
+	let pointedName = $state('');
+	const named = (w: { producer: string; cuvee?: string | null; vintage?: string | number | null }) =>
+		[w.producer, w.cuvee, w.vintage].filter(Boolean).join(' ');
+	const pointTasting = (t: { id: number; wine_id: number; region: string | null; producer?: string; cuvee?: string; vintage?: string }, wait = 180) => {
+		pointedName = t.producer ? named(t as { producer: string }) : '';
 		point({ kind: 'tasting', id: t.id, wine_id: t.wine_id, region: t.region }, wait);
+	};
 	// along the year's ribbon: quicker (it's swept along), at once for its replay
-	const pointBottle = (b: Bottle) => point({ kind: 'bottle', id: b.bottle_id, wine_id: b.wine_id, region: b.region });
+	const pointBottle = (b: Bottle) => {
+		pointedName = named(b);
+		point({ kind: 'bottle', id: b.bottle_id, wine_id: b.wine_id, region: b.region });
+	};
 	const shownWine = $derived(pointed ?? (lastWine ? { kind: 'tasting' as const, id: lastWine.id, wine_id: lastWine.wine_id, region: lastWine.region } : null));
 	// an evening's place pointed at (its line in the latest tastings): pinned on the map, until a wine is pointed at
 	let pinned = $state<[number, number] | null>(null);
@@ -64,19 +56,29 @@
 		pointTimer = setTimeout(() => (pinned = where), 180);
 	}
 	const shownTasting = $derived(shownWine?.kind === 'tasting' ? shownWine.id : null);
-	const shownBottle = $derived(shownWine?.kind === 'bottle' ? shownWine.id : null);
-	// The past year's wines as one line of region colours
-	const yearAgo = $derived(`${Number(d.today.slice(0, 4)) - 1}${d.today.slice(4)}`);
-	const recentTastings = $derived(data.journal.tastings.filter((t) => t.date >= yearAgo));
-	// The last dozen purchases still in the cellar, as lines
-	const recentBottles = $derived(
-		data.cellar.bottles
-			.filter((b) => b.purchase_date)
-			.sort((a, b) => b.purchase_date!.localeCompare(a.purchase_date!))
-			.slice(0, 12)
+	// What the map shows, and the label over it saying so: the evening (its wines together), one wine of it, the
+	// bottle to open, or the place
+	const focus = $derived(
+		pinned
+			? { point: pinned }
+			: pointed
+				? { wineId: pointed.wine_id, region: pointed.region }
+				: lastWine
+					? { wineId: lastWine.wine_id, region: lastWine.region, wineIds: [...new Set(evening!.wines.map((w) => w.wine_id))] }
+					: null
 	);
-	const recentQty = $derived(recentBottles.reduce((n, b) => n + b.qty, 0));
-
+	const caption = $derived(
+		pinned
+			? `Where it was opened · ${evening?.name ?? ''}`
+			: pointed?.kind === 'bottle'
+				? `To open · ${pointedName}`
+				: pointed
+					? `Tasted · ${pointedName}`
+					: evening
+						? `Last opened · ${fmtDate(evening.date)}, ${evening.wines.length === 1 ? named(evening.wines[0]) : `${evening.wines.length} wines`}`
+						: null
+	);
+	const shownBottle = $derived(shownWine?.kind === 'bottle' ? shownWine.id : null);
 	// A wine at random: any you hold or have tasted, each once however many bottles or notes
 	const wineIds = $derived([...new Set([...data.cellar.bottles, ...data.journal.tastings].map((x) => x.wine_id))]);
 	const randomWine = () => goto(links.wine(wineIds[Math.floor(Math.random() * wineIds.length)]));
@@ -94,6 +96,12 @@
 	<div>
 		<h1>{greeting}</h1>
 		<p class="muted date">{fmtDate(d.today)}</p>
+		<p class="stats">
+			<a href={links.cellar()}><b class="num">{d.cellar.bottles}</b> bottles</a>
+			{#if d.cellar.market}<a href={links.cellar({ view: 'prices' })}><b class="num">{money(d.cellar.market)}</b></a>{/if}
+			<a href={links.tastings()}><b class="num">{d.year.tastings}</b> tasted</a>
+			<a href={links.cellar({ view: 'list' })}><b class="num">{d.year.purchases}</b> bought in {year}</a>
+		</p>
 	</div>
 	<div class="actions">
 		<a class="btn icon primary" href={links.newTasting()} title="Add a tasting" aria-label="Add a tasting"><span class="plus">+</span><Icon name="glass" size={15} /></a>
@@ -111,65 +119,23 @@
 	<GettingStarted bottles={data.cellar.bottles.length} tastings={data.journal.tastings.length} />
 {/if}
 
-<div class="kpis">
-	<a class="kpi card" href={links.cellar()}>
-		<div class="label">Bottles in cellar</div>
-		<div class="value num">{d.cellar.bottles}</div>
-	</a>
-	<a class="kpi card" href={links.cellar({ view: 'prices' })}>
-		<div class="label">Market value</div>
-		<div class="value num">{d.cellar.market ? money(d.cellar.market) : '–'}</div>
-		{#if d.cellar.market}<div class="sub num"><Change value={gain} digits={1} /> on cost</div>{/if}
-	</a>
-	<a class="kpi card" href={links.tastings()}>
-		<div class="label">Wines tasted in {year}</div>
-		<div class="value num">{d.year.tastings}</div>
-	</a>
-	<a class="kpi card" href={links.cellar({ view: 'list' })}>
-		<div class="label">Purchases in {year}</div>
-		<div class="value num">{d.year.purchases}</div>
-	</a>
-</div>
-
-<!-- The map is the page's ground: the whole window behind the cards, on the latest tasting's wine (or the one
-     pointed at in the list) -->
-<HomeMap full focus={pinned ? { point: pinned } : shownWine ? { wineId: shownWine.wine_id, region: shownWine.region } : null} />
+<!-- The map is the page: the whole window behind a slim column, on the latest evening's vineyards (or the wine
+     pointed at), a label over it saying which -->
+<HomeMap full column={400} by="tasted" {focus} {caption} />
 
 <section class="card latest">
 	<div class="sec-head">
-		<h2>Latest {latest.length > 1 ? 'tastings' : 'tasting'}</h2>
+		<h2>Last opened</h2>
 		<a class="more" href={links.tastings()}>All tasting notes →</a>
 	</div>
-	{#each latest as o (o.key)}
-		<OccasionCard occasion={o} regionColors={data.regionColors} plain onwine={pointTasting} shown={pinned ? null : shownTasting} onplace={pointPlace} />
+	{#if evening}
+		<OccasionCard occasion={evening} regionColors={data.regionColors} plain onwine={pointTasting} shown={pinned ? null : shownTasting} onplace={pointPlace} />
 	{:else}
 		<p class="muted">No tastings yet. <a class="more" href={links.newTasting()}>Add the first one</a></p>
-	{/each}
+	{/if}
 </section>
-{#if recentTastings.length > 1}
-	<TastingRibbon
-		tastings={recentTastings}
-		label="The past year, a wine per bar: its region’s colour (its own below). Sweep it, or replay it, the map following"
-		onwine={(t, now) => pointTasting(t, now ? 0 : 90)}
-		shown={shownTasting}
-	/>
-{/if}
 
-<WhatToOpen bottles={data.cellar.bottles} totals={d.drink_soon.bottles} onwine={pointBottle} shown={shownBottle} />
-<!-- Without any purchase dates (none recorded), there's nothing recent to show -->
-{#if recentBottles.length || !data.cellar.bottles.length}
-	<section class="card purchases-card">
-		<div class="sec-head">
-			<h2>Recent purchases <span class="muted num">{plural(recentQty, 'bottle')}</span></h2>
-			<a class="more" href={links.cellar()}>The cellar →</a>
-		</div>
-		{#if recentBottles.length}
-			<CellarSection bottles={recentBottles} regionColors={data.regionColors} prices onwine={pointBottle} shown={shownBottle} />
-		{:else}
-			<p class="muted">No purchases yet. <a class="more" href={links.newBottle()}>Add one</a></p>
-		{/if}
-	</section>
-{/if}
+<WhatToOpen compact bottles={data.cellar.bottles} onwine={pointBottle} shown={shownBottle} />
 
 <style>
 	/* over the map, on a card of its own (app.css: html.map-full main > .page-head) */
@@ -188,31 +154,24 @@
 		gap: 8px;
 		flex-wrap: wrap;
 	}
-	.kpis {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-		gap: 12px;
-		margin-bottom: 14px;
-	}
-	.kpi {
-		padding: 14px 16px;
-		color: inherit;
-		text-decoration: none;
-		transition: border-color 0.15s;
-	}
-	.kpi:hover {
-		border-color: var(--accent);
-	}
-	.label {
-		font-size: 12px;
+	.stats {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 2px 12px;
+		margin: 6px 0 0;
+		font-size: 13px;
 		color: var(--muted);
 	}
-	.value {
-		font-size: 22px;
-		font-weight: 650;
+	.stats a {
+		color: inherit;
+		text-decoration: none;
 	}
-	.sub {
-		font-size: 12px;
+	.stats a:hover {
+		color: var(--accent);
+	}
+	.stats b {
+		color: var(--text);
+		font-weight: 600;
 	}
 	section.card {
 		padding: 16px 18px;
@@ -240,15 +199,7 @@
 		margin: 0;
 		padding: 10px 0;
 	}
-	.latest :global(.occ + .occ) {
-		border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
-	}
 	.latest :global(.occ:last-child) {
 		padding-bottom: 0;
-	}
-	.purchases-card h2 .muted {
-		font-weight: 400;
-		font-size: 13px;
-		margin-left: 6px;
 	}
 </style>

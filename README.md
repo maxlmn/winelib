@@ -11,13 +11,13 @@ vineyard. It runs on your own computer: your data stays yours.
 
 ## What it does
 
-**Your cellar at a glance.** The map of the regions you drink, your latest tastings, the past year's wines in one
-line of colours, what to open tonight (the bottles your lists are waiting for first, then those to drink soon) and
-your latest purchases, rack by rack.
+**Your cellar at a glance.** The map is the home page: it opens on the vineyards of your last evening, with their
+hills, and a slim column beside it says what it shows, what you opened last and what to open tonight (the bottles
+your lists are waiting for first), flying to that bottle's vineyard.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="screenshots/home-dark.png">
-  <img alt="The home page: your wine map, the latest tasting, the past year in colours" src="screenshots/home.png">
+  <img alt="The home page: the map on your last evening's vineyards, what you opened and what to open tonight" src="screenshots/home.png">
 </picture>
 
 **Lists, a treasure hunt.** Wines to find and taste: a critic's top 100, Noble Rot's wines of the decade, the 1855
