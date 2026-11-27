@@ -67,6 +67,18 @@
 					? { wineId: lastWine.wine_id, region: lastWine.region, wineIds: [...new Set(evening!.wines.map((w) => w.wine_id))] }
 					: null
 	);
+	// the evening's wines the map frames (HomeMap: all, or the last alone when they lie far apart)
+	let framed = $state<number[] | null>(null);
+	const eveningLabel = $derived.by(() => {
+		if (!evening) return '';
+		const ids = [...new Set(evening.wines.map((w) => w.wine_id))];
+		const shown = framed?.length ? ids.filter((id) => framed!.includes(id)) : ids;
+		if (shown.length === 1) {
+			const w = evening.wines.findLast((x) => x.wine_id === shown[0])!;
+			return ids.length > 1 ? `${named(w)} (1 of ${ids.length} wines)` : named(w);
+		}
+		return shown.length < ids.length ? `${shown.length} of ${ids.length} wines` : `${ids.length} wines`;
+	});
 	const caption = $derived(
 		pinned
 			? `Where it was opened · ${evening?.name ?? ''}`
@@ -75,7 +87,7 @@
 				: pointed
 					? `Tasted · ${pointedName}`
 					: evening
-						? `Last opened · ${fmtDate(evening.date)}, ${evening.wines.length === 1 ? named(evening.wines[0]) : `${evening.wines.length} wines`}`
+						? `Last opened · ${fmtDate(evening.date)}, ${eveningLabel}`
 						: null
 	);
 	const shownBottle = $derived(shownWine?.kind === 'bottle' ? shownWine.id : null);
@@ -121,7 +133,7 @@
 
 <!-- The map is the page: the whole window behind a slim column, on the latest evening's vineyards (or the wine
      pointed at), a label over it saying which -->
-<HomeMap full column={400} by="tasted" {focus} {caption} />
+<HomeMap full column={400} by="tasted" {focus} {caption} bind:framed />
 
 <section class="card latest">
 	<div class="sec-head">
