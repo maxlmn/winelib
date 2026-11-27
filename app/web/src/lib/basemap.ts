@@ -3,6 +3,7 @@ import { GLYPHS, VECTOR_IDS, VECTOR_SOURCE, vectorLayers, vectorPaint } from '#l
 // MapLibre resolves its worker next to its own module, which bundling breaks: point it at Vite's copy
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import { integrations } from './settings.svelte.ts';
+import { untrack } from 'svelte';
 import { onRelief, relief } from './relief.svelte.ts';
 
 export type Basemap = 'plain' | 'satellite';
@@ -137,9 +138,10 @@ let satRegistered = false;
 
 /** Which layers show: the vector map on Plain, and under the photos when there's no Esri key (where they stop);
  * OpenStreetMap's raster tiles in its place when OpenFreeMap is down; the photos on Satellite */
+// Relief read untracked: a map's basemap effect doesn't re-run when it's toggled (onRelief below redraws it, once)
 function shownLayers(kind: Basemap, vectorDown: boolean) {
 	const vector = (kind === 'plain' || !esriKey()) && !vectorDown;
-	return { vector, osm: kind === 'plain' && vectorDown, sat: kind === 'satellite', relief: kind === 'plain' && !vectorDown && relief.on };
+	return { vector, osm: kind === 'plain' && vectorDown, sat: kind === 'satellite', relief: kind === 'plain' && !vectorDown && untrack(() => relief.on) };
 }
 
 // Per map: the basemap shown, and whether OpenFreeMap failed (Plain then falls back to raster tiles)

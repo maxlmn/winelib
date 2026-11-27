@@ -7,7 +7,7 @@ import re
 import xml.etree.ElementTree as ET
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
 from pydantic import BaseModel
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -151,7 +151,7 @@ def new_vineyard_start(wine_id: int, session: Session = Depends(get_session)):
 
 
 @router.post("/api/vineyards", status_code=201)
-def create_vineyard(body: NewVineyard, session: Session = Depends(get_session)):
+def create_vineyard(body: NewVineyard, later: BackgroundTasks, session: Session = Depends(get_session)):
     """A vineyard drawn from a wine's page: created with its outline, then linked to the wine and to its other
     vintages that have no vineyard or the one it replaces (as a lieu-dit picked does)."""
     w = _wine(session, body.wine)
@@ -176,6 +176,7 @@ def create_vineyard(body: NewVineyard, session: Session = Depends(get_session)):
         x.vineyard_id = v.id
     session.commit()
     geo.custom_changed(int(v.boundary.split(":")[1]))
+    _relief_later(later, session, v.boundary)
     return {"id": v.id, "wines_linked": len({w, *family})}
 
 
@@ -185,6 +186,12 @@ def _forget_worked_out(session, boundary):
     from db import Geology, Relief
     session.query(Relief).filter(Relief.boundary == boundary).delete()
     session.query(Geology).filter(Geology.boundary == boundary).delete()
+
+
+def _relief_later(later, session, boundary):
+    """A vineyard's relief worked out once the outline's saving has answered (routers/relief.py)"""
+    from routers.relief import work_out_later
+    later.add_task(work_out_later, session.get_bind(), boundary)
 
 
 def _link(session, row, label, g):
@@ -204,13 +211,16 @@ def _link(session, row, label, g):
 
 
 @router.put("/api/{kind}/{row_id}/outline")
-def save_outline(kind: str, row_id: int, body: Outline, session: Session = Depends(get_session)):
+def save_outline(kind: str, row_id: int, body: Outline, later: BackgroundTasks,
+                 session: Session = Depends(get_session)):
     """Saves the drawn outline (creating it, or replacing the one the row has) and links the row to it."""
     row, label = _row(session, kind, row_id)
     custom, bbox = _link(session, row, label, to_shape(body.geometry))
     _forget_worked_out(session, f"custom:{custom.id}")
     session.commit()
     geo.custom_changed(custom.id)
+    if label == "vineyard":
+        _relief_later(later, session, row.boundary)
     return {"boundary": row.boundary, "bbox": [float(b) for b in bbox.split(",")]}
 
 
