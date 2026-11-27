@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.9.1
 
 - **The home page is its map**: the map fills the window beside a slimmer column, opens on your last evening's
   vineyards (together when they lie close, else the last wine's) with their hills, and a label over it says what it
@@ -14,6 +14,10 @@
   Michelin stars, each "of" the whole when filtered.
 - The Lists page's top card tidied: the title with its figures (lists, entries tasted, lists complete) and the new list
   button beside it, the find box across, the two orders on a quiet line under it.
+- The home map's label names the wine it shows when the last evening's wines lie too far apart to frame together
+  ("Clos des Grandes Vignes 2021 (1 of 2 wines)"), instead of "2 wines" over a map showing one.
+- The README's and the website's screenshots retaken: the home page, the cellar, the lists, the tasting notes, the
+  phone shots and the walk-through.
 
 ## v0.9.0
 

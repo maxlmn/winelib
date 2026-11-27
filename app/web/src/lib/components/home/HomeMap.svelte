@@ -30,7 +30,8 @@
 		by = 'both',
 		counts = null,
 		caption = null,
-		column = 540
+		column = 540,
+		framed = $bindable(null)
 	}: {
 		minHeight?: number;
 		focus?: Focus | null;
@@ -42,6 +43,8 @@
 		caption?: string | null;
 		/** full: the page's column width over the map's left side (app.css: html.map-full main) */
 		column?: number;
+		/** an evening's wines the map frames (all of them, or the last alone when they lie far apart), once known */
+		framed?: number[] | null;
 	} = $props();
 
 	type By = 'both' | 'cellar' | 'tasted';
@@ -76,11 +79,11 @@
 	// An evening: its wines' shapes together when they lie within ~1° of the last one's (a Burgundy dinner), else
 	// the last one's alone (Champagne and Nuits-Saint-Georges: two specks on a map of France)
 	const NEAR = 1.2;
-	function together(all: Shapes[]): Shapes {
+	function together(all: Shapes[], ids: number[]): Shapes & { wines: number[] } {
 		const own = (p: Shapes) => (p.vineyards?.features.length ? p.vineyards : p.appellations)?.features ?? [];
 		const last = all.at(-1) ?? {};
 		const lastBox = own(last).length ? bbox(own(last).map((f) => f.geometry)) : null;
-		if (!lastBox) return last;
+		if (!lastBox) return { ...last, wines: ids.slice(-1) };
 		const near = all.filter((p) => {
 			if (!own(p).length) return false;
 			const box = bbox([...own(p), ...own(last)].map((f) => f.geometry));
@@ -94,8 +97,11 @@
 			});
 			return features.length ? ({ type: 'FeatureCollection', features } as MapCollection) : undefined;
 		};
+		const wines = ids.filter((_, i) => near.includes(all[i]));
 		// vineyards for all, or for none: a wine known only by its appellation would otherwise be left out unframed
-		return near.every((p) => p.vineyards?.features.length) ? { vineyards: merge('vineyards'), appellations: merge('appellations') } : { appellations: merge('appellations') };
+		return near.every((p) => p.vineyards?.features.length)
+			? { vineyards: merge('vineyards'), appellations: merge('appellations'), wines }
+			: { appellations: merge('appellations'), wines };
 	}
 	$effect(() => {
 		const key = focusKey;
@@ -104,11 +110,16 @@
 			return;
 		}
 		let stale = false;
-		const got =
+		const ids = key[0] === 'e' ? key.slice(1).split(',').map(Number) : [];
+		const got: Promise<Shapes & { wines?: number[] }> =
 			key[0] === 'e'
-				? Promise.all(key.slice(1).split(',').map((id) => shapesOf(`/api/wines/${id}/shapes`))).then(together)
+				? Promise.all(ids.map((id) => shapesOf(`/api/wines/${id}/shapes`))).then((all) => together(all, ids))
 				: shapesOf(key[0] === 'w' ? `/api/wines/${key.slice(1)}/shapes` : `/api/producers/${key.slice(1)}/shapes`);
-		got.then((p) => !stale && (place = { ...p, id: key }));
+		got.then((p) => {
+			if (stale) return;
+			place = { appellations: p.appellations, vineyards: p.vineyards, id: key };
+			if (p.wines) framed = p.wines;
+		});
 		return () => (stale = true);
 	});
 	// the focus's region, as it was when its shapes came (a region-only wine)
