@@ -18,19 +18,23 @@
 
 	/** onwine: a bottle pointed at (hovered, or tapped outside its links), e.g. for a map to show its wine; `shown`
 	 * marks the bottle shown there */
+	/** compact: the home page's "Tonight, why not": one bottle (Another for the next), the colours to pick from and
+	 * the lie of its vineyard; the other filters are the cellar's */
 	let {
 		bottles,
 		totals = null,
 		onwine,
-		shown = null
+		shown = null,
+		compact = false
 	}: {
 		bottles: Bottle[];
 		totals?: { ready: number; young: number; past: number; unknown: number } | null;
 		onwine?: (b: Bottle) => void;
 		shown?: number | null;
+		compact?: boolean;
 	} = $props();
 
-	const SHOWN = 6;
+	const SHOWN = $derived(compact ? 1 : 6);
 	const MOSAIC = 24;
 	// Per wine in the cellar, the lists still waiting for it
 	let onLists = $state<Record<string, { list_id: number; list: string; note: string | null; waiting: boolean }[]>>({});
@@ -98,13 +102,42 @@
 			.map((x) => x.b)
 	);
 	const label = (b: Bottle) => b.cuvee || [b.appellation, b.varietal].filter(Boolean).join(' · ');
+
+	// compact: the lie of the land of the bottle suggested (its vineyard's relief, when it has an outline worked out)
+	type Lie = { elevation: { min: number; max: number }; slope: { median: number }; facing: string | null };
+	let lie = $state<Lie | null>(null);
+	const lieOf = new Map<number, Promise<Lie | null>>();
+	async function lieFor(wineId: number): Promise<Lie | null> {
+		try {
+			const shapes = await (await fetch(`/api/wines/${wineId}/shapes`)).json();
+			const vineyard = shapes?.vineyards?.features?.[0]?.properties?.id;
+			if (!vineyard) return null;
+			const r = await fetch(`/api/vineyards/${vineyard}/relief`);
+			return r.ok ? ((await r.json()) as Lie | null) : null;
+		} catch {
+			return null;
+		}
+	}
+	$effect(() => {
+		const b = compact ? picks[0] : undefined;
+		lie = null;
+		if (!b) return;
+		let stale = false;
+		if (!lieOf.has(b.wine_id)) lieOf.set(b.wine_id, lieFor(b.wine_id));
+		lieOf.get(b.wine_id)!.then((l) => !stale && (lie = l));
+		return () => (stale = true);
+	});
+	const lieLabel = (l: Lie) =>
+		[l.facing ? `Faces ${l.facing}` : null, `${Math.round(l.elevation.min)}–${Math.round(l.elevation.max)} m`, `${Math.round(l.slope.median)}°`]
+			.filter(Boolean)
+			.join(' · ');
 </script>
 
-<section class="card open">
+<section class="card open" class:compact>
 	<div class="sec-head">
-		<h2>What should I open?</h2>
-		<a class="cellar-link" href={links.cellar({ view: 'list' })}>The cellar →</a>
-		<button class="link" onclick={() => (seed += 1)}>Another idea ↻</button>
+		<h2>{compact ? 'Tonight, why not' : 'What should I open?'}</h2>
+		{#if !compact}<a class="cellar-link" href={links.cellar({ view: 'list' })}>The cellar →</a>{/if}
+		<button class="link" onclick={() => (seed += 1)}>{compact ? 'Another ↻' : 'Another idea ↻'}</button>
 	</div>
 	<div class="filters">
 		<div class="chips">
@@ -120,7 +153,7 @@
 				</button>
 			{/each}
 		</div>
-		<div class="row">
+		{#if !compact}<div class="row">
 			<select value={from} onchange={(e) => pickStorage(e.currentTarget.value)} aria-label="Storage">
 				{#each groups as g (g)}<option value={g}>{g}</option>{/each}
 				<option value="*">Anywhere</option>
@@ -142,7 +175,7 @@
 				{appSettings.currency}
 			</label>
 			<label class="young"><input type="checkbox" bind:checked={includeYoung} /> include too young</label>
-		</div>
+		</div>{/if}
 	</div>
 	{#if picks.length}
 		<ul>
@@ -162,11 +195,12 @@
 						<span class="muted num">{b.vintage}</span>
 						{#if preferred(b)}<span class="critic num" title="Critic’s score">{preferred(b)}</span>{/if}
 						<div class="muted small">
-							{regionLabel(b.region)} · <span class="loc">{b.location}</span>{b.drink_from || b.drink_to ? ` · drink ${windowLabel(b.drink_from, b.drink_to)}` : ''}{b.market_base ? ` · ${money(b.market_base)}` : ''}
+							{regionLabel(b.region)} · <span class="loc">{b.location}</span>{!compact && (b.drink_from || b.drink_to) ? ` · drink ${windowLabel(b.drink_from, b.drink_to)}` : ''}{b.market_base ? ` · ${money(b.market_base)}` : ''}
 							<span class="mosaic" title={plural(b.qty, 'bottle')}>
 								{#each { length: Math.min(b.qty, MOSAIC) } as _, i (i)}<BottleEnd region={regionColor(b.region) ?? FALLBACK_REGION} color={b.color} format={b.format} size={8} />{/each}
 							</span>
 						</div>
+						{#if compact && lie}<div class="muted small lie">{lieLabel(lie)}</div>{/if}
 						{#if lists(b).length}
 							<div class="on-lists small">
 								<Icon name="bookmark" size={11} />
@@ -174,7 +208,7 @@
 							</div>
 						{/if}
 					</div>
-					{#if b.maturity}
+					{#if b.maturity && !compact}
 						<MaturityBadge maturity={b.maturity} from={b.drink_from} to={b.drink_to} />
 					{/if}
 				</li>
@@ -185,6 +219,7 @@
 	{:else}
 		<p class="muted">Nothing in the cellar matches: loosen the filters.</p>
 	{/if}
+	{#if compact}<a class="more-link small" href={links.cellar({ view: 'list' })}>More to choose from in the cellar →</a>{/if}
 	{#if totals}
 		<p class="muted small totals">
 			{totals.ready} bottles ready · {totals.young} too young · {totals.past} past{#if totals.unknown} · {totals.unknown} without a window{/if}
@@ -200,6 +235,14 @@
 		margin-left: auto;
 		font-size: 13px;
 		color: var(--link);
+	}
+	.more-link {
+		display: inline-block;
+		margin-top: 8px;
+		color: var(--link);
+	}
+	.compact .sec-head h2 {
+		margin-right: auto;
 	}
 	.totals {
 		margin: 8px 0 0;

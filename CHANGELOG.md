@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+- **The home page is its map**: the map fills the window beside a slimmer column, opens on your last evening's
+  vineyards (together when they lie close, else the last wine's) with their hills, and a label over it says what it
+  shows: the last evening, a wine of it, the bottle to open or the place. The column has a line of numbers (bottles,
+  value, tasted and bought this year) instead of four tiles, the last evening, and *Tonight, why not*: one bottle at a
+  time (Another for the next, the colours to pick from, its vineyard's facing, height and slope), the map flying to
+  its vineyard; the other filters are the cellar's. The year's ribbon stays on the Tasting Notes page; the recent
+  purchases and the drinking-window counts left the home page.
+- The cellar's and the Tasting Notes' figures are a line under the page's title instead of four cards (the cellar's
+  currency switch beside them): the bottles, cost and market value shown; the wines, producers, unique wines and
+  Michelin stars, each "of" the whole when filtered.
+- The Lists page's top card tidied: the title with its figures (lists, entries tasted, lists complete) and the new list
+  button beside it, the find box across, the two orders on a quiet line under it.
+
 ## v0.9.0
 
 - A vineyard drawn or redrawn has its relief and contours worked out as soon as its outline is saved, not on its

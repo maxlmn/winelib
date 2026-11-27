@@ -111,6 +111,13 @@
 		}
 	}
 
+	// The figures over every list (not only those found)
+	const totals = $derived({
+		entries: data.lists.reduce((n, l) => n + l.entries, 0),
+		tasted: data.lists.reduce((n, l) => n + l.tasted, 0),
+		complete: data.lists.filter((l) => l.entries && l.tasted === l.entries).length
+	});
+
 	// The map behind: the regions of the lists' entries (every list, or the one hovered), by how many each has
 	let hovered = $state<(typeof data.lists)[number] | null>(null);
 	const counts = $derived.by(() => {
@@ -125,24 +132,38 @@
 <!-- Over the map: every list's regions coloured, by how many entries each has; a list's card hovered colours its own -->
 <HomeMap full {counts} />
 
-<div class="page-head">
-	<h1>Lists</h1>
-	{#if lists.length}
+<!-- The title and its figures, the new list button beside; under them the find box and the two orders -->
+<div class="page-head lists-head">
+	<div class="title-row">
+		<div>
+			<h1>Lists</h1>
+			{#if data.lists.length}
+				<p class="stats">
+					<span><b class="num">{data.lists.length}</b> {data.lists.length === 1 ? 'list' : 'lists'}</span>
+					<span><b class="num">{totals.tasted}</b> of {totals.entries} entries tasted</span>
+					{#if totals.complete}<span><b class="num">{totals.complete}</b> complete</span>{/if}
+				</p>
+			{/if}
+		</div>
+		<button class="btn icon primary" onclick={() => (adding = !adding)} title={adding ? 'Cancel' : 'New list'} aria-label={adding ? 'Cancel' : 'New list'}>{#if adding}✕{:else}<span class="plus">+</span><Icon name="list" size={15} />{/if}</button>
+	</div>
+	{#if lists.length || find}
 		<input class="find" type="search" bind:value={find} placeholder="Find a list, a wine, a note…" aria-label="Find in the lists" />
-		<label class="order">
-			<span class="muted">Sort the lists</span>
-			<select value={listOrder} onchange={(e) => setListOrder(e.currentTarget.value as ListOrder)}>
-				{#each LIST_ORDERS as [k, label] (k)}<option value={k}>{label}</option>{/each}
-			</select>
-		</label>
-		<label class="order">
-			<span class="muted">Sort the mosaics</span>
-			<select value={order} onchange={(e) => setOrder(e.currentTarget.value as DotOrder)}>
-				{#each DOT_ORDERS as [k, label] (k)}<option value={k}>{label}</option>{/each}
-			</select>
-		</label>
+		<div class="orders">
+			<label class="order">
+				<span class="muted">Lists by</span>
+				<select value={listOrder} onchange={(e) => setListOrder(e.currentTarget.value as ListOrder)}>
+					{#each LIST_ORDERS as [k, label] (k)}<option value={k}>{label}</option>{/each}
+				</select>
+			</label>
+			<label class="order">
+				<span class="muted">Mosaics by</span>
+				<select value={order} onchange={(e) => setOrder(e.currentTarget.value as DotOrder)}>
+					{#each DOT_ORDERS as [k, label] (k)}<option value={k}>{label}</option>{/each}
+				</select>
+			</label>
+		</div>
 	{/if}
-	<button class="btn icon primary" onclick={() => (adding = !adding)} title={adding ? 'Cancel' : 'New list'} aria-label={adding ? 'Cancel' : 'New list'}>{#if adding}✕{:else}<span class="plus">+</span><Icon name="list" size={15} />{/if}</button>
 </div>
 
 {#if adding}
@@ -212,9 +233,41 @@
 {/if}
 
 <style>
+	/* the head as a column: the title row, the find box, the orders (also over the map, app.css's map-full) */
+	.lists-head {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 10px;
+	}
+	.title-row {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 12px;
+	}
+	.title-row h1 {
+		margin: 0;
+	}
+	.stats {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 2px 14px;
+		margin: 4px 0 0;
+		font-size: 13px;
+		color: var(--muted);
+	}
+	.stats b {
+		color: var(--text);
+		font-weight: 600;
+	}
+	.orders {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px 16px;
+	}
 	.find {
-		margin-left: auto;
-		width: min(260px, 100%);
+		width: 100%;
+		box-sizing: border-box;
 		padding: 6px 10px;
 		border: 1px solid var(--border);
 		border-radius: 8px;
@@ -278,6 +331,10 @@
 		display: flex;
 		align-items: center;
 		gap: 6px;
+		font-size: 13px;
+	}
+	.order select {
+		padding: 3px 6px;
 		font-size: 13px;
 	}
 	.new {

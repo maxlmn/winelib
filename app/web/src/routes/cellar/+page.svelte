@@ -134,13 +134,23 @@
 <svelte:head><title>Cellar · WineLib</title></svelte:head>
 
 <div class="page-head">
-	<h1>Cellar</h1>
-	<div class="head-actions">
-		<div class="currency" role="group" aria-label="Currency of the totals">
-			{#each currencies as c (c)}
-				<button class:on={c === cur} onclick={() => setCurrency(c)}>{c}</button>
+	<div>
+		<h1>Cellar</h1>
+		<!-- the totals of what's shown (the filters'), as one line -->
+		<p class="stats">
+			<span><b class="num">{t.qty}</b> {t.qty === 1 ? 'bottle' : 'bottles'}{#if t.qty !== tAll.qty}<span class="muted">&nbsp;of {tAll.qty}</span>{/if}</span>
+			<span>cost <b class="num">{t.cost ? money(t.cost) : '–'}</b>{#if hasLocal && tLocal.cost}<span class="muted">&nbsp;({appSettings.local_label} {money(tLocal.cost)})</span>{/if}</span>
+			{#each [{ label: 'market', s: t }, ...(hasLocal ? [{ label: `${appSettings.local_label} market`, s: tLocal }] : [])] as k (k.label)}
+				<span>{k.label} <b class="num">{k.s.market ? money(k.s.market) : '–'}</b>{#if k.s.market}&nbsp;<span class="num"><Change value={pct(k.s.cost, k.s.market)} digits={1} /></span>{/if}</span>
 			{/each}
-		</div>
+			<span class="currency" role="group" aria-label="Currency of the totals">
+				{#each currencies as c (c)}
+					<button class:on={c === cur} onclick={() => setCurrency(c)}>{c}</button>
+				{/each}
+			</span>
+		</p>
+	</div>
+	<div class="head-actions">
 		<div class="mode" role="group" aria-label="How the cellar is shown">
 			<button class:on={onMap} aria-pressed={onMap} onclick={() => setView('cards')} title="Your storage places as cards, over the map">On the map</button>
 			<button class:on={!onMap} aria-pressed={!onMap} onclick={() => setView(lastTable)} title="The list, the shelves, the vintages and the prices, the page's whole width">Tables</button>
@@ -148,27 +158,6 @@
 		<a class="btn" href="{links.wineList()}?{toParams(filters)}">Wine list</a>
 		<button class="btn" onclick={exportMarkdown}>↓ Export</button>
 	</div>
-</div>
-
-<div class="kpis">
-	<div class="kpi card">
-		<div class="label">Bottles</div>
-		<div class="value num">{t.qty}</div>
-		{#if t.qty !== tAll.qty}<div class="sub muted">of {tAll.qty}</div>{/if}
-	</div>
-	<div class="kpi card">
-		<div class="label">Cost</div>
-		<div class="value num">{t.cost ? money(t.cost) : '–'}</div>
-		{#if hasLocal && tLocal.cost}<div class="sub muted">{appSettings.local_label} {money(tLocal.cost)}</div>{/if}
-	</div>
-	{#each [{ label: 'Market value', s: t }, ...(hasLocal ? [{ label: `${appSettings.local_label} market value`, s: tLocal }] : [])] as k}
-		{@const p = pct(k.s.cost, k.s.market)}
-		<div class="kpi card">
-			<div class="label">{k.label}</div>
-			<div class="value num">{k.s.market ? money(k.s.market) : '–'}</div>
-			{#if k.s.market}<div class="sub num"><Change value={p} digits={1} /></div>{/if}
-		</div>
-	{/each}
 </div>
 
 <div class="filters card">
@@ -285,8 +274,9 @@
 	.currency button {
 		border: none;
 		background: none;
-		padding: 5px 9px;
-		font-size: 12px;
+		padding: 2px 7px;
+		font: inherit;
+		font-size: 11px;
 		cursor: pointer;
 		color: var(--muted);
 	}
@@ -294,27 +284,23 @@
 		background: var(--accent);
 		color: var(--on-accent);
 	}
-	.kpis {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-		gap: 12px;
-		margin-bottom: 14px;
+	.page-head h1 {
+		margin: 0;
 	}
-	.kpi {
-		padding: 14px 16px;
-	}
-	.label {
-		font-size: 12px;
+	.stats {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 2px 14px;
+		margin: 4px 0 0;
+		font-size: 13px;
 		color: var(--muted);
 	}
-	.value {
-		font-size: 22px;
-		font-weight: 650;
-		letter-spacing: -0.01em;
-		margin: 2px 0;
+	.stats {
+		align-items: center;
 	}
-	.sub {
-		font-size: 12px;
+	.stats b {
+		color: var(--text);
+		font-weight: 600;
 	}
 	.filters {
 		padding: 12px;
