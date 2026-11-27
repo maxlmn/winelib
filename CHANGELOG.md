@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.9.0
 
 - A vineyard drawn or redrawn has its relief and contours worked out as soon as its outline is saved, not on its
   page's first visit (a vineyard drawn from a wine's page too); with the terrain tiles unreachable, it's left for the
