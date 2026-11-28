@@ -1,6 +1,6 @@
 <script lang="ts">
+	import ColorMark from '#lib/components/ColorMark.svelte';
 	import type { CatalogEntry } from '#lib/api/details.ts';
-	import { typeColor } from '#lib/colors.ts';
 	import { links } from '#lib/links.ts';
 	import Icon from '#lib/components/Icon.svelte';
 	import { appSettings } from '#lib/settings.svelte.ts';
@@ -67,7 +67,7 @@
 			{@const grapeInSub = !!(w.varietal && (w.cuvee || w.appellation))}
 			<li class:with-labels={withLabels}>
 				<div class="name">
-					<span class="dot" style:background={typeColor(w.color)}></span>
+					<ColorMark color={w.color} />
 					<div>
 						{#if showProducer}<a class="producer" href={links.producer(w.producer_id)}>{w.producer}</a>{/if}
 						<!-- Without a cuvée name the appellation is the headline (then the grape, then the color) -->

@@ -1,7 +1,7 @@
 <script lang="ts">
+	import ColorMark from '#lib/components/ColorMark.svelte';
 	import RegionName from '#lib/components/RegionName.svelte';
 	import type { Snippet } from 'svelte';
-	import { TYPE_COLORS } from '#lib/colors.ts';
 	import { vintageLabel } from '#lib/api/forms.ts';
 	import type { WineSummary } from '#lib/api/forms.ts';
 
@@ -13,7 +13,7 @@
 </script>
 
 <div class="wine">
-	<span class="dot" style:background={TYPE_COLORS[wine.type ?? ''] ?? 'var(--muted)'}></span>
+	<ColorMark color={wine.type} />
 	<div class="text">
 		<div class="title">
 			<b>{wine.producer}</b>

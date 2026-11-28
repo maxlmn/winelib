@@ -1,8 +1,9 @@
 <script lang="ts">
+	import ColorMark from '#lib/components/ColorMark.svelte';
 	import CriticPills from '#lib/components/CriticPills.svelte';
 	import { regionLabel } from '#lib/regions.svelte.ts';
 	import Icon from '#lib/components/Icon.svelte';
-	import { FALLBACK_REGION, typeColor } from '#lib/colors.ts';
+	import { FALLBACK_REGION } from '#lib/colors.ts';
 	import CellarSection from '#lib/components/details/CellarSection.svelte';
 	import DetailHeader from '#lib/components/details/DetailHeader.svelte';
 	import Stats from '#lib/components/details/Stats.svelte';
@@ -85,7 +86,7 @@
 					{#each best as b (b.id)}
 						<li>
 							<span class="score"><CriticPills scores={b.scores ?? b.score} /></span>
-							<span class="dot" style:background={typeColor(b.color)}></span>
+							<ColorMark color={b.color} size={8} />
 							<a href={links.wine(b.id)}><b>{b.producer}</b> {b.cuvee || b.appellation || ''}</a>
 							{#if b.cuvee && b.appellation}<span class="muted small">{b.appellation}</span>{/if}
 							{@render badges(b)}
@@ -147,13 +148,6 @@
 	}
 	.score {
 		min-width: 54px;
-	}
-	.dot {
-		width: 8px;
-		height: 8px;
-		border-radius: 50%;
-		flex: none;
-		align-self: center;
 	}
 	.small {
 		font-size: 12px;

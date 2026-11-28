@@ -1,11 +1,11 @@
 <script lang="ts">
+	import ColorMark from '#lib/components/ColorMark.svelte';
 	/** Which of your wines a list takes: tags, colour, region, grape, vintages, in the cellar or tasted, your rating,
 	 * words in the name; how many match, and the first of them, as you go. */
 	import { onMount } from 'svelte';
 	import TagPicker from '#lib/components/TagPicker.svelte';
 	import { suggestions } from '#lib/api/tags.ts';
 	import { previewCriteria, type Criteria, type CriteriaPreview } from '#lib/api/lists.ts';
-	import { typeColor } from '#lib/colors.ts';
 
 	let { criteria = $bindable() }: { criteria: Criteria } = $props();
 
@@ -51,8 +51,8 @@
 		<span class="label">Colour</span>
 		<div class="field chips">
 			{#each COLORS as c (c)}
-				<button type="button" class="chip" class:on={criteria.colors.includes(c)} onclick={() => (criteria.colors = toggle(criteria.colors, c))}>
-					<span class="dot" style:background={typeColor(c)}></span>{c}
+				<button type="button" class="chip" class:on={criteria.colors.includes(c)} onclick={() => (criteria.colors = toggle(criteria.colors, c))} title={c} aria-label={c}>
+					<ColorMark color={c} size={11} title={false} />
 				</button>
 			{/each}
 		</div>
@@ -160,11 +160,6 @@
 		border-color: var(--accent);
 		background: var(--accent-soft);
 		color: var(--accent);
-	}
-	.dot {
-		width: 8px;
-		height: 8px;
-		border-radius: 50%;
 	}
 	input:not([type='checkbox']),
 	select {

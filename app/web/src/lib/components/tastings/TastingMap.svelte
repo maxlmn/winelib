@@ -1,11 +1,11 @@
 <script lang="ts">
+	import ColorMark from '#lib/components/ColorMark.svelte';
 	import PlaceName from '#lib/components/PlaceName.svelte';
 	import { isFriends } from '#lib/places.ts';
 	import { accentColor } from '#lib/theme.svelte.ts';
 	import type { Place, Tasting, Visit } from '#lib/api/tastings.ts';
 	import PointMap from '#lib/components/PointMap.svelte';
 	import type { MapPoint } from '#lib/components/PointMap.svelte';
-	import { typeColor } from '#lib/colors.ts';
 	import { links } from '#lib/links.ts';
 	import { plural } from '#lib/format.ts';
 	import { fmtDay, stars } from './journal.ts';
@@ -101,7 +101,7 @@
 						<div class="day-h num">{fmtDay(day)}{#if d.visit && !d.wines.length}<span class="muted"> · visit</span>{/if}</div>
 						{#each d.wines as w (w.id)}
 							<a class="wine" href={links.tasting(w.id)} title={w.notes || undefined}>
-								<span class="dot" style:background={typeColor(w.color)}></span>
+								<ColorMark color={w.color} size={8} />
 								<span><b>{w.producer}</b>{w.cuvee ? ` ${w.cuvee}` : ''} <span class="muted num">{w.vintage}</span></span>
 							</a>
 						{/each}
@@ -275,10 +275,6 @@
 		gap: 7px;
 		padding: 2px 0;
 		font-size: 13px;
-	}
-	.wine .dot {
-		width: 8px;
-		height: 8px;
 	}
 	.visit {
 		margin: 2px 0;

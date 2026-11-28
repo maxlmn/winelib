@@ -17,11 +17,23 @@ type Entry = { kind: string; id: number | string; title: string; sub: string; re
 const fold = (s: string) =>
 	s.normalize('NFKD').replace(/[^\x00-\x7f]/g, '').toLowerCase().replace(/[-'’]/g, ' ');
 
-/** textsearch.matches: every word in one of the fields; 0 when the first starts with the query, 1 with a word */
+/** textsearch.one_off: a and b differ by one letter at most (one left out, one too many, one changed) */
+function oneOff(a: string, b: string) {
+	if (a === b) return true;
+	if (Math.abs(a.length - b.length) > 1) return false;
+	if (a.length > b.length) [a, b] = [b, a];
+	let i = 0;
+	while (i < a.length && a[i] === b[i]) i++;
+	return a.length === b.length ? a.slice(i + 1) === b.slice(i + 1) : a.slice(i) === b.slice(i + 1);
+}
+const near = (w: string, h: string) => w.length >= 5 && (h.match(/[a-z0-9]+/g) ?? []).some((x) => oneOff(w, x));
+
+/** textsearch.matches: every word in one of the fields; 0 when the first starts with the query, 1 with a word, 2
+ *  elsewhere, 3 with a word one letter off (5 letters or more: "fournaux" finds "Aux Fourneaux") */
 function rank(q: string, fields: string[]) {
 	const words = fold(q).split(/\s+/).filter(Boolean);
 	const hay = fields.map(fold);
-	if (!words.every((w) => hay.some((h) => h.includes(w)))) return null;
+	if (!words.every((w) => hay.some((h) => h.includes(w)))) return words.every((w) => hay.some((h) => h.includes(w) || near(w, h))) ? 3 : null;
 	return hay[0].startsWith(fold(q).trim()) ? 0 : words.some((w) => hay[0].startsWith(w)) ? 1 : 2;
 }
 

@@ -66,6 +66,19 @@ def test_accents_case_and_punctuation_are_ignored(client):
     assert titles(client, "saumur champigny 2016", "wine") == ["Clos Rougeard Le Bourg 2016"]
 
 
+def test_a_letter_off_is_found_after_the_exact_matches():
+    """A word of 5 letters or more one letter off ("fournaux", the cadastre's spelling) finds INAO's "Fourneaux",
+    after what matches as typed"""
+    from textsearch import one_off, search
+    rows = ["Savigny-lès-Beaune Premier Cru Aux Fourneaux", "Aux Fournaux", "Les Lavières", "Clos"]
+    assert search(rows, "fournaux", lambda r: (r,), 10) == ["Aux Fournaux", "Savigny-lès-Beaune Premier Cru Aux Fourneaux"]
+    assert search(rows, "fourneaux", lambda r: (r,), 10) == ["Savigny-lès-Beaune Premier Cru Aux Fourneaux", "Aux Fournaux"]
+    assert search(rows, "fourneaux", lambda r: (r,), 1) == ["Savigny-lès-Beaune Premier Cru Aux Fourneaux"]
+    assert search(rows, "lavirees", lambda r: (r,), 10) == []  # two letters off
+    assert search(rows, "clso", lambda r: (r,), 10) == []  # too short to guess
+    assert one_off("lavieres", "laviere") and one_off("lavieres", "lavieros") and not one_off("abcde", "axcxe")
+
+
 def test_all_lists_what_search_finds_with_its_fields(client):
     """/api/search/all: every entry and the texts a query matches, for the static demo's search in the browser."""
     entries = client.get("/api/search/all").json()["entries"]

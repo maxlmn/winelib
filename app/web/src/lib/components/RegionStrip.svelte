@@ -18,6 +18,7 @@
 </script>
 
 <script lang="ts">
+	import ColorMark from '#lib/components/ColorMark.svelte';
 	import { barWidth, endScale } from '#lib/format.ts';
 	import { regionColor, regionLabel } from '#lib/regions.svelte.ts';
 	import { FALLBACK_REGION, typeColor } from '#lib/colors.ts';
@@ -116,7 +117,7 @@
 			{#if tip.pip.image}<img class="label" src={tip.pip.image} alt="" decoding="async" />{/if}
 			<div>
 				<b>{tip.pip.label}</b>
-				{#if tip.pip.color}<span class="type"><span class="dot" style:background={typeColor(tip.pip.color)}></span>{tip.pip.color}</span>{/if}
+				{#if tip.pip.color}<span class="type"><ColorMark color={tip.pip.color} size={7} title={false} /> {tip.pip.color}</span>{/if}
 				<div class="muted">{[regionLabel(tip.pip.region), tip.pip.sub].filter(Boolean).join(' · ')}</div>
 			</div>
 		</div>
@@ -248,13 +249,6 @@
 	.type {
 		display: block;
 		color: var(--muted);
-	}
-	.type .dot {
-		display: inline-block;
-		width: 7px;
-		height: 7px;
-		border-radius: 50%;
-		margin-right: 5px;
 	}
 	.swatch {
 		flex: none;
