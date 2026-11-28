@@ -135,20 +135,32 @@
 
 <div class="page-head">
 	<div>
-		<h1>Cellar</h1>
-		<!-- the totals of what's shown (the filters'), as one line -->
-		<p class="stats">
-			<span><b class="num">{t.qty}</b> {t.qty === 1 ? 'bottle' : 'bottles'}{#if t.qty !== tAll.qty}<span class="muted">&nbsp;of {tAll.qty}</span>{/if}</span>
-			<span>cost <b class="num">{t.cost ? money(t.cost) : '–'}</b>{#if hasLocal && tLocal.cost}<span class="muted">&nbsp;({appSettings.local_label} {money(tLocal.cost)})</span>{/if}</span>
-			{#each [{ label: 'market', s: t }, ...(hasLocal ? [{ label: `${appSettings.local_label} market`, s: tLocal }] : [])] as k (k.label)}
-				<span>{k.label} <b class="num">{k.s.market ? money(k.s.market) : '–'}</b>{#if k.s.market}&nbsp;<span class="num"><Change value={pct(k.s.cost, k.s.market)} digits={1} /></span>{/if}</span>
+		<div class="title-line">
+			<h1>Cellar</h1>
+			<select class="currency" value={cur} onchange={(e) => setCurrency(e.currentTarget.value)} aria-label="Currency of the totals" title="Currency of the totals">
+				{#each currencies as c (c)}<option value={c}>{c}</option>{/each}
+			</select>
+		</div>
+		<!-- the totals of what's shown (the filters'), as small tiles, in the currency picked beside the title -->
+		<div class="stat-tiles">
+			<div class="stat-tile">
+				<span class="label">Bottles</span>
+				<b class="num">{t.qty}</b>
+				{#if t.qty !== tAll.qty}<span class="sub muted">of {tAll.qty}</span>{/if}
+			</div>
+			<div class="stat-tile">
+				<span class="label">Cost</span>
+				<b class="num">{t.cost ? money(t.cost) : '–'}</b>
+				{#if hasLocal && tLocal.cost}<span class="sub muted">{appSettings.local_label} {money(tLocal.cost)}</span>{/if}
+			</div>
+			{#each [{ label: 'Market', s: t }, ...(hasLocal ? [{ label: `${appSettings.local_label} market`, s: tLocal }] : [])] as k (k.label)}
+				<div class="stat-tile">
+					<span class="label">{k.label}</span>
+					<b class="num">{k.s.market ? money(k.s.market) : '–'}</b>
+					{#if k.s.market}<span class="sub num"><Change value={pct(k.s.cost, k.s.market)} digits={1} /></span>{/if}
+				</div>
 			{/each}
-			<span class="currency" role="group" aria-label="Currency of the totals">
-				{#each currencies as c (c)}
-					<button class:on={c === cur} onclick={() => setCurrency(c)}>{c}</button>
-				{/each}
-			</span>
-		</p>
+		</div>
 	</div>
 	<div class="head-actions">
 		<div class="mode" role="group" aria-label="How the cellar is shown">
@@ -266,41 +278,21 @@
 		gap: 8px;
 	}
 	.currency {
-		display: inline-flex;
+		padding: 2px 4px;
 		border: 1px solid var(--border);
-		border-radius: 8px;
-		overflow: hidden;
-	}
-	.currency button {
-		border: none;
-		background: none;
-		padding: 2px 7px;
+		border-radius: 6px;
+		background: var(--surface);
+		color: var(--text);
 		font: inherit;
 		font-size: 11px;
-		cursor: pointer;
-		color: var(--muted);
-	}
-	.currency button.on {
-		background: var(--accent);
-		color: var(--on-accent);
 	}
 	.page-head h1 {
 		margin: 0;
 	}
-	.stats {
+	.title-line {
 		display: flex;
-		flex-wrap: wrap;
-		gap: 2px 14px;
-		margin: 4px 0 0;
-		font-size: 13px;
-		color: var(--muted);
-	}
-	.stats {
 		align-items: center;
-	}
-	.stats b {
-		color: var(--text);
-		font-weight: 600;
+		gap: 10px;
 	}
 	.filters {
 		padding: 12px;

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- The cellar's, Tasting Notes' and Lists' totals are small cards under the title again (a label, the figure, the
+  line under it: "of" the whole when filtered, the local cost, the gain), the same three pages alike.
+- The cellar's currency is a small dropdown beside its title, instead of a row of buttons.
+
 ## v0.9.3
 
 - **Bubbles look like bubbles**: a wine's colour is one mark everywhere (the cellar's cards, the shelves, the tasting

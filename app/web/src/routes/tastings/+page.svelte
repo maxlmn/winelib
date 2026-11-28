@@ -103,9 +103,9 @@
 
 	// the figures of what's shown (the filters'), as one line; "of" the whole journal's when filtered
 	const figures = $derived([
-		{ label: 'wines tasted', value: s.wines, all: sAll.wines },
-		{ label: 'producers', value: s.producers, all: sAll.producers },
-		{ label: 'unique wines', value: s.unique, all: sAll.unique },
+		{ label: 'Wines tasted', value: s.wines, all: sAll.wines },
+		{ label: 'Producers', value: s.producers, all: sAll.producers },
+		{ label: 'Unique wines', value: s.unique, all: sAll.unique },
 		{ label: 'Michelin stars', value: s.stars, all: sAll.stars, gold: true }
 	]);
 </script>
@@ -115,11 +115,15 @@
 <div class="page-head">
 	<div>
 		<h1>Tasting Notes</h1>
-		<p class="stats">
+		<div class="stat-tiles">
 			{#each figures as k (k.label)}
-				<span><b class="num" class:gold={k.gold && k.value}>{k.value}{k.gold && k.value ? ' ★' : ''}</b> {k.label}{#if k.value !== k.all}<span class="muted">&nbsp;of {k.all}</span>{/if}</span>
+				<div class="stat-tile">
+					<span class="label">{k.label}</span>
+					<b class="num" class:gold={k.gold && k.value}>{k.value}{k.gold && k.value ? ' ★' : ''}</b>
+					{#if k.value !== k.all}<span class="sub muted">of {k.all}</span>{/if}
+				</div>
 			{/each}
-		</p>
+		</div>
 	</div>
 	<div class="actions">
 		<div class="mode" role="group" aria-label="How the notes are shown">
@@ -297,19 +301,7 @@
 	.page-head h1 {
 		margin: 0;
 	}
-	.stats {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 2px 14px;
-		margin: 4px 0 0;
-		font-size: 13px;
-		color: var(--muted);
-	}
-	.stats b {
-		color: var(--text);
-		font-weight: 600;
-	}
-	.stats b.gold {
+	.stat-tile b.gold {
 		color: var(--gold-text);
 	}
 	.filters {
