@@ -9,7 +9,6 @@
 	import TastingMap from '#lib/components/tastings/TastingMap.svelte';
 	import TastingTable from '#lib/components/tastings/TastingTable.svelte';
 	import TastingTrends from '#lib/components/tastings/TastingTrends.svelte';
-	import TastingRibbon from '#lib/components/tastings/TastingRibbon.svelte';
 	import HomeMap from '#lib/components/home/HomeMap.svelte';
 	import type { Tasting } from '#lib/api/tastings.ts';
 	import {
@@ -39,7 +38,7 @@
 	const filters = $derived(fromParams(params));
 	const view = $derived(VIEWS.find((v) => v.id === params.get('view'))?.id ?? 'cards');
 	const onMap = $derived(view === 'cards');
-	// a wine pointed at (in the cards, or along the ribbon): the map flies to it
+	// a wine pointed at (in the cards): the map flies to it
 	// ...or a place (an occasion's header): the map pins it
 	let pointed = $state<Tasting | null>(null);
 	let pinned = $state<[number, number] | null>(null);
@@ -147,14 +146,6 @@
 
 {#if onMap}
 	<HomeMap full by="tasted" {focus} />
-	<TastingRibbon
-		{tastings}
-		label="Every wine, oldest on the left: its region’s colour, its own below. Sweep it, or replay it, the map following"
-		onwine={(t, now) => point(t, now ? 0 : 90)}
-		shown={shownWine?.id ?? null}
-	/>
-{:else}
-	<TastingRibbon {tastings} />
 {/if}
 
 <div class="filters card">

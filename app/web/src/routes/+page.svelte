@@ -39,7 +39,6 @@
 		pointedName = t.producer ? named(t as { producer: string }) : '';
 		point({ kind: 'tasting', id: t.id, wine_id: t.wine_id, region: t.region }, wait);
 	};
-	// along the year's ribbon: quicker (it's swept along), at once for its replay
 	const pointBottle = (b: Bottle) => {
 		pointedName = named(b);
 		point({ kind: 'bottle', id: b.bottle_id, wine_id: b.wine_id, region: b.region });
