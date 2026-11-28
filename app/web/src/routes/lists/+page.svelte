@@ -138,11 +138,13 @@
 		<div>
 			<h1>Lists</h1>
 			{#if data.lists.length}
-				<p class="stats">
-					<span><b class="num">{data.lists.length}</b> {data.lists.length === 1 ? 'list' : 'lists'}</span>
-					<span><b class="num">{totals.tasted}</b> of {totals.entries} entries tasted</span>
-					{#if totals.complete}<span><b class="num">{totals.complete}</b> complete</span>{/if}
-				</p>
+				<div class="stat-tiles">
+					<div class="stat-tile"><span class="label">Lists</span><b class="num">{data.lists.length}</b></div>
+					<div class="stat-tile">
+						<span class="label">Tasted</span><b class="num">{totals.tasted}</b><span class="sub muted">of {totals.entries}</span>
+					</div>
+					<div class="stat-tile"><span class="label">Complete</span><b class="num">{totals.complete}</b></div>
+				</div>
 			{/if}
 		</div>
 		<button class="btn icon primary" onclick={() => (adding = !adding)} title={adding ? 'Cancel' : 'New list'} aria-label={adding ? 'Cancel' : 'New list'}>{#if adding}✕{:else}<span class="plus">+</span><Icon name="list" size={15} />{/if}</button>
@@ -245,20 +247,11 @@
 		justify-content: space-between;
 		gap: 12px;
 	}
+	.title-row > div {
+		flex: 1;
+	}
 	.title-row h1 {
 		margin: 0;
-	}
-	.stats {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 2px 14px;
-		margin: 4px 0 0;
-		font-size: 13px;
-		color: var(--muted);
-	}
-	.stats b {
-		color: var(--text);
-		font-weight: 600;
 	}
 	.orders {
 		display: flex;

@@ -464,3 +464,38 @@ html.map-full main > .page-head {
 		display: none;
 	}
 }
+
+/* A page's totals under its title, as small cards */
+.stat-tiles {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: stretch;
+	gap: 6px;
+	margin: 8px 0 0;
+}
+/* a small card per total (the cellar's, Tasting Notes', Lists'): its label, the figure, a line under it */
+.stat-tile {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	flex: 1 1 0;
+	min-width: 96px;
+	padding: 6px 10px;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--surface);
+}
+.stat-tile .label {
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--muted);
+}
+.stat-tile b {
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--text);
+}
+.stat-tile .sub {
+	font-size: 11px;
+}
