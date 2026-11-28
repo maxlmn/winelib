@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ColorMark from '#lib/components/ColorMark.svelte';
 	import { labelTip } from '#lib/labelTip.svelte.ts';
 	import { regionColor, regionLabel } from '#lib/regions.svelte.ts';
 	import { appSettings, groupOrder } from '#lib/settings.svelte.ts';
@@ -6,7 +7,7 @@
 	 * list asks you to taste (an entry not ticked yet), then those past their window, then the ready ones whose window
 	 * closes soonest. Under them, the cellar's bottles by maturity. */
 	import { onMount } from 'svelte';
-	import { FALLBACK_REGION, typeColor } from '#lib/colors.ts';
+	import { FALLBACK_REGION } from '#lib/colors.ts';
 	import BottleEnd from '#lib/components/BottleEnd.svelte';
 	import { links } from '#lib/links.ts';
 	import { money } from '#lib/format.ts';
@@ -150,8 +151,9 @@
 			{/if}
 			<button class="chip" class:on={!color} onclick={() => ((color = ''), (step = 0))}>Any</button>
 			{#each colors as c (c)}
-				<button class="chip" class:on={color === c} onclick={() => ((color = c), (step = 0))}>
-					<span class="dot" style:background={typeColor(c)}></span>{c}
+				<!-- compact: the dot alone (its name on hover); the bubbles as bubbles, a dot alone reading as white or rosé -->
+				<button class="chip" class:on={color === c} class:dot-only={compact} onclick={() => ((color = c), (step = 0))} title={c} aria-label={c}>
+					<ColorMark color={c} size={compact ? 11 : 9} title={false} />{#if !compact}{c}{/if}
 				</button>
 			{/each}
 		</div>
@@ -326,6 +328,9 @@
 		font-size: 12px;
 		cursor: pointer;
 	}
+	.chip.dot-only {
+		padding: 3px 7px;
+	}
 	.chip.on {
 		border-color: var(--accent);
 		background: var(--accent-soft);
@@ -379,13 +384,6 @@
 		display: flex;
 		flex: none;
 		align-self: center;
-	}
-	.dot {
-		width: 9px;
-		height: 9px;
-		border-radius: 50%;
-		flex: none;
-		display: inline-block;
 	}
 	/* a wine that shows itself on a map when pointed at (the home page's); the one shown on a soft tint */
 	li.points {

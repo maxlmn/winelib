@@ -1,6 +1,7 @@
 <script lang="ts">
+	import ColorMark from '#lib/components/ColorMark.svelte';
 	import type { Bottle, Location, RegionColors } from '#lib/types.ts';
-	import { FALLBACK_REGION, typeColor } from '#lib/colors.ts';
+	import { FALLBACK_REGION } from '#lib/colors.ts';
 	import { money } from '#lib/format.ts';
 	import { groupOrder } from '#lib/settings.svelte.ts';
 
@@ -101,7 +102,7 @@
 							</div>
 							{#each t.contents.slice(0, 8) as b (b.bottle_id)}
 								<div class="pop-row">
-									<span class="dot" style:background={typeColor(b.color)}></span>
+									<ColorMark color={b.color} />
 									<span class="ellipsis">{b.producer}{b.cuvee ? ` · ${b.cuvee}` : ''}</span>
 									<span class="muted num">{b.vintage}{b.qty > 1 ? ` ×${b.qty}` : ''}</span>
 								</div>

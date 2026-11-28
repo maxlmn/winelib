@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.9.3
+
+- **Bubbles look like bubbles**: a wine's colour is one mark everywhere (the cellar's cards, the shelves, the tasting
+  map, the vintages, the forms, the lists' criteria): a dot in its colour, or three small bubbles for the sparkling
+  ones, whose dot alone read as a white or a rosé; the name on hover. *Tonight, why not*'s and the lists' colour
+  buttons are the mark alone.
+- The home page's column is wider: about 40% of the map beside it (420 to 760 px), instead of 400 px.
+- Search forgives a letter: a word of 5 letters or more one letter off a name finds it, after what matches as typed
+  ("fournaux", the cadastre's spelling, finds INAO's premier cru "Aux Fourneaux"): the vineyard, producer and
+  appellation fields, and the search box (the demo's too).
+
 ## v0.9.2
 
 - *Tonight, why not*'s **Another** gives the next bottle: it steps through the cellar's suggestions in turn (back to

@@ -1,10 +1,10 @@
 <script lang="ts">
+	import ColorMark from '#lib/components/ColorMark.svelte';
 	import Combobox from './Combobox.svelte';
 	import Field from './Field.svelte';
 	import WineCard from './WineCard.svelte';
 	import WineFields from './WineFields.svelte';
 	import RegionName from '#lib/components/RegionName.svelte';
-	import { TYPE_COLORS } from '#lib/colors.ts';
 	import { emptyWine, lookup, newVintageDraft, vintageLabel } from '#lib/api/forms.ts';
 	import { request } from '#lib/api/http.ts';
 	import type { Choice, Options, WineDraft, WineForm, WineSummary } from '#lib/api/forms.ts';
@@ -80,7 +80,7 @@
 </script>
 
 {#snippet row(w: Option)}
-	<span class="dot" style:background={TYPE_COLORS[w.type ?? ''] ?? 'var(--muted)'}></span>
+	<ColorMark color={w.type} />
 	<span class="opt">
 		<span><b>{w.producer}</b> {w.cuvee} <span class="num">{vintageLabel(w)}</span></span>
 		<span class="muted small">{[w.appellation, w.varietal].filter(Boolean).join(', ')}{#if w.region}{w.appellation || w.varietal ? ' · ' : ''}<RegionName name={w.region} />{/if}</span>

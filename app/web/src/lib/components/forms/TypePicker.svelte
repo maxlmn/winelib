@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { TYPE_COLORS } from '#lib/colors.ts';
+	import ColorMark from '#lib/components/ColorMark.svelte';
 
 	let { value, types, name, onchange }: { value: string; types: string[]; name: string; onchange: (t: string) => void } = $props();
 </script>
@@ -8,7 +8,7 @@
 	{#each types as t}
 		<label class:on={value === t}>
 			<input type="radio" {name} value={t} checked={value === t} onchange={() => onchange(t)} />
-			<span class="dot" style:background={TYPE_COLORS[t]}></span>{t}
+			<ColorMark color={t} title={false} />{t}
 		</label>
 	{/each}
 </div>

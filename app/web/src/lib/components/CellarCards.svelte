@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ColorMark from '#lib/components/ColorMark.svelte';
 	import { labelTip } from '#lib/labelTip.svelte.ts';
 	import CriticPills from '#lib/components/CriticPills.svelte';
 	import { regionLabel } from '#lib/regions.svelte.ts';
@@ -8,7 +9,7 @@
 	import type { Pip } from '#lib/components/RegionStrip.svelte';
 	import { bottlePips } from '#lib/pips.ts';
 	import type { Bottle, RegionColors } from '#lib/types.ts';
-	import { FALLBACK_REGION, TYPE_COLORS, typeColor } from '#lib/colors.ts';
+	import { FALLBACK_REGION, TYPE_COLORS } from '#lib/colors.ts';
 	import { links } from '#lib/links.ts';
 	import { money, plural, symbol } from '#lib/format.ts';
 	import { appSettings, groupOrder } from '#lib/settings.svelte.ts';
@@ -190,7 +191,7 @@
 			<!-- by colour, then region, then appellation: one column, a colour's heading over its regions -->
 			<div class="sections">
 				{#each c.sections as s (s.title)}
-					<h4><span class="dot" style:background={typeColor(s.color ?? '')}></span>{s.title} <span class="muted num">{s.qty}</span></h4>
+					<h4><ColorMark color={s.color} />{s.title} <span class="muted num">{s.qty}</span></h4>
 					{#each s.regions as r (r.region)}
 						{@render wineList(regionLabel(r.region), r.lines, r.lines.reduce((n, b) => n + b.qty, 0), regionColor(r.region), true)}
 					{/each}

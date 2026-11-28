@@ -100,6 +100,10 @@
 		return h < 5 ? 'Good evening' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
 	})();
 
+
+	// The column over the map: about 40% of the map's width (beside the sidebar), 420 to 760px
+	let width = $state(1400);
+	const column = $derived(Math.round(Math.min(760, Math.max(420, (width - 200) * 0.4))));
 </script>
 
 <svelte:head><title>Home · WineLib</title></svelte:head>
@@ -133,7 +137,8 @@
 
 <!-- The map is the page: the whole window behind a slim column, on the latest evening's vineyards (or the wine
      pointed at), a label over it saying which -->
-<HomeMap full column={400} by="tasted" {focus} {caption} bind:framed />
+<svelte:window bind:innerWidth={width} />
+<HomeMap full {column} by="tasted" {focus} {caption} bind:framed />
 
 <section class="card latest">
 	<div class="sec-head">
