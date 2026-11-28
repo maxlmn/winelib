@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.9.2
+
+- *Tonight, why not*'s **Another** gives the next bottle: it steps through the cellar's suggestions in turn (back to
+  the first when a colour is picked) instead of reshuffling near-ties, which kept the same bottle on top.
+
 ## v0.9.1
 
 - **The home page is its map**: the map fills the window beside a slimmer column, opens on your last evening's

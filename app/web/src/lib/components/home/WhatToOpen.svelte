@@ -34,7 +34,7 @@
 		compact?: boolean;
 	} = $props();
 
-	const SHOWN = $derived(compact ? 1 : 6);
+	const SHOWN = 6;
 	const MOSAIC = 24;
 	// Per wine in the cellar, the lists still waiting for it
 	let onLists = $state<Record<string, { list_id: number; list: string; note: string | null; waiting: boolean }[]>>({});
@@ -45,6 +45,7 @@
 	let maxPrice = $state<number | null>(null);
 	let includeYoung = $state(false);
 	let seed = $state(0); // "Another idea" reshuffles the ties
+	let step = $state(0); // compact: "Another" steps to the next bottle of the order (all of them in turn)
 
 	// Where to pick from: a storage group (the first in Settings' order by default, usually home) or anywhere ('*');
 	// remembered on this device
@@ -89,7 +90,7 @@
 	// The preferred critic's score (Settings) as a pill: "RP 95"
 	const preferred = (b: Bottle) => (b.score ? ((b.scores ?? '').split(' · ').find((p) => p.endsWith(` ${b.score}`)) ?? b.score) : null);
 	const anyListed = $derived(here.some(waiting));
-	const picks = $derived(
+	const ordered = $derived(
 		here
 			.filter((b) => !listsOnly || waiting(b))
 			.filter((b) => (!color || b.color === color) && (!region || b.region === region))
@@ -98,9 +99,10 @@
 			.filter((b) => includeYoung || b.maturity !== 'young')
 			.map((b) => ({ b, score: rank(b) + jitter(b.bottle_id) * 0.6 - (waiting(b) ? 4 : 0) }))
 			.sort((x, y) => x.score - y.score)
-			.slice(0, SHOWN)
 			.map((x) => x.b)
 	);
+	// The one bottle (compact), stepping through them all; else the first few, reshuffled among equals
+	const picks = $derived(compact ? (ordered.length ? [ordered[step % ordered.length]] : []) : ordered.slice(0, SHOWN));
 	const label = (b: Bottle) => b.cuvee || [b.appellation, b.varietal].filter(Boolean).join(' · ');
 
 	// compact: the lie of the land of the bottle suggested (its vineyard's relief, when it has an outline worked out)
@@ -137,7 +139,7 @@
 	<div class="sec-head">
 		<h2>{compact ? 'Tonight, why not' : 'What should I open?'}</h2>
 		{#if !compact}<a class="cellar-link" href={links.cellar({ view: 'list' })}>The cellar →</a>{/if}
-		<button class="link" onclick={() => (seed += 1)}>{compact ? 'Another ↻' : 'Another idea ↻'}</button>
+		<button class="link" onclick={() => (compact ? (step += 1) : (seed += 1))}>{compact ? 'Another ↻' : 'Another idea ↻'}</button>
 	</div>
 	<div class="filters">
 		<div class="chips">
@@ -146,9 +148,9 @@
 					<Icon name="bookmark" size={11} />On a list
 				</button>
 			{/if}
-			<button class="chip" class:on={!color} onclick={() => (color = '')}>Any</button>
+			<button class="chip" class:on={!color} onclick={() => ((color = ''), (step = 0))}>Any</button>
 			{#each colors as c (c)}
-				<button class="chip" class:on={color === c} onclick={() => (color = c)}>
+				<button class="chip" class:on={color === c} onclick={() => ((color = c), (step = 0))}>
 					<span class="dot" style:background={typeColor(c)}></span>{c}
 				</button>
 			{/each}
